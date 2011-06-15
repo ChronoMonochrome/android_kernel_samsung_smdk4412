@@ -11,6 +11,7 @@ struct user_namespace {
 	struct user_namespace	*parent;
 	struct user_struct	*creator;
 	struct work_struct	destroyer;
+	unsigned int		proc_inum;
 };
 
 extern struct user_namespace init_user_ns;
