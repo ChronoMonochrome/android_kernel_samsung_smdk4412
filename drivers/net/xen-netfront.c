@@ -79,6 +79,14 @@ struct netfront_stats {
 	struct u64_stats_sync	syncp;
 };
 
+struct netfront_stats {
+	u64			rx_packets;
+	u64			tx_packets;
+	u64			rx_bytes;
+	u64			tx_bytes;
+	struct u64_stats_sync	syncp;
+};
+
 struct netfront_info {
 	struct list_head list;
 	struct net_device *netdev;
@@ -1949,6 +1957,8 @@ static int __devexit xennet_remove(struct xenbus_device *dev)
 	unregister_netdev(info->netdev);
 
 	del_timer_sync(&info->rx_refill_timer);
+
+	free_percpu(info->stats);
 
 	free_percpu(info->stats);
 
