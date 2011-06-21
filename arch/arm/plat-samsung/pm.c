@@ -243,7 +243,7 @@ static void __maybe_unused s3c_pm_show_resume_irqs(int start,
 }
 
 void (*pm_cpu_prep)(void);
-void (*pm_cpu_sleep)(void);
+void (*pm_cpu_sleep)(unsigned long);
 void (*pm_cpu_restore)(void);
 int (*pm_prepare)(void);
 void (*pm_finish)(void);
@@ -360,7 +360,11 @@ static int s3c_pm_enter(suspend_state_t state)
 			__raw_readl(S5P_VA_PMU + 0x2104),
 			__raw_readl(S5P_VA_PMU + 0x2184));
 
-	s3c_cpu_save(0, PLAT_PHYS_OFFSET - PAGE_OFFSET);
+	/* this will also act as our return point from when
+	 * we resume as it saves its own register state and restores it
+	 * during the resume.  */
+
+	cpu_suspend(0, PHYS_OFFSET - PAGE_OFFSET, 0, pm_cpu_sleep);
 
 	/* restore the cpu state using the kernel's cpu init code. */
 
