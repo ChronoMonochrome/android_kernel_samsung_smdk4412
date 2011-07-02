@@ -165,7 +165,7 @@ static struct sleep_save exynos4_l2cc_save[] = {
 /* For Cortex-A9 Diagnostic and Power control register */
 static unsigned int save_arm_register[2];
 
-void exynos4_cpu_suspend(unsigned long arg)
+static int exynos4_cpu_suspend(unsigned long arg)
 {
 	outer_flush_all();
 
