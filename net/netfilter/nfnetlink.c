@@ -190,7 +190,7 @@ static int __net_init nfnetlink_net_init(struct net *net)
 	if (!nfnl)
 		return -ENOMEM;
 	net->nfnl_stash = nfnl;
-	rcu_assign_pointer(net->nfnl, nfnl);
+	RCU_INIT_POINTER(net->nfnl, nfnl);
 	return 0;
 }
 
@@ -199,7 +199,7 @@ static void __net_exit nfnetlink_net_exit_batch(struct list_head *net_exit_list)
 	struct net *net;
 
 	list_for_each_entry(net, net_exit_list, exit_list)
-		rcu_assign_pointer(net->nfnl, NULL);
+		RCU_INIT_POINTER(net->nfnl, NULL);
 	synchronize_net();
 	list_for_each_entry(net, net_exit_list, exit_list)
 		netlink_kernel_release(net->nfnl_stash);
