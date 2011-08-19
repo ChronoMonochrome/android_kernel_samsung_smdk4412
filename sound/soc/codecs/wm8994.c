@@ -3030,38 +3030,36 @@ static irqreturn_t wm8958_mic_irq(int irq, void *data)
 {
 	struct wm8994_priv *wm8994 = data;
 	struct snd_soc_codec *codec = wm8994->codec;
-	int reg;
+	int reg, count;
 
-        /* We may occasionally read a detection without an impedence
-         * range being provided - if that happens loop again.
-         */
-        int count = 10;
-        do {
-                reg = snd_soc_read(codec, WM8958_MIC_DETECT_3);
-                if (reg < 0) {
-                        dev_err(codec->dev,
-                                "Failed to read mic detect status: %d\n",
-                                reg);
-                        return IRQ_NONE;
-                }
+	/* We may occasionally read a detection without an impedence
+	 * range being provided - if that happens loop again.
+	 */
+	count = 10;
+	do {
+		reg = snd_soc_read(codec, WM8958_MIC_DETECT_3);
+		if (reg < 0) {
+			dev_err(codec->dev,
+				"Failed to read mic detect status: %d\n",
+				reg);
+			return IRQ_NONE;
+		}
 
-                if (!(reg & WM8958_MICD_VALID)) {
-                        dev_err(codec->dev, "Mic detect data not valid\n");
-                        return IRQ_NONE;
-                }
+		if (!(reg & WM8958_MICD_VALID)) {
+			dev_dbg(codec->dev, "Mic detect data not valid\n");
+			goto out;
+		}
 
-                if (!(reg & WM8958_MICD_STS) || (reg & WM8958_MICD_LVL_MASK))
-                        break;
+		if (!(reg & WM8958_MICD_STS) || (reg & WM8958_MICD_LVL_MASK))
+			break;
 
-                msleep(1);
-        } while (count--);
+		msleep(1);
+	} while (count--);
+
+	if (count == 0)
+		dev_err(codec->dev, "No impedence range reported for jack\n");
 
         pr_err("midas_wm1811: %s: WM8958_MIC_DETECT_3 reg=%d\n", __func__, reg);
-
-	if (!(reg & WM8958_MICD_VALID)) {
-		dev_err(codec->dev, "Mic detect data not valid\n");
-                return IRQ_NONE;
-	}
 
 #ifndef CONFIG_SND_SOC_WM8994_MODULE
 	trace_snd_soc_jack_irq(dev_name(codec->dev));
