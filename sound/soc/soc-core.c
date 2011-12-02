@@ -1125,7 +1125,7 @@ int snd_soc_suspend(struct device *dev)
 					break;
 				}
 			case SND_SOC_BIAS_OFF:
-				codec->driver->suspend(codec, PMSG_SUSPEND);
+				codec->driver->suspend(codec);
 				codec->suspended = 1;
 				break;
 			default:
