@@ -3960,6 +3960,13 @@ static int wm8962_remove(struct snd_soc_codec *codec)
 	return 0;
 }
 
+static int wm8962_soc_volatile(struct snd_soc_codec *codec,
+			       unsigned int reg)
+{
+	return true;
+}
+
+
 static struct snd_soc_codec_driver soc_codec_dev_wm8962 = {
 	.probe =	wm8962_probe,
 	.remove =	wm8962_remove,
@@ -3971,6 +3978,8 @@ static struct snd_soc_codec_driver soc_codec_dev_wm8962 = {
 	.volatile_register = wm8962_volatile_register,
 	.readable_register = wm8962_readable_register,
 	.set_pll = wm8962_set_fll,
+	.reg_cache_size	= WM8962_MAX_REGISTER,
+	.volatile_register = wm8962_soc_volatile,
 };
 
 #if defined(CONFIG_I2C) || defined(CONFIG_I2C_MODULE)
