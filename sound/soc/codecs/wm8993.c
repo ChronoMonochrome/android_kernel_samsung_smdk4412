@@ -911,6 +911,8 @@ static int wm8993_set_bias_level(struct snd_soc_codec *codec,
 
 			wm_hubs_vmid_ena(codec);
 
+			wm_hubs_vmid_ena(codec);
+
 			/* Bring up VMID with fast soft start */
 			snd_soc_update_bits(codec, WM8993_ANTIPOP2,
 					    WM8993_STARTUP_BIAS_ENA |
