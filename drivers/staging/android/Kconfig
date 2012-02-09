@@ -100,6 +100,23 @@ config ANDROID_LOW_MEMORY_KILLER_AUTODETECT_OOM_ADJ_VALUES
 	  /sys/module/lowmemorykiller/parameters/adj and convert them
 	  to oom_score_adj values.
 
+config ANDROID_INTF_ALARM
+	bool "Android alarm driver"
+	depends on RTC_CLASS
+	default y
+	help
+	  Provides non-wakeup and rtc backed wakeup alarms based on rtc or
+	  elapsed realtime, and a non-wakeup alarm on the monotonic clock.
+	  Also provides an interface to set the wall time which must be used
+	  for elapsed realtime to work.
+
+config ANDROID_INTF_ALARM_DEV
+	bool "Android alarm device"
+	depends on ANDROID_INTF_ALARM
+	default y
+	help
+	  Exports the alarm interface to user-space.
+
 endif # if ANDROID
 
 endmenu
