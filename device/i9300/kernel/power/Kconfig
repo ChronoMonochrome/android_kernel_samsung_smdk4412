@@ -112,3 +112,11 @@ config SUSPEND_TIME
 config CPU_PM
 	bool
 	depends on SUSPEND || CPU_IDLE
+
+config PM_WAKELOCKS
+	bool "User space wakeup sources interface"
+	depends on PM_SLEEP
+	default n
+	---help---
+	Allow user space to create, activate and deactivate wakeup source
+	objects with the help of a sysfs-based interface.
