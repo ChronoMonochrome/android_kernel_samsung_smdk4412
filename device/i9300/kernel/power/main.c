@@ -306,6 +306,83 @@ static ssize_t wakeup_count_store(struct kobject *kobj,
 }
 
 power_attr(wakeup_count);
+
+#ifdef CONFIG_PM_AUTOSLEEP
+static ssize_t autosleep_show(struct kobject *kobj,
+			      struct kobj_attribute *attr,
+			      char *buf)
+{
+	suspend_state_t state = pm_autosleep_state();
+
+	if (state == PM_SUSPEND_ON)
+		return sprintf(buf, "off\n");
+
+#ifdef CONFIG_SUSPEND
+	if (state < PM_SUSPEND_MAX)
+		return sprintf(buf, "%s\n", valid_state(state) ?
+						pm_states[state] : "error");
+#endif
+#ifdef CONFIG_HIBERNATION
+	return sprintf(buf, "disk\n");
+#else
+	return sprintf(buf, "error");
+#endif
+}
+
+static ssize_t autosleep_store(struct kobject *kobj,
+			       struct kobj_attribute *attr,
+			       const char *buf, size_t n)
+{
+	suspend_state_t state = decode_state(buf, n);
+	int error;
+
+	if (state == PM_SUSPEND_ON
+	    && strcmp(buf, "off") && strcmp(buf, "off\n"))
+		return -EINVAL;
+
+	error = pm_autosleep_set_state(state);
+	return error ? error : n;
+}
+
+power_attr(autosleep);
+#endif /* CONFIG_PM_AUTOSLEEP */
+
+#ifdef CONFIG_PM_WAKELOCKS
+static ssize_t wake_lock_show(struct kobject *kobj,
+			      struct kobj_attribute *attr,
+			      char *buf)
+{
+	return pm_show_wakelocks(buf, true);
+}
+
+static ssize_t wake_lock_store(struct kobject *kobj,
+			       struct kobj_attribute *attr,
+			       const char *buf, size_t n)
+{
+	int error = pm_wake_lock(buf);
+	return error ? error : n;
+}
+
+power_attr(wake_lock);
+
+static ssize_t wake_unlock_show(struct kobject *kobj,
+				struct kobj_attribute *attr,
+				char *buf)
+{
+	return pm_show_wakelocks(buf, false);
+}
+
+static ssize_t wake_unlock_store(struct kobject *kobj,
+				 struct kobj_attribute *attr,
+				 const char *buf, size_t n)
+{
+	int error = pm_wake_unlock(buf);
+	return error ? error : n;
+}
+
+power_attr(wake_unlock);
+
+#endif /* CONFIG_PM_WAKELOCKS */
 #endif /* CONFIG_PM_SLEEP */
 
 #ifdef CONFIG_PM_TRACE
@@ -725,6 +802,10 @@ static struct attribute * g[] = {
 #ifdef CONFIG_PM_SLEEP
 	&pm_async_attr.attr,
 	&wakeup_count_attr.attr,
+#ifdef CONFIG_PM_WAKELOCKS
+	&wake_lock_attr.attr,
+	&wake_unlock_attr.attr,
+#endif
 #ifdef CONFIG_PM_DEBUG
 	&pm_test_attr.attr,
 #endif
