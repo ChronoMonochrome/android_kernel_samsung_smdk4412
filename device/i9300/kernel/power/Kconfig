@@ -120,3 +120,9 @@ config PM_WAKELOCKS
 	---help---
 	Allow user space to create, activate and deactivate wakeup source
 	objects with the help of a sysfs-based interface.
+
+config PM_WAKELOCKS_LIMIT
+	int "Maximum number of user space wakeup sources (0 = no limit)"
+	range 0 100000
+	default 100
+	depends on PM_WAKELOCKS
