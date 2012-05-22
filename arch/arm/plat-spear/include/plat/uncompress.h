@@ -12,8 +12,8 @@
  */
 
 #include <linux/io.h>
-#include <device/linux/amba/serial.h>
-#include <mach/hardware.h>
+#include <linux/amba/serial.h>
+#include <mach/spear.h>
 
 #ifndef __PLAT_UNCOMPRESS_H
 #define __PLAT_UNCOMPRESS_H
