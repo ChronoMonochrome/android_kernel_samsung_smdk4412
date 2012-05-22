@@ -59,7 +59,6 @@ struct common_audit_data {
 #define LSM_AUDIT_DATA_INODE	9
 #define LSM_AUDIT_DATA_DENTRY	10
 #define LSM_AUDIT_DATA_IOCTL_OP	11
-	struct task_struct *tsk;
 	union 	{
 		struct path path;
 		struct dentry *dentry;
@@ -99,11 +98,6 @@ int ipv4_skb_to_auditdata(struct sk_buff *skb,
 
 int ipv6_skb_to_auditdata(struct sk_buff *skb,
 		struct common_audit_data *ad, u8 *proto);
-
-/* Initialize an LSM audit data structure. */
-#define COMMON_AUDIT_DATA_INIT(_d, _t) \
-	{ memset((_d), 0, sizeof(struct common_audit_data)); \
-	 (_d)->type = LSM_AUDIT_DATA_##_t; }
 
 void common_lsm_audit(struct common_audit_data *a,
 	void (*pre_audit)(struct audit_buffer *, void *),
