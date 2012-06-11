@@ -1443,15 +1443,6 @@ static int ath9k_add_interface(struct ieee80211_hw *hw,
 		}
 	}
 
-	if ((ah->opmode == NL80211_IFTYPE_ADHOC) ||
-	    ((vif->type == NL80211_IFTYPE_ADHOC) &&
-	     sc->nvifs > 0)) {
-		ath_err(common, "Cannot create ADHOC interface when other"
-			" interfaces already exist.\n");
-		ret = -EINVAL;
-		goto out;
-	}
-
 	ath_dbg(common, CONFIG, "Attach a VIF of type: %d\n", vif->type);
 
 	sc->nvifs++;
@@ -1475,15 +1466,6 @@ static int ath9k_change_interface(struct ieee80211_hw *hw,
 	ath_dbg(common, CONFIG, "Change Interface\n");
 	mutex_lock(&sc->mutex);
 	ath9k_ps_wakeup(sc);
-
-	/* See if new interface type is valid. */
-	if ((new_type == NL80211_IFTYPE_ADHOC) &&
-	    (sc->nvifs > 1)) {
-		ath_err(common, "When using ADHOC, it must be the only"
-			" interface.\n");
-		ret = -EINVAL;
-		goto out;
-	}
 
 	if (ath9k_uses_beacons(new_type) &&
 	    !ath9k_uses_beacons(vif->type)) {
