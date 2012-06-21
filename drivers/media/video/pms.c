@@ -30,6 +30,7 @@
 #include <linux/init.h>
 #include <linux/version.h>
 #include <linux/mutex.h>
+#include <linux/slab.h>
 #include <linux/uaccess.h>
 #include <asm/io.h>
 
