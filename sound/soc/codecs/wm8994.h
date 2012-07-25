@@ -92,6 +92,7 @@ struct wm8994_priv {
 	struct completion fll_locked[2];
 	bool fll_locked_irq;
 	bool fll_byp;
+	bool clk_has_run;
 
 	int vmid_refcount;
 	int active_refcount;
@@ -145,6 +146,7 @@ struct wm8994_priv {
 	int btn_mask;
 	bool jackdet;
 	int jackdet_mode;
+	struct delayed_work jackdet_bootstrap;
 
 	wm8958_micdet_cb jack_cb;
 	void *jack_cb_data;
