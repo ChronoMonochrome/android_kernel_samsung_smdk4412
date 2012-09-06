@@ -12,6 +12,12 @@
  */
 #define SCM_MAX_FD	253
 
+struct scm_creds {
+	u32	pid;
+	kuid_t	uid;
+	kgid_t	gid;
+};
+
 struct scm_fp_list {
 	struct list_head	list;
 	short			count;
@@ -24,7 +30,7 @@ struct scm_cookie {
 	struct pid		*pid;		/* Skb credentials */
 	const struct cred	*cred;
 	struct scm_fp_list	*fp;		/* Passed files		*/
-	struct ucred		creds;		/* Skb credentials	*/
+	struct scm_creds	creds;		/* Skb credentials	*/
 #ifdef CONFIG_SECURITY_NETWORK
 	u32			secid;		/* Passed security ID 	*/
 #endif
@@ -116,8 +122,15 @@ static __inline__ void scm_recv(struct socket *sock, struct msghdr *msg,
 		return;
 	}
 
-	if (test_bit(SOCK_PASSCRED, &sock->flags))
-		put_cmsg(msg, SOL_SOCKET, SCM_CREDENTIALS, sizeof(scm->creds), &scm->creds);
+	if (test_bit(SOCK_PASSCRED, &sock->flags)) {
+		struct user_namespace *current_ns = current_user_ns();
+		struct ucred ucreds = {
+			.pid = scm->creds.pid,
+			.uid = from_kuid_munged(current_ns, scm->creds.uid),
+			.gid = from_kgid_munged(current_ns, scm->creds.gid),
+		};
+		put_cmsg(msg, SOL_SOCKET, SCM_CREDENTIALS, sizeof(ucreds), &ucreds);
+	}
 
 	scm_destroy_cred(scm);
 
