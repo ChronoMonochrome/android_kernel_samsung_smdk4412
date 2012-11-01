@@ -3873,7 +3873,7 @@ static irqreturn_t wm8958_mic_irq(int irq, void *data)
 	} while (count--);
 
 	if (count == 0)
-		dev_err(codec->dev, "No impedence range reported for jack\n");
+		dev_err(codec->dev, "No impedance range reported for jack\n");
 
         pr_err("midas_wm1811: %s: WM8958_MIC_DETECT_3 reg=%d\n", __func__, reg);
 
