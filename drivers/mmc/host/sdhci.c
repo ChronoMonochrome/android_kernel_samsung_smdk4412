@@ -2353,6 +2353,7 @@ int sdhci_suspend_host(struct sdhci_host *host, pm_message_t state)
 #endif
 			ret = regulator_disable(host->vmmc);
 			pr_info("%s : MMC Card OFF\n", __func__);
+			mdelay(5);
 		}
 	}
 
