@@ -22,6 +22,8 @@
 
 #include <plat/cpu.h>
 #include <mach/regs-pmu.h>
+#include <plat/cpu.h>
+
 #include "common.h"
 
 static inline void cpu_enter_lowpower_a9(void)
@@ -51,22 +53,22 @@ static inline void cpu_enter_lowpower_a15(void)
 	unsigned int v;
 
 	asm volatile(
-	"       mrc     p15, 0, %0, c1, c0, 0\n"
-	"       bic     %0, %0, %1\n"
-	"       mcr     p15, 0, %0, c1, c0, 0\n"
+	"	mrc	p15, 0, %0, c1, c0, 0\n"
+	"	bic	%0, %0, %1\n"
+	"	mcr	p15, 0, %0, c1, c0, 0\n"
 	  : "=&r" (v)
 	  : "Ir" (CR_C)
 	  : "cc");
 
-	flush_cache_all();
+	flush_cache_louis();
 
 	asm volatile(
 	/*
 	* Turn off coherency
 	*/
-	"       mrc     p15, 0, %0, c1, c0, 1\n"
-	"       bic     %0, %0, %1\n"
-	"       mcr     p15, 0, %0, c1, c0, 1\n"
+	"	mrc	p15, 0, %0, c1, c0, 1\n"
+	"	bic	%0, %0, %1\n"
+	"	mcr	p15, 0, %0, c1, c0, 1\n"
 	: "=&r" (v)
 	: "Ir" (0x40)
 	: "cc");
@@ -132,14 +134,19 @@ static inline void platform_do_lowpower(unsigned int cpu, int *spurious)
 void __ref exynos_cpu_die(unsigned int cpu)
 {
 	int spurious = 0;
+	int primary_part = 0;
 
 	/*
-	 * we're ready for shutdown now, so do it
+	 * we're ready for shutdown now, so do it.
+	 * Exynos4 is A9 based while Exynos5 is A15; check the CPU part
+	 * number by reading the Main ID register and then perform the
+	 * appropriate sequence for entering low power.
 	 */
 	if (soc_is_exynos5250())
 		cpu_enter_lowpower_a15();
 	else
 		cpu_enter_lowpower_a9();
+
 	platform_do_lowpower(cpu, &spurious);
 
 	/*
