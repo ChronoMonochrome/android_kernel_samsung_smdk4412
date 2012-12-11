@@ -14,6 +14,8 @@
 
 extern struct smp_operations exynos_smp_ops;
 
+void exynos_firmware_init(void);
+
 extern void exynos4_register_clocks(void);
 extern void exynos4_setup_clocks(void);
 

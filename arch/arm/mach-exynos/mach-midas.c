@@ -3608,10 +3608,6 @@ static void __init exynos4_reserve(void)
 }
 #endif
 
-static void __init exynos_init_reserve(void)
-{
-}
-
 MACHINE_START(SMDK4412, "SMDK4x12")
 	.atag_offset	= S5P_PA_SDRAM + 0x100,
 	.init_irq	= exynos4_init_irq,
@@ -3624,7 +3620,7 @@ MACHINE_START(SMDK4412, "SMDK4x12")
 #elif defined(CONFIG_DMA_CMA)
 	.reserve	= &exynos4_reserve,
 #endif
-	.init_early	= &exynos_init_reserve,
+	.init_early	= exynos_firmware_init,
 MACHINE_END
 
 MACHINE_START(SMDK4212, "SMDK4x12")
@@ -3639,5 +3635,5 @@ MACHINE_START(SMDK4212, "SMDK4x12")
 #elif defined(CONFIG_DMA_CMA)
 	.reserve	= &exynos4_reserve,
 #endif
-	.init_early	= &exynos_init_reserve,
+	.init_early	= exynos_firmware_init,
 MACHINE_END

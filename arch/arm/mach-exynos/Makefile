@@ -63,6 +63,7 @@ obj-$(CONFIG_LEGACY_HOTPLUG_POLICY)	+= pm-hotplug.o
 obj-$(CONFIG_WITH_DVFS_POLICY)		+= dvfs-hotplug.o
 obj-$(CONFIG_DVFS_NR_RUNNING_POLICY)	+= dynamic-dvfs-nr_running-hotplug.o
 obj-$(CONFIG_NR_RUNNING_POLICY)		+= dynamic-nr_running-hotplug.o
+obj-$(CONFIG_ARCH_EXYNOS)	+= firmware.o
 
 # machine support
 
