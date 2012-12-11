@@ -25,6 +25,7 @@
 #include <asm/smp_scu.h>
 #include <asm/smp_plat.h>
 #include <asm/unified.h>
+#include <asm/firmware.h>
 
 #include <mach/hardware.h>
 #include <mach/regs-clock.h>
@@ -39,7 +40,7 @@
 
 #include "common.h"
 
-extern void exynos_secondary_startup(void);
+extern void exynos4_secondary_startup(void);
 extern unsigned int gic_bank_offset;
 
 struct _cpu_boot_info {
@@ -165,17 +166,21 @@ static int __cpuinit exynos_boot_secondary(unsigned int cpu, struct task_struct 
 	 */
 	timeout = jiffies + (1 * HZ);
 	while (time_before(jiffies, timeout)) {
+		unsigned long boot_addr;
+
 		smp_rmb();
 
-		__raw_writel(BSYM(virt_to_phys(exynos_secondary_startup)),
-			cpu_boot_info[cpu].boot_base);
+		boot_addr = virt_to_phys(exynos4_secondary_startup);
 
-#ifdef CONFIG_ARM_TRUSTZONE
-		if (soc_is_exynos4412())
-			exynos_smc(SMC_CMD_CPU1BOOT, cpu, 0, 0);
-		else
-			exynos_smc(SMC_CMD_CPU1BOOT, 0, 0, 0);
-#endif
+		/*
+		 * Try to set boot address using firmware first
+		 * and fall back to boot register if it fails.
+		 */
+		if (call_firmware_op(set_cpu_boot_addr, phys_cpu, boot_addr))
+			__raw_writel(boot_addr, cpu_boot_reg(phys_cpu));
+
+		call_firmware_op(cpu_boot, phys_cpu);
+
 		arch_send_wakeup_ipi_mask(cpumask_of(cpu));
 
 		if (pen_release == -1)
@@ -252,19 +257,24 @@ static void __init exynos_smp_prepare_cpus(unsigned int max_cpus)
 	else
 		flush_cache_all();
 
-	/* Set up secondary boot base and core power cofiguration base address */
-	for (i = 1; i < max_cpus; i++) {
-#ifdef CONFIG_ARM_TRUSTZONE
-		cpu_boot_info[i].boot_base = S5P_VA_SYSRAM_NS + 0x1C;
-#else
-		if (soc_is_exynos4210() && (samsung_rev() >= EXYNOS4210_REV_1_1))
-			cpu_boot_info[i].boot_base = S5P_INFORM5;
-		else
-			cpu_boot_info[i].boot_base = S5P_VA_SYSRAM;
-#endif
-		if (soc_is_exynos4412())
-			cpu_boot_info[i].boot_base += (0x4 * i);
-		cpu_boot_info[i].power_base = S5P_ARM_CORE_CONFIGURATION(i);
+	/*
+	 * Write the address of secondary startup into the
+	 * system-wide flags register. The boot monitor waits
+	 * until it receives a soft interrupt, and then the
+	 * secondary CPU branches to this address.
+	 *
+	 * Try using firmware operation first and fall back to
+	 * boot register if it fails.
+	 */
+	for (i = 1; i < max_cpus; ++i) {
+		unsigned long phys_cpu;
+		unsigned long boot_addr;
+
+		phys_cpu = cpu_logical_map(i);
+		boot_addr = virt_to_phys(exynos4_secondary_startup);
+
+		if (call_firmware_op(set_cpu_boot_addr, phys_cpu, boot_addr))
+			__raw_writel(boot_addr, cpu_boot_reg(phys_cpu));
 	}
 }
 
