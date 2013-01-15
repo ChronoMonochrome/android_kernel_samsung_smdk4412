@@ -465,4 +465,3 @@ void cpufreq_frequency_table_put_attr(unsigned int cpu);
 #define SCALING_MAX_UNCOUPLED -1
 
 #endif /* _LINUX_CPUFREQ_H */
-
