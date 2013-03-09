@@ -56,8 +56,6 @@ obj-$(CONFIG_BUSFREQ_LOCK_WRAPPER)	+= dev-slp.o
 
 obj-$(CONFIG_SMP)		+= platsmp.o headsmp.o
 
-obj-$(CONFIG_EXYNOS_MCT)	+= mct.o
-
 obj-$(CONFIG_HOTPLUG_CPU)	+= hotplug.o
 
 obj-$(CONFIG_STAND_ALONE_POLICY)	+= stand-hotplug.o

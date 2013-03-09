@@ -139,12 +139,6 @@ config EXYNOS5_LOWPWR_IDLE
 	help
 	  Enable Low power IDLE for Exynos5 series.
 
-config EXYNOS_MCT
-	bool
-	default y
-	help
-	  Use MCT (Multi Core Timer) as kernel timers
-
 config EXYNOS5_DEV_AHCI
 	bool
 	help
