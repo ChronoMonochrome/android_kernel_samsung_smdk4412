@@ -960,6 +960,8 @@ static ssize_t oom_adjust_write(struct file *file, const char __user *buf,
 		task->signal->oom_score_adj = (oom_adjust * OOM_SCORE_ADJ_MAX) /
 								-OOM_DISABLE;
 	trace_oom_score_adj_update(task);
+	delete_from_adj_tree(task);
+	add_2_adj_tree(task);
 err_sighand:
 	unlock_task_sighand(task, &flags);
 err_task_lock:
@@ -1045,6 +1047,8 @@ static ssize_t oom_score_adj_write(struct file *file, const char __user *buf,
 	}
 
 	task->signal->oom_score_adj = oom_score_adj;
+	delete_from_adj_tree(task);
+	add_2_adj_tree(task);
 	if (has_capability_noaudit(current, CAP_SYS_RESOURCE))
 		task->signal->oom_score_adj_min = oom_score_adj;
 	trace_oom_score_adj_update(task);

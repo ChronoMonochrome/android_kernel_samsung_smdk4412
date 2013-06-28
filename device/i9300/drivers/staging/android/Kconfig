@@ -90,6 +90,14 @@ config ANDROID_LOW_MEMORY_KILLER_LEGACY
 	---help---
 	  Register processes to be killed when memory is low
 
+config ANDROID_LMK_ADJ_RBTREE
+	bool "Use RBTREE for Android Low Memory Killer"
+	depends on ANDROID_LOW_MEMORY_KILLER
+	default y
+	---help---
+	  Use oom_score_adj rbtree to select the best proecss to kill
+	  when system in low memory status.
+
 endif # if ANDROID_LEGACY
 
 endmenu
