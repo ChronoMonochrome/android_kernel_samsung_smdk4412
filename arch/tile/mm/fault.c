@@ -278,7 +278,9 @@ static int handle_page_fault(struct pt_regs *regs,
 	if (!is_page_fault)
 		write = 1;
 
-	is_kernel_mode = (EX1_PL(regs->ex1) != USER_PL);
+	flags = FAULT_FLAG_ALLOW_RETRY | FAULT_FLAG_KILLABLE;
+
+	is_kernel_mode = !user_mode(regs);
 
 	tsk = validate_current();
 
@@ -360,6 +362,9 @@ static int handle_page_fault(struct pt_regs *regs,
 		goto bad_area_nosemaphore;
 	}
 
+	if (!is_kernel_mode)
+		flags |= FAULT_FLAG_USER;
+
 	/*
 	 * When running in the kernel we expect faults to occur only to
 	 * addresses in user space.  All other faults represent errors in the
@@ -418,6 +423,7 @@ good_area:
 #endif
 		if (!(vma->vm_flags & VM_WRITE))
 			goto bad_area;
+		flags |= FAULT_FLAG_WRITE;
 	} else {
 		if (!is_page_fault || !(vma->vm_flags & VM_READ))
 			goto bad_area;
