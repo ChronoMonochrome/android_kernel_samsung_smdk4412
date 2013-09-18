@@ -36,6 +36,7 @@ endchoice
 config CPU_EXYNOS4210
 	bool
 	select S3C_PL330_DMA
+	select ARM_CPU_SUSPEND if PM
 	select PL310_ERRATA_727915
 	select PL310_ERRATA_753970
 	help
