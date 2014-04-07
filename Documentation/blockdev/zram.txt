@@ -49,7 +49,21 @@ will not take any effect, because single stream compression backend implemented
 as a special case and does not support dynamic max_comp_streams. Only multi
 stream backend supports dynamic max_comp_streams adjustment.
 
-4) Set Disksize
+4) Select compression algorithm
+	Using comp_algorithm device attribute one can see available and
+	currently selected (shown in square brackets) compression algortithms,
+	change selected compression algorithm (once the device is initialised
+	there is no way to change compression algorithm).
+
+	Examples:
+	#show supported compression algorithms
+	cat /sys/block/zram0/comp_algorithm
+	lzo [lz4]
+
+	#select lzo compression algorithm
+	echo lzo > /sys/block/zram0/comp_algorithm
+
+5) Set Disksize
         Set disk size by writing the value to sysfs node 'disksize'.
         The value can be either in bytes or you can use mem suffixes.
         Examples:
@@ -68,14 +82,14 @@ There is little point creating a zram of greater than twice the size of memory
 since we expect a 2:1 compression ratio. Note that zram uses about 0.1% of the
 size of the disk when not in use so a huge zram is wasteful.
 
-5) Activate:
+6) Activate:
 	mkswap /dev/zram0
 	swapon /dev/zram0
 
 	mkfs.ext4 /dev/zram1
 	mount /dev/zram1 /tmp
 
-6) Stats:
+7) Stats:
 	Per-device statistics are exported as various nodes under
 	/sys/block/zram<id>/
 		disksize
@@ -90,11 +104,11 @@ size of the disk when not in use so a huge zram is wasteful.
 		compr_data_size
 		mem_used_total
 
-7) Deactivate:
+8) Deactivate:
 	swapoff /dev/zram0
 	umount /dev/zram1
 
-8) Reset:
+9) Reset:
 	Write any positive value to 'reset' sysfs node
 	echo 1 > /sys/block/zram0/reset
 	echo 1 > /sys/block/zram1/reset
