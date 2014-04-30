@@ -325,6 +325,7 @@ static int alarm_release(struct inode *inode, struct file *file)
 	if (file->private_data != 0) {
 		for (i = 0; i < ANDROID_ALARM_TYPE_COUNT; i++) {
 			uint32_t alarm_type_mask = 1U << i;
+
 			if (alarm_enabled & alarm_type_mask) {
 				alarm_dbg(INFO, "alarm_release: clear alarm, "
 					"pending %d\n",
