@@ -121,6 +121,7 @@ static int __cpuinit exynos_boot_secondary(unsigned int cpu, struct task_struct 
 	unsigned int tmp_wtcon;
 #endif
 	unsigned long phys_cpu = cpu_logical_map(cpu);
+	int ret = -ENOSYS;
 
 	/*
 	 * Set synchronisation state between this boot processor
@@ -178,8 +179,18 @@ static int __cpuinit exynos_boot_secondary(unsigned int cpu, struct task_struct 
 		 * Try to set boot address using firmware first
 		 * and fall back to boot register if it fails.
 		 */
-		if (call_firmware_op(set_cpu_boot_addr, phys_cpu, boot_addr))
+		ret = call_firmware_op(set_cpu_boot_addr, phys_cpu, boot_addr);
+		if (ret && ret != -ENOSYS)
+			goto fail;
+		if (ret == -ENOSYS) {
+			void __iomem *boot_reg = cpu_boot_reg(phys_cpu);
+
+			if (IS_ERR(boot_reg)) {
+				ret = PTR_ERR(boot_reg);
+				goto fail;
+			}
 			__raw_writel(boot_addr, cpu_boot_reg(phys_cpu));
+		}
 
 		call_firmware_op(cpu_boot, phys_cpu);
 
@@ -199,9 +210,10 @@ static int __cpuinit exynos_boot_secondary(unsigned int cpu, struct task_struct 
 	 * now the secondary core is starting up let it run its
 	 * calibrations, then wait for it to finish
 	 */
+fail:
 	spin_unlock(&boot_lock);
 
-	return pen_release != -1 ? -ENOSYS : 0;
+	return pen_release != -1 ? ret : 0;
 }
 
 static inline unsigned long exynos5_get_core_count(void)
@@ -271,12 +283,21 @@ static void __init exynos_smp_prepare_cpus(unsigned int max_cpus)
 	for (i = 1; i < max_cpus; ++i) {
 		unsigned long phys_cpu;
 		unsigned long boot_addr;
+		int ret;
 
 		phys_cpu = cpu_logical_map(i);
 		boot_addr = virt_to_phys(exynos4_secondary_startup);
 
-		if (call_firmware_op(set_cpu_boot_addr, phys_cpu, boot_addr))
+		ret = call_firmware_op(set_cpu_boot_addr, phys_cpu, boot_addr);
+		if (ret && ret != -ENOSYS)
+			break;
+		if (ret == -ENOSYS) {
+			void __iomem *boot_reg = cpu_boot_reg(phys_cpu);
+
+			if (IS_ERR(boot_reg))
+				break;
 			__raw_writel(boot_addr, cpu_boot_reg(phys_cpu));
+		}
 	}
 }
 
