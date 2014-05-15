@@ -23,6 +23,9 @@ extern void combiner_cascade_irq(unsigned int combiner_nr, unsigned int irq);
 extern void exynos_cpu_die(unsigned int cpu);
 extern void __init exynos4_timer_init(void);
 void exynos_cpufreq_init(void);
+extern void exynos_cpu_power_down(int cpu);
+extern void exynos_cpu_power_up(int cpu);
+extern int  exynos_cpu_power_state(int cpu);
 
 extern void set_gps_uart_op(int onoff);
 int check_gps_uart_op(void);
