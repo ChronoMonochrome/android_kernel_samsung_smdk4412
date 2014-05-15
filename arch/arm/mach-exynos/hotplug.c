@@ -97,7 +97,7 @@ static inline void platform_do_lowpower(unsigned int cpu, int *spurious)
 	for (;;) {
 		/* make cpu1 to be turned off at next WFI command */
 		if ((cpu >= 1) && (cpu < NR_CPUS))
-			__raw_writel(0, S5P_ARM_CORE_CONFIGURATION(cpu));
+			exynos_cpu_power_down(cpu);
 
 		/*
 		 * here's the WFI

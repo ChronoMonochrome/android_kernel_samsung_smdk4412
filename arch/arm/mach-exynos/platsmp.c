@@ -103,23 +103,21 @@ static int exynos_power_up_cpu(unsigned int cpu)
 	void __iomem *power_base = cpu_boot_info[cpu].power_base;
 
 	val = __raw_readl(power_base);
-	if (!(val & S5P_CORE_LOCAL_PWR_EN)) {
-		__raw_writel(S5P_CORE_LOCAL_PWR_EN, power_base);
-
-		/* wait max 10 ms until cpu is on */
+	if (!exynos_cpu_power_state(cpu)) {
+		exynos_cpu_power_up(cpu);
 		timeout = 10;
-		while (timeout) {
-			val = __raw_readl(power_base + 0x4);
 
-			if ((val & S5P_CORE_LOCAL_PWR_EN) == S5P_CORE_LOCAL_PWR_EN)
+		/* wait max 10 ms until cpu1 is on */
+		while (exynos_cpu_power_state(cpu) != S5P_CORE_LOCAL_PWR_EN) {
+			if (timeout-- == 0)
 				break;
 
 			mdelay(1);
-			timeout--;
 		}
 
 		if (timeout == 0) {
-			printk(KERN_ERR "cpu%d power up failed", cpu);
+			printk(KERN_ERR "cpu1 power enable failed");
+			spin_unlock(&boot_lock);
 			return -ETIMEDOUT;
 		}
 	}
