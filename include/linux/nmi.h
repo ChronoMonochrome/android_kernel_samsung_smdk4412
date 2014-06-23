@@ -36,8 +36,17 @@ static inline bool trigger_all_cpu_backtrace(void)
 
 	return true;
 }
+static inline bool trigger_allbutself_cpu_backtrace(void)
+{
+	arch_trigger_all_cpu_backtrace();
+	return true;
+}
 #else
 static inline bool trigger_all_cpu_backtrace(void)
+{
+	return false;
+}
+static inline bool trigger_allbutself_cpu_backtrace(void)
 {
 	return false;
 }
