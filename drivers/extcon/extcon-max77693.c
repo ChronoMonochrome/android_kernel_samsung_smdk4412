@@ -1319,9 +1319,6 @@ static int max77693_muic_probe(struct platform_device *pdev)
 
 	pr_err("%s: got usb_sel GPIO: %p", __func__, info->usb_sel_gpio);
 
-	/* Set initial path for USB */
-	 max77693_muic_set_path(info, info->path_usb, true);
-
 	/* Check revision number of MUIC device*/
 	ret = regmap_read(info->max77693->regmap_muic,
 			MAX77693_MUIC_REG_ID, &id);
