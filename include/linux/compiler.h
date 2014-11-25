@@ -164,6 +164,15 @@ void ftrace_likely_update(struct ftrace_branch_data *f, int val, int expect);
     (typeof(ptr)) (__ptr + (off)); })
 #endif
 
+#ifndef OPTIMIZER_HIDE_VAR
+#define OPTIMIZER_HIDE_VAR(var) barrier()
+#endif
+
+/* Not-quite-unique ID. */
+#ifndef __UNIQUE_ID
+# define __UNIQUE_ID(prefix) __PASTE(__PASTE(__UNIQUE_ID_, prefix), __LINE__)
+#endif
+
 #include <linux/types.h>
 
 static __always_inline void data_access_exceeds_word_size(void)
@@ -182,6 +191,9 @@ static __always_inline void __read_once_size(volatile void *p, void *res, int si
 	case 1: *(__u8 *)res = *(volatile __u8 *)p; break;
 	case 2: *(__u16 *)res = *(volatile __u16 *)p; break;
 	case 4: *(__u32 *)res = *(volatile __u32 *)p; break;
+#ifdef CONFIG_64BIT
+	case 8: *(__u64 *)res = *(volatile __u64 *)p; break;
+#endif
 	default:
 		barrier();
 		__builtin_memcpy((void *)res, (const void *)p, size);
@@ -196,6 +208,9 @@ static __always_inline void __assign_once_size(volatile void *p, void *res, int 
 	case 1: *(volatile __u8 *)p = *(__u8 *)res; break;
 	case 2: *(volatile __u16 *)p = *(__u16 *)res; break;
 	case 4: *(volatile __u32 *)p = *(__u32 *)res; break;
+#ifdef CONFIG_64BIT
+	case 8: *(volatile __u64 *)p = *(__u64 *)res; break;
+#endif
 	default:
 		barrier();
 		__builtin_memcpy((void *)p, (const void *)res, size);
