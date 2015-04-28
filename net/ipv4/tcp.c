@@ -2539,6 +2539,10 @@ void tcp_get_info(const struct sock *sk, struct tcp_info *info)
 	info->tcpi_max_pacing_rate = sk->sk_max_pacing_rate != ~0U ?
 					sk->sk_max_pacing_rate : ~0ULL;
 
+	spin_lock_bh(&sk->sk_lock.slock);
+	info->tcpi_bytes_acked = tp->bytes_acked;
+	spin_unlock_bh(&sk->sk_lock.slock);
+
 }
 EXPORT_SYMBOL_GPL(tcp_get_info);
 
