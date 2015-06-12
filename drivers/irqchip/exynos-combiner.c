@@ -12,6 +12,7 @@
 #include <linux/export.h>
 #include <linux/init.h>
 #include <linux/io.h>
+#include <linux/syscore_ops.h>
 #include <linux/irqdomain.h>
 #include <linux/irqchip/chained_irq.h>
 #include <linux/interrupt.h>
@@ -35,8 +36,12 @@ struct combiner_chip_data {
 	unsigned int irq_mask;
 	void __iomem *base;
 	unsigned int parent_irq;
+#ifdef CONFIG_PM
+	u32 pm_save;
+#endif
 };
 
+static unsigned int max_nr = EXYNOS4_MAX_COMBINER_NR;
 static struct irq_domain *combiner_irq_domain;
 static struct combiner_chip_data combiner_data[EXYNOS4_MAX_COMBINER_NR];
 
@@ -215,11 +220,13 @@ static unsigned int exynos4x12_combiner_extra_irq(int group)
 	}
 }
 
+static void _register_syscore_ops(void);
+
 void __init combiner_init(void __iomem *combiner_base,
 			  struct device_node *np)
 {
 	int i, irq, irq_base;
-	unsigned int max_nr, nr_irq;
+	unsigned int nr_irq;
 
 	max_nr = max_combiner_nr();
 
@@ -258,6 +265,63 @@ void __init combiner_init(void __iomem *combiner_base,
 		combiner_init_one(i, combiner_base + (i >> 2) * 0x10, irq);
 		combiner_cascade_irq(i, irq);
 	}
+
+	if (!np)
+		_register_syscore_ops();
+}
+
+#ifdef CONFIG_PM
+
+/**
+ * combiner_suspend - save interrupt combiner state before suspend
+ *
+ * Save the interrupt enable set register for all combiner groups since
+ * the state is lost when the system enters into a sleep state.
+ *
+ */
+static int combiner_suspend(void)
+{
+	int i;
+
+	for (i = 0; i < max_nr; i++)
+		combiner_data[i].pm_save =
+			__raw_readl(combiner_data[i].base + COMBINER_ENABLE_SET);
+
+	return 0;
+}
+
+/**
+ * combiner_resume - restore interrupt combiner state after resume
+ *
+ * Restore the interrupt enable set register for all combiner groups since
+ * the state is lost when the system enters into a sleep state on suspend.
+ *
+ */
+static void combiner_resume(void)
+{
+	int i;
+
+	for (i = 0; i < max_nr; i++) {
+		__raw_writel(combiner_data[i].irq_mask,
+			     combiner_data[i].base + COMBINER_ENABLE_CLEAR);
+		__raw_writel(combiner_data[i].pm_save,
+			     combiner_data[i].base + COMBINER_ENABLE_SET);
+	}
+}
+
+#else
+#define combiner_suspend	NULL
+#define combiner_resume		NULL
+#endif
+
+static struct syscore_ops combiner_syscore_ops = {
+	.suspend	= combiner_suspend,
+	.resume		= combiner_resume,
+};
+
+static void _register_syscore_ops(void)
+{
+	register_syscore_ops(&combiner_syscore_ops);
 }
 
 #ifdef CONFIG_OF
@@ -273,6 +337,8 @@ static int __init combiner_of_init(struct device_node *np,
 	}
 
 	combiner_init(combiner_base, np);
+
+	register_syscore_ops(&combiner_syscore_ops);
 
 	return 0;
 }
