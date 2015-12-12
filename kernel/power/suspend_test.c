@@ -95,13 +95,13 @@ repeat:
 	}
 
 	if (state == PM_SUSPEND_MEM) {
-		printk(info_test, pm_states[state].label);
+		printk(info_test, pm_states[state]);
 		status = pm_suspend(state);
 		if (status == -ENODEV)
 			state = PM_SUSPEND_STANDBY;
 	}
 	if (state == PM_SUSPEND_STANDBY) {
-		printk(info_test, pm_states[state].label);
+		printk(info_test, pm_states[state]);
 		status = pm_suspend(state);
 		if (status < 0)
 			state = PM_SUSPEND_FREEZE;
@@ -166,9 +166,9 @@ static int __init setup_test_suspend(char *value)
 			return 0;
 	}
 
-	for (i = PM_SUSPEND_MIN; i < PM_SUSPEND_MAX; i++)
-		if (!strcmp(pm_states[i].label, value)) {
-			test_state = pm_states[i].state;
+	for (i = 0; pm_labels[i]; i++)
+		if (!strcmp(pm_labels[i], suspend_type)) {
+			test_state_label = pm_labels[i];
 			return 0;
 		}
 
@@ -191,7 +191,7 @@ static int __init test_suspend(void)
 		return 0;
 
 	for (test_state = PM_SUSPEND_MIN; test_state < PM_SUSPEND_MAX; test_state++) {
-		const char *state_label = pm_states[test_state].label;
+		const char *state_label = pm_states[test_state];
 
 		if (state_label && !strcmp(test_state_label, state_label))
 			break;
