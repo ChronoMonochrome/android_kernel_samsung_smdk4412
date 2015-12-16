@@ -923,6 +923,7 @@ struct proto {
 						  struct cgroup_subsys *ss);
 	struct cg_proto		*(*proto_cgroup)(struct mem_cgroup *memcg);
 #endif
+	int			(*diag_destroy)(struct sock *sk, int err);
 };
 
 struct cg_proto {
