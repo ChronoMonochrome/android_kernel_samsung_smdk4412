@@ -33,7 +33,13 @@ static inline unsigned long COLOUR_ALIGN_DOWN(unsigned long addr,
 
 static int mmap_is_legacy(void)
 {
-	return 1;
+	if (current->personality & ADDR_COMPAT_LAYOUT)
+		return 1;
+
+	if (rlimit(RLIMIT_STACK) == RLIM_INFINITY)
+		return 1;
+
+	return sysctl_legacy_va_layout;
 }
 
 static unsigned long mmap_base(unsigned long rnd)
@@ -104,10 +110,6 @@ arch_get_unmapped_area(struct file *filp, unsigned long addr,
 	        start_addr = addr = mm->mmap_base;
 	        mm->cached_hole_size = 0;
 	}
-
-	if ((current->flags & PF_RANDOMIZE) &&
-	    !(current->personality & ADDR_NO_RANDOMIZE))
-		addr += (get_random_int() % ((1 << mmap_rnd_bits) - 1)) << PAGE_SHIFT;
 
 full_search:
 	if (do_align)
