@@ -111,6 +111,10 @@ arch_get_unmapped_area(struct file *filp, unsigned long addr,
 	        mm->cached_hole_size = 0;
 	}
 
+	if ((current->flags & PF_RANDOMIZE) &&
+	    !(current->personality & ADDR_NO_RANDOMIZE))
+		addr += (get_random_int() % ((1 << mmap_rnd_bits) - 1)) << PAGE_SHIFT;
+
 full_search:
 	if (do_align)
 		addr = COLOUR_ALIGN(addr, pgoff);
