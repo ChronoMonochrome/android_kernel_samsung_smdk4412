@@ -85,6 +85,8 @@ struct usb_hub {
 	void			**port_owners;
 };
 
+int deny_new_usb = 0;
+
 static inline int hub_is_superspeed(struct usb_device *hdev)
 {
 	return (hdev->descriptor.bDeviceProtocol == 3);
@@ -3291,6 +3293,11 @@ static void hub_port_connect_change(struct usb_hub *hub, int port1,
 		if (portstatus & USB_PORT_STAT_ENABLE)
   			goto done;
 		return;
+	}
+
+	if (deny_new_usb) {
+		dev_err(hub_dev, "denied insert of USB device on port %d\n", port1);
+		goto done;
 	}
 
 	for (i = 0; i < SET_CONFIG_TRIES; i++) {
