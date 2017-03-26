@@ -56,7 +56,7 @@
 #define SDCARDFS_DIRENT_SIZE 256
 
 /* temporary static uid settings for development */
-#define AID_ROOT             0	/* uid for accessing /mnt/sdcard & extSdcard */
+#define AID_ROOT          1035	/* uid for accessing /mnt/sdcard & extSdcard */
 #define AID_MEDIA_RW      1023	/* internal media storage write access */
 
 #define AID_SDCARD_RW     1015	/* external storage write access */
@@ -69,9 +69,9 @@
 
 #define fix_derived_permission(x)	\
 	do {						\
-		(x)->i_uid = SDCARDFS_I(x)->d_uid;	\
-		(x)->i_gid = SDCARDFS_I(x)->d_gid;	\
-		(x)->i_mode = ((x)->i_mode & S_IFMT) | SDCARDFS_I(x)->d_mode;\
+		(x)->i_uid = AID_SDCARD_ALL;	\
+		(x)->i_gid = AID_SDCARD_ALL;	\
+		(x)->i_mode = 0777  | ((x)->i_mode & S_IFMT) | SDCARDFS_I(x)->d_mode; \
 	} while (0)
 
 /* OVERRIDE_CRED() and REVERT_CRED()
