@@ -128,11 +128,6 @@ typedef enum {
 	DERIVE_UNIFIED,
 } derive_t;
 
-typedef enum {
-	LOWER_FS_EXT4,
-	LOWER_FS_FAT,
-} lower_fs_t;
-
 struct sdcardfs_sb_info;
 struct sdcardfs_mount_options;
 
@@ -199,7 +194,6 @@ struct sdcardfs_mount_options {
 	gid_t write_gid;
 	int split_perms;
 	derive_t derive;
-	lower_fs_t lower_fs;
 	unsigned int reserved_mb;
 };
 
