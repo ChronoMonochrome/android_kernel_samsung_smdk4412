@@ -399,6 +399,8 @@ static inline void unlock_dir(struct dentry *dir)
 	dput(dir);
 }
 
+
+extern struct dentry *kern_path_locked(const char *name, struct path *path);
 static inline int prepare_dir(const char *path_s, uid_t uid, gid_t gid, mode_t mode)
 {
 	int err;
