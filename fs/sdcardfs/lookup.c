@@ -95,12 +95,16 @@ struct inode *sdcardfs_iget(struct super_block *sb,
 			     lower_inode->i_ino, /* hashval */
 			     sdcardfs_inode_test,	/* inode comparison function */
 			     sdcardfs_inode_set, /* inode init function */
+<<<<<<< HEAD
 			     lower_inode); /* data passed to test+set fxns */
 	if (!inode) {
 		err = -EACCES;
 		iput(lower_inode);
 		return ERR_PTR(err);
 	}
+=======
+			     &data); /* data passed to test+set fxns */
+>>>>>>> 8716dc3... sdcardfs: relax android permission restrictions
 	/* if found a cached inode, then just return it */
 	if (!(inode->i_state & I_NEW))
 		return inode;
@@ -337,6 +341,7 @@ struct dentry *sdcardfs_lookup(struct inode *dir, struct dentry *dentry,
 
 	parent = dget_parent(dentry);
 
+<<<<<<< HEAD
 	if(!check_caller_access_to_name(parent->d_inode, dentry->d_name.name,
 						sbi->options.derive, 0, 0)) {
 		ret = ERR_PTR(-EACCES);
@@ -346,6 +351,8 @@ struct dentry *sdcardfs_lookup(struct inode *dir, struct dentry *dentry,
 		goto out_err;
         }
 
+=======
+>>>>>>> 8716dc3... sdcardfs: relax android permission restrictions
 	/* save current_cred and override it */
 	OVERRIDE_CRED_PTR(SDCARDFS_SB(dir->i_sb), saved_cred);
 
