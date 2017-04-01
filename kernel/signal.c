@@ -1259,6 +1259,7 @@ force_sig_info(int sig, struct siginfo *info, struct task_struct *t)
 
 	return ret;
 }
+EXPORT_SYMBOL(force_sig_info);
 
 /*
  * Nuke all other threads in the group.
