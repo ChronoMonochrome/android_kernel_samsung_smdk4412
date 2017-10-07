@@ -25,7 +25,7 @@
 static unsigned int fb_suspended;
 static struct notifier_block fb_notif;
 
-static bool doze_hlp = false;
+static bool doze_hlp = true;
 static bool restrict_sensors = true;
 
 static char * envp[] = { "HOME=/", NULL };
