@@ -238,10 +238,10 @@ static struct lcd_platform_data ld9040_platform_data = {
 	.gpio_cfg_lateresume = lcd_gpio_cfg_lateresume,
 		 /* it indicates whether lcd panel is enabled from u-boot. */
 	.lcd_enabled = 0,
-	.reset_delay = 20,  /* 20ms */
-	.power_on_delay = 20,	 /* 20ms */
-	.power_off_delay = 200, /* 200ms */
-	.sleep_in_delay = 160,
+	.reset_delay = 0,  /* 20ms */
+	.power_on_delay = 0,	 /* 20ms */
+	.power_off_delay = 0, /* 200ms */
+	.sleep_in_delay = 0,
 	.pdata = &s2plus_panel_data,
 };
 
