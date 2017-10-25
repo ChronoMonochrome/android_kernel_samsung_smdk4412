@@ -129,6 +129,38 @@ config ANDROID_LMK_ADJ_RBTREE
 	---help---
 	  Use oom_score_adj rbtree to select the best proecss to kill
 	  when system in low memory status.
+	 
+config LMK_LOCK_TREBUCHET
+ 	bool "Lock Trebuchet in memory"
+ 	depends on ANDROID_LOW_MEMORY_KILLER
+ 	default n
+ 	---help---
+ 	  Lock Trebuchet launcher in memory and protect it from killing by LowMemoryKiller.
+	  Launcher is a part of Android UI. Unloading launcher from memory is unwanted for user experience. 
+	  Better don't kill it. This option locks Trebuchet in memory at runtime and protect it from killing by LowMemoryKiller.
+
+config LMK_LOCK_NOVA
+ 	bool "Lock Nova Launcher in memory"
+ 	depends on ANDROID_LOW_MEMORY_KILLER
+ 	default n
+ 	---help---
+ 	  Lock Nova Launcher in memory and protect it from killing by LowMemoryKiller.
+	  Launcher is a part of Android UI. Unloading launcher from memory is unwanted for user experience. 
+	  Better don't kill it. This option locks Nova Launcher in memory at runtime and protect it from killing by LowMemoryKiller.
+
+ 	  Nova is the highly customizable, performance driven, home screen replacement.
+  	  Accept no substitutes! Nova Launcher is the top launcher for modern Android, embracing full Material Design throughout.
+ 	  Nova Launcher replaces your home screen with one you control and can customize. Change icons, layouts, animations and more.
+
+config LMK_LOCK_GMS
+ 	bool "Lock Google Play Services in memory"
+ 	depends on ANDROID_LOW_MEMORY_KILLER
+ 	default n
+ 	---help---
+ 	  Google Play Services is a framework, which provides Google Services API for applications and MUST stay background.
+	  At the same time GMS is a huge application, which utilize ~20M memory at runtime, but very heavy to launch/restart for legacy devices.
+	  Better don't kill it. This option locks Google Play Services in memory at runtime and protect it from killing by LowMemoryKiller.
+
 
 config ANDROID_INTF_ALARM
 	bool "Android alarm driver"
