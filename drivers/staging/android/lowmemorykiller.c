@@ -86,8 +86,10 @@ static bool protected_apps(char *comm)
 #endif	
 			strcmp(comm, "ndroid.systemui") == 0)
 		return 1;
+	
 	return 0;
 }
+
 static int
 task_notify_func(struct notifier_block *self, unsigned long val, void *data);
 
@@ -218,7 +220,7 @@ static int lowmem_shrink(struct shrinker *s, struct shrink_control *sc)
 				continue;
 		}
 
-		if (protected_apps(p->comm))
+		if (!protected_apps(p->comm))
 		{
 			selected = p;
 			selected_tasksize = tasksize;
