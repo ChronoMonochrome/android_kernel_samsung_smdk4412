@@ -1054,6 +1054,8 @@ config MACH_MIDAS
 	select EXYNOS_DEV_PD
 	select EXYNOS4_SETUP_MFC
 	select MIDAS_COMMON
+	select KEXEC
+	select KEXEC_HARDBOOT
 	help
 	  Machine support for Samsung midas board
 
