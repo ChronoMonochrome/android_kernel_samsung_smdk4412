@@ -36,8 +36,8 @@
  * (to see the precise effective timeslice length of your workload,
  *  run vmstat and monitor the context-switches (cs) field)
  */
-unsigned int sysctl_sched_latency = 4000000ULL;
-unsigned int normalized_sysctl_sched_latency = 4000000ULL;
+unsigned int sysctl_sched_latency = 3000000ULL;
+unsigned int normalized_sysctl_sched_latency = 3000000ULL;
 
 /*
  * The initial- and re-scaling of tunables is configurable
@@ -95,7 +95,7 @@ const_debug unsigned int sysctl_sched_migration_cost = 400000UL;
  * distribution.
  * (default: 10msec)
  */
-unsigned int __read_mostly sysctl_sched_shares_window = 10000000UL;
+unsigned int __read_mostly sysctl_sched_shares_window = 6000000UL;
 
 static const struct sched_class fair_sched_class;
 
