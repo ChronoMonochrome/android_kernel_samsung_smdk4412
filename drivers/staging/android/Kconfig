@@ -107,6 +107,10 @@ config ANDROID_DOZE_HELPER
 	  Android Doze powesaving helper module. 
 	  Turns on full Doze mode when screen is off.
 
+config IO_PRIO_BOOST
+	bool "Boost IO priority of user interacting task"
+	default N
+
 config ANDROID_LOW_MEMORY_KILLER
 	bool "Android Low Memory Killer"
 	default N
