@@ -68,7 +68,7 @@ static char *iSerialNumber;
 module_param(iSerialNumber, charp, 0);
 MODULE_PARM_DESC(iSerialNumber, "SerialNumber string");
 
-static char composite_manufacturer[50];
+static char composite_manufacturer[136];
 
 /*-------------------------------------------------------------------------*/
 /**
