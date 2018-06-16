@@ -1488,7 +1488,7 @@ static void sched_ttwu_pending(void)
 
 void scheduler_ipi(void)
 {
-	if (llist_empty(&this_rq()->wake_list) && !got_nohz_idle_kick())
+	if (llist_empty_relaxed(&this_rq()->wake_list) && !got_nohz_idle_kick())
 		return;
 
 	/*

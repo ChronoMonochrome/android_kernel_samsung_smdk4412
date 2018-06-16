@@ -1918,7 +1918,7 @@ bool mem_cgroup_handle_oom(struct mem_cgroup *memcg, gfp_t mask, int order)
 
 	mem_cgroup_unmark_under_oom(memcg);
 
-	if (test_thread_flag(TIF_MEMDIE) || fatal_signal_pending(current))
+	if (test_thread_flag_relaxed(TIF_MEMDIE) || fatal_signal_pending(current))
 		return false;
 	/* Give chance to dying process */
 	schedule_timeout_uninterruptible(1);
@@ -2323,7 +2323,7 @@ static int __mem_cgroup_try_charge(struct mm_struct *mm,
 	 * in system level. So, allow to go ahead dying process in addition to
 	 * MEMDIE process.
 	 */
-	if (unlikely(test_thread_flag(TIF_MEMDIE)
+	if (unlikely(test_thread_flag_relaxed(TIF_MEMDIE)
 		     || fatal_signal_pending(current)))
 		goto bypass;
 
@@ -2947,7 +2947,7 @@ static void mem_cgroup_do_uncharge(struct mem_cgroup *memcg,
 	 * because we want to do uncharge as soon as possible.
 	 */
 
-	if (!batch->do_batch || test_thread_flag(TIF_MEMDIE))
+	if (!batch->do_batch || test_thread_flag_relaxed(TIF_MEMDIE))
 		goto direct_uncharge;
 
 	if (nr_pages > 1)
