@@ -39,16 +39,16 @@ static void turn_doze(bool trigger)
 	if(trigger)
 	{
 		printk("doze_hlp: entering Doze\n");
-		call_usermodehelper("/system/bin/dumpsys", argv1, envp, UMH_WAIT_EXEC);
+		call_usermodehelper("/system/bin/dumpsys", argv1, envp, UMH_NO_WAIT);
 		if(restrict_sensors)
-			call_usermodehelper("/system/bin/dumpsys", argv3, envp, UMH_WAIT_EXEC);
+			call_usermodehelper("/system/bin/dumpsys", argv3, envp, UMH_NO_WAIT);
 
 	}
 	else
 	{
-		call_usermodehelper("/system/bin/dumpsys", argv2, envp, UMH_WAIT_EXEC);
+		call_usermodehelper("/system/bin/dumpsys", argv2, envp, UMH_NO_WAIT);
 		if(restrict_sensors)
-			call_usermodehelper("/system/bin/dumpsys", argv4, envp, UMH_WAIT_EXEC);
+			call_usermodehelper("/system/bin/dumpsys", argv4, envp, UMH_NO_WAIT);
 
 		printk("doze_hlp: exiting Doze\n");
 	}
