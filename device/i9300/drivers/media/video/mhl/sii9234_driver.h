@@ -34,10 +34,6 @@
 #define __CONFIG_TMDS_OFFON_WORKAROUND__
 #endif
 
-#ifndef __CONFIG_USE_TIMER__
-#define __CONFIG_USE_TIMER__
-#endif
-
 #ifndef CONFIG_SII9234_RCP
 #define CONFIG_SII9234_RCP		1
 #include <linux/input.h>
@@ -47,6 +43,8 @@
 #ifdef CONFIG_SAMSUNG_MHL_9290
 #include <linux/30pin_con.h>
 #endif
+
+#include <linux/switch.h>
 
 #ifdef CONFIG_SAMSUNG_SMARTDOCK
 #define ADC_SMARTDOCK   0x10 /* 40.2K ohm */
@@ -369,12 +367,19 @@
 #define VBUS_NONE			0
 #define VBUS_USB			1
 
-#define SS_MHL_DONGLE_DEV_ID		0x1134
-#define SS_MHL_DOCK_DEV_ID		0x1234
+#ifdef __MHL_NEW_CBUS_MSC_CMD__
+#	define SS_MHL_DONGLE_DEV_ID		0x1134
+#	define SS_MHL_DOCK_DEV_ID		0x1234
+#endif
 
 /* wolverin*/
 #define	INTR_CBUS1_DESIRED_MASK		(BIT2 | BIT3 | BIT4 | BIT5 | BIT6)
 #define	INTR_CBUS2_DESIRED_MASK		(BIT2 | BIT3) /* (BIT0| BIT2 | BIT3) */
+
+enum hpd_state {
+	LOW = 0,
+	HIGH
+};
 
 enum page_num {
 	PAGE0 = 0,
@@ -433,6 +438,14 @@ enum cbus_command {
 	CBUS_WRITE_BURST =      0x6C,
 	CBUS_GET_SC3_ERR_CODE =	0x6D,
 };
+
+enum mhl_vbus_type {
+	MHL_VBUS_TA_500mA = 0x00,
+	MHL_VBUS_TA_900mA = 0x01,
+	MHL_VBUS_TA_1500mA = 0x02,
+	MHL_VBUS_USB = 0x03,
+};
+
 #if 0
 enum mhl_status_enum_type {
 	NO_MHL_STATUS = 0x00,
@@ -490,8 +503,10 @@ struct device_cap {
 	u16 device_id;
 	u8 scratchpad_size;
 	u8 int_stat_size;
+#ifdef __MHL_NEW_CBUS_MSC_CMD__
 	u8 reserved_data; /*Only SAMSUNG use this offset
 			  as a method to distinguish TA and USB*/
+#endif
 
 	bool rcp_support;
 	bool rap_support;
@@ -503,6 +518,7 @@ struct sii9234_data {
 	wait_queue_head_t		wq;
 #ifdef CONFIG_SAMSUNG_MHL_9290
 	struct notifier_block           acc_con_nb;
+	struct work_struct		tmds_reset_work;
 #endif
 	bool				claimed;
 	u8				cbus_connected; /* wolverin */
@@ -517,15 +533,18 @@ struct sii9234_data {
 	struct cbus_packet		cbus_pkt;
 	struct cbus_packet		cbus_pkt_buf[CBUS_PKT_BUF_COUNT];
 	struct device_cap		devcap;
+	u8 plim; /* charger info of MHL 2.0 */
 	struct mhl_tx_status_type mhl_status_value;
 #ifdef CONFIG_SII9234_RCP
 	u8 error_key;
 	struct input_dev		*input_dev;
 #endif
+#ifdef __MHL_NEW_CBUS_MSC_CMD__
 	struct completion		msc_complete;
 	struct work_struct		msc_work;
 	int				vbus_owner;
 	int				dcap_ready_status;
+#endif
 
 	struct work_struct		mhl_restart_work;
 	struct work_struct		mhl_end_work;
@@ -534,9 +553,6 @@ struct sii9234_data {
 	struct work_struct		mhl_d3_work;
 #ifdef __CONFIG_TMDS_OFFON_WORKAROUND__
 	struct work_struct		tmds_offon_work;
-#endif
-#ifdef __CONFIG_USE_TIMER__
-	struct timer_list		cbus_command_timer;
 #endif
 #ifdef CONFIG_MACH_MIDAS
 	struct wake_lock		mhl_wake_lock;
@@ -564,8 +580,10 @@ struct sii9234_data {
 	bool				wake_pulse_completed;
 	unsigned int			wp_cnt;
 	struct hrtimer			pulse_timer;
+	struct switch_dev		mhl_event_switch;
 };
 
+#ifdef __MHL_NEW_CBUS_MSC_CMD__
 struct msc_packet {
 	enum cbus_command	command;
 	u8	offset;
@@ -578,19 +596,26 @@ static int sii9234_msc_req_locked(struct sii9234_data *sii9234,
 					struct msc_packet *msc_pkt);
 static int sii9234_enqueue_msc_work(struct sii9234_data *sii9234, u8 command,
 		u8 offset, u8 data_1, u8 data_2);
+#endif
 static struct device *sii9244_mhldev;
 extern void mhl_hpd_handler(bool state);
 static int sii9234_detection_callback(void);
 static void sii9234_cancel_callback(void);
 static u8 sii9234_tmds_control(struct sii9234_data *sii9234, bool enable);
+static bool cbus_command_request(struct sii9234_data *sii9234,
+				 enum cbus_command command,
+				 u8 offset, u8 data);
+static void cbus_command_response(struct sii9234_data *sii9234);
 static irqreturn_t sii9234_irq_thread(int irq, void *data);
 
 #ifdef CONFIG_SAMSUNG_MHL_9290
 static int sii9234_30pin_init_for_9290(struct sii9234_data *sii9234);
+void sii9234_tmds_reset(void);
+void sii9234_tmds_reset_work(struct work_struct *work);
 #endif
 
 #ifdef CONFIG_SAMSUNG_USE_11PIN_CONNECTOR
-#	if !defined(CONFIG_MACH_P4NOTE)
+#	if !defined(CONFIG_MACH_P4NOTE) && !defined(CONFIG_MACH_TAB3) && !defined(CONFIG_MACH_SP7160LTE)
 extern int max77693_muic_get_status1_adc1k_value(void);
 #endif
 #endif
