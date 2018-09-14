@@ -273,8 +273,8 @@ void s5p_mixer_ctrl_init_grp_layer(enum s5p_mixer_layer layer)
 	struct s5ptvfb_user_scaling scaling;
 
 #ifdef CLOCK_GATING_ON_EARLY_SUSPEND
-	if (suspend_status) {
-		tvout_dbg("driver is suspend_status\n");
+	if (fb_suspended) {
+		tvout_dbg("driver is fb_suspended\n");
 		return;
 	} else
 #endif
@@ -333,8 +333,8 @@ int s5p_mixer_ctrl_set_pixel_format(
 	s5p_mixer_ctrl_private.layer[layer].format = format;
 
 #ifdef CLOCK_GATING_ON_EARLY_SUSPEND
-	if (suspend_status) {
-		tvout_dbg("driver is suspend_status\n");
+	if (fb_suspended) {
+		tvout_dbg("driver is fb_suspended\n");
 		return 0;
 	} else
 #endif
@@ -364,8 +364,8 @@ int s5p_mixer_ctrl_enable_layer(enum s5p_mixer_layer layer)
 		return -1;
 	}
 #ifdef CLOCK_GATING_ON_EARLY_SUSPEND
-	if (suspend_status) {
-		tvout_dbg("driver is suspend_status\n");
+	if (fb_suspended) {
+		tvout_dbg("driver is fb_suspended\n");
 		return 0;
 	}
 #endif
@@ -415,8 +415,8 @@ int s5p_mixer_ctrl_disable_layer(enum s5p_mixer_layer layer)
 	}
 
 #ifdef CLOCK_GATING_ON_EARLY_SUSPEND
-	if (suspend_status) {
-		tvout_dbg("driver is suspend_status\n");
+	if (fb_suspended) {
+		tvout_dbg("driver is fb_suspended\n");
 		return 0;
 	}
 #endif
@@ -574,8 +574,8 @@ int s5p_mixer_ctrl_set_dst_win_pos(enum s5p_mixer_layer layer,
 	s5p_mixer_ctrl_private.layer[layer].dst_y = (u32)dst_y;
 
 #ifdef CLOCK_GATING_ON_EARLY_SUSPEND
-	if (suspend_status) {
-		tvout_dbg("driver is suspend_status\n");
+	if (fb_suspended) {
+		tvout_dbg("driver is fb_suspended\n");
 		return 0;
 	}
 #endif
@@ -602,8 +602,8 @@ int s5p_mixer_ctrl_set_src_win_pos(enum s5p_mixer_layer layer,
 	s5p_mixer_ctrl_private.layer[layer].height = h;
 
 #ifdef CLOCK_GATING_ON_EARLY_SUSPEND
-	if (suspend_status) {
-		tvout_dbg("driver is suspend_status\n");
+	if (fb_suspended) {
+		tvout_dbg("driver is fb_suspended\n");
 		return 0;
 	} else
 #endif
@@ -629,8 +629,8 @@ int s5p_mixer_ctrl_set_buffer_address(enum s5p_mixer_layer layer,
 	s5p_mixer_ctrl_private.layer[layer].fb_addr = start_addr;
 
 #ifdef CLOCK_GATING_ON_EARLY_SUSPEND
-	if (suspend_status) {
-		tvout_dbg("driver is suspend_status\n");
+	if (fb_suspended) {
+		tvout_dbg("driver is fb_suspended\n");
 		return 0;
 	}
 #endif
@@ -654,8 +654,8 @@ int s5p_mixer_ctrl_set_chroma_key(enum s5p_mixer_layer layer,
 	s5p_mixer_ctrl_private.layer[layer].chroma_key = chroma.key;
 
 #ifdef CLOCK_GATING_ON_EARLY_SUSPEND
-	if (suspend_status) {
-		tvout_dbg("driver is suspend_status\n");
+	if (fb_suspended) {
+		tvout_dbg("driver is fb_suspended\n");
 		return 0;
 	}
 #endif
@@ -761,8 +761,8 @@ int s5p_mixer_ctrl_set_alpha_blending(enum s5p_mixer_layer layer,
 		tvout_dbg("pixel blending\n");
 		s5p_mixer_ctrl_private.layer[layer].pixel_blend = true;
 #ifdef CLOCK_GATING_ON_EARLY_SUSPEND
-		if (suspend_status) {
-			tvout_dbg("driver is suspend_status\n");
+		if (fb_suspended) {
+			tvout_dbg("driver is fb_suspended\n");
 			return 0;
 		}
 #endif
@@ -775,8 +775,8 @@ int s5p_mixer_ctrl_set_alpha_blending(enum s5p_mixer_layer layer,
 		s5p_mixer_ctrl_private.layer[layer].layer_blend = true;
 		s5p_mixer_ctrl_private.layer[layer].alpha = alpha;
 #ifdef CLOCK_GATING_ON_EARLY_SUSPEND
-		if (suspend_status) {
-			tvout_dbg("driver is suspend_status\n");
+		if (fb_suspended) {
+			tvout_dbg("driver is fb_suspended\n");
 			return 0;
 		}
 #endif
@@ -791,8 +791,8 @@ int s5p_mixer_ctrl_set_alpha_blending(enum s5p_mixer_layer layer,
 		s5p_mixer_ctrl_private.layer[layer].pixel_blend = false;
 		s5p_mixer_ctrl_private.layer[layer].layer_blend = false;
 #ifdef CLOCK_GATING_ON_EARLY_SUSPEND
-		if (suspend_status) {
-			tvout_dbg("driver is suspend_status\n");
+		if (fb_suspended) {
+			tvout_dbg("driver is fb_suspended\n");
 			return 0;
 		}
 #endif
@@ -832,8 +832,8 @@ int s5p_mixer_ctrl_scaling(enum s5p_mixer_layer layer,
 	s5p_mixer_ctrl_private.layer[layer].hor = scaling.hor;
 
 #ifdef CLOCK_GATING_ON_EARLY_SUSPEND
-	if (suspend_status) {
-		tvout_dbg("driver is suspend_status\n");
+	if (fb_suspended) {
+		tvout_dbg("driver is fb_suspended\n");
 		return 0;
 	}
 #endif
@@ -899,8 +899,8 @@ void s5p_mixer_ctrl_stop(void)
 	tvout_dbg("running(%d)\n", s5p_mixer_ctrl_private.running);
 	if (s5p_mixer_ctrl_private.running) {
 #ifdef CLOCK_GATING_ON_EARLY_SUSPEND
-		if (suspend_status) {
-			tvout_dbg("driver is suspend_status\n");
+		if (fb_suspended) {
+			tvout_dbg("driver is fb_suspended\n");
 		} else
 #endif
 		{
