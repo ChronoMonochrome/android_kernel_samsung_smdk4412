@@ -15,6 +15,7 @@
 #include <linux/clk.h>
 #include <linux/spinlock.h>
 #include <linux/fb.h>
+#include <linux/notifier.h>
 
 #include <plat/clock.h>
 #include <plat/clock-clksrc.h>
@@ -80,7 +81,8 @@ struct lcdfreq_info {
 
 	int			blank;
 
-	struct early_suspend	early_suspend;
+	struct notifier_block 		fb_notif;
+	bool 				fb_suspended;
 };
 
 static inline struct lcdfreq_info *dev_get_lcdfreq(struct device *dev)
@@ -393,10 +395,12 @@ static struct attribute_group lcdfreq_attr_group = {
 	.attrs = lcdfreq_attributes,
 };
 
-static void lcdfreq_early_suspend(struct early_suspend *h)
+static void lcdfreq_fb_suspend(struct lcdfreq_info *lcdfreq)
 {
-	struct lcdfreq_info *lcdfreq =
-		container_of(h, struct lcdfreq_info, early_suspend);
+	if (lcdfreq->fb_suspended)
+		return;
+
+	lcdfreq->fb_suspended = true;
 
 	dev_info(lcdfreq->dev, "%s\n", __func__);
 
@@ -409,10 +413,12 @@ static void lcdfreq_early_suspend(struct early_suspend *h)
 	return;
 }
 
-static void lcdfreq_late_resume(struct early_suspend *h)
+static void lcdfreq_fb_resume(struct lcdfreq_info *lcdfreq)
 {
-	struct lcdfreq_info *lcdfreq =
-		container_of(h, struct lcdfreq_info, early_suspend);
+	if (!lcdfreq->fb_suspended)
+		return;
+
+	lcdfreq->fb_suspended = false;
 
 	dev_info(lcdfreq->dev, "%s\n", __func__);
 
@@ -423,7 +429,32 @@ static void lcdfreq_late_resume(struct early_suspend *h)
 	return;
 }
 
-#if 0
+int lcdfreq_fb_notifier_callback(struct notifier_block *self,
+				unsigned long event, void *data)
+{
+	struct fb_event *evdata = data;
+	int *blank;
+	struct lcdfreq_info *lcdfreq = container_of(self, struct lcdfreq_info, fb_notif);
+	if (evdata && evdata->data && lcdfreq) {
+		if (event == FB_EVENT_BLANK) {
+			blank = evdata->data;
+			switch (*blank) {
+				case FB_BLANK_UNBLANK:
+				case FB_BLANK_NORMAL:
+				case FB_BLANK_VSYNC_SUSPEND:
+				case FB_BLANK_HSYNC_SUSPEND:
+					lcdfreq_fb_resume(lcdfreq);
+					break;
+				default:
+				case FB_BLANK_POWERDOWN:
+					lcdfreq_fb_suspend(lcdfreq);
+					break;
+			}
+		}
+	}
+	return 0;
+}
+
 static int lcdfreq_pm_notifier_event(struct notifier_block *this,
 	unsigned long event, void *ptr)
 {
@@ -450,7 +481,6 @@ static int lcdfreq_pm_notifier_event(struct notifier_block *this,
 	}
 	return NOTIFY_DONE;
 }
-#endif
 
 static int lcdfreq_reboot_notify(struct notifier_block *this,
 		unsigned long code, void *unused)
@@ -578,10 +608,10 @@ static int lcdfreq_probe(struct platform_device *pdev)
 	info->reboot_noti.notifier_call = lcdfreq_reboot_notify;
 	register_reboot_notifier(&info->reboot_noti);
 
-	info->early_suspend.suspend = lcdfreq_early_suspend;
-	info->early_suspend.resume = lcdfreq_late_resume;
-	info->early_suspend.level = EARLY_SUSPEND_LEVEL_STOP_DRAWING + 1;
-	register_early_suspend(&info->early_suspend);
+	info->fb_suspended = false;
+    info->fb_notif.notifier_call = lcdfreq_fb_notifier_callback;
+    fb_register_client(&info->fb_notif);
+
 
 	info->ielcd_reg = ioremap(IELCD_REG_BASE, IELCD_MAP_SIZE);
 	info->enable = true;
