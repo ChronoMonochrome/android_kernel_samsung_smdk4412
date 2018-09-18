@@ -1006,16 +1006,21 @@ static const struct attribute_group *mdnie_groups[] = {
 };
 
 #ifdef CONFIG_PM
-#if defined(CONFIG_HAS_EARLYSUSPEND)
-#if defined(CONFIG_FB_MDNIE_PWM)
-static void mdnie_early_suspend(struct early_suspend *h)
+#if defined(CONFIG_FB)
+static void mdnie_fb_suspend(struct mdnie_info *mdnie)
 {
-	struct mdnie_info *mdnie = container_of(h, struct mdnie_info, early_suspend);
+	if (mdnie->fb_suspended)
+		return;
+
+	mdnie->fb_suspended = true;
+
+ 	dev_info(mdnie->dev, "+%s\n", __func__);
+
+	printk("%s: scenario:%d accessibility:%d", __func__, mdnie->scenario, mdnie->accessibility);
+#if defined(CONFIG_FB_MDNIE_PWM)
 	struct lcd_platform_data *pd = mdnie->lcd_pd;
 
-	dev_info(mdnie->dev, "+%s\n", __func__);
-
-	mdnie->bd_enable = FALSE;
+ 	mdnie->bd_enable = FALSE;
 
 	if (mdnie->enable)
 		mdnie_pwm_control(mdnie, 0);
@@ -1023,22 +1028,23 @@ static void mdnie_early_suspend(struct early_suspend *h)
 	if (pd && pd->power_on)
 		pd->power_on(NULL, 0);
 
+#endif
 	dev_info(mdnie->dev, "-%s\n", __func__);
 
 	return;
 }
-#endif
 
-static void mdnie_late_resume(struct early_suspend *h)
+static void mdnie_fb_resume(struct mdnie_info *mdnie)
 {
-	struct mdnie_info *mdnie = container_of(h, struct mdnie_info, early_suspend);
-#if defined(CONFIG_FB_MDNIE_PWM)
-	struct lcd_platform_data *pd = mdnie->lcd_pd;
-#endif
+	if (!mdnie->fb_suspended)
+		return;
+
+	mdnie->fb_suspended = false;
 
 	dev_info(mdnie->dev, "+%s\n", __func__);
 
 #if defined(CONFIG_FB_MDNIE_PWM)
+	struct lcd_platform_data *pd = mdnie->lcd_pd;
 	if (mdnie->enable)
 		mdnie_pwm_control(mdnie, 0);
 
@@ -1052,7 +1058,6 @@ static void mdnie_late_resume(struct early_suspend *h)
 
 	mdnie->bd_enable = TRUE;
 #endif
-
 	mdnie_update(mdnie);
 
 	dev_info(mdnie->dev, "-%s\n", __func__);
@@ -1060,6 +1065,32 @@ static void mdnie_late_resume(struct early_suspend *h)
 	return;
 }
 #endif
+
+static int fb_notifier_callback(struct notifier_block *self,
+				unsigned long event, void *data)
+{
+	struct fb_event *evdata = data;
+	int *blank;
+	struct mdnie_info *mdnie = container_of(self, struct mdnie_info, fb_notif);
+	if (evdata && evdata->data && mdnie) {
+		if (event == FB_EVENT_BLANK) {
+			blank = evdata->data;
+			switch (*blank) {
+				case FB_BLANK_UNBLANK:
+				case FB_BLANK_NORMAL:
+				case FB_BLANK_VSYNC_SUSPEND:
+				case FB_BLANK_HSYNC_SUSPEND:
+					mdnie_fb_resume(mdnie);
+					break;
+				default:
+				case FB_BLANK_POWERDOWN:
+					mdnie_fb_suspend(mdnie);
+					break;
+			}
+		}
+	}
+	return 0;
+}
 #endif
 
 static int mdnie_probe(struct platform_device *pdev)
