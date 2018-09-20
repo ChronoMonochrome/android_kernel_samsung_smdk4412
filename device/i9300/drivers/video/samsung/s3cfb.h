@@ -18,8 +18,11 @@
 #include <linux/mutex.h>
 #include <linux/fb.h>
 #ifdef CONFIG_HAS_WAKELOCK
+#ifdef CONFIG_FB
+#include <linux/notifier.h>
+#include <linux/fb.h>
+#endif
 #include <linux/wakelock.h>
-#include <linux/earlysuspend.h>
 #endif
 #include <plat/fb-s5p.h>
 #endif
@@ -239,7 +242,10 @@ struct s3cfb_global {
 	int			timeline_max;
 	unsigned int		support_fence;
 #ifdef CONFIG_HAS_WAKELOCK
-	struct early_suspend	early_suspend;
+#ifdef CONFIG_FB
+	struct notifier_block 	fb_notif;
+	bool 			fb_suspended;
+#endif
 	struct wake_lock	idle_lock;
 #endif
 #ifdef FEATURE_BUSFREQ_LOCK
@@ -492,8 +498,8 @@ extern void s3cfb_set_lcd_info(struct s3cfb_global *ctrl);
 
 #ifdef CONFIG_FB_S5P_MIPI_DSIM
 extern int s3cfb_vsync_status_check(void);
-extern void s5p_dsim_early_suspend(void);
-extern void s5p_dsim_late_resume(void);
+extern void s5p_dsim_fb_suspend(void);
+extern void s5p_dsim_fb_resume(void);
 extern void set_dsim_hs_clk_toggle_count(u8 count);
 extern void set_dsim_lcd_enabled(u8 enable);
 #endif
