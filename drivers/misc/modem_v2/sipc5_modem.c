@@ -33,13 +33,12 @@
 #include <linux/delay.h>
 #include <linux/wakelock.h>
 
-#include <linux/platform_data/modem_v2.h>
+#include <linux/platform_data/modem.h>
 #include "modem_prj.h"
 #include "modem_variation.h"
 #include "modem_utils.h"
 
 #define FMT_WAKE_TIME   (HZ/2)
-#define RFS_WAKE_TIME   (HZ*3)
 #define RAW_WAKE_TIME   (HZ*6)
 
 static struct modem_shared *create_modem_shared_data(void)
@@ -129,17 +128,17 @@ static struct io_device *create_io_device(struct modem_io_t *io_t,
 	iod->format = io_t->format;
 	iod->io_typ = io_t->io_type;
 	iod->link_types = io_t->links;
+	iod->app = io_t->app;
 	iod->net_typ = pdata->modem_net;
 	iod->use_handover = pdata->use_handover;
 	iod->ipc_version = pdata->ipc_version;
-	iod->attr = io_t->attr;
 	atomic_set(&iod->opened, 0);
 
 	/* link between io device and modem control */
 	iod->mc = modemctl;
 	if (iod->format == IPC_FMT)
 		modemctl->iod = iod;
-	if (iod->format == IPC_BOOT && iod->id == 0) {
+	if (iod->format == IPC_BOOT) {
 		modemctl->bootd = iod;
 		mif_info("Bood device = %s\n", iod->name);
 	}
@@ -170,6 +169,7 @@ static int attach_devices(struct io_device *iod, enum modem_link tx_link)
 {
 	struct modem_shared *msd = iod->msd;
 	struct link_device *ld;
+	unsigned ch;
 
 	/* find link type for this io device */
 	list_for_each_entry(ld, &msd->link_dev_list, list) {
@@ -198,32 +198,28 @@ static int attach_devices(struct io_device *iod, enum modem_link tx_link)
 
 	switch (iod->format) {
 	case IPC_FMT:
-		wake_lock_init(&iod->wakelock, WAKE_LOCK_SUSPEND, iod->name);
+		wakeup_source_init(&iod->wakelock, iod->name);
 		iod->waketime = FMT_WAKE_TIME;
 		break;
 
 	case IPC_RAW:
-		wake_lock_init(&iod->wakelock, WAKE_LOCK_SUSPEND, iod->name);
+		wakeup_source_init(&iod->wakelock, iod->name);
 		iod->waketime = RAW_WAKE_TIME;
 		break;
 
 	case IPC_RFS:
-		wake_lock_init(&iod->wakelock, WAKE_LOCK_SUSPEND, iod->name);
-		iod->waketime = RFS_WAKE_TIME;
+		wakeup_source_init(&iod->wakelock, iod->name);
+		iod->waketime = RAW_WAKE_TIME;
 		break;
 
 	case IPC_MULTI_RAW:
-		wake_lock_init(&iod->wakelock, WAKE_LOCK_SUSPEND, iod->name);
+		wakeup_source_init(&iod->wakelock, iod->name);
 		iod->waketime = RAW_WAKE_TIME;
 		break;
 
 	case IPC_BOOT:
-		wake_lock_init(&iod->wakelock, WAKE_LOCK_SUSPEND, iod->name);
+		wakeup_source_init(&iod->wakelock, iod->name);
 		iod->waketime = RAW_WAKE_TIME;
-		break;
-
-	case IPC_RAW_NCM:
-		wake_lock_init(&iod->wakelock, WAKE_LOCK_SUSPEND, iod->name);
 		break;
 
 	default:
@@ -310,17 +306,33 @@ static void modem_shutdown(struct platform_device *pdev)
 {
 	struct device *dev = &pdev->dev;
 	struct modem_ctl *mc = dev_get_drvdata(dev);
+	struct utc_time utc;
+
 	mc->ops.modem_off(mc);
 	mc->phone_state = STATE_OFFLINE;
+
+	get_utc_time(&utc);
+	mif_info("%s: at [%02d:%02d:%02d.%03d]\n",
+		mc->name, utc.hour, utc.min, utc.sec, utc.msec);
 }
 
 static int modem_suspend(struct device *pdev)
 {
+#ifndef CONFIG_SAMSUNG_PRODUCT_SHIP
+	struct utc_time utc;
+#endif
+
 #ifndef CONFIG_LINK_DEVICE_HSIC
 	struct modem_ctl *mc = dev_get_drvdata(pdev);
 
-	if (mc->gpio_pda_active)
+	if (mc->gpio_pda_active) {
 		gpio_set_value(mc->gpio_pda_active, 0);
+#ifndef CONFIG_SAMSUNG_PRODUCT_SHIP
+		get_utc_time(&utc);
+		mif_info("%s: at [%02d:%02d:%02d.%03d]\n",
+			mc->name, utc.hour, utc.min, utc.sec, utc.msec);
+#endif
+	}
 #endif
 
 	return 0;
@@ -328,19 +340,29 @@ static int modem_suspend(struct device *pdev)
 
 static int modem_resume(struct device *pdev)
 {
+#ifndef CONFIG_SAMSUNG_PRODUCT_SHIP
+	struct utc_time utc;
+#endif
+
 #ifndef CONFIG_LINK_DEVICE_HSIC
 	struct modem_ctl *mc = dev_get_drvdata(pdev);
 
-	if (mc->gpio_pda_active)
+	if (mc->gpio_pda_active) {
 		gpio_set_value(mc->gpio_pda_active, 1);
+#ifndef CONFIG_SAMSUNG_PRODUCT_SHIP
+		get_utc_time(&utc);
+		mif_info("%s: at [%02d:%02d:%02d.%03d]\n",
+			mc->name, utc.hour, utc.min, utc.sec, utc.msec);
+#endif
+	}
 #endif
 
 	return 0;
 }
 
 static const struct dev_pm_ops modem_pm_ops = {
-	.suspend    = modem_suspend,
-	.resume     = modem_resume,
+	.suspend = modem_suspend,
+	.resume = modem_resume,
 };
 
 static struct platform_driver modem_driver = {
@@ -348,7 +370,7 @@ static struct platform_driver modem_driver = {
 	.shutdown = modem_shutdown,
 	.driver = {
 		.name = "mif_sipc5",
-		.pm   = &modem_pm_ops,
+		.pm = &modem_pm_ops,
 	},
 };
 
