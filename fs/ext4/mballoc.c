@@ -2033,11 +2033,7 @@ repeat:
 		group = ac->ac_g_ex.fe_group;
 
 		for (i = 0; i < ngroups; group++, i++) {
-			/*
-			 * Artificially restricted ngroups for non-extent
-			 * files makes group > ngroups possible on first loop.
-			 */
-			if (group >= ngroups)
+			if (group == ngroups)
 				group = 0;
 
 			/* This now checks without needing the buddy page */
