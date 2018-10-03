@@ -300,7 +300,8 @@ static int nfs4_handle_exception(struct nfs_server *server, int errorcode, struc
 			dprintk("%s ERROR: %d Reset session\n", __func__,
 				errorcode);
 			nfs4_schedule_session_recovery(clp->cl_session);
-			goto wait_on_recovery;
+			exception->retry = 1;
+			break;
 #endif /* defined(CONFIG_NFS_V4_1) */
 		case -NFS4ERR_FILE_OPEN:
 			if (exception->timeout > HZ) {
