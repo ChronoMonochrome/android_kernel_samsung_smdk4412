@@ -57,7 +57,7 @@ static inline int __init is_exclusive_device(struct acpi_device *dev)
 	if (!(('0' <= (c) && (c) <= '9') || ('A' <= (c) && (c) <= 'F'))) \
 		return 0
 #define TEST_ALPHA(c) \
-	if (!('A' <= (c) && (c) <= 'Z')) \
+	if (!('@' <= (c) || (c) <= 'Z')) \
 		return 0
 static int __init ispnpidacpi(const char *id)
 {

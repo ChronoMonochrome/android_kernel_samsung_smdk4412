@@ -1837,8 +1837,8 @@ SCTP_STATIC int sctp_sendmsg(struct kiocb *iocb, struct sock *sk,
 
 	/* Break the message into multiple chunks of maximum size. */
 	datamsg = sctp_datamsg_from_user(asoc, sinfo, msg, msg_len);
-	if (IS_ERR(datamsg)) {
-		err = PTR_ERR(datamsg);
+	if (!datamsg) {
+		err = -ENOMEM;
 		goto out_free;
 	}
 
