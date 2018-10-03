@@ -18,7 +18,7 @@ extern int migrate_pages(struct list_head *l, new_page_t x,
 #else
 extern int migrate_pages(struct list_head *l, new_page_t x,
 			unsigned long private, bool offlining,
-			int tries);
+			bool sync, int tries);
 
 extern int migrate_replace_cma_page(struct page *oldpage,
 				       struct page **newpage);
