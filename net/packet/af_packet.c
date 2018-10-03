@@ -1349,15 +1349,13 @@ static int packet_release(struct socket *sock)
 
 	packet_flush_mclist(sk);
 
-	if (po->rx_ring.pg_vec) {
-		memset(&req, 0, sizeof(req));
-		packet_set_ring(sk, &req, 1, 0);
-	}
+	memset(&req, 0, sizeof(req));
 
-	if (po->tx_ring.pg_vec) {
-		memset(&req, 0, sizeof(req));
+	if (po->rx_ring.pg_vec)
+		packet_set_ring(sk, &req, 1, 0);
+
+	if (po->tx_ring.pg_vec)
 		packet_set_ring(sk, &req, 1, 1);
-	}
 
 	synchronize_net();
 	/*
