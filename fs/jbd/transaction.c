@@ -1955,9 +1955,7 @@ retry:
 			spin_unlock(&journal->j_list_lock);
 			jbd_unlock_bh_state(bh);
 			spin_unlock(&journal->j_state_lock);
-			unlock_buffer(bh);
 			log_wait_commit(journal, tid);
-			lock_buffer(bh);
 			goto retry;
 		}
 		/*
