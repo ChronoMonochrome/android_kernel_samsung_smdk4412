@@ -1298,8 +1298,8 @@ int queue_delayed_work_on(int cpu, struct workqueue_struct *wq,
 	if (!test_and_set_bit(WORK_STRUCT_PENDING_BIT, work_data_bits(work))) {
 		unsigned int lcpu;
 
-		WARN_ON_ONCE(timer_pending(timer));
-		WARN_ON_ONCE(!list_empty(&work->entry));
+		BUG_ON(timer_pending(timer));
+		BUG_ON(!list_empty(&work->entry));
 
 		timer_stats_timer_set_start_info(&dwork->timer);
 
