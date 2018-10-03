@@ -2086,42 +2086,6 @@ restart:
 	throttle_vm_writeout(sc->gfp_mask);
 }
 
-/* Returns true if compaction should go ahead for a high-order request */
-static inline bool compaction_ready(struct zone *zone, struct scan_control *sc)
-{
-	unsigned long balance_gap, watermark;
-	bool watermark_ok;
-
-	/* Do not consider compaction for orders reclaim is meant to satisfy */
-	if (sc->order <= PAGE_ALLOC_COSTLY_ORDER)
-		return false;
-
-	/*
-	 * Compaction takes time to run and there are potentially other
-	 * callers using the pages just freed. Continue reclaiming until
-	 * there is a buffer of free pages available to give compaction
-	 * a reasonable chance of completing and allocating the page
-	 */
-	balance_gap = min(low_wmark_pages(zone),
-		(zone->present_pages + KSWAPD_ZONE_BALANCE_GAP_RATIO-1) /
-			KSWAPD_ZONE_BALANCE_GAP_RATIO);
-	watermark = high_wmark_pages(zone) + balance_gap + (2UL << sc->order);
-	watermark_ok = zone_watermark_ok_safe(zone, 0, watermark, 0, 0);
-
-	/*
-	 * If compaction is deferred, reclaim up to a point where
-	 * compaction will have a chance of success when re-enabled
-	 */
-	if (compaction_deferred(zone))
-		return watermark_ok;
-
-	/* If compaction is not ready to start, keep reclaiming */
-	if (!compaction_suitable(zone, sc->order))
-		return false;
-
-	return watermark_ok;
-}
-
 /*
  * This is the direct reclaim path, for page-allocating processes.  We only
  * try to reclaim pages from zones which will satisfy the caller's allocation
@@ -2139,9 +2103,8 @@ static inline bool compaction_ready(struct zone *zone, struct scan_control *sc)
  * scan then give up on it.
  *
  * This function returns true if a zone is being reclaimed for a costly
- * high-order allocation and compaction is ready to begin. This indicates to
- * the caller that it should consider retrying the allocation instead of
- * further reclaim.
+ * high-order allocation and compaction is either ready to begin or deferred.
+ * This indicates to the caller that it should retry the allocation or fail.
  */
 static bool shrink_zones(int priority, struct zonelist *zonelist,
 					struct scan_control *sc)
@@ -2150,7 +2113,7 @@ static bool shrink_zones(int priority, struct zonelist *zonelist,
 	struct zone *zone;
 	unsigned long nr_soft_reclaimed;
 	unsigned long nr_soft_scanned;
-	bool aborted_reclaim = false;
+	bool should_abort_reclaim = false;
 
 	for_each_zone_zonelist_nodemask(zone, z, zonelist,
 					gfp_zone(sc->gfp_mask), sc->nodemask) {
@@ -2175,8 +2138,10 @@ static bool shrink_zones(int priority, struct zonelist *zonelist,
 				 * noticable problem, like transparent huge page
 				 * allocations.
 				 */
-				if (compaction_ready(zone, sc)) {
-					aborted_reclaim = true;
+				if (sc->order > PAGE_ALLOC_COSTLY_ORDER &&
+					(compaction_suitable(zone, sc->order) ||
+					 compaction_deferred(zone))) {
+					should_abort_reclaim = true;
 					continue;
 				}
 			}
@@ -2198,7 +2163,7 @@ static bool shrink_zones(int priority, struct zonelist *zonelist,
 		shrink_zone(priority, zone, sc);
 	}
 
-	return aborted_reclaim;
+	return should_abort_reclaim;
 }
 
 static bool zone_reclaimable(struct zone *zone)
@@ -2252,7 +2217,6 @@ static unsigned long do_try_to_free_pages(struct zonelist *zonelist,
 	struct zoneref *z;
 	struct zone *zone;
 	unsigned long writeback_threshold;
-	bool aborted_reclaim;
 
 	get_mems_allowed();
 	delayacct_freepages_start();
@@ -2264,7 +2228,8 @@ static unsigned long do_try_to_free_pages(struct zonelist *zonelist,
 		sc->nr_scanned = 0;
 		if (!priority)
 			disable_swap_token(sc->mem_cgroup);
-		aborted_reclaim = shrink_zones(priority, zonelist, sc);
+		if (shrink_zones(priority, zonelist, sc))
+			break;
 
 		/*
 		 * Don't shrink slabs when reclaiming memory from
@@ -2329,10 +2294,6 @@ out:
 	 */
 	if (oom_killer_disabled)
 		return 0;
-
-	/* Aborted reclaim to try compaction? don't OOM, then */
-	if (aborted_reclaim)
-		return 1;
 
 	/* top priority shrink_zones still had more to do? don't OOM, then */
 	if (scanning_global_lru(sc) && !all_unreclaimable(zonelist, sc))
