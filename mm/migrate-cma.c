@@ -251,7 +251,7 @@ static int is_failed_page(struct page *page, int pass, int tries)
  */
 static int migrate_page_move_mapping(struct address_space *mapping,
 		struct page *newpage, struct page *page,
-		int pass, int tries)
+		bool sync, int pass, int tries)
 {
 	int expected_count;
 	void **pslot;
@@ -453,13 +453,13 @@ EXPORT_SYMBOL(fail_migrate_page);
  */
 static int __migrate_page(struct address_space *mapping,
 		struct page *newpage, struct page *page,
-		int pass, int tries)
+		bool sync, int pass, int tries)
 {
 	int rc;
 
 	BUG_ON(PageWriteback(page));	/* Writeback must be complete */
 
-	rc = migrate_page_move_mapping(mapping, newpage, page, pass, tries);
+	rc = migrate_page_move_mapping(mapping, newpage, page, sync, pass, tries);
 
 	if (rc) {
 		if (is_failed_page(page, pass, tries)) {
@@ -474,9 +474,9 @@ static int __migrate_page(struct address_space *mapping,
 }
 
 int migrate_page(struct address_space *mapping,
-		struct page *newpage, struct page *page)
+		struct page *newpage, struct page *page, bool sync)
 {
-	return __migrate_page(mapping, newpage, page, 0, 0);
+	return __migrate_page(mapping, newpage, page, sync, 0, 0);
 }
 EXPORT_SYMBOL(migrate_page);
 
@@ -487,17 +487,17 @@ EXPORT_SYMBOL(migrate_page);
  * exist.
  */
 int buffer_migrate_page(struct address_space *mapping,
-		struct page *newpage, struct page *page)
+		struct page *newpage, struct page *page, bool sync)
 {
 	struct buffer_head *bh, *head;
 	int rc;
 
 	if (!page_has_buffers(page))
-		return migrate_page(mapping, newpage, page);
+		return migrate_page(mapping, newpage, page, sync);
 
 	head = page_buffers(page);
 
-	rc = migrate_page_move_mapping(mapping, newpage, page, 0, 0);
+	rc = migrate_page_move_mapping(mapping, newpage, page, sync, 0, 0);
 
 	if (rc)
 		return rc;
@@ -585,7 +585,7 @@ static int writeout(struct address_space *mapping, struct page *page)
  * Default handling if a filesystem does not provide a migration function.
  */
 static int fallback_migrate_page(struct address_space *mapping,
-	struct page *newpage, struct page *page, int pass, int tries)
+	struct page *newpage, struct page *page, bool sync, int pass, int tries)
 {
 	int rc;
 
@@ -611,7 +611,7 @@ static int fallback_migrate_page(struct address_space *mapping,
 		return -EAGAIN;
 	}
 
-	rc = __migrate_page(mapping, newpage, page, pass, tries);
+	rc = __migrate_page(mapping, newpage, page, sync, pass, tries);
 	if (rc) {
 		if (is_failed_page(page, pass, tries)) {
 			printk("%s[%d] 3 ", __func__, __LINE__);
@@ -655,7 +655,7 @@ static int move_to_new_page(struct page *newpage, struct page *page,
 
 	mapping = page_mapping(page);
 	if (!mapping) {
-		rc = __migrate_page(mapping, newpage, page, pass, tries);
+		rc = __migrate_page(mapping, newpage, page, sync, pass, tries);
 		if (rc) {
 			if (is_failed_page(page, pass, tries)) {
 				printk("%s[%d]: 1 ", __func__, __LINE__);
@@ -687,7 +687,7 @@ static int move_to_new_page(struct page *newpage, struct page *page,
 			 * path for page migration.
 			 */
 			rc = mapping->a_ops->migratepage(mapping,
-							newpage, page);
+							newpage, page, sync);
 			if (rc) {
 				if (is_failed_page(page, pass, tries)) {
 					printk(KERN_ERR "%s[%d]: 3 ",
@@ -697,7 +697,7 @@ static int move_to_new_page(struct page *newpage, struct page *page,
 			}
 		} else	{
 			rc = fallback_migrate_page(mapping, newpage, page,
-							 pass, tries);
+							 pass, tries, sync);
 			if (rc) {
 				if (is_failed_page(page, pass, tries)) {
 					printk(KERN_ERR "%s[%d]: 4 ",
