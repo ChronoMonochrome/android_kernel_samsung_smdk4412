@@ -1822,24 +1822,18 @@ struct page *
 alloc_pages_vma(gfp_t gfp, int order, struct vm_area_struct *vma,
 		unsigned long addr, int node)
 {
-	struct mempolicy *pol;
+	struct mempolicy *pol = get_vma_policy(current, vma, addr);
 	struct zonelist *zl;
 	struct page *page;
-	unsigned int cpuset_mems_cookie;
 
-retry_cpuset:
-	pol = get_vma_policy(current, vma, addr);
-	cpuset_mems_cookie = get_mems_allowed();
-
+	get_mems_allowed();
 	if (unlikely(pol->mode == MPOL_INTERLEAVE)) {
 		unsigned nid;
 
 		nid = interleave_nid(pol, vma, addr, PAGE_SHIFT + order);
 		mpol_cond_put(pol);
 		page = alloc_page_interleave(gfp, order, nid);
-		if (unlikely(!put_mems_allowed(cpuset_mems_cookie) && !page))
-			goto retry_cpuset;
-
+		put_mems_allowed();
 		return page;
 	}
 	zl = policy_zonelist(gfp, pol, node);
@@ -1850,8 +1844,7 @@ retry_cpuset:
 		struct page *page =  __alloc_pages_nodemask(gfp, order,
 						zl, policy_nodemask(gfp, pol));
 		__mpol_put(pol);
-		if (unlikely(!put_mems_allowed(cpuset_mems_cookie) && !page))
-			goto retry_cpuset;
+		put_mems_allowed();
 		return page;
 	}
 	/*
@@ -1859,8 +1852,7 @@ retry_cpuset:
 	 */
 	page = __alloc_pages_nodemask(gfp, order, zl,
 				      policy_nodemask(gfp, pol));
-	if (unlikely(!put_mems_allowed(cpuset_mems_cookie) && !page))
-		goto retry_cpuset;
+	put_mems_allowed();
 	return page;
 }
 
@@ -1887,14 +1879,11 @@ struct page *alloc_pages_current(gfp_t gfp, unsigned order)
 {
 	struct mempolicy *pol = current->mempolicy;
 	struct page *page;
-	unsigned int cpuset_mems_cookie;
 
 	if (!pol || in_interrupt() || (gfp & __GFP_THISNODE))
 		pol = &default_policy;
 
-retry_cpuset:
-	cpuset_mems_cookie = get_mems_allowed();
-
+	get_mems_allowed();
 	/*
 	 * No reference counting needed for current->mempolicy
 	 * nor system default_policy
@@ -1905,10 +1894,7 @@ retry_cpuset:
 		page = __alloc_pages_nodemask(gfp, order,
 				policy_zonelist(gfp, pol, numa_node_id()),
 				policy_nodemask(gfp, pol));
-
-	if (unlikely(!put_mems_allowed(cpuset_mems_cookie) && !page))
-		goto retry_cpuset;
-
+	put_mems_allowed();
 	return page;
 }
 EXPORT_SYMBOL(alloc_pages_current);

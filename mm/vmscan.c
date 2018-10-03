@@ -248,15 +248,11 @@ unsigned long shrink_slab(struct shrink_control *shrink,
 
 	list_for_each_entry(shrinker, &shrinker_list, list) {
 		unsigned long long delta;
-		long total_scan;
-		long max_pass;
+		unsigned long total_scan;
+		unsigned long max_pass;
 		int shrink_ret = 0;
 		long nr;
 		long new_nr;
-
-		max_pass = do_shrinker_shrink(shrinker, shrink, 0);
-		if (max_pass <= 0)
-			continue;
 
 		/*
 		 * copy the current shrinker scan count into a local variable
@@ -268,6 +264,7 @@ unsigned long shrink_slab(struct shrink_control *shrink,
 		} while (cmpxchg(&shrinker->nr, nr, 0) != nr);
 
 		total_scan = nr;
+		max_pass = do_shrinker_shrink(shrinker, shrink, 0);
 		delta = (4 * nr_pages_scanned) / shrinker->seeks;
 		delta *= max_pass;
 		do_div(delta, lru_pages + 1);
@@ -731,12 +728,6 @@ static enum page_references page_check_references(struct page *page,
 			return PAGEREF_ACTIVATE;
 #else
 		if (referenced_page || referenced_ptes > 1)
-			return PAGEREF_ACTIVATE;
-
-		/*
-		 * Activate file-backed executable pages after first usage.
-		*/
-		if (vm_flags & VM_EXEC)
 			return PAGEREF_ACTIVATE;
 #endif
 		return PAGEREF_KEEP;
@@ -1210,7 +1201,7 @@ static unsigned long isolate_lru_pages(unsigned long nr_to_scan,
 			 * anon page which don't already have a swap slot is
 			 * pointless.
 			 */
-			if (nr_swap_pages <= 0 && PageSwapBacked(cursor_page) &&
+			if (nr_swap_pages <= 0 && PageAnon(cursor_page) &&
 			    !PageSwapCache(cursor_page))
 				break;
 
@@ -1861,8 +1852,7 @@ static void get_scan_count(struct zone *zone, struct scan_control *sc,
 	unsigned long nr_force_scan[2];
 
 	/* kswapd does zone balancing and needs to scan this zone */
-	if (scanning_global_lru(sc) && current_is_kswapd() &&
-	    zone->all_unreclaimable)
+	if (scanning_global_lru(sc) && current_is_kswapd())
 		force_scan = true;
 	/* memcg may have small limit and need to avoid priority drop */
 	if (!scanning_global_lru(sc))
@@ -2020,9 +2010,8 @@ static inline bool should_continue_reclaim(struct zone *zone,
 	 * inactive lists are large enough, continue reclaiming
 	 */
 	pages_for_compaction = (2UL << sc->order);
-	inactive_lru_pages = zone_nr_lru_pages(zone, sc, LRU_INACTIVE_FILE);
-	if (nr_swap_pages > 0)
-		inactive_lru_pages += zone_nr_lru_pages(zone, sc, LRU_INACTIVE_ANON);
+	inactive_lru_pages = zone_nr_lru_pages(zone, sc, LRU_INACTIVE_ANON) +
+				zone_nr_lru_pages(zone, sc, LRU_INACTIVE_FILE);
 	if (sc->nr_reclaimed < pages_for_compaction &&
 			inactive_lru_pages > pages_for_compaction)
 		return true;
@@ -2265,6 +2254,7 @@ static unsigned long do_try_to_free_pages(struct zonelist *zonelist,
 	unsigned long writeback_threshold;
 	bool aborted_reclaim;
 
+	get_mems_allowed();
 	delayacct_freepages_start();
 
 	if (scanning_global_lru(sc))
@@ -2327,6 +2317,7 @@ static unsigned long do_try_to_free_pages(struct zonelist *zonelist,
 
 out:
 	delayacct_freepages_end();
+	put_mems_allowed();
 
 	if (sc->nr_reclaimed)
 		return sc->nr_reclaimed;
