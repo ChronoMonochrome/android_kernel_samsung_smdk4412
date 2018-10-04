@@ -376,7 +376,7 @@ static int autofs_dev_ioctl_setpipefd(struct file *fp,
 			err = -EBADF;
 			goto out;
 		}
-		if (autofs_prepare_pipe(pipe) < 0) {
+		if (!pipe->f_op || !pipe->f_op->write) {
 			err = -EPIPE;
 			fput(pipe);
 			goto out;
@@ -385,6 +385,7 @@ static int autofs_dev_ioctl_setpipefd(struct file *fp,
 		sbi->pipefd = pipefd;
 		sbi->pipe = pipe;
 		sbi->catatonic = 0;
+		sbi->compat_daemon = is_compat_task();
 	}
 out:
 	mutex_unlock(&sbi->wq_mutex);
