@@ -55,5 +55,7 @@ static inline int gen_pool_add(struct gen_pool *pool, unsigned long addr,
 }
 extern void gen_pool_destroy(struct gen_pool *);
 extern unsigned long gen_pool_alloc(struct gen_pool *, size_t);
+extern unsigned long gen_pool_alloc_aligned(struct gen_pool *, size_t,
+                       unsigned);
 extern void gen_pool_free(struct gen_pool *, unsigned long, size_t);
 #endif /* __GENALLOC_H__ */

@@ -179,6 +179,61 @@ unsigned long gen_pool_alloc(struct gen_pool *pool, size_t size)
 EXPORT_SYMBOL(gen_pool_alloc);
 
 /**
+ * gen_pool_alloc_aligned() - allocate special memory from the pool
+ * @pool:	Pool to allocate from.
+ * @size:	Number of bytes to allocate from the pool.
+ * @alignment_order:	Order the allocated space should be
+ *			aligned to (eg. 20 means allocated space
+ *			must be aligned to 1MiB).
+ *
+ * Allocate the requested number of bytes from the specified pool.
+ * Uses a first-fit algorithm.
+ */
+unsigned long __must_check
+gen_pool_alloc_aligned(struct gen_pool *pool, size_t size,
+		       unsigned alignment_order)
+{
+	unsigned long addr, align_mask = 0, flags, start;
+	struct gen_pool_chunk *chunk;
+	size_t chunk_size;
+
+	if (size == 0)
+		return 0;
+
+	if (alignment_order > pool->min_alloc_order)
+		align_mask = (1 << (alignment_order - pool->min_alloc_order)) - 1;
+
+	size = (size + (1UL << pool->min_alloc_order) - 1) >> pool->min_alloc_order;
+
+	read_lock(&pool->lock);
+	list_for_each_entry(chunk, &pool->chunks, next_chunk) {
+		chunk_size = chunk->end_addr - chunk->start_addr + 1;
+		if (chunk_size < size)
+			continue;
+
+		spin_lock_irqsave(&chunk->lock, flags);
+		start = bitmap_find_next_zero_area_off(chunk->bits, chunk_size,
+						       0, size, align_mask,
+						       chunk->start_addr);
+		if (start >= chunk_size) {
+			spin_unlock_irqrestore(&chunk->lock, flags);
+			continue;
+		}
+
+		bitmap_set(chunk->bits, start, size);
+		spin_unlock_irqrestore(&chunk->lock, flags);
+		addr = (chunk->start_addr + start) << pool->min_alloc_order;
+		goto done;
+	}
+
+	addr = 0;
+done:
+	read_unlock(&pool->lock);
+	return addr;
+}
+EXPORT_SYMBOL(gen_pool_alloc_aligned);
+
+/**
  * gen_pool_free - free allocated special memory back to the pool
  * @pool: pool to free to
  * @addr: starting address of memory to free back to pool
