@@ -90,6 +90,7 @@ int drm_debugfs_create_files(struct drm_info_list *files, int count,
 	struct drm_device *dev = minor->dev;
 	struct dentry *ent;
 	struct drm_info_node *tmp;
+	char name[64];
 	int i, ret;
 
 	for (i = 0; i < count; i++) {
@@ -108,7 +109,7 @@ int drm_debugfs_create_files(struct drm_info_list *files, int count,
 					  root, tmp, &drm_debugfs_fops);
 		if (!ent) {
 			DRM_ERROR("Cannot create /sys/kernel/debug/dri/%s/%s\n",
-				  root->d_name.name, files[i].name);
+				  name, files[i].name);
 			kfree(tmp);
 			ret = -1;
 			goto fail;
@@ -117,10 +118,7 @@ int drm_debugfs_create_files(struct drm_info_list *files, int count,
 		tmp->minor = minor;
 		tmp->dent = ent;
 		tmp->info_ent = &files[i];
-
-		mutex_lock(&minor->debugfs_lock);
-		list_add(&tmp->list, &minor->debugfs_list);
-		mutex_unlock(&minor->debugfs_lock);
+		list_add(&(tmp->list), &(minor->debugfs_nodes.list));
 	}
 	return 0;
 
@@ -148,8 +146,7 @@ int drm_debugfs_init(struct drm_minor *minor, int minor_id,
 	char name[64];
 	int ret;
 
-	INIT_LIST_HEAD(&minor->debugfs_list);
-	mutex_init(&minor->debugfs_lock);
+	INIT_LIST_HEAD(&minor->debugfs_nodes.list);
 	sprintf(name, "%d", minor_id);
 	minor->debugfs_root = debugfs_create_dir(name, root);
 	if (!minor->debugfs_root) {
@@ -195,9 +192,8 @@ int drm_debugfs_remove_files(struct drm_info_list *files, int count,
 	struct drm_info_node *tmp;
 	int i;
 
-	mutex_lock(&minor->debugfs_lock);
 	for (i = 0; i < count; i++) {
-		list_for_each_safe(pos, q, &minor->debugfs_list) {
+		list_for_each_safe(pos, q, &minor->debugfs_nodes.list) {
 			tmp = list_entry(pos, struct drm_info_node, list);
 			if (tmp->info_ent == &files[i]) {
 				debugfs_remove(tmp->dent);
@@ -206,7 +202,6 @@ int drm_debugfs_remove_files(struct drm_info_list *files, int count,
 			}
 		}
 	}
-	mutex_unlock(&minor->debugfs_lock);
 	return 0;
 }
 EXPORT_SYMBOL(drm_debugfs_remove_files);

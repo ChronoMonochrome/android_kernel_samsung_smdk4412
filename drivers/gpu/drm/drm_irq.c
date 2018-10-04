@@ -109,7 +109,10 @@ static void vblank_disable_and_save(struct drm_device *dev, int crtc)
 	/* Prevent vblank irq processing while disabling vblank irqs,
 	 * so no updates of timestamps or count can happen after we've
 	 * disabled. Needed to prevent races in case of delayed irq's.
+	 * Disable preemption, so vblank_time_lock is held as short as
+	 * possible, even under a kernel with PREEMPT_RT patches.
 	 */
+	preempt_disable();
 	spin_lock_irqsave(&dev->vblank_time_lock, irqflags);
 
 	dev->driver->disable_vblank(dev, crtc);
@@ -160,6 +163,7 @@ static void vblank_disable_and_save(struct drm_device *dev, int crtc)
 	clear_vblank_timestamps(dev, crtc);
 
 	spin_unlock_irqrestore(&dev->vblank_time_lock, irqflags);
+	preempt_enable();
 }
 
 static void vblank_disable_fn(unsigned long arg)
@@ -287,14 +291,11 @@ static void drm_irq_vgaarb_nokms(void *cookie, bool state)
 	if (!dev->irq_enabled)
 		return;
 
-	if (state) {
-		if (dev->driver->irq_uninstall)
-			dev->driver->irq_uninstall(dev);
-	} else {
-		if (dev->driver->irq_preinstall)
-			dev->driver->irq_preinstall(dev);
-		if (dev->driver->irq_postinstall)
-			dev->driver->irq_postinstall(dev);
+	if (state)
+		dev->driver->irq_uninstall(dev);
+	else {
+		dev->driver->irq_preinstall(dev);
+		dev->driver->irq_postinstall(dev);
 	}
 }
 
@@ -304,7 +305,7 @@ static void drm_irq_vgaarb_nokms(void *cookie, bool state)
  * \param dev DRM device.
  *
  * Initializes the IRQ related data. Installs the handler, calling the driver
- * \c irq_preinstall() and \c irq_postinstall() functions
+ * \c drm_driver_irq_preinstall() and \c drm_driver_irq_postinstall() functions
  * before and after the installation.
  */
 int drm_irq_install(struct drm_device *dev)
@@ -337,8 +338,7 @@ int drm_irq_install(struct drm_device *dev)
 	DRM_DEBUG("irq=%d\n", drm_dev_to_irq(dev));
 
 	/* Before installing handler */
-	if (dev->driver->irq_preinstall)
-		dev->driver->irq_preinstall(dev);
+	dev->driver->irq_preinstall(dev);
 
 	/* Install handler */
 	if (drm_core_check_feature(dev, DRIVER_IRQ_SHARED))
@@ -363,16 +363,11 @@ int drm_irq_install(struct drm_device *dev)
 		vga_client_register(dev->pdev, (void *)dev, drm_irq_vgaarb_nokms, NULL);
 
 	/* After installing handler */
-	if (dev->driver->irq_postinstall)
-		ret = dev->driver->irq_postinstall(dev);
-
+	ret = dev->driver->irq_postinstall(dev);
 	if (ret < 0) {
 		mutex_lock(&dev->struct_mutex);
 		dev->irq_enabled = 0;
 		mutex_unlock(&dev->struct_mutex);
-		if (!drm_core_check_feature(dev, DRIVER_MODESET))
-			vga_client_register(dev->pdev, NULL, NULL, NULL);
-		free_irq(drm_dev_to_irq(dev), dev);
 	}
 
 	return ret;
@@ -384,7 +379,7 @@ EXPORT_SYMBOL(drm_irq_install);
  *
  * \param dev DRM device.
  *
- * Calls the driver's \c irq_uninstall() function, and stops the irq.
+ * Calls the driver's \c drm_driver_irq_uninstall() function, and stops the irq.
  */
 int drm_irq_uninstall(struct drm_device *dev)
 {
@@ -402,16 +397,13 @@ int drm_irq_uninstall(struct drm_device *dev)
 	/*
 	 * Wake up any waiters so they don't hang.
 	 */
-	if (dev->num_crtcs) {
-		spin_lock_irqsave(&dev->vbl_lock, irqflags);
-		for (i = 0; i < dev->num_crtcs; i++) {
-			DRM_WAKEUP(&dev->vbl_queue[i]);
-			dev->vblank_enabled[i] = 0;
-			dev->last_vblank[i] =
-				dev->driver->get_vblank_counter(dev, i);
-		}
-		spin_unlock_irqrestore(&dev->vbl_lock, irqflags);
+	spin_lock_irqsave(&dev->vbl_lock, irqflags);
+	for (i = 0; i < dev->num_crtcs; i++) {
+		DRM_WAKEUP(&dev->vbl_queue[i]);
+		dev->vblank_enabled[i] = 0;
+		dev->last_vblank[i] = dev->driver->get_vblank_counter(dev, i);
 	}
+	spin_unlock_irqrestore(&dev->vbl_lock, irqflags);
 
 	if (!irq_enabled)
 		return -EINVAL;
@@ -421,8 +413,7 @@ int drm_irq_uninstall(struct drm_device *dev)
 	if (!drm_core_check_feature(dev, DRIVER_MODESET))
 		vga_client_register(dev->pdev, NULL, NULL, NULL);
 
-	if (dev->driver->irq_uninstall)
-		dev->driver->irq_uninstall(dev);
+	dev->driver->irq_uninstall(dev);
 
 	free_irq(drm_dev_to_irq(dev), dev);
 
@@ -884,6 +875,10 @@ int drm_vblank_get(struct drm_device *dev, int crtc)
 	spin_lock_irqsave(&dev->vbl_lock, irqflags);
 	/* Going from 0->1 means we have to enable interrupts again */
 	if (atomic_add_return(1, &dev->vblank_refcount[crtc]) == 1) {
+		/* Disable preemption while holding vblank_time_lock. Do
+		 * it explicitely to guard against PREEMPT_RT kernel.
+		 */
+		preempt_disable();
 		spin_lock_irqsave(&dev->vblank_time_lock, irqflags2);
 		if (!dev->vblank_enabled[crtc]) {
 			/* Enable vblank irqs under vblank_time_lock protection.
@@ -903,6 +898,7 @@ int drm_vblank_get(struct drm_device *dev, int crtc)
 			}
 		}
 		spin_unlock_irqrestore(&dev->vblank_time_lock, irqflags2);
+		preempt_enable();
 	} else {
 		if (!dev->vblank_enabled[crtc]) {
 			atomic_dec(&dev->vblank_refcount[crtc]);
@@ -1118,7 +1114,6 @@ static int drm_queue_vblank_event(struct drm_device *dev, int pipe,
 		trace_drm_vblank_event_delivered(current->pid, pipe,
 						 vblwait->request.sequence);
 	} else {
-		/* drm_handle_vblank_events will call drm_vblank_put */
 		list_add_tail(&e->base.link, &dev->vblank_event_list);
 		vblwait->reply.sequence = vblwait->request.sequence;
 	}
@@ -1199,12 +1194,8 @@ int drm_wait_vblank(struct drm_device *dev, void *data,
 		goto done;
 	}
 
-	if (flags & _DRM_VBLANK_EVENT) {
-		/* must hold on to the vblank ref until the event fires
-		 * drm_vblank_put will be called asynchronously
-		 */
+	if (flags & _DRM_VBLANK_EVENT)
 		return drm_queue_vblank_event(dev, crtc, vblwait, file_priv);
-	}
 
 	if ((flags & _DRM_VBLANK_NEXTONMISS) &&
 	    (seq - vblwait->request.sequence) <= (1<<23)) {

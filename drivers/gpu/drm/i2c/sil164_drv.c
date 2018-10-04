@@ -24,8 +24,6 @@
  *
  */
 
-#include <linux/module.h>
-
 #include "drmP.h"
 #include "drm_crtc_helper.h"
 #include "drm_encoder_slave.h"

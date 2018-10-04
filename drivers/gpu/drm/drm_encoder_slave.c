@@ -24,8 +24,6 @@
  *
  */
 
-#include <linux/module.h>
-
 #include "drm_encoder_slave.h"
 
 /**

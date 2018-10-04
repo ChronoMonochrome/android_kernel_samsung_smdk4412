@@ -665,8 +665,6 @@ static void atom_op_delay(atom_exec_context *ctx, int *ptr, int arg)
 	SDEBUG("   count: %d\n", count);
 	if (arg == ATOM_UNIT_MICROSEC)
 		udelay(count);
-	else if (!drm_can_sleep())
-		mdelay(count);
 	else
 		msleep(count);
 }
@@ -1255,9 +1253,6 @@ struct atom_context *atom_parse(struct card_info *card, void *bios)
 	char *str;
 	char name[512];
 	int i;
-
-	if (!ctx)
-		return NULL;
 
 	ctx->card = card;
 	ctx->bios = bios;

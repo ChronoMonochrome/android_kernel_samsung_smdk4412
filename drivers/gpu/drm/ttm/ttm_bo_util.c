@@ -244,7 +244,7 @@ static int ttm_copy_io_ttm_page(struct ttm_tt *ttm, void *src,
 				unsigned long page,
 				pgprot_t prot)
 {
-	struct page *d = ttm->pages[page];
+	struct page *d = ttm_tt_get_page(ttm, page);
 	void *dst;
 
 	if (!d)
@@ -281,7 +281,7 @@ static int ttm_copy_ttm_io_page(struct ttm_tt *ttm, void *dst,
 				unsigned long page,
 				pgprot_t prot)
 {
-	struct page *s = ttm->pages[page];
+	struct page *s = ttm_tt_get_page(ttm, page);
 	void *src;
 
 	if (!s)
@@ -321,7 +321,7 @@ int ttm_bo_move_memcpy(struct ttm_buffer_object *bo,
 	struct ttm_mem_type_manager *man = &bdev->man[new_mem->mem_type];
 	struct ttm_tt *ttm = bo->ttm;
 	struct ttm_mem_reg *old_mem = &bo->mem;
-	struct ttm_mem_reg old_copy = *old_mem;
+	struct ttm_mem_reg old_copy;
 	void *old_iomap;
 	void *new_iomap;
 	int ret;
@@ -341,12 +341,6 @@ int ttm_bo_move_memcpy(struct ttm_buffer_object *bo,
 		goto out2;
 	if (old_iomap == NULL && ttm == NULL)
 		goto out2;
-
-	if (ttm->state == tt_unpopulated) {
-		ret = ttm->bdev->driver->ttm_tt_populate(ttm);
-		if (ret)
-			goto out1;
-	}
 
 	add = 0;
 	dir = 1;
@@ -445,7 +439,6 @@ static int ttm_buffer_object_transfer(struct ttm_buffer_object *bo,
 	kref_init(&fbo->list_kref);
 	kref_init(&fbo->kref);
 	fbo->destroy = &ttm_transfered_destroy;
-	fbo->acc_size = 0;
 
 	*new_obj = fbo;
 	return 0;
@@ -509,16 +502,10 @@ static int ttm_bo_kmap_ttm(struct ttm_buffer_object *bo,
 {
 	struct ttm_mem_reg *mem = &bo->mem; pgprot_t prot;
 	struct ttm_tt *ttm = bo->ttm;
-	int ret;
+	struct page *d;
+	int i;
 
 	BUG_ON(!ttm);
-
-	if (ttm->state == tt_unpopulated) {
-		ret = ttm->bdev->driver->ttm_tt_populate(ttm);
-		if (ret)
-			return ret;
-	}
-
 	if (num_pages == 1 && (mem->placement & TTM_PL_FLAG_CACHED)) {
 		/*
 		 * We're mapping a single page, and the desired
@@ -526,9 +513,18 @@ static int ttm_bo_kmap_ttm(struct ttm_buffer_object *bo,
 		 */
 
 		map->bo_kmap_type = ttm_bo_map_kmap;
-		map->page = ttm->pages[start_page];
+		map->page = ttm_tt_get_page(ttm, start_page);
 		map->virtual = kmap(map->page);
 	} else {
+	    /*
+	     * Populate the part we're mapping;
+	     */
+		for (i = start_page; i < start_page + num_pages; ++i) {
+			d = ttm_tt_get_page(ttm, i);
+			if (!d)
+				return -ENOMEM;
+		}
+
 		/*
 		 * We need to use vmap to get the desired page protection
 		 * or to make the buffer object look contiguous.

@@ -32,7 +32,6 @@
 #include <linux/firmware.h>
 #include <linux/platform_device.h>
 #include <linux/slab.h>
-#include <linux/module.h>
 
 #include "drmP.h"
 #include "drm.h"

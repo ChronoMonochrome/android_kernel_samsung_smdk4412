@@ -28,8 +28,6 @@
  * Authors: Thomas Hellstrom <thellstrom-at-vmware-dot-com>
  */
 
-#define pr_fmt(fmt) "[TTM] " fmt
-
 #include "ttm/ttm_module.h"
 #include "ttm/ttm_bo_driver.h"
 #include "ttm/ttm_placement.h"
@@ -39,7 +37,7 @@
 #include <linux/mm.h>
 #include <linux/file.h>
 #include <linux/module.h>
-#include <linux/atomic.h>
+#include <asm/atomic.h>
 
 #define TTM_ASSERT_LOCKED(param)
 #define TTM_DEBUG(fmt, arg...)
@@ -70,13 +68,15 @@ static void ttm_mem_type_debug(struct ttm_bo_device *bdev, int mem_type)
 {
 	struct ttm_mem_type_manager *man = &bdev->man[mem_type];
 
-	pr_err("    has_type: %d\n", man->has_type);
-	pr_err("    use_type: %d\n", man->use_type);
-	pr_err("    flags: 0x%08X\n", man->flags);
-	pr_err("    gpu_offset: 0x%08lX\n", man->gpu_offset);
-	pr_err("    size: %llu\n", man->size);
-	pr_err("    available_caching: 0x%08X\n", man->available_caching);
-	pr_err("    default_caching: 0x%08X\n", man->default_caching);
+	printk(KERN_ERR TTM_PFX "    has_type: %d\n", man->has_type);
+	printk(KERN_ERR TTM_PFX "    use_type: %d\n", man->use_type);
+	printk(KERN_ERR TTM_PFX "    flags: 0x%08X\n", man->flags);
+	printk(KERN_ERR TTM_PFX "    gpu_offset: 0x%08lX\n", man->gpu_offset);
+	printk(KERN_ERR TTM_PFX "    size: %llu\n", man->size);
+	printk(KERN_ERR TTM_PFX "    available_caching: 0x%08X\n",
+		man->available_caching);
+	printk(KERN_ERR TTM_PFX "    default_caching: 0x%08X\n",
+		man->default_caching);
 	if (mem_type != TTM_PL_SYSTEM)
 		(*man->func->debug)(man, TTM_PFX);
 }
@@ -86,16 +86,16 @@ static void ttm_bo_mem_space_debug(struct ttm_buffer_object *bo,
 {
 	int i, ret, mem_type;
 
-	pr_err("No space for %p (%lu pages, %luK, %luM)\n",
-	       bo, bo->mem.num_pages, bo->mem.size >> 10,
-	       bo->mem.size >> 20);
+	printk(KERN_ERR TTM_PFX "No space for %p (%lu pages, %luK, %luM)\n",
+		bo, bo->mem.num_pages, bo->mem.size >> 10,
+		bo->mem.size >> 20);
 	for (i = 0; i < placement->num_placement; i++) {
 		ret = ttm_mem_type_from_flags(placement->placement[i],
 						&mem_type);
 		if (ret)
 			return;
-		pr_err("  placement[%d]=0x%08X (%d)\n",
-		       i, placement->placement[i], mem_type);
+		printk(KERN_ERR TTM_PFX "  placement[%d]=0x%08X (%d)\n",
+			i, placement->placement[i], mem_type);
 		ttm_mem_type_debug(bo->bdev, mem_type);
 	}
 }
@@ -137,7 +137,6 @@ static void ttm_bo_release_list(struct kref *list_kref)
 	struct ttm_buffer_object *bo =
 	    container_of(list_kref, struct ttm_buffer_object, list_kref);
 	struct ttm_bo_device *bdev = bo->bdev;
-	size_t acc_size = bo->acc_size;
 
 	BUG_ON(atomic_read(&bo->list_kref.refcount));
 	BUG_ON(atomic_read(&bo->kref.refcount));
@@ -153,9 +152,9 @@ static void ttm_bo_release_list(struct kref *list_kref)
 	if (bo->destroy)
 		bo->destroy(bo);
 	else {
+		ttm_mem_global_free(bdev->glob->mem_glob, bo->acc_size);
 		kfree(bo);
 	}
-	ttm_mem_global_free(bdev->glob->mem_glob, acc_size);
 }
 
 int ttm_bo_wait_unreserved(struct ttm_buffer_object *bo, bool interruptible)
@@ -338,13 +337,29 @@ static int ttm_bo_add_ttm(struct ttm_buffer_object *bo, bool zero_alloc)
 		if (zero_alloc)
 			page_flags |= TTM_PAGE_FLAG_ZERO_ALLOC;
 	case ttm_bo_type_kernel:
-		bo->ttm = bdev->driver->ttm_tt_create(bdev, bo->num_pages << PAGE_SHIFT,
-						      page_flags, glob->dummy_read_page);
+		bo->ttm = ttm_tt_create(bdev, bo->num_pages << PAGE_SHIFT,
+					page_flags, glob->dummy_read_page);
 		if (unlikely(bo->ttm == NULL))
 			ret = -ENOMEM;
 		break;
+	case ttm_bo_type_user:
+		bo->ttm = ttm_tt_create(bdev, bo->num_pages << PAGE_SHIFT,
+					page_flags | TTM_PAGE_FLAG_USER,
+					glob->dummy_read_page);
+		if (unlikely(bo->ttm == NULL)) {
+			ret = -ENOMEM;
+			break;
+		}
+
+		ret = ttm_tt_set_user(bo->ttm, current,
+				      bo->buffer_start, bo->num_pages);
+		if (unlikely(ret != 0)) {
+			ttm_tt_destroy(bo->ttm);
+			bo->ttm = NULL;
+		}
+		break;
 	default:
-		pr_err("Illegal buffer object type\n");
+		printk(KERN_ERR TTM_PFX "Illegal buffer object type\n");
 		ret = -EINVAL;
 		break;
 	}
@@ -416,23 +431,14 @@ static int ttm_bo_handle_move_mem(struct ttm_buffer_object *bo,
 	else
 		ret = ttm_bo_move_memcpy(bo, evict, no_wait_reserve, no_wait_gpu, mem);
 
-	if (ret) {
-		if (bdev->driver->move_notify) {
-			struct ttm_mem_reg tmp_mem = *mem;
-			*mem = bo->mem;
-			bo->mem = tmp_mem;
-			bdev->driver->move_notify(bo, mem);
-			bo->mem = *mem;
-		}
-
+	if (ret)
 		goto out_err;
-	}
 
 moved:
 	if (bo->evicted) {
 		ret = bdev->driver->invalidate_caches(bdev, bo->mem.placement);
 		if (ret)
-			pr_err("Can not flush read caches\n");
+			printk(KERN_ERR TTM_PFX "Can not flush read caches\n");
 		bo->evicted = false;
 	}
 
@@ -466,9 +472,6 @@ out_err:
 
 static void ttm_bo_cleanup_memtype_use(struct ttm_buffer_object *bo)
 {
-	if (bo->bdev->driver->move_notify)
-		bo->bdev->driver->move_notify(bo, NULL);
-
 	if (bo->ttm) {
 		ttm_tt_unbind(bo->ttm);
 		ttm_tt_destroy(bo->ttm);
@@ -571,16 +574,10 @@ retry:
 		return ret;
 
 	spin_lock(&glob->lru_lock);
-
-	if (unlikely(list_empty(&bo->ddestroy))) {
-		spin_unlock(&glob->lru_lock);
-		return 0;
-	}
-
 	ret = ttm_bo_reserve_locked(bo, interruptible,
 				    no_wait_reserve, false, 0);
 
-	if (unlikely(ret != 0)) {
+	if (unlikely(ret != 0) || list_empty(&bo->ddestroy)) {
 		spin_unlock(&glob->lru_lock);
 		return ret;
 	}
@@ -734,7 +731,9 @@ static int ttm_bo_evict(struct ttm_buffer_object *bo, bool interruptible,
 
 	if (unlikely(ret != 0)) {
 		if (ret != -ERESTARTSYS) {
-			pr_err("Failed to expire sync object before buffer eviction\n");
+			printk(KERN_ERR TTM_PFX
+			       "Failed to expire sync object before "
+			       "buffer eviction.\n");
 		}
 		goto out;
 	}
@@ -755,8 +754,9 @@ static int ttm_bo_evict(struct ttm_buffer_object *bo, bool interruptible,
 				no_wait_reserve, no_wait_gpu);
 	if (ret) {
 		if (ret != -ERESTARTSYS) {
-			pr_err("Failed to find memory space for buffer 0x%p eviction\n",
-			       bo);
+			printk(KERN_ERR TTM_PFX
+			       "Failed to find memory space for "
+			       "buffer 0x%p eviction.\n", bo);
 			ttm_bo_mem_space_debug(bo, &placement);
 		}
 		goto out;
@@ -766,7 +766,7 @@ static int ttm_bo_evict(struct ttm_buffer_object *bo, bool interruptible,
 				     no_wait_reserve, no_wait_gpu);
 	if (ret) {
 		if (ret != -ERESTARTSYS)
-			pr_err("Buffer eviction failed\n");
+			printk(KERN_ERR TTM_PFX "Buffer eviction failed\n");
 		ttm_bo_mem_put(bo, &evict_mem);
 		goto out;
 	}
@@ -907,11 +907,15 @@ static uint32_t ttm_bo_select_caching(struct ttm_mem_type_manager *man,
 }
 
 static bool ttm_bo_mt_compatible(struct ttm_mem_type_manager *man,
+				 bool disallow_fixed,
 				 uint32_t mem_type,
 				 uint32_t proposed_placement,
 				 uint32_t *masked_placement)
 {
 	uint32_t cur_flags = ttm_bo_type_flags(mem_type);
+
+	if ((man->flags & TTM_MEMTYPE_FLAG_FIXED) && disallow_fixed)
+		return false;
 
 	if ((cur_flags & proposed_placement & TTM_PL_MASK_MEM) == 0)
 		return false;
@@ -957,6 +961,7 @@ int ttm_bo_mem_space(struct ttm_buffer_object *bo,
 		man = &bdev->man[mem_type];
 
 		type_ok = ttm_bo_mt_compatible(man,
+						bo->type == ttm_bo_type_user,
 						mem_type,
 						placement->placement[i],
 						&cur_flags);
@@ -1004,6 +1009,7 @@ int ttm_bo_mem_space(struct ttm_buffer_object *bo,
 		if (!man->has_type)
 			continue;
 		if (!ttm_bo_mt_compatible(man,
+						bo->type == ttm_bo_type_user,
 						mem_type,
 						placement->busy_placement[i],
 						&cur_flags))
@@ -1173,22 +1179,11 @@ int ttm_bo_init(struct ttm_bo_device *bdev,
 {
 	int ret = 0;
 	unsigned long num_pages;
-	struct ttm_mem_global *mem_glob = bdev->glob->mem_glob;
-
-	ret = ttm_mem_global_alloc(mem_glob, acc_size, false, false);
-	if (ret) {
-		pr_err("Out of kernel memory\n");
-		if (destroy)
-			(*destroy)(bo);
-		else
-			kfree(bo);
-		return -ENOMEM;
-	}
 
 	size += buffer_start & ~PAGE_MASK;
 	num_pages = (size + PAGE_SIZE - 1) >> PAGE_SHIFT;
 	if (num_pages == 0) {
-		pr_err("Illegal buffer object size\n");
+		printk(KERN_ERR TTM_PFX "Illegal buffer object size.\n");
 		if (destroy)
 			(*destroy)(bo);
 		else
@@ -1254,34 +1249,14 @@ out_err:
 }
 EXPORT_SYMBOL(ttm_bo_init);
 
-size_t ttm_bo_acc_size(struct ttm_bo_device *bdev,
-		       unsigned long bo_size,
-		       unsigned struct_size)
+static inline size_t ttm_bo_size(struct ttm_bo_global *glob,
+				 unsigned long num_pages)
 {
-	unsigned npages = (PAGE_ALIGN(bo_size)) >> PAGE_SHIFT;
-	size_t size = 0;
+	size_t page_array_size = (num_pages * sizeof(void *) + PAGE_SIZE - 1) &
+	    PAGE_MASK;
 
-	size += ttm_round_pot(struct_size);
-	size += PAGE_ALIGN(npages * sizeof(void *));
-	size += ttm_round_pot(sizeof(struct ttm_tt));
-	return size;
+	return glob->ttm_bo_size + 2 * page_array_size;
 }
-EXPORT_SYMBOL(ttm_bo_acc_size);
-
-size_t ttm_bo_dma_acc_size(struct ttm_bo_device *bdev,
-			   unsigned long bo_size,
-			   unsigned struct_size)
-{
-	unsigned npages = (PAGE_ALIGN(bo_size)) >> PAGE_SHIFT;
-	size_t size = 0;
-
-	size += ttm_round_pot(struct_size);
-	size += PAGE_ALIGN(npages * sizeof(void *));
-	size += PAGE_ALIGN(npages * sizeof(dma_addr_t));
-	size += ttm_round_pot(sizeof(struct ttm_dma_tt));
-	return size;
-}
-EXPORT_SYMBOL(ttm_bo_dma_acc_size);
 
 int ttm_bo_create(struct ttm_bo_device *bdev,
 			unsigned long size,
@@ -1295,10 +1270,10 @@ int ttm_bo_create(struct ttm_bo_device *bdev,
 {
 	struct ttm_buffer_object *bo;
 	struct ttm_mem_global *mem_glob = bdev->glob->mem_glob;
-	size_t acc_size;
 	int ret;
 
-	acc_size = ttm_bo_acc_size(bdev, size, sizeof(struct ttm_buffer_object));
+	size_t acc_size =
+	    ttm_bo_size(bdev->glob, (size + PAGE_SIZE - 1) >> PAGE_SHIFT);
 	ret = ttm_mem_global_alloc(mem_glob, acc_size, false, false);
 	if (unlikely(ret != 0))
 		return ret;
@@ -1318,7 +1293,6 @@ int ttm_bo_create(struct ttm_bo_device *bdev,
 
 	return ret;
 }
-EXPORT_SYMBOL(ttm_bo_create);
 
 static int ttm_bo_force_list_clean(struct ttm_bo_device *bdev,
 					unsigned mem_type, bool allow_errors)
@@ -1339,7 +1313,8 @@ static int ttm_bo_force_list_clean(struct ttm_bo_device *bdev,
 			if (allow_errors) {
 				return ret;
 			} else {
-				pr_err("Cleanup eviction failed\n");
+				printk(KERN_ERR TTM_PFX
+					"Cleanup eviction failed\n");
 			}
 		}
 		spin_lock(&glob->lru_lock);
@@ -1354,14 +1329,14 @@ int ttm_bo_clean_mm(struct ttm_bo_device *bdev, unsigned mem_type)
 	int ret = -EINVAL;
 
 	if (mem_type >= TTM_NUM_MEM_TYPES) {
-		pr_err("Illegal memory type %d\n", mem_type);
+		printk(KERN_ERR TTM_PFX "Illegal memory type %d\n", mem_type);
 		return ret;
 	}
 	man = &bdev->man[mem_type];
 
 	if (!man->has_type) {
-		pr_err("Trying to take down uninitialized memory manager type %u\n",
-		       mem_type);
+		printk(KERN_ERR TTM_PFX "Trying to take down uninitialized "
+		       "memory manager type %u\n", mem_type);
 		return ret;
 	}
 
@@ -1384,12 +1359,16 @@ int ttm_bo_evict_mm(struct ttm_bo_device *bdev, unsigned mem_type)
 	struct ttm_mem_type_manager *man = &bdev->man[mem_type];
 
 	if (mem_type == 0 || mem_type >= TTM_NUM_MEM_TYPES) {
-		pr_err("Illegal memory manager memory type %u\n", mem_type);
+		printk(KERN_ERR TTM_PFX
+		       "Illegal memory manager memory type %u.\n",
+		       mem_type);
 		return -EINVAL;
 	}
 
 	if (!man->has_type) {
-		pr_err("Memory type %u has not been initialized\n", mem_type);
+		printk(KERN_ERR TTM_PFX
+		       "Memory type %u has not been initialized.\n",
+		       mem_type);
 		return 0;
 	}
 
@@ -1474,9 +1453,17 @@ int ttm_bo_global_init(struct drm_global_reference *ref)
 	ttm_mem_init_shrink(&glob->shrink, ttm_bo_swapout);
 	ret = ttm_mem_register_shrink(glob->mem_glob, &glob->shrink);
 	if (unlikely(ret != 0)) {
-		pr_err("Could not register buffer object swapout\n");
+		printk(KERN_ERR TTM_PFX
+		       "Could not register buffer object swapout.\n");
 		goto out_no_shrink;
 	}
+
+	glob->ttm_bo_extra_size =
+		ttm_round_pot(sizeof(struct ttm_tt)) +
+		ttm_round_pot(sizeof(struct ttm_backend));
+
+	glob->ttm_bo_size = glob->ttm_bo_extra_size +
+		ttm_round_pot(sizeof(struct ttm_buffer_object));
 
 	atomic_set(&glob->bo_count, 0);
 
@@ -1507,8 +1494,9 @@ int ttm_bo_device_release(struct ttm_bo_device *bdev)
 			man->use_type = false;
 			if ((i != TTM_PL_SYSTEM) && ttm_bo_clean_mm(bdev, i)) {
 				ret = -EBUSY;
-				pr_err("DRM memory manager type %d is not clean\n",
-				       i);
+				printk(KERN_ERR TTM_PFX
+				       "DRM memory manager type %d "
+				       "is not clean.\n", i);
 			}
 			man->has_type = false;
 		}
