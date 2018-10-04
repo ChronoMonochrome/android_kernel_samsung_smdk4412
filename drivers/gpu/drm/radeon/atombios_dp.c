@@ -115,7 +115,6 @@ static int radeon_dp_aux_native_write(struct radeon_connector *radeon_connector,
 	u8 msg[20];
 	int msg_bytes = send_bytes + 4;
 	u8 ack;
-	unsigned retry;
 
 	if (send_bytes > 16)
 		return -1;
@@ -126,22 +125,20 @@ static int radeon_dp_aux_native_write(struct radeon_connector *radeon_connector,
 	msg[3] = (msg_bytes << 4) | (send_bytes - 1);
 	memcpy(&msg[4], send, send_bytes);
 
-	for (retry = 0; retry < 4; retry++) {
+	while (1) {
 		ret = radeon_process_aux_ch(dig_connector->dp_i2c_bus,
 					    msg, msg_bytes, NULL, 0, delay, &ack);
-		if (ret == -EBUSY)
-			continue;
-		else if (ret < 0)
+		if (ret < 0)
 			return ret;
 		if ((ack & AUX_NATIVE_REPLY_MASK) == AUX_NATIVE_REPLY_ACK)
-			return send_bytes;
+			break;
 		else if ((ack & AUX_NATIVE_REPLY_MASK) == AUX_NATIVE_REPLY_DEFER)
 			udelay(400);
 		else
 			return -EIO;
 	}
 
-	return -EIO;
+	return send_bytes;
 }
 
 static int radeon_dp_aux_native_read(struct radeon_connector *radeon_connector,
@@ -152,31 +149,26 @@ static int radeon_dp_aux_native_read(struct radeon_connector *radeon_connector,
 	int msg_bytes = 4;
 	u8 ack;
 	int ret;
-	unsigned retry;
 
 	msg[0] = address;
 	msg[1] = address >> 8;
 	msg[2] = AUX_NATIVE_READ << 4;
 	msg[3] = (msg_bytes << 4) | (recv_bytes - 1);
 
-	for (retry = 0; retry < 4; retry++) {
+	while (1) {
 		ret = radeon_process_aux_ch(dig_connector->dp_i2c_bus,
 					    msg, msg_bytes, recv, recv_bytes, delay, &ack);
-		if (ret == -EBUSY)
-			continue;
-		else if (ret < 0)
+		if (ret == 0)
+			return -EPROTO;
+		if (ret < 0)
 			return ret;
 		if ((ack & AUX_NATIVE_REPLY_MASK) == AUX_NATIVE_REPLY_ACK)
 			return ret;
 		else if ((ack & AUX_NATIVE_REPLY_MASK) == AUX_NATIVE_REPLY_DEFER)
 			udelay(400);
-		else if (ret == 0)
-			return -EPROTO;
 		else
 			return -EIO;
 	}
-
-	return -EIO;
 }
 
 static void radeon_write_dpcd_reg(struct radeon_connector *radeon_connector,
@@ -240,9 +232,7 @@ int radeon_dp_i2c_aux_ch(struct i2c_adapter *adapter, int mode,
 	for (retry = 0; retry < 4; retry++) {
 		ret = radeon_process_aux_ch(auxch,
 					    msg, msg_bytes, reply, reply_bytes, 0, &ack);
-		if (ret == -EBUSY)
-			continue;
-		else if (ret < 0) {
+		if (ret < 0) {
 			DRM_DEBUG_KMS("aux_ch failed %d\n", ret);
 			return ret;
 		}
