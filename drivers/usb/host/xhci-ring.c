@@ -819,24 +819,23 @@ void xhci_stop_endpoint_command_watchdog(unsigned long arg)
 	struct xhci_ring *ring;
 	struct xhci_td *cur_td;
 	int ret, i, j;
-	unsigned long flags;
 
 	ep = (struct xhci_virt_ep *) arg;
 	xhci = ep->xhci;
 
-	spin_lock_irqsave(&xhci->lock, flags);
+	spin_lock(&xhci->lock);
 
 	ep->stop_cmds_pending--;
 	if (xhci->xhc_state & XHCI_STATE_DYING) {
 		xhci_dbg(xhci, "Stop EP timer ran, but another timer marked "
 				"xHCI as DYING, exiting.\n");
-		spin_unlock_irqrestore(&xhci->lock, flags);
+		spin_unlock(&xhci->lock);
 		return;
 	}
 	if (!(ep->stop_cmds_pending == 0 && (ep->ep_state & EP_HALT_PENDING))) {
 		xhci_dbg(xhci, "Stop EP timer ran, but no command pending, "
 				"exiting.\n");
-		spin_unlock_irqrestore(&xhci->lock, flags);
+		spin_unlock(&xhci->lock);
 		return;
 	}
 
@@ -848,11 +847,11 @@ void xhci_stop_endpoint_command_watchdog(unsigned long arg)
 	xhci->xhc_state |= XHCI_STATE_DYING;
 	/* Disable interrupts from the host controller and start halting it */
 	xhci_quiesce(xhci);
-	spin_unlock_irqrestore(&xhci->lock, flags);
+	spin_unlock(&xhci->lock);
 
 	ret = xhci_halt(xhci);
 
-	spin_lock_irqsave(&xhci->lock, flags);
+	spin_lock(&xhci->lock);
 	if (ret < 0) {
 		/* This is bad; the host is not responding to commands and it's
 		 * not allowing itself to be halted.  At least interrupts are
@@ -900,7 +899,7 @@ void xhci_stop_endpoint_command_watchdog(unsigned long arg)
 			}
 		}
 	}
-	spin_unlock_irqrestore(&xhci->lock, flags);
+	spin_unlock(&xhci->lock);
 	xhci_dbg(xhci, "Calling usb_hc_died()\n");
 	usb_hc_died(xhci_to_hcd(xhci)->primary_hcd);
 	xhci_dbg(xhci, "xHCI host controller is dead.\n");
