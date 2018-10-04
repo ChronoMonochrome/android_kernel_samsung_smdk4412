@@ -257,6 +257,7 @@ static struct inet6_dev *ip6_mc_find_dev_rcu(struct net *net,
 
 		if (rt) {
 			dev = rt->rt6i_dev;
+			dev_hold(dev);
 			dst_release(&rt->dst);
 		}
 	} else
