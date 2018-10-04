@@ -1140,7 +1140,7 @@ DECLARE_RWSEM(uts_sem);
 static int override_release(char __user *release, int len)
 {
 	int ret = 0;
-	char buf[65];
+	char buf[len];
 
 	if (current->personality & UNAME26) {
 		char *rest = UTS_RELEASE;

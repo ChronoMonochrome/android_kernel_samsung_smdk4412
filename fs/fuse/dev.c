@@ -258,14 +258,10 @@ void fuse_queue_forget(struct fuse_conn *fc, struct fuse_forget_link *forget,
 	forget->forget_one.nlookup = nlookup;
 
 	spin_lock(&fc->lock);
-	if (fc->connected) {
-		fc->forget_list_tail->next = forget;
-		fc->forget_list_tail = forget;
-		wake_up(&fc->waitq);
-		kill_fasync(&fc->fasync, SIGIO, POLL_IN);
-	} else {
-		kfree(forget);
-	}
+	fc->forget_list_tail->next = forget;
+	fc->forget_list_tail = forget;
+	wake_up(&fc->waitq);
+	kill_fasync(&fc->fasync, SIGIO, POLL_IN);
 	spin_unlock(&fc->lock);
 }
 
