@@ -285,8 +285,7 @@ static int cp210x_get_config(struct usb_serial_port *port, u8 request,
 	/* Issue the request, attempting to read 'size' bytes */
 	result = usb_control_msg(serial->dev, usb_rcvctrlpipe(serial->dev, 0),
 				request, REQTYPE_DEVICE_TO_HOST, 0x0000,
-				port_priv->bInterfaceNumber, buf, size,
-				USB_CTRL_GET_TIMEOUT);
+				port_priv->bInterfaceNumber, buf, size, 300);
 
 	/* Convert data into an array of integers */
 	for (i = 0; i < length; i++)
@@ -336,14 +335,12 @@ static int cp210x_set_config(struct usb_serial_port *port, u8 request,
 		result = usb_control_msg(serial->dev,
 				usb_sndctrlpipe(serial->dev, 0),
 				request, REQTYPE_HOST_TO_DEVICE, 0x0000,
-				port_priv->bInterfaceNumber, buf, size,
-				USB_CTRL_SET_TIMEOUT);
+				port_priv->bInterfaceNumber, buf, size, 300);
 	} else {
 		result = usb_control_msg(serial->dev,
 				usb_sndctrlpipe(serial->dev, 0),
 				request, REQTYPE_HOST_TO_DEVICE, data[0],
-				port_priv->bInterfaceNumber, NULL, 0,
-				USB_CTRL_SET_TIMEOUT);
+				port_priv->bInterfaceNumber, NULL, 0, 300);
 	}
 
 	kfree(buf);
