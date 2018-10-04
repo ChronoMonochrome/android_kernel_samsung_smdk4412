@@ -72,7 +72,6 @@
 
 #define DP_MAIN_LINK_CHANNEL_CODING         0x006
 
-#define DP_EDP_CONFIGURATION_CAP            0x00d
 #define DP_TRAINING_AUX_RD_INTERVAL         0x00e
 
 #define DP_PSR_SUPPORT                      0x070
@@ -147,20 +146,6 @@
 
 #define DP_MAIN_LINK_CHANNEL_CODING_SET	    0x108
 # define DP_SET_ANSI_8B10B		    (1 << 0)
-
-#define DP_PSR_EN_CFG			    0x170
-# define DP_PSR_ENABLE			    (1 << 0)
-# define DP_PSR_MAIN_LINK_ACTIVE	    (1 << 1)
-# define DP_PSR_CRC_VERIFICATION	    (1 << 2)
-# define DP_PSR_FRAME_CAPTURE		    (1 << 3)
-
-#define DP_DEVICE_SERVICE_IRQ_VECTOR	    0x201
-# define DP_REMOTE_CONTROL_COMMAND_PENDING  (1 << 0)
-# define DP_AUTOMATED_TEST_REQUEST	    (1 << 1)
-# define DP_CP_IRQ			    (1 << 2)
-# define DP_SINK_SPECIFIC_IRQ		    (1 << 6)
-
-#define DP_EDP_CONFIGURATION_SET            0x10a
 
 #define DP_LANE0_1_STATUS		    0x202
 #define DP_LANE2_3_STATUS		    0x203

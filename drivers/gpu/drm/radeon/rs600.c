@@ -287,7 +287,6 @@ void rs600_hpd_init(struct radeon_device *rdev)
 		default:
 			break;
 		}
-		radeon_hpd_set_polarity(rdev, radeon_connector->hpd.hpd);
 	}
 	if (rdev->irq.installed)
 		rs600_irq_set(rdev);

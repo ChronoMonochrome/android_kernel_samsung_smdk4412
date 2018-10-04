@@ -76,9 +76,6 @@ static void xhci_pci_quirks(struct device *dev, struct xhci_hcd *xhci)
 	if (pdev->vendor == PCI_VENDOR_ID_NEC)
 		xhci->quirks |= XHCI_NEC_HOST;
 
-	if (pdev->vendor == PCI_VENDOR_ID_AMD && xhci->hci_version == 0x96)
-		xhci->quirks |= XHCI_AMD_0x96_HOST;
-
 	/* AMD PLL quirk */
 	if (pdev->vendor == PCI_VENDOR_ID_AMD && usb_amd_find_chipset_info())
 		xhci->quirks |= XHCI_AMD_PLL_FIX;
