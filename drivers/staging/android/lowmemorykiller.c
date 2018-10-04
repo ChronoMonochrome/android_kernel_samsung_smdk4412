@@ -99,7 +99,7 @@ task_notify_func(struct notifier_block *self, unsigned long val, void *data)
 
 static int lowmem_shrink(struct shrinker *s, struct shrink_control *sc)
 {
-	struct task_struct *tsk;
+	struct task_struct *p;
 #ifdef ENHANCED_LMK_ROUTINE
 	struct task_struct *selected[LOWMEM_DEATHPENDING_DEPTH] = {NULL,};
 #else
@@ -180,19 +180,17 @@ static int lowmem_shrink(struct shrinker *s, struct shrink_control *sc)
 #endif
 
 	rcu_read_lock();
-	for_each_process(tsk) {
-		struct task_struct *p;
+	for_each_process(p) {
+		struct mm_struct *mm;
 		struct signal_struct *sig;
 		int oom_adj;
 #ifdef ENHANCED_LMK_ROUTINE
 		int is_exist_oom_task = 0;
 #endif
-		p = find_lock_task_mm(tsk);
-		if (!p)
-			continue;
-
+		task_lock(p);
+		mm = p->mm;
 		sig = p->signal;
-		if (!sig) {
+		if (!mm || !sig) {
 			task_unlock(p);
 			continue;
 		}
@@ -201,7 +199,7 @@ static int lowmem_shrink(struct shrinker *s, struct shrink_control *sc)
 			task_unlock(p);
 			continue;
 		}
-		tasksize = get_mm_rss(p->mm);
+		tasksize = get_mm_rss(mm);
 		task_unlock(p);
 		if (tasksize <= 0)
 			continue;
