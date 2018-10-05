@@ -381,6 +381,14 @@ static int nfs4_access_to_omode(u32 access)
 	BUG();
 }
 
+static int nfs4_access_bmap_to_omode(struct nfs4_stateid *stp)
+{
+	unsigned int access;
+
+	set_access(&access, stp->st_access_bmap);
+	return nfs4_access_to_omode(access);
+}
+
 static void unhash_generic_stateid(struct nfs4_stateid *stp)
 {
 	list_del(&stp->st_hash);
@@ -390,14 +398,11 @@ static void unhash_generic_stateid(struct nfs4_stateid *stp)
 
 static void free_generic_stateid(struct nfs4_stateid *stp)
 {
-	int i;
+	int oflag;
 
 	if (stp->st_access_bmap) {
-		for (i = 1; i < 4; i++) {
-			if (test_bit(i, &stp->st_access_bmap))
-				nfs4_file_put_access(stp->st_file,
-						nfs4_access_to_omode(i));
-		}
+		oflag = nfs4_access_bmap_to_omode(stp);
+		nfs4_file_put_access(stp->st_file, oflag);
 	}
 	put_nfs4_file(stp->st_file);
 	kmem_cache_free(stateid_slab, stp);
@@ -2332,6 +2337,15 @@ out:
 	return ret;
 }
 
+static inline void
+nfs4_file_downgrade(struct nfs4_file *fp, unsigned int share_access)
+{
+	if (share_access & NFS4_SHARE_ACCESS_WRITE)
+		nfs4_file_put_access(fp, O_WRONLY);
+	if (share_access & NFS4_SHARE_ACCESS_READ)
+		nfs4_file_put_access(fp, O_RDONLY);
+}
+
 static void nfsd_break_one_deleg(struct nfs4_delegation *dp)
 {
 	/* We're assuming the state code never drops its reference
@@ -2542,18 +2556,12 @@ static inline int nfs4_access_to_access(u32 nfs4_access)
 	return flags;
 }
 
-static __be32 nfs4_get_vfs_file(struct svc_rqst *rqstp, struct nfs4_file *fp,
-		struct svc_fh *cur_fh, struct nfsd4_open *open)
+static __be32 nfs4_get_vfs_file(struct svc_rqst *rqstp, struct nfs4_file
+*fp, struct svc_fh *cur_fh, u32 nfs4_access)
 {
 	__be32 status;
-	int oflag = nfs4_access_to_omode(open->op_share_access);
-	int access = nfs4_access_to_access(open->op_share_access);
-
-	/* CLAIM_DELEGATE_CUR is used in response to a broken lease;
-	 * allowing it to break the lease and return EAGAIN leaves the
-	 * client unable to make progress in returning the delegation */
-	if (open->op_claim_type == NFS4_OPEN_CLAIM_DELEGATE_CUR)
-		access |= NFSD_MAY_NOT_BREAK_LEASE;
+	int oflag = nfs4_access_to_omode(nfs4_access);
+	int access = nfs4_access_to_access(nfs4_access);
 
 	if (!fp->fi_fds[oflag]) {
 		status = nfsd_open(rqstp, cur_fh, S_IFREG, access,
@@ -2578,7 +2586,7 @@ nfs4_new_open(struct svc_rqst *rqstp, struct nfs4_stateid **stpp,
 	if (stp == NULL)
 		return nfserr_resource;
 
-	status = nfs4_get_vfs_file(rqstp, fp, cur_fh, open);
+	status = nfs4_get_vfs_file(rqstp, fp, cur_fh, open->op_share_access);
 	if (status) {
 		kmem_cache_free(stateid_slab, stp);
 		return status;
@@ -2611,14 +2619,14 @@ nfs4_upgrade_open(struct svc_rqst *rqstp, struct nfs4_file *fp, struct svc_fh *c
 
 	new_access = !test_bit(op_share_access, &stp->st_access_bmap);
 	if (new_access) {
-		status = nfs4_get_vfs_file(rqstp, fp, cur_fh, open);
+		status = nfs4_get_vfs_file(rqstp, fp, cur_fh, op_share_access);
 		if (status)
 			return status;
 	}
 	status = nfsd4_truncate(rqstp, cur_fh, open);
 	if (status) {
 		if (new_access) {
-			int oflag = nfs4_access_to_omode(op_share_access);
+			int oflag = nfs4_access_to_omode(new_access);
 			nfs4_file_put_access(fp, oflag);
 		}
 		return status;
@@ -3376,15 +3384,18 @@ out:
 	return status;
 }
 
-static inline void nfs4_file_downgrade(struct nfs4_stateid *stp, unsigned int to_access)
+
+/*
+ * unset all bits in union bitmap (bmap) that
+ * do not exist in share (from successful OPEN_DOWNGRADE)
+ */
+static void
+reset_union_bmap_access(unsigned long access, unsigned long *bmap)
 {
 	int i;
-
 	for (i = 1; i < 4; i++) {
-		if (test_bit(i, &stp->st_access_bmap) && !(i & to_access)) {
-			nfs4_file_put_access(stp->st_file, i);
-			__clear_bit(i, &stp->st_access_bmap);
-		}
+		if ((i & access) != i)
+			__clear_bit(i, bmap);
 	}
 }
 
@@ -3405,6 +3416,7 @@ nfsd4_open_downgrade(struct svc_rqst *rqstp,
 {
 	__be32 status;
 	struct nfs4_stateid *stp;
+	unsigned int share_access;
 
 	dprintk("NFSD: nfsd4_open_downgrade on file %.*s\n", 
 			(int)cstate->current_fh.fh_dentry->d_name.len,
@@ -3433,8 +3445,10 @@ nfsd4_open_downgrade(struct svc_rqst *rqstp,
 			stp->st_deny_bmap, od->od_share_deny);
 		goto out;
 	}
-	nfs4_file_downgrade(stp, od->od_share_access);
+	set_access(&share_access, stp->st_access_bmap);
+	nfs4_file_downgrade(stp->st_file, share_access & ~od->od_share_access);
 
+	reset_union_bmap_access(od->od_share_access, &stp->st_access_bmap);
 	reset_union_bmap_deny(od->od_share_deny, &stp->st_deny_bmap);
 
 	update_stateid(&stp->st_stateid);

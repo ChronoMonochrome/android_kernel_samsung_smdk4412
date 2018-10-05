@@ -4644,7 +4644,7 @@ do_more:
 	}
 	ext4_mark_super_dirty(sb);
 error_return:
-	if (freed && !(flags & EXT4_FREE_BLOCKS_NO_QUOT_UPDATE))
+	if (freed)
 		dquot_free_block(inode, freed);
 	brelse(bitmap_bh);
 	ext4_std_error(sb, err);

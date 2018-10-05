@@ -99,10 +99,9 @@ struct nfs_open_context {
 
 struct nfs_open_dir_context {
 	struct rpc_cred *cred;
-	unsigned long attr_gencount;
 	__u64 dir_cookie;
 	__u64 dup_cookie;
-	signed char duped;
+	int duped;
 };
 
 /*

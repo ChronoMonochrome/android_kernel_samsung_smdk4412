@@ -1125,13 +1125,12 @@ void wiphy_update_regulatory(struct wiphy *wiphy,
 	enum ieee80211_band band;
 
 	if (ignore_reg_update(wiphy, initiator))
-		return;
-
+		goto out;
 	for (band = 0; band < IEEE80211_NUM_BANDS; band++) {
 		if (wiphy->bands[band])
 			handle_band(wiphy, band, initiator);
 	}
-
+out:
 	reg_process_beacons(wiphy);
 	reg_process_ht_flags(wiphy);
 	if (wiphy->reg_notifier)
