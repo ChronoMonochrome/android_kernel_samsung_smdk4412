@@ -60,6 +60,7 @@
 #include <linux/dma-contiguous.h>
 #endif
 
+#include <asm/io.h>
 #include <asm/mach/arch.h>
 #include <asm/mach-types.h>
 
