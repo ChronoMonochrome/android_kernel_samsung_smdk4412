@@ -176,15 +176,6 @@ static const struct nla_policy nl80211_policy[NL80211_ATTR_MAX+1] = {
 	[NL80211_ATTR_WOWLAN_TRIGGERS] = { .type = NLA_NESTED },
 	[NL80211_ATTR_STA_PLINK_STATE] = { .type = NLA_U8 },
 	[NL80211_ATTR_SCHED_SCAN_INTERVAL] = { .type = NLA_U32 },
-	[NL80211_ATTR_REKEY_DATA] = { .type = NLA_NESTED },
-	[NL80211_ATTR_SCAN_SUPP_RATES] = { .type = NLA_NESTED },
-	[NL80211_ATTR_HIDDEN_SSID] = { .type = NLA_U32 },
-	[NL80211_ATTR_IE_PROBE_RESP] = { .type = NLA_BINARY,
-					 .len = IEEE80211_MAX_DATA_LEN },
-	[NL80211_ATTR_IE_ASSOC_RESP] = { .type = NLA_BINARY,
-					 .len = IEEE80211_MAX_DATA_LEN },
-	[NL80211_ATTR_ROAM_SUPPORT] = { .type = NLA_FLAG },
-	[NL80211_ATTR_SCHED_SCAN_MATCH] = { .type = NLA_NESTED },
 };
 
 /* policy for the key attributes */
@@ -213,12 +204,6 @@ nl80211_wowlan_policy[NUM_NL80211_WOWLAN_TRIG] = {
 	[NL80211_WOWLAN_TRIG_DISCONNECT] = { .type = NLA_FLAG },
 	[NL80211_WOWLAN_TRIG_MAGIC_PKT] = { .type = NLA_FLAG },
 	[NL80211_WOWLAN_TRIG_PKT_PATTERN] = { .type = NLA_NESTED },
-};
-
-static const struct nla_policy
-nl80211_match_policy[NL80211_SCHED_SCAN_MATCH_ATTR_MAX + 1] = {
-	[NL80211_ATTR_SCHED_SCAN_MATCH_SSID] = { .type = NLA_BINARY,
-						 .len = IEEE80211_MAX_SSID_LEN },
 };
 
 /* ifidx get helper */
@@ -698,14 +683,8 @@ static int nl80211_send_wiphy(struct sk_buff *msg, u32 pid, u32 seq, int flags,
 		    dev->wiphy.coverage_class);
 	NLA_PUT_U8(msg, NL80211_ATTR_MAX_NUM_SCAN_SSIDS,
 		   dev->wiphy.max_scan_ssids);
-	NLA_PUT_U8(msg, NL80211_ATTR_MAX_NUM_SCHED_SCAN_SSIDS,
-		   dev->wiphy.max_sched_scan_ssids);
 	NLA_PUT_U16(msg, NL80211_ATTR_MAX_SCAN_IE_LEN,
 		    dev->wiphy.max_scan_ie_len);
-	NLA_PUT_U16(msg, NL80211_ATTR_MAX_SCHED_SCAN_IE_LEN,
-		    dev->wiphy.max_sched_scan_ie_len);
-	NLA_PUT_U8(msg, NL80211_ATTR_MAX_MATCH_SETS,
-		   dev->wiphy.max_match_sets);
 
 	if (dev->wiphy.flags & WIPHY_FLAG_IBSS_RSN)
 		NLA_PUT_FLAG(msg, NL80211_ATTR_SUPPORT_IBSS_RSN);
@@ -2230,10 +2209,6 @@ static int nl80211_send_station(struct sk_buff *msg, u32 pid, u32 seq,
 	}
 	nla_nest_end(msg, sinfoattr);
 
-	if (sinfo->filled & STATION_INFO_ASSOC_REQ_IES)
-		NLA_PUT(msg, NL80211_ATTR_IE, sinfo->assoc_req_ies_len,
-			sinfo->assoc_req_ies);
-
 	return genlmsg_end(msg, hdr);
 
  nla_put_failure:
@@ -2261,7 +2236,6 @@ static int nl80211_dump_station(struct sk_buff *skb,
 	}
 
 	while (1) {
-		memset(&sinfo, 0, sizeof(sinfo));
 		err = dev->ops->dump_station(&dev->wiphy, netdev, sta_idx,
 					     mac_addr, &sinfo);
 		if (err == -ENOENT)
@@ -3475,11 +3449,10 @@ static int nl80211_start_sched_scan(struct sk_buff *skb,
 	struct net_device *dev = info->user_ptr[1];
 	struct nlattr *attr;
 	struct wiphy *wiphy;
-	int err, tmp, n_ssids = 0, n_match_sets = 0, n_channels, i;
+	int err, tmp, n_ssids = 0, n_channels, i;
 	u32 interval;
 	enum ieee80211_band band;
 	size_t ie_len;
-	struct nlattr *tb[NL80211_SCHED_SCAN_MATCH_ATTR_MAX + 1];
 
 	if (!(rdev->wiphy.flags & WIPHY_FLAG_SUPPORTS_SCHED_SCAN) ||
 	    !rdev->ops->sched_scan_start)
@@ -3515,16 +3488,7 @@ static int nl80211_start_sched_scan(struct sk_buff *skb,
 				    tmp)
 			n_ssids++;
 
-	if (n_ssids > wiphy->max_sched_scan_ssids)
-		return -EINVAL;
-
-	if (info->attrs[NL80211_ATTR_SCHED_SCAN_MATCH])
-		nla_for_each_nested(attr,
-				    info->attrs[NL80211_ATTR_SCHED_SCAN_MATCH],
-				    tmp)
-			n_match_sets++;
-
-	if (n_match_sets > wiphy->max_match_sets)
+	if (n_ssids > wiphy->max_scan_ssids)
 		return -EINVAL;
 
 	if (info->attrs[NL80211_ATTR_IE])
@@ -3532,7 +3496,7 @@ static int nl80211_start_sched_scan(struct sk_buff *skb,
 	else
 		ie_len = 0;
 
-	if (ie_len > wiphy->max_sched_scan_ie_len)
+	if (ie_len > wiphy->max_scan_ie_len)
 		return -EINVAL;
 
 	mutex_lock(&rdev->sched_scan_mtx);
@@ -3544,7 +3508,6 @@ static int nl80211_start_sched_scan(struct sk_buff *skb,
 
 	request = kzalloc(sizeof(*request)
 			+ sizeof(*request->ssids) * n_ssids
-			+ sizeof(*request->match_sets) * n_match_sets
 			+ sizeof(*request->channels) * n_channels
 			+ ie_len, GFP_KERNEL);
 	if (!request) {
@@ -3561,18 +3524,6 @@ static int nl80211_start_sched_scan(struct sk_buff *skb,
 		else
 			request->ie = (void *)(request->channels + n_channels);
 	}
-
-	if (n_match_sets) {
-		if (request->ie)
-			request->match_sets = (void *)(request->ie + ie_len);
-		else if (request->ssids)
-			request->match_sets =
-				(void *)(request->ssids + n_ssids);
-		else
-			request->match_sets =
-				(void *)(request->channels + n_channels);
-	}
-	request->n_match_sets = n_match_sets;
 
 	i = 0;
 	if (info->attrs[NL80211_ATTR_SCAN_FREQUENCIES]) {
@@ -3634,31 +3585,6 @@ static int nl80211_start_sched_scan(struct sk_buff *skb,
 			request->ssids[i].ssid_len = nla_len(attr);
 			memcpy(request->ssids[i].ssid, nla_data(attr),
 			       nla_len(attr));
-			i++;
-		}
-	}
-
-	i = 0;
-	if (info->attrs[NL80211_ATTR_SCHED_SCAN_MATCH]) {
-		nla_for_each_nested(attr,
-				    info->attrs[NL80211_ATTR_SCHED_SCAN_MATCH],
-				    tmp) {
-			struct nlattr *ssid;
-
-			nla_parse(tb, NL80211_SCHED_SCAN_MATCH_ATTR_MAX,
-				  nla_data(attr), nla_len(attr),
-				  nl80211_match_policy);
-			ssid = tb[NL80211_ATTR_SCHED_SCAN_MATCH_SSID];
-			if (ssid) {
-				if (nla_len(ssid) > IEEE80211_MAX_SSID_LEN) {
-					err = -EINVAL;
-					goto out_free;
-				}
-				memcpy(request->match_sets[i].ssid.ssid,
-				       nla_data(ssid), nla_len(ssid));
-				request->match_sets[i].ssid.ssid_len =
-					nla_len(ssid);
-			}
 			i++;
 		}
 	}
@@ -3937,36 +3863,22 @@ static bool nl80211_valid_auth_type(enum nl80211_auth_type auth_type)
 static bool nl80211_valid_wpa_versions(u32 wpa_versions)
 {
 	return !(wpa_versions & ~(NL80211_WPA_VERSION_1 |
-				NL80211_WPA_VERSION_2 |
-/*WAPI*/
-				NL80211_WAPI_VERSION_1));
+				  NL80211_WPA_VERSION_2));
 }
 
 static bool nl80211_valid_akm_suite(u32 akm)
 {
 	return akm == WLAN_AKM_SUITE_8021X ||
-#if 1 /* AKM_SUITE for CCKM */
-		akm == WLAN_AKM_SUITE_CCKM ||
-#endif
-		akm == WLAN_AKM_SUITE_PSK ||
-/* WAPI */
-		akm == WLAN_AKM_SUITE_WAPI_PSK ||
-		akm == WLAN_AKM_SUITE_WAPI_CERT;
+		akm == WLAN_AKM_SUITE_PSK;
 }
 
 static bool nl80211_valid_cipher_suite(u32 cipher)
 {
-	if (cipher == WLAN_CIPHER_SUITE_SMS4)
-		printk(KERN_DEBUG " ** nl80211_valid_cipher_suite, is WLAN_CIPHER_SUITE_SMS4\n");
 	return cipher == WLAN_CIPHER_SUITE_WEP40 ||
 		cipher == WLAN_CIPHER_SUITE_WEP104 ||
 		cipher == WLAN_CIPHER_SUITE_TKIP ||
 		cipher == WLAN_CIPHER_SUITE_CCMP ||
-		cipher == WLAN_CIPHER_SUITE_AES_CMAC ||
-/*
-WAPI
-*/
-		cipher == WLAN_CIPHER_SUITE_SMS4;
+		cipher == WLAN_CIPHER_SUITE_AES_CMAC;
 }
 
 
@@ -6916,7 +6828,8 @@ nl80211_send_cqm_pktloss_notify(struct cfg80211_registered_device *rdev,
 		return;
 	}
 
-	genlmsg_multicast(msg, 0, nl80211_mlme_mcgrp.id, gfp);
+	genlmsg_multicast_netns(wiphy_net(&rdev->wiphy), msg, 0,
+				nl80211_mlme_mcgrp.id, gfp);
 	return;
 
  nla_put_failure:
