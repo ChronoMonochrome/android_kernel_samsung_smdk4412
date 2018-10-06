@@ -361,7 +361,7 @@ static int ehci_bus_resume (struct usb_hcd *hcd)
 	u32			temp;
 	u32			power_okay;
 	int			i;
-	unsigned long		resume_needed = 0;
+	u8			resume_needed = 0;
 
 	if (time_before (jiffies, ehci->next_statechange))
 		msleep(5);
@@ -434,7 +434,7 @@ static int ehci_bus_resume (struct usb_hcd *hcd)
 		if (test_bit(i, &ehci->bus_suspended) &&
 				(temp & PORT_SUSPEND)) {
 			temp |= PORT_RESUME;
-			set_bit(i, &resume_needed);
+			resume_needed = 1;
 		}
 		ehci_writel(ehci, temp, &ehci->regs->port_status [i]);
 	}
@@ -449,7 +449,8 @@ static int ehci_bus_resume (struct usb_hcd *hcd)
 	i = HCS_N_PORTS (ehci->hcs_params);
 	while (i--) {
 		temp = ehci_readl(ehci, &ehci->regs->port_status [i]);
-		if (test_bit(i, &resume_needed)) {
+		if (test_bit(i, &ehci->bus_suspended) &&
+				(temp & PORT_SUSPEND)) {
 			temp &= ~(PORT_RWC_BITS | PORT_RESUME);
 			ehci_writel(ehci, temp, &ehci->regs->port_status [i]);
 			ehci_vdbg (ehci, "resumed port %d\n", i + 1);

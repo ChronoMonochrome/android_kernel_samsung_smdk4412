@@ -670,7 +670,7 @@ static int __must_check __sta_info_destroy(struct sta_info *sta)
 		BUG_ON(!sdata->bss);
 
 		atomic_dec(&sdata->bss->num_sta_ps);
-		sta_info_clear_tim_bit(sta);
+		__sta_info_clear_tim_bit(sdata->bss, sta);
 	}
 
 	local->num_sta--;

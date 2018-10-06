@@ -4252,9 +4252,9 @@ pick_next_task(struct rq *rq)
 }
 
 /*
- * __schedule() is the main scheduler function.
+ * schedule() is the main scheduler function.
  */
-static void __sched __schedule(void)
+asmlinkage void __sched schedule(void)
 {
 	struct task_struct *prev, *next;
 	unsigned long *switch_count;
@@ -4295,6 +4295,16 @@ need_resched:
 				if (to_wakeup)
 					try_to_wake_up_local(to_wakeup);
 			}
+
+			/*
+			 * If we are going to sleep and we have plugged IO
+			 * queued, make sure to submit it to avoid deadlocks.
+			 */
+			if (blk_needs_flush_plug(prev)) {
+				raw_spin_unlock(&rq->lock);
+				blk_schedule_flush_plug(prev);
+				raw_spin_lock(&rq->lock);
+			}
 		}
 		switch_count = &prev->nvcsw;
 	}
@@ -4332,26 +4342,6 @@ need_resched:
 	preempt_enable_no_resched();
 	if (need_resched())
 		goto need_resched;
-}
-
-static inline void sched_submit_work(struct task_struct *tsk)
-{
-	if (!tsk->state)
-		return;
-	/*
-	 * If we are going to sleep and we have plugged IO queued,
-	 * make sure to submit it to avoid deadlocks.
-	 */
-	if (blk_needs_flush_plug(tsk))
-		blk_schedule_flush_plug(tsk);
-}
-
-asmlinkage void schedule(void)
-{
-	struct task_struct *tsk = current;
-
-	sched_submit_work(tsk);
-	__schedule();
 }
 EXPORT_SYMBOL(schedule);
 
@@ -4426,7 +4416,7 @@ asmlinkage void __sched notrace preempt_schedule(void)
 
 	do {
 		add_preempt_count_notrace(PREEMPT_ACTIVE);
-		__schedule();
+		schedule();
 		sub_preempt_count_notrace(PREEMPT_ACTIVE);
 
 		/*
@@ -4454,7 +4444,7 @@ asmlinkage void __sched preempt_schedule_irq(void)
 	do {
 		add_preempt_count(PREEMPT_ACTIVE);
 		local_irq_enable();
-		__schedule();
+		schedule();
 		local_irq_disable();
 		sub_preempt_count(PREEMPT_ACTIVE);
 
@@ -5579,7 +5569,7 @@ static inline int should_resched(void)
 static void __cond_resched(void)
 {
 	add_preempt_count(PREEMPT_ACTIVE);
-	__schedule();
+	schedule();
 	sub_preempt_count(PREEMPT_ACTIVE);
 }
 
@@ -7434,7 +7424,6 @@ static void __sdt_free(const struct cpumask *cpu_map)
 			struct sched_domain *sd = *per_cpu_ptr(sdd->sd, j);
 			if (sd && (sd->flags & SD_OVERLAP))
 				free_sched_groups(sd->groups, 0);
-			kfree(*per_cpu_ptr(sdd->sd, j));
 			kfree(*per_cpu_ptr(sdd->sg, j));
 			kfree(*per_cpu_ptr(sdd->sgp, j));
 		}

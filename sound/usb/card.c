@@ -529,11 +529,8 @@ static void *snd_usb_audio_probe(struct usb_device *dev,
 	return chip;
 
  __error:
-	if (chip) {
-		if (!chip->num_interfaces)
-			snd_card_free(chip->card);
-		chip->probing = 0;
-	}
+	if (chip && !chip->num_interfaces)
+		snd_card_free(chip->card);
 	mutex_unlock(&register_mutex);
  __err_val:
 	return NULL;

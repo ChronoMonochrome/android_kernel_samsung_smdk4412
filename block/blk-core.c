@@ -348,10 +348,9 @@ void blk_put_queue(struct request_queue *q)
 EXPORT_SYMBOL(blk_put_queue);
 
 /*
- * Note: If a driver supplied the queue lock, it is disconnected
- * by this function. The actual state of the lock doesn't matter
- * here as the request_queue isn't accessible after this point
- * (QUEUE_FLAG_DEAD is set) and no other requests will be queued.
+ * Note: If a driver supplied the queue lock, it should not zap that lock
+ * unexpectedly as some queue cleanup components like elevator_exit() and
+ * blk_throtl_exit() need queue lock.
  */
 void blk_cleanup_queue(struct request_queue *q)
 {
@@ -368,8 +367,10 @@ void blk_cleanup_queue(struct request_queue *q)
 	queue_flag_set_unlocked(QUEUE_FLAG_DEAD, q);
 	mutex_unlock(&q->sysfs_lock);
 
-	if (q->queue_lock != &q->__queue_lock)
-		q->queue_lock = &q->__queue_lock;
+	if (q->elevator)
+		elevator_exit(q->elevator);
+
+	blk_throtl_exit(q);
 
 	blk_put_queue(q);
 }

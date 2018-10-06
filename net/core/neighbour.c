@@ -1386,15 +1386,11 @@ static void neigh_proxy_process(unsigned long arg)
 
 		if (tdif <= 0) {
 			struct net_device *dev = skb->dev;
-
 			__skb_unlink(skb, &tbl->proxy_queue);
-			if (tbl->proxy_redo && netif_running(dev)) {
-				rcu_read_lock();
+			if (tbl->proxy_redo && netif_running(dev))
 				tbl->proxy_redo(skb);
-				rcu_read_unlock();
-			} else {
+			else
 				kfree_skb(skb);
-			}
 
 			dev_put(dev);
 		} else if (!sched_next || tdif < sched_next)

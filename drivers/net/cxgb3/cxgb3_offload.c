@@ -1149,14 +1149,12 @@ static void cxgb_redirect(struct dst_entry *old, struct dst_entry *new)
 		if (te && te->ctx && te->client && te->client->redirect) {
 			update_tcb = te->client->redirect(te->ctx, old, new, e);
 			if (update_tcb) {
-				rcu_read_lock();
 				l2t_hold(L2DATA(tdev), e);
-				rcu_read_unlock();
 				set_l2t_ix(tdev, tid, e);
 			}
 		}
 	}
-	l2t_release(tdev, e);
+	l2t_release(L2DATA(tdev), e);
 }
 
 /*
@@ -1269,7 +1267,7 @@ int cxgb3_offload_activate(struct adapter *adapter)
 		goto out_free;
 
 	err = -ENOMEM;
-	RCU_INIT_POINTER(dev->l2opt, t3_init_l2t(l2t_capacity));
+	L2DATA(dev) = t3_init_l2t(l2t_capacity);
 	if (!L2DATA(dev))
 		goto out_free;
 
@@ -1303,24 +1301,16 @@ int cxgb3_offload_activate(struct adapter *adapter)
 
 out_free_l2t:
 	t3_free_l2t(L2DATA(dev));
-	rcu_assign_pointer(dev->l2opt, NULL);
+	L2DATA(dev) = NULL;
 out_free:
 	kfree(t);
 	return err;
 }
 
-static void clean_l2_data(struct rcu_head *head)
-{
-	struct l2t_data *d = container_of(head, struct l2t_data, rcu_head);
-	t3_free_l2t(d);
-}
-
-
 void cxgb3_offload_deactivate(struct adapter *adapter)
 {
 	struct t3cdev *tdev = &adapter->tdev;
 	struct t3c_data *t = T3C_DATA(tdev);
-	struct l2t_data *d;
 
 	remove_adapter(adapter);
 	if (list_empty(&adapter_list))
@@ -1328,11 +1318,8 @@ void cxgb3_offload_deactivate(struct adapter *adapter)
 
 	free_tid_maps(&t->tid_maps);
 	T3C_DATA(tdev) = NULL;
-	rcu_read_lock();
-	d = L2DATA(tdev);
-	rcu_read_unlock();
-	rcu_assign_pointer(tdev->l2opt, NULL);
-	call_rcu(&d->rcu_head, clean_l2_data);
+	t3_free_l2t(L2DATA(tdev));
+	L2DATA(tdev) = NULL;
 	if (t->nofail_skb)
 		kfree_skb(t->nofail_skb);
 	kfree(t);
