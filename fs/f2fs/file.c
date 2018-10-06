@@ -19,7 +19,6 @@
 #include <linux/compat.h>
 #include <linux/uaccess.h>
 #include <linux/mount.h>
-#include <linux/dcache.h>
 
 #include "f2fs.h"
 #include "node.h"
@@ -92,17 +91,7 @@ static int get_parent_ino(struct inode *inode, nid_t *pino)
 	struct dentry *dentry;
 
 	inode = igrab(inode);
-
-	/* Alex - the following is equivalent to: dentry = d_find_any_alias(inode); */
-	dentry = NULL;
-	spin_lock(&inode->i_lock);
-	if (!list_empty(&inode->i_dentry)) {
-		dentry = list_first_entry(&inode->i_dentry,
-					  struct dentry, d_alias);
-		dget(dentry);
-	}
-	spin_unlock(&inode->i_lock);
-
+	dentry = d_find_any_alias(inode);
 	iput(inode);
 	if (!dentry)
 		return 0;
@@ -117,7 +106,7 @@ static int get_parent_ino(struct inode *inode, nid_t *pino)
 	return 1;
 }
 
-int f2fs_sync_file(struct file *file, int datasync)
+int f2fs_sync_file(struct file *file, loff_t start, loff_t end, int datasync)
 {
 	struct inode *inode = file->f_mapping->host;
 	struct f2fs_sb_info *sbi = F2FS_SB(inode->i_sb);
@@ -133,9 +122,16 @@ int f2fs_sync_file(struct file *file, int datasync)
 		return 0;
 
 	trace_f2fs_sync_file_enter(inode);
+	ret = filemap_write_and_wait_range(inode->i_mapping, start, end);
+	if (ret) {
+		trace_f2fs_sync_file_exit(inode, need_cp, datasync, ret);
+		return ret;
+	}
 
 	/* guarantee free sections for fsync */
 	f2fs_balance_fs(sbi);
+
+	mutex_lock(&inode->i_mutex);
 
 	/*
 	 * Both of fdatasync() and fsync() are able to be recovered from
@@ -182,6 +178,7 @@ int f2fs_sync_file(struct file *file, int datasync)
 		ret = blkdev_issue_flush(inode->i_sb->s_bdev, GFP_KERNEL, NULL);
 	}
 out:
+	mutex_unlock(&inode->i_mutex);
 	trace_f2fs_sync_file_exit(inode, need_cp, datasync, ret);
 	return ret;
 }
@@ -397,7 +394,7 @@ int f2fs_setattr(struct dentry *dentry, struct iattr *attr)
 const struct inode_operations f2fs_file_inode_operations = {
 	.getattr	= f2fs_getattr,
 	.setattr	= f2fs_setattr,
-	.check_acl	= f2fs_check_acl,
+	.get_acl	= f2fs_get_acl,
 #ifdef CONFIG_F2FS_FS_XATTR
 	.setxattr	= generic_setxattr,
 	.getxattr	= generic_getxattr,
@@ -601,7 +598,7 @@ long f2fs_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 	{
 		unsigned int oldflags;
 
-		ret = mnt_want_write(filp->f_path.mnt);
+		ret = mnt_want_write_file(filp);
 		if (ret)
 			return ret;
 
@@ -638,7 +635,7 @@ long f2fs_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 		inode->i_ctime = CURRENT_TIME;
 		mark_inode_dirty(inode);
 out:
-		mnt_drop_write(filp->f_path.mnt);
+		mnt_drop_write_file(filp);
 		return ret;
 	}
 	default:

@@ -36,11 +36,12 @@ struct f2fs_acl_header {
 
 #ifdef CONFIG_F2FS_FS_POSIX_ACL
 
-extern int f2fs_check_acl(struct inode *inode, int mask, unsigned int flags);
+extern struct posix_acl *f2fs_get_acl(struct inode *, int);
 extern int f2fs_acl_chmod(struct inode *);
 extern int f2fs_init_acl(struct inode *, struct inode *, struct page *);
 #else
 #define f2fs_check_acl	NULL
+#define f2fs_get_acl	NULL
 #define f2fs_set_acl	NULL
 
 static inline int f2fs_acl_chmod(struct inode *inode)
