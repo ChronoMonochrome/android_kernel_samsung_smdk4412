@@ -79,7 +79,7 @@ struct async {
 	struct list_head asynclist;
 	struct dev_state *ps;
 	struct pid *pid;
-	uid_t uid, euid;
+	const struct cred *cred;
 	unsigned int signr;
 	unsigned int ifnum;
 	void __user *userbuffer;
@@ -248,6 +248,7 @@ static struct async *alloc_async(unsigned int numisoframes)
 static void free_async(struct async *as)
 {
 	put_pid(as->pid);
+	put_cred(as->cred);
 	kfree(as->urb->transfer_buffer);
 	kfree(as->urb->setup_packet);
 	usb_free_urb(as->urb);
@@ -393,9 +394,8 @@ static void async_completed(struct urb *urb)
 	struct dev_state *ps = as->ps;
 	struct siginfo sinfo;
 	struct pid *pid = NULL;
-	uid_t uid = 0;
-	uid_t euid = 0;
 	u32 secid = 0;
+	const struct cred *cred = NULL;
 	int signr;
 
 	spin_lock(&ps->lock);
@@ -408,8 +408,7 @@ static void async_completed(struct urb *urb)
 		sinfo.si_code = SI_ASYNCIO;
 		sinfo.si_addr = as->userurb;
 		pid = as->pid;
-		uid = as->uid;
-		euid = as->euid;
+		cred = get_cred(as->cred);
 		secid = as->secid;
 	}
 	snoop(&urb->dev->dev, "urb complete\n");
@@ -422,9 +421,10 @@ static void async_completed(struct urb *urb)
 		cancel_bulk_urbs(ps, as->bulk_addr);
 	spin_unlock(&ps->lock);
 
-	if (signr)
-		kill_pid_info_as_uid(sinfo.si_signo, &sinfo, pid, uid,
-				      euid, secid);
+	if (signr) {
+		kill_pid_info_as_cred(sinfo.si_signo, &sinfo, pid, cred, secid);
+		put_cred(cred);
+	}
 
 	wake_up(&ps->wait);
 }
@@ -1271,8 +1271,7 @@ static int proc_do_submiturb(struct dev_state *ps, struct usbdevfs_urb *uurb,
 	as->signr = uurb->signr;
 	as->ifnum = ifnum;
 	as->pid = get_pid(task_pid(current));
-	as->uid = cred->uid;
-	as->euid = cred->euid;
+	as->cred = get_current_cred();
 	security_task_getsecid(current, &as->secid);
 	if (!is_in && uurb->buffer_length > 0) {
 		if (copy_from_user(as->urb->transfer_buffer, uurb->buffer,
@@ -1990,9 +1989,8 @@ static void usbdev_remove(struct usb_device *udev)
 			sinfo.si_errno = EPIPE;
 			sinfo.si_code = SI_ASYNCIO;
 			sinfo.si_addr = ps->disccontext;
-			kill_pid_info_as_uid(ps->discsignr, &sinfo,
-					ps->disc_pid, ps->disc_uid,
-					ps->disc_euid, ps->secid);
+			kill_pid_info_as_cred(ps->discsignr, &sinfo,
+					ps->disc_pid, get_current_cred(), ps->secid);
 		}
 	}
 }
