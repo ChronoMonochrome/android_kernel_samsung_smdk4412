@@ -11,6 +11,7 @@
  */
 
 #include <linux/io.h>
+#include <linux/module.h>
 #include <linux/kernel.h>
 
 #include <mach/regs-clock.h>
