@@ -24,7 +24,7 @@
 #include <asm/cacheflush.h>
 #include <asm/hardware/gic.h>
 #include <asm/smp_scu.h>
-#include <asm/unified.h>
+#include <asm/smp_plat.h>
 
 #include <mach/hardware.h>
 #include <mach/regs-clock.h>
@@ -181,7 +181,7 @@ int __cpuinit boot_secondary(unsigned int cpu, struct task_struct *idle)
 	while (time_before(jiffies, timeout)) {
 		smp_rmb();
 
-		__raw_writel(BSYM(virt_to_phys(exynos_secondary_startup)),
+		__raw_writel(virt_to_phys(exynos_secondary_startup),
 			cpu_boot_info[cpu].boot_base);
 
 #ifdef CONFIG_ARM_TRUSTZONE
