@@ -876,9 +876,10 @@ config ARCH_EXYNOS
 	select HAVE_S3C_RTC if RTC_CLASS
 	select HAVE_S3C2410_I2C if I2C
 	select HAVE_S3C2410_WATCHDOG if WATCHDOG
+	select NEED_MACH_MEMORY_H
+	select MIGHT_HAVE_CACHE_L2X0
 	select ARCH_HAS_OPP
 	select PM_OPP if PM
-	select NEED_MACH_MEMORY_H
 	help
 	  Support for SAMSUNG's EXYNOS SoCs (EXYNOS4/5)
 
