@@ -401,7 +401,7 @@ static unsigned int exynos4_pm_check_eint_pend(void)
 	return pending_eint;
 }
 
-static int exynos4_pm_add(struct sys_device *sysdev)
+static int exynos4_pm_add(struct device *dev, struct subsys_interface *sif)
 {
 	pm_cpu_prep = exynos4_cpu_prepare;
 	pm_cpu_sleep = exynos4_cpu_suspend;
@@ -417,8 +417,10 @@ static int exynos4_pm_add(struct sys_device *sysdev)
 	return 0;
 }
 
-static struct sysdev_driver exynos4_pm_driver = {
-	.add		= exynos4_pm_add,
+static struct subsys_interface exynos4_pm_interface = {
+	.name		= "exynos4_pm",
+	.subsys		= &exynos4_subsys,
+	.add_dev	= exynos4_pm_add,
 };
 
 static __init int exynos4_pm_drvinit(void)
@@ -436,7 +438,7 @@ static __init int exynos4_pm_drvinit(void)
 	/* Disable XXTI pad in system level normal mode */
 	__raw_writel(0x0, S5P_XXTI_CONFIGURATION);
 
-	return sysdev_driver_register(&exynos4_sysclass, &exynos4_pm_driver);
+	return subsys_interface_register(&exynos4_pm_interface);
 }
 arch_initcall(exynos4_pm_drvinit);
 
