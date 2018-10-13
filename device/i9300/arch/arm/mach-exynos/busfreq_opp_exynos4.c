@@ -64,7 +64,7 @@ void update_busfreq_stat(struct busfreq_data *data, unsigned int index)
 {
 #ifdef BUSFREQ_DEBUG
 	unsigned long long cur_time = get_jiffies_64();
-	data->time_in_state[index] = cputime64_add(data->time_in_state[index], cputime_sub(cur_time, data->last_time));
+	data->time_in_state[index] = data->time_in_state[index] + (cur_time - data->last_time);
 	data->last_time = cur_time;
 #endif
 }
