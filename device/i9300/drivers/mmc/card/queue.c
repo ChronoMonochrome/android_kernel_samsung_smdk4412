@@ -113,7 +113,7 @@ static void mmc_request(struct request_queue *q)
 		return;
 	}
 
-	ioc = get_io_context(GFP_NOWAIT, 0);
+	ioc = get_task_io_context(current, GFP_NOWAIT, 0);
 	if (ioc) {
 		/* Set nopacked period if requesting process is RT class */
 		if (IOPRIO_PRIO_CLASS(ioc->ioprio) == IOPRIO_CLASS_RT)
