@@ -17,6 +17,7 @@
 #include <linux/io.h>
 
 #include <asm/cacheflush.h>
+#include <asm/cp15.h>
 #include <asm/smp_plat.h>
 
 #include <plat/cpu.h>
