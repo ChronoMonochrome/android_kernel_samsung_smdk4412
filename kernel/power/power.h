@@ -154,6 +154,9 @@ extern void swsusp_free(void);
 extern int swsusp_read(unsigned int *flags_p);
 extern int swsusp_write(unsigned int flags);
 extern void swsusp_close(fmode_t);
+#ifdef CONFIG_SUSPEND
+extern int swsusp_unmark(void);
+#endif
 
 /* kernel/power/block_io.c */
 extern struct block_device *hib_resume_bdev;
@@ -275,6 +278,11 @@ extern struct wake_lock main_wake_lock;
 extern struct workqueue_struct *sync_work_queue;
 extern struct wake_lock sync_wake_lock;
 extern suspend_state_t requested_suspend_state;
+extern void suspend_sys_sync_queue(void);
+extern int suspend_sys_sync_wait(void);
+#else
+void suspend_sys_sync_queue(void) {}
+int suspend_sys_sync_wait(void) { return 0; }
 #endif
 
 #ifdef CONFIG_USER_WAKELOCK
@@ -309,3 +317,21 @@ static inline void pm_wd_add_timer(struct timer_list *timer,
 				struct pm_wd_data *data, int timeout) { }
 static inline void pm_wd_del_timer(struct timer_list *timer) { }
 #endif
+
+#ifdef CONFIG_PM_AUTOSLEEP
+
+/* kernel/power/autosleep.c */
+extern int pm_autosleep_init(void);
+extern int pm_autosleep_lock(void);
+extern void pm_autosleep_unlock(void);
+extern suspend_state_t pm_autosleep_state(void);
+extern int pm_autosleep_set_state(suspend_state_t state);
+
+#else /* !CONFIG_PM_AUTOSLEEP */
+
+static inline int pm_autosleep_init(void) { return 0; }
+static inline int pm_autosleep_lock(void) { return 0; }
+static inline void pm_autosleep_unlock(void) {}
+static inline suspend_state_t pm_autosleep_state(void) { return PM_SUSPEND_ON; }
+
+#endif /* !CONFIG_PM_AUTOSLEEP */

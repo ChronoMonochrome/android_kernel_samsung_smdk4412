@@ -3,11 +3,12 @@
  *
  * Copyright (c) 2003 Patrick Mochel
  * Copyright (c) 2003 Open Source Development Lab
- * 
+ *
  * This file is released under the GPLv2
  *
  */
 
+#include <linux/export.h>
 #include <linux/kobject.h>
 #include <linux/string.h>
 #include <linux/resume-trace.h>
@@ -20,8 +21,13 @@
 #endif
 
 #if defined(CONFIG_CPU_EXYNOS4210)
-#define CONFIG_GPU_LOCK
+#define CONFIG_EXYNOS4_GPU_LOCK
 #define CONFIG_ROTATION_BOOSTER_SUPPORT
+#endif
+
+#if defined(CONFIG_CPU_EXYNOS4412) && defined(CONFIG_MALI400) \
+			&& defined(CONFIG_MALI_DVFS)
+#define CONFIG_EXYNOS4_GPU_LOCK
 #endif
 
 #ifdef CONFIG_DVFS_LIMIT
@@ -29,15 +35,8 @@
 #include <mach/cpufreq.h>
 #endif
 
-#ifdef CONFIG_GPU_LOCK
+#ifdef CONFIG_EXYNOS4_GPU_LOCK
 #include <mach/gpufreq.h>
-#endif
-
-#if defined(CONFIG_CPU_EXYNOS4412) && defined(CONFIG_VIDEO_MALI400MP) \
-		&& defined(CONFIG_VIDEO_MALI400MP_DVFS)
-#define CONFIG_PEGASUS_GPU_LOCK
-extern int mali_dvfs_bottom_lock_push(int lock_step);
-extern int mali_dvfs_bottom_lock_pop(void);
 #endif
 
 #include "power.h"
@@ -64,8 +63,9 @@ EXPORT_SYMBOL_GPL(unregister_pm_notifier);
 
 int pm_notifier_call_chain(unsigned long val)
 {
-	return (blocking_notifier_call_chain(&pm_chain_head, val, NULL)
-			== NOTIFY_BAD) ? -EINVAL : 0;
+	int ret = blocking_notifier_call_chain(&pm_chain_head, val, NULL);
+
+	return notifier_to_errno(ret);
 }
 
 /* If set, devices may be suspended and resumed asynchronously. */
@@ -82,7 +82,7 @@ static ssize_t pm_async_store(struct kobject *kobj, struct kobj_attribute *attr,
 {
 	unsigned long val;
 
-	if (strict_strtoul(buf, 10, &val))
+	if (kstrtoul(buf, 10, &val))
 		return -EINVAL;
 
 	if (val > 1)
@@ -139,7 +139,7 @@ static ssize_t pm_test_store(struct kobject *kobj, struct kobj_attribute *attr,
 	p = memchr(buf, '\n', n);
 	len = p ? p - buf : n;
 
-	mutex_lock(&pm_mutex);
+	lock_system_sleep();
 
 	level = TEST_FIRST;
 	for (s = &pm_tests[level]; level <= TEST_MAX; s++, level++)
@@ -149,15 +149,13 @@ static ssize_t pm_test_store(struct kobject *kobj, struct kobj_attribute *attr,
 			break;
 		}
 
-	mutex_unlock(&pm_mutex);
+	unlock_system_sleep();
 
 	return error ? error : n;
 }
 
 power_attr(pm_test);
 #endif /* CONFIG_PM_DEBUG */
-
-#endif /* CONFIG_PM_SLEEP */
 
 #ifdef CONFIG_DEBUG_FS
 static char *suspend_step_name(enum suspend_stat_step step)
@@ -190,16 +188,20 @@ static int suspend_stats_show(struct seq_file *s, void *unused)
 	last_errno %= REC_FAILED_NUM;
 	last_step = suspend_stats.last_failed_step + REC_FAILED_NUM - 1;
 	last_step %= REC_FAILED_NUM;
-	seq_printf(s, "%s: %d\n%s: %d\n%s: %d\n%s: %d\n"
-			"%s: %d\n%s: %d\n%s: %d\n%s: %d\n",
+	seq_printf(s, "%s: %d\n%s: %d\n%s: %d\n%s: %d\n%s: %d\n"
+			"%s: %d\n%s: %d\n%s: %d\n%s: %d\n%s: %d\n",
 			"success", suspend_stats.success,
 			"fail", suspend_stats.fail,
 			"failed_freeze", suspend_stats.failed_freeze,
 			"failed_prepare", suspend_stats.failed_prepare,
 			"failed_suspend", suspend_stats.failed_suspend,
+			"failed_suspend_late",
+				suspend_stats.failed_suspend_late,
 			"failed_suspend_noirq",
 				suspend_stats.failed_suspend_noirq,
 			"failed_resume", suspend_stats.failed_resume,
+			"failed_resume_early",
+				suspend_stats.failed_resume_early,
 			"failed_resume_noirq",
 				suspend_stats.failed_resume_noirq);
 	seq_printf(s,	"failures:\n  last_failed_dev:\t%-s\n",
@@ -254,6 +256,49 @@ static int __init pm_debugfs_init(void)
 late_initcall(pm_debugfs_init);
 #endif /* CONFIG_DEBUG_FS */
 
+#endif /* CONFIG_PM_SLEEP */
+
+#ifdef CONFIG_PM_SLEEP_DEBUG
+/*
+ * pm_print_times: print time taken by devices to suspend and resume.
+ *
+ * show() returns whether printing of suspend and resume times is enabled.
+ * store() accepts 0 or 1.  0 disables printing and 1 enables it.
+ */
+bool pm_print_times_enabled;
+
+static ssize_t pm_print_times_show(struct kobject *kobj,
+				   struct kobj_attribute *attr, char *buf)
+{
+	return sprintf(buf, "%d\n", pm_print_times_enabled);
+}
+
+static ssize_t pm_print_times_store(struct kobject *kobj,
+				    struct kobj_attribute *attr,
+				    const char *buf, size_t n)
+{
+	unsigned long val;
+
+	if (kstrtoul(buf, 10, &val))
+		return -EINVAL;
+
+	if (val > 1)
+		return -EINVAL;
+
+	pm_print_times_enabled = !!val;
+	return n;
+}
+
+power_attr(pm_print_times);
+
+static inline void pm_print_times_init(void)
+{
+	pm_print_times_enabled = !!initcall_debug;
+}
+#else /* !CONFIG_PP_SLEEP_DEBUG */
+static inline void pm_print_times_init(void) {}
+#endif /* CONFIG_PM_SLEEP_DEBUG */
+
 struct kobject *power_kobj;
 
 /**
@@ -263,7 +308,7 @@ struct kobject *power_kobj;
  *	'standby' (Power-On Suspend), 'mem' (Suspend-to-RAM), and
  *	'disk' (Suspend-to-Disk).
  *
- *	store() accepts one of those strings, translates it into the 
+ *	store() accepts one of those strings, translates it into the
  *	proper enumerated value, and initiates a suspend transition.
  */
 static ssize_t state_show(struct kobject *kobj, struct kobj_attribute *attr,
@@ -287,73 +332,68 @@ static ssize_t state_show(struct kobject *kobj, struct kobj_attribute *attr,
 #endif
 	return (s - buf);
 }
-#ifdef CONFIG_FAST_BOOT
-bool fake_shut_down = false;
-EXPORT_SYMBOL(fake_shut_down);
 
-extern void wakelock_force_suspend(void);
-#endif
-
-static ssize_t state_store(struct kobject *kobj, struct kobj_attribute *attr,
-			   const char *buf, size_t n)
+static suspend_state_t decode_state(const char *buf, size_t n)
 {
 #ifdef CONFIG_SUSPEND
 #ifdef CONFIG_EARLYSUSPEND
 	suspend_state_t state = PM_SUSPEND_ON;
 #else
-	suspend_state_t state = PM_SUSPEND_STANDBY;
+	suspend_state_t state = PM_SUSPEND_MIN;
 #endif
 	const char * const *s;
 #endif
 	char *p;
 	int len;
-	int error = -EINVAL;
 
 	p = memchr(buf, '\n', n);
 	len = p ? p - buf : n;
 
-	/* First, check if we are requested to hibernate */
-	if (len == 4 && !strncmp(buf, "disk", len)) {
-		error = hibernate();
-  goto Exit;
-	}
+	/* Check hibernation first. */
+	if (len == 4 && !strncmp(buf, "disk", len))
+		return PM_SUSPEND_MAX;
 
 #ifdef CONFIG_SUSPEND
-	for (s = &pm_states[state]; state < PM_SUSPEND_MAX; s++, state++) {
+	for (s = &pm_states[state]; state < PM_SUSPEND_MAX; s++, state++)
 		if (*s && len == strlen(*s) && !strncmp(buf, *s, len))
-			break;
-	}
-
-#ifdef CONFIG_FAST_BOOT
-	if (len == 4 && !strncmp(buf, "dmem", len)) {
-		pr_info("%s: fake shut down!!!\n", __func__);
-		fake_shut_down = true;
-		state = PM_SUSPEND_MEM;
-	}
+			return state;
 #endif
 
-	if (state < PM_SUSPEND_MAX && *s) {
+	return PM_SUSPEND_ON;
+}
+
+static ssize_t state_store(struct kobject *kobj, struct kobj_attribute *attr,
+			   const char *buf, size_t n)
+{
+	suspend_state_t state;
+	int error;
+
+	error = pm_autosleep_lock();
+	if (error)
+		return error;
+
+	if (pm_autosleep_state() > PM_SUSPEND_ON) {
+		error = -EBUSY;
+		goto out;
+	}
+
+	state = decode_state(buf, n);
+	if (state < PM_SUSPEND_MAX) {
 #ifdef CONFIG_EARLYSUSPEND
 		if (state == PM_SUSPEND_ON || valid_state(state)) {
 			error = 0;
 			request_suspend_state(state);
 		}
-#ifdef CONFIG_FAST_BOOT
-		if (fake_shut_down)
-			wakelock_force_suspend();
-#endif
 #else
-		error = enter_state(state);
-		if (error) {
-			suspend_stats.fail++;
-			dpm_save_failed_errno(error);
-		} else
-			suspend_stats.success++;
+		error = pm_suspend(state);
 #endif
-	}
-#endif
+	} else if (state == PM_SUSPEND_MAX)
+		error = hibernate();
+	else
+		error = -EINVAL;
 
- Exit:
+ out:
+	pm_autosleep_unlock();
 	return error ? error : n;
 }
 
@@ -394,7 +434,8 @@ static ssize_t wakeup_count_show(struct kobject *kobj,
 {
 	unsigned int val;
 
-	return pm_get_wakeup_count(&val) ? sprintf(buf, "%u\n", val) : -EINTR;
+	return pm_get_wakeup_count(&val, true) ?
+		sprintf(buf, "%u\n", val) : -EINTR;
 }
 
 static ssize_t wakeup_count_store(struct kobject *kobj,
@@ -402,15 +443,71 @@ static ssize_t wakeup_count_store(struct kobject *kobj,
 				const char *buf, size_t n)
 {
 	unsigned int val;
+	int error;
 
+	error = pm_autosleep_lock();
+	if (error)
+		return error;
+
+	if (pm_autosleep_state() > PM_SUSPEND_ON) {
+		error = -EBUSY;
+		goto out;
+	}
+
+	error = -EINVAL;
 	if (sscanf(buf, "%u", &val) == 1) {
 		if (pm_save_wakeup_count(val))
-			return n;
+			error = n;
+		else
+			pm_print_active_wakeup_sources();
 	}
-	return -EINVAL;
+
+ out:
+	pm_autosleep_unlock();
+	return error;
 }
 
 power_attr(wakeup_count);
+
+#ifdef CONFIG_PM_AUTOSLEEP
+static ssize_t autosleep_show(struct kobject *kobj,
+			      struct kobj_attribute *attr,
+			      char *buf)
+{
+	suspend_state_t state = pm_autosleep_state();
+
+	if (state == PM_SUSPEND_ON)
+		return sprintf(buf, "off\n");
+
+#ifdef CONFIG_SUSPEND
+	if (state < PM_SUSPEND_MAX)
+		return sprintf(buf, "%s\n", valid_state(state) ?
+						pm_states[state] : "error");
+#endif
+#ifdef CONFIG_HIBERNATION
+	return sprintf(buf, "disk\n");
+#else
+	return sprintf(buf, "error");
+#endif
+}
+
+static ssize_t autosleep_store(struct kobject *kobj,
+			       struct kobj_attribute *attr,
+			       const char *buf, size_t n)
+{
+	suspend_state_t state = decode_state(buf, n);
+	int error;
+
+	if (state == PM_SUSPEND_ON
+	    && strcmp(buf, "off") && strcmp(buf, "off\n"))
+		return -EINVAL;
+
+	error = pm_autosleep_set_state(state);
+	return error ? error : n;
+}
+
+power_attr(autosleep);
+#endif /* CONFIG_PM_AUTOSLEEP */
 #endif /* CONFIG_PM_SLEEP */
 
 #ifdef CONFIG_PM_TRACE
@@ -430,6 +527,10 @@ pm_trace_store(struct kobject *kobj, struct kobj_attribute *attr,
 
 	if (sscanf(buf, "%d", &val) == 1) {
 		pm_trace_enabled = !!val;
+		if (pm_trace_enabled) {
+			pr_warn("PM: Enabling pm_trace changes system date and time during resume.\n"
+				"PM: Correct system time has to be restored manually after resume.\n");
+		}
 		return n;
 	}
 	return -EINVAL;
@@ -565,19 +666,27 @@ static ssize_t cpufreq_max_limit_store(struct kobject *kobj,
 		if (cpufreq_max_limit_val != -1) {
 			exynos_cpufreq_upper_limit_free(DVFS_LOCK_ID_USER);
 			cpufreq_max_limit_val = -1;
-		}
+		} else /* Already unlocked */
+			printk(KERN_ERR "%s: Unlock request is ignored\n",
+				__func__);
 	} else { /* Lock request */
-		if (get_cpufreq_level((unsigned int)val, &cpufreq_level)
-		    == VALID_LEVEL) {
-			if (cpufreq_max_limit_val != -1)
-				/* Unlock the previous lock */
-				exynos_cpufreq_upper_limit_free(
-					DVFS_LOCK_ID_USER);
-			lock_ret = exynos_cpufreq_upper_limit(
-					DVFS_LOCK_ID_USER, cpufreq_level);
-			/* ret of exynos_cpufreq_upper_limit is meaningless.
-			   0 is fail? success? */
-			cpufreq_max_limit_val = val;
+		if (val < 1200000) {
+			val = 1000000;
+
+			if (get_cpufreq_level((unsigned int)val, &cpufreq_level)
+			    == VALID_LEVEL) {
+				if (cpufreq_max_limit_val != -1)
+					/* Unlock the previous lock */
+					exynos_cpufreq_upper_limit_free(
+						DVFS_LOCK_ID_USER);
+				lock_ret = exynos_cpufreq_upper_limit(
+						DVFS_LOCK_ID_USER, cpufreq_level);
+				/* ret of exynos_cpufreq_upper_limit is meaningless.
+				   0 is fail? success? */
+				cpufreq_max_limit_val = val;
+			} else /* Invalid lock request --> No action */
+				printk(KERN_ERR "%s: Lock request is invalid\n",
+						__func__);
 		}
 	}
 
@@ -614,15 +723,17 @@ static ssize_t cpufreq_min_limit_store(struct kobject *kobj,
 		if (cpufreq_min_limit_val != -1) {
 			exynos_cpufreq_lock_free(DVFS_LOCK_ID_USER);
 			cpufreq_min_limit_val = -1;
-		}
+		} else /* Already unlocked */
+			printk(KERN_ERR "%s: Unlock request is ignored\n",
+				__func__);
 	} else { /* Lock request */
 		if (get_cpufreq_level((unsigned int)val, &cpufreq_level)
 			== VALID_LEVEL) {
-			if (cpufreq_min_limit_val != -1)
+//			if (cpufreq_min_limit_val != -1)
 				/* Unlock the previous lock */
-				exynos_cpufreq_lock_free(DVFS_LOCK_ID_USER);
-			lock_ret = exynos_cpufreq_lock(
-					DVFS_LOCK_ID_USER, cpufreq_level);
+//				exynos_cpufreq_lock_free(DVFS_LOCK_ID_USER);
+//			lock_ret = exynos_cpufreq_lock(
+//					DVFS_LOCK_ID_USER, cpufreq_level);
 			/* ret of exynos_cpufreq_lock is meaningless.
 			   0 is fail? success? */
 			cpufreq_min_limit_val = val;
@@ -646,59 +757,12 @@ power_attr(cpufreq_max_limit);
 power_attr(cpufreq_min_limit);
 #endif /* CONFIG_DVFS_LIMIT */
 
-#ifdef CONFIG_GPU_LOCK
-static int gpu_lock_val;
-DEFINE_MUTEX(gpu_lock_mutex);
-
-static ssize_t gpu_lock_show(struct kobject *kobj,
-					struct kobj_attribute *attr,
-					char *buf)
-{
-	return sprintf(buf, "%d\n", gpu_lock_val);
-}
-
-static ssize_t gpu_lock_store(struct kobject *kobj,
-					struct kobj_attribute *attr,
-					const char *buf, size_t n)
-{
-	int val;
-	ssize_t ret = -EINVAL;
-
-	mutex_lock(&gpu_lock_mutex);
-
-	if (sscanf(buf, "%d", &val) != 1) {
-		pr_info("%s: Invalid mali lock format\n", __func__);
-		goto out;
-	}
-
-	if (val == 0) {
-		if (gpu_lock_val != 0) {
-			exynos_gpufreq_unlock();
-			gpu_lock_val = 0;
-		}
-	} else if (val == 1) {
-		if (gpu_lock_val == 0) {
-			exynos_gpufreq_lock();
-			gpu_lock_val = val;
-		}
-	} else {
-		pr_info("%s: Lock request is invalid\n", __func__);
-	}
-
-	ret = n;
-out:
-	mutex_unlock(&gpu_lock_mutex);
-	return ret;
-}
-power_attr(gpu_lock);
-#endif
-
 #ifdef CONFIG_ROTATION_BOOSTER_SUPPORT
 static inline void rotation_booster_on(void)
 {
 	exynos_cpufreq_lock(DVFS_LOCK_ID_ROTATION_BOOSTER, L0);
 	exynos4_busfreq_lock(DVFS_LOCK_ID_ROTATION_BOOSTER, BUS_L0);
-	exynos_gpufreq_lock();
+	exynos_gpufreq_lock(1);
 }
 
 static inline void rotation_booster_off(void)
@@ -764,52 +828,76 @@ static inline void rotation_booster_on(void){}
 static inline void rotation_booster_off(void){}
 #endif /* CONFIG_ROTATION_BOOSTER_SUPPORT */
 
-#ifdef CONFIG_PEGASUS_GPU_LOCK
-static int mali_lock_val;
-static int mali_lock_cnt;
-DEFINE_MUTEX(mali_lock_mutex);
+#ifdef CONFIG_EXYNOS4_GPU_LOCK
+static int gpu_lock_val;
+static int gpu_lock_cnt;
+DEFINE_MUTEX(gpu_lock_mutex);
 
-static ssize_t mali_lock_show(struct kobject *kobj,
+static ssize_t gpu_lock_show(struct kobject *kobj,
 					struct kobj_attribute *attr,
 					char *buf)
 {
 	return sprintf(buf, "level = %d, count = %d\n",
-			mali_lock_val, mali_lock_cnt);
+			gpu_lock_val, gpu_lock_cnt);
 }
 
-static ssize_t mali_lock_store(struct kobject *kobj,
+static ssize_t gpu_lock_store(struct kobject *kobj,
 					struct kobj_attribute *attr,
 					const char *buf, size_t n)
 {
 	int val;
 	ssize_t ret = -EINVAL;
 
-	mutex_lock(&mali_lock_mutex);
+	mutex_lock(&gpu_lock_mutex);
 
 	if (sscanf(buf, "%d", &val) != 1) {
-		pr_info("%s: Invalid mali lock format\n", __func__);
+		pr_info("%s: Invalid gpu lock format\n", __func__);
 		goto out;
 	}
 
 	if (val == 0) {	/* unlock */
-		mali_lock_cnt = mali_dvfs_bottom_lock_pop();
-		if (mali_lock_cnt == 0)
-			mali_lock_val = 0;
+		gpu_lock_cnt = exynos_gpufreq_unlock();
+		if (gpu_lock_cnt == 0)
+			gpu_lock_val = 0;
 	} else if (val > 0 && val < 5) { /* lock with level */
-		mali_lock_cnt = mali_dvfs_bottom_lock_push(val);
-		if (mali_lock_val < val)
-			mali_lock_val = val;
+		gpu_lock_cnt = exynos_gpufreq_lock(val);
+		if (gpu_lock_val < val)
+			gpu_lock_val = val;
 	} else {
 		pr_info("%s: Lock request is invalid\n", __func__);
 	}
 
 	ret = n;
 out:
-	mutex_unlock(&mali_lock_mutex);
+	mutex_unlock(&gpu_lock_mutex);
 	return ret;
 }
-power_attr(mali_lock);
+power_attr(gpu_lock);
 #endif
+
+#ifdef CONFIG_FREEZER
+static ssize_t pm_freeze_timeout_show(struct kobject *kobj,
+				      struct kobj_attribute *attr, char *buf)
+{
+	return sprintf(buf, "%u\n", freeze_timeout_msecs);
+}
+
+static ssize_t pm_freeze_timeout_store(struct kobject *kobj,
+				       struct kobj_attribute *attr,
+				       const char *buf, size_t n)
+{
+	unsigned long val;
+
+	if (kstrtoul(buf, 10, &val))
+		return -EINVAL;
+
+	freeze_timeout_msecs = val;
+	return n;
+}
+
+power_attr(pm_freeze_timeout);
+
+#endif	/* CONFIG_FREEZER*/
 
 static struct attribute * g[] = {
 	&state_attr.attr,
@@ -820,12 +908,18 @@ static struct attribute * g[] = {
 #ifdef CONFIG_PM_SLEEP
 	&pm_async_attr.attr,
 	&wakeup_count_attr.attr,
-#ifdef CONFIG_PM_DEBUG
-	&pm_test_attr.attr,
+#ifdef CONFIG_PM_AUTOSLEEP
+	&autosleep_attr.attr,
 #endif
 #ifdef CONFIG_USER_WAKELOCK
 	&wake_lock_attr.attr,
 	&wake_unlock_attr.attr,
+#endif
+#ifdef CONFIG_PM_DEBUG
+	&pm_test_attr.attr,
+#endif
+#ifdef CONFIG_PM_SLEEP_DEBUG
+	&pm_print_times_attr.attr,
 #endif
 #endif
 #ifdef CONFIG_DVFS_LIMIT
@@ -833,14 +927,14 @@ static struct attribute * g[] = {
 	&cpufreq_max_limit_attr.attr,
 	&cpufreq_min_limit_attr.attr,
 #endif
-#ifdef CONFIG_GPU_LOCK
+#ifdef CONFIG_EXYNOS4_GPU_LOCK
 	&gpu_lock_attr.attr,
-#endif
-#ifdef CONFIG_PEGASUS_GPU_LOCK
-	&mali_lock_attr.attr,
 #endif
 #ifdef CONFIG_ROTATION_BOOSTER_SUPPORT
 	&rotation_booster_attr.attr,
+#endif
+#ifdef CONFIG_FREEZER
+	&pm_freeze_timeout_attr.attr,
 #endif
 	NULL,
 };
@@ -873,7 +967,11 @@ static int __init pm_init(void)
 	power_kobj = kobject_create_and_add("power", NULL);
 	if (!power_kobj)
 		return -ENOMEM;
-	return sysfs_create_group(power_kobj, &attr_group);
+	error = sysfs_create_group(power_kobj, &attr_group);
+	if (error)
+		return error;
+	pm_print_times_init();
+	return pm_autosleep_init();
 }
 
 core_initcall(pm_init);

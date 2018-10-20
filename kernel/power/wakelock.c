@@ -22,6 +22,9 @@
 #ifdef CONFIG_WAKELOCK_STAT
 #include <linux/proc_fs.h>
 #endif
+#ifdef CONFIG_FAST_BOOT
+#include <linux/delay.h>
+#endif
 #include "power.h"
 
 enum {
@@ -39,11 +42,16 @@ module_param_named(debug_mask, debug_mask, int, S_IRUGO | S_IWUSR | S_IWGRP);
 #define WAKE_LOCK_ACTIVE                 (1U << 9)
 #define WAKE_LOCK_AUTO_EXPIRE            (1U << 10)
 #define WAKE_LOCK_PREVENTING_SUSPEND     (1U << 11)
+#define WAKE_LOCK_AWAKE_CULPRIT          (1U << 12)
 
 static DEFINE_SPINLOCK(list_lock);
 static LIST_HEAD(inactive_locks);
 static struct list_head active_wake_locks[WAKE_LOCK_TYPE_COUNT];
 static int current_event_num;
+static int suspend_sys_sync_count;
+static DEFINE_SPINLOCK(suspend_sys_sync_lock);
+static struct workqueue_struct *suspend_sys_sync_work_queue;
+static DECLARE_COMPLETION(suspend_sys_sync_comp);
 struct workqueue_struct *suspend_work_queue;
 struct workqueue_struct *sync_work_queue;
 struct wake_lock main_wake_lock;
@@ -59,8 +67,16 @@ static unsigned suspend_short_count;
 
 #ifdef CONFIG_WAKELOCK_STAT
 static struct wake_lock deleted_wake_locks;
+#define MAX_DELETED_WAKE_LOCK_NAME 48
+static struct wake_lock deleted_wake_lock1;
+static char deleted_wake_lock1_name[MAX_DELETED_WAKE_LOCK_NAME];
+static struct wake_lock deleted_wake_lock2;
+static char deleted_wake_lock2_name[MAX_DELETED_WAKE_LOCK_NAME];
 static ktime_t last_sleep_time_update;
 static int wait_for_wakeup;
+
+static int default_stats = 0; // 0 - total; 1 - discrete
+module_param_named(default_stats, default_stats, int, S_IRUGO | S_IWUSR | S_IWGRP);
 
 int get_expired_time(struct wake_lock *lock, ktime_t *expire_time)
 {
@@ -85,21 +101,24 @@ int get_expired_time(struct wake_lock *lock, ktime_t *expire_time)
 }
 
 
-static int print_lock_stat(struct seq_file *m, struct wake_lock *lock)
+static int print_lock_stat(struct seq_file *m, struct wake_lock *lock, int stats_type)
 {
-	int lock_count = lock->stat.count;
-	int expire_count = lock->stat.expire_count;
+	int lock_count = stats_type ? lock->discrete_stat.count : lock->stat.count;
+	int expire_count = stats_type ? lock->discrete_stat.expire_count : lock->stat.expire_count;
 	ktime_t active_time = ktime_set(0, 0);
-	ktime_t total_time = lock->stat.total_time;
-	ktime_t max_time = lock->stat.max_time;
+	ktime_t total_time = stats_type ? lock->discrete_stat.total_time : lock->stat.total_time;
+	ktime_t max_time = stats_type ? lock->discrete_stat.max_time : lock->stat.max_time;
 
-	ktime_t prevent_suspend_time = lock->stat.prevent_suspend_time;
-	if (lock->flags & WAKE_LOCK_ACTIVE) {
+	ktime_t prevent_suspend_time = stats_type ? lock->discrete_stat.prevent_suspend_time
+						: lock->stat.prevent_suspend_time;
+	if (lock->flags & WAKE_LOCK_ACTIVE
+			&& (!stats_type || (stats_type && lock->flags & WAKE_LOCK_AWAKE_CULPRIT))) {
 		ktime_t now, add_time;
 		int expired = get_expired_time(lock, &now);
 		if (!expired)
 			now = ktime_get();
-		add_time = ktime_sub(now, lock->stat.last_time);
+		add_time = ktime_sub(now, stats_type ? lock->discrete_stat.last_time
+						: lock->stat.last_time);
 		lock_count++;
 		if (!expired)
 			active_time = add_time;
@@ -116,13 +135,13 @@ static int print_lock_stat(struct seq_file *m, struct wake_lock *lock)
 	return seq_printf(m,
 		     "\"%s\"\t%d\t%d\t%d\t%lld\t%lld\t%lld\t%lld\t%lld\n",
 		     lock->name, lock_count, expire_count,
-		     lock->stat.wakeup_count, ktime_to_ns(active_time),
-		     ktime_to_ns(total_time),
+		     stats_type ? lock->discrete_stat.wakeup_count : lock->stat.wakeup_count,
+		     ktime_to_ns(active_time), ktime_to_ns(total_time),
 		     ktime_to_ns(prevent_suspend_time), ktime_to_ns(max_time),
-		     ktime_to_ns(lock->stat.last_time));
+		     ktime_to_ns(stats_type ? lock->discrete_stat.last_time : lock->stat.last_time));
 }
 
-static int wakelock_stats_show(struct seq_file *m, void *unused)
+static int wakelock_stats_show_total(struct seq_file *m, void *unused)
 {
 	unsigned long irqflags;
 	struct wake_lock *lock;
@@ -134,10 +153,31 @@ static int wakelock_stats_show(struct seq_file *m, void *unused)
 	ret = seq_puts(m, "name\tcount\texpire_count\twake_count\tactive_since"
 			"\ttotal_time\tsleep_time\tmax_time\tlast_change\n");
 	list_for_each_entry(lock, &inactive_locks, link)
-		ret = print_lock_stat(m, lock);
+		ret = print_lock_stat(m, lock, 0);
 	for (type = 0; type < WAKE_LOCK_TYPE_COUNT; type++) {
 		list_for_each_entry(lock, &active_wake_locks[type], link)
-			ret = print_lock_stat(m, lock);
+			ret = print_lock_stat(m, lock, 0);
+	}
+	spin_unlock_irqrestore(&list_lock, irqflags);
+	return 0;
+}
+
+static int wakelock_stats_show_discrete(struct seq_file *m, void *unused)
+{
+	unsigned long irqflags;
+	struct wake_lock *lock;
+	int ret;
+	int type;
+
+	spin_lock_irqsave(&list_lock, irqflags);
+
+	ret = seq_puts(m, "name\tcount\texpire_count\twake_count\tactive_since"
+			"\ttotal_time\tsleep_time\tmax_time\tlast_change\n");
+	list_for_each_entry(lock, &inactive_locks, link)
+		ret = print_lock_stat(m, lock, 1);
+	for (type = 0; type < WAKE_LOCK_TYPE_COUNT; type++) {
+		list_for_each_entry(lock, &active_wake_locks[type], link)
+			ret = print_lock_stat(m, lock, 1);
 	}
 	spin_unlock_irqrestore(&list_lock, irqflags);
 	return 0;
@@ -146,6 +186,7 @@ static int wakelock_stats_show(struct seq_file *m, void *unused)
 static void wake_unlock_stat_locked(struct wake_lock *lock, int expired)
 {
 	ktime_t duration;
+	ktime_t discrete_duration;
 	ktime_t now;
 	if (!(lock->flags & WAKE_LOCK_ACTIVE))
 		return;
@@ -157,14 +198,29 @@ static void wake_unlock_stat_locked(struct wake_lock *lock, int expired)
 	if (expired)
 		lock->stat.expire_count++;
 	duration = ktime_sub(now, lock->stat.last_time);
+	discrete_duration = ktime_sub(now, lock->discrete_stat.last_time);
 	lock->stat.total_time = ktime_add(lock->stat.total_time, duration);
 	if (ktime_to_ns(duration) > ktime_to_ns(lock->stat.max_time))
 		lock->stat.max_time = duration;
 	lock->stat.last_time = ktime_get();
+	if (lock->flags & WAKE_LOCK_AWAKE_CULPRIT) {
+		lock->discrete_stat.count++;
+		if (expired)
+			lock->discrete_stat.expire_count++;
+		lock->discrete_stat.total_time = ktime_add(lock->discrete_stat.total_time, discrete_duration);
+		if (ktime_to_ns(discrete_duration) > ktime_to_ns(lock->discrete_stat.max_time))
+			lock->discrete_stat.max_time = discrete_duration;
+		lock->discrete_stat.last_time = ktime_get();
+	}
 	if (lock->flags & WAKE_LOCK_PREVENTING_SUSPEND) {
 		duration = ktime_sub(now, last_sleep_time_update);
 		lock->stat.prevent_suspend_time = ktime_add(
 			lock->stat.prevent_suspend_time, duration);
+		if (lock->flags & WAKE_LOCK_AWAKE_CULPRIT) {
+			discrete_duration = ktime_sub(now, last_sleep_time_update);
+			lock->discrete_stat.prevent_suspend_time = ktime_add(
+				lock->discrete_stat.prevent_suspend_time, discrete_duration);
+		}
 		lock->flags &= ~WAKE_LOCK_PREVENTING_SUSPEND;
 	}
 }
@@ -186,6 +242,10 @@ static void update_sleep_wait_stats_locked(int done)
 				add = elapsed;
 			lock->stat.prevent_suspend_time = ktime_add(
 				lock->stat.prevent_suspend_time, add);
+			if (lock->flags & WAKE_LOCK_AWAKE_CULPRIT) {
+				lock->discrete_stat.prevent_suspend_time = ktime_add(
+					lock->discrete_stat.prevent_suspend_time, add);
+			}
 		}
 		if (done || expired)
 			lock->flags &= ~WAKE_LOCK_PREVENTING_SUSPEND;
@@ -193,6 +253,53 @@ static void update_sleep_wait_stats_locked(int done)
 			lock->flags |= WAKE_LOCK_PREVENTING_SUSPEND;
 	}
 	last_sleep_time_update = now;
+}
+
+static void assign_next_awake_culprit_locked(void)
+{
+	struct wake_lock *lock;
+	struct wake_lock *candidate_lock;
+	long timeout;
+	long max_timeout;
+
+	candidate_lock = NULL;
+	max_timeout = 0;
+	list_for_each_entry(lock, &active_wake_locks[WAKE_LOCK_SUSPEND], link) {
+		if (!(lock->flags & WAKE_LOCK_AUTO_EXPIRE)) {
+			// Out of the non-expiring locks, prefer the oldest inserted ones (further in the list)
+			candidate_lock = lock;
+			max_timeout = -1;
+		} else {
+			if (candidate_lock && (max_timeout < 0))
+				// Already chose the 1st non-expiring lock, use it
+				break;
+
+			// For the expiring locks, select the one with a greater expiration timeout
+			timeout = lock->expires - jiffies;
+			if ((timeout > 0) && (timeout > max_timeout)) {
+				max_timeout = timeout;
+				candidate_lock = lock;
+				// Continue searching for a lock with greater expiration timeout
+			}
+		}
+	}
+	if (candidate_lock) {
+		// Account PREVENTING_SUSPEND time before assigning new culprit
+		if (wake_lock_active(&main_wake_lock)) {
+			// Update times but keep all active locks as *not* PREVENTING_SUSPEND, "main" is active
+			update_sleep_wait_stats_locked(1);
+		} else {
+			// Update times and set all active locks as PREVENTING_SUSPEND, "main" is not active and the device
+			// could be sleeping
+			update_sleep_wait_stats_locked(0);
+		}
+		// Set now as the last_time of the culprit
+		candidate_lock->discrete_stat.last_time = ktime_get();
+		// Assign new culprit
+		candidate_lock->flags |= WAKE_LOCK_AWAKE_CULPRIT;
+		if (debug_mask & DEBUG_WAKE_LOCK)
+			pr_info("wake lock %s, new culprit for awake\n", candidate_lock->name);
+	}
 }
 #endif
 
@@ -207,6 +314,12 @@ static void expire_wake_lock(struct wake_lock *lock)
 	list_add(&lock->link, &inactive_locks);
 	if (debug_mask & (DEBUG_WAKE_LOCK | DEBUG_EXPIRE))
 		pr_info("expired wake lock %s\n", lock->name);
+#ifdef CONFIG_WAKELOCK_STAT
+	if (lock->flags & WAKE_LOCK_AWAKE_CULPRIT) {
+		lock->flags &= ~WAKE_LOCK_AWAKE_CULPRIT;
+		assign_next_awake_culprit_locked();
+	}
+#endif
 }
 
 /* Caller must acquire the list_lock spinlock */
@@ -246,21 +359,109 @@ static long has_wake_lock_locked(int type)
 			else if (timeout > max_timeout)
 				max_timeout = timeout;
 		} else
-			return -1;
+			max_timeout = -1;
+			break;
 	}
+#ifdef CONFIG_WAKELOCK_STAT
+	// Remove the AWAKE_CULPRIT ownership from any expired wake lock
+	list_for_each_entry_safe(lock, n, &active_wake_locks[type], link) {
+		if ((lock->flags & WAKE_LOCK_AUTO_EXPIRE) && (lock->flags & WAKE_LOCK_AWAKE_CULPRIT)) {
+			if ((lock->expires - jiffies) <= 0) {
+				// Mark the culprit as expired (and select a new one in the process)
+				expire_wake_lock(lock);
+				break;
+			}
+		}
+	}
+#endif
 	return max_timeout;
 }
+#ifdef CONFIG_FAST_BOOT
+extern bool fake_shut_down;
+#endif
 
 long has_wake_lock(int type)
 {
 	long ret;
 	unsigned long irqflags;
+#ifdef CONFIG_FAST_BOOT
+	if (fake_shut_down)
+		return 0;
+#endif
 	spin_lock_irqsave(&list_lock, irqflags);
 	ret = has_wake_lock_locked(type);
 	if (ret && (debug_mask & DEBUG_WAKEUP) && type == WAKE_LOCK_SUSPEND)
 		print_active_locks(type);
 	spin_unlock_irqrestore(&list_lock, irqflags);
 	return ret;
+}
+
+#ifdef CONFIG_SYS_SYNC_BLOCKING_DEBUG
+void sys_sync_debug(void);
+#endif
+
+static void suspend_sys_sync(struct work_struct *work)
+{
+	if (debug_mask & DEBUG_SUSPEND)
+		pr_info("PM: Syncing filesystems...\n");
+
+	sys_sync();
+
+	if (debug_mask & DEBUG_SUSPEND)
+		pr_info("sync done.\n");
+
+	spin_lock(&suspend_sys_sync_lock);
+	suspend_sys_sync_count--;
+	spin_unlock(&suspend_sys_sync_lock);
+}
+static DECLARE_WORK(suspend_sys_sync_work, suspend_sys_sync);
+
+void suspend_sys_sync_queue(void)
+{
+	int ret;
+
+	spin_lock(&suspend_sys_sync_lock);
+	ret = queue_work(suspend_sys_sync_work_queue, &suspend_sys_sync_work);
+	if (ret)
+		suspend_sys_sync_count++;
+	spin_unlock(&suspend_sys_sync_lock);
+}
+
+static bool suspend_sys_sync_abort;
+static void suspend_sys_sync_handler(unsigned long);
+static DEFINE_TIMER(suspend_sys_sync_timer, suspend_sys_sync_handler, 0, 0);
+/* value should be less then half of input event wake lock timeout value
+ * which is currently set to 5*HZ (see drivers/input/evdev.c)
+ */
+#define SUSPEND_SYS_SYNC_TIMEOUT (HZ/4)
+static void suspend_sys_sync_handler(unsigned long arg)
+{
+	if (suspend_sys_sync_count == 0) {
+		complete(&suspend_sys_sync_comp);
+	} else if (has_wake_lock(WAKE_LOCK_SUSPEND)) {
+		suspend_sys_sync_abort = true;
+		complete(&suspend_sys_sync_comp);
+	} else {
+		mod_timer(&suspend_sys_sync_timer, jiffies +
+				SUSPEND_SYS_SYNC_TIMEOUT);
+	}
+}
+
+int suspend_sys_sync_wait(void)
+{
+	suspend_sys_sync_abort = false;
+
+	if (suspend_sys_sync_count != 0) {
+		mod_timer(&suspend_sys_sync_timer, jiffies +
+				SUSPEND_SYS_SYNC_TIMEOUT);
+		wait_for_completion(&suspend_sys_sync_comp);
+	}
+	if (suspend_sys_sync_abort) {
+		pr_info("suspend aborted....while waiting for sys_sync\n");
+		return -EAGAIN;
+	}
+
+	return 0;
 }
 
 static void suspend_backoff(void)
@@ -283,7 +484,7 @@ static void suspend(struct work_struct *work)
 	}
 
 	entry_event_num = current_event_num;
-	sys_sync();
+	suspend_sys_sync_queue();
 	if (debug_mask & DEBUG_SUSPEND)
 		pr_info("suspend: enter suspend\n");
 	getnstimeofday(&ts_entry);
@@ -387,6 +588,13 @@ void wake_lock_init(struct wake_lock *lock, int type, const char *name)
 	lock->stat.prevent_suspend_time = ktime_set(0, 0);
 	lock->stat.max_time = ktime_set(0, 0);
 	lock->stat.last_time = ktime_set(0, 0);
+	lock->discrete_stat.count = 0;
+	lock->discrete_stat.expire_count = 0;
+	lock->discrete_stat.wakeup_count = 0;
+	lock->discrete_stat.total_time = ktime_set(0, 0);
+	lock->discrete_stat.prevent_suspend_time = ktime_set(0, 0);
+	lock->discrete_stat.max_time = ktime_set(0, 0);
+	lock->discrete_stat.last_time = ktime_set(0, 0);
 #endif
 	lock->flags = (type & WAKE_LOCK_TYPE_MASK) | WAKE_LOCK_INITIALIZED;
 
@@ -405,18 +613,87 @@ void wake_lock_destroy(struct wake_lock *lock)
 	spin_lock_irqsave(&list_lock, irqflags);
 	lock->flags &= ~WAKE_LOCK_INITIALIZED;
 #ifdef CONFIG_WAKELOCK_STAT
+	if (lock->flags & WAKE_LOCK_AWAKE_CULPRIT) {
+		lock->flags &= ~WAKE_LOCK_AWAKE_CULPRIT;
+		lock->flags &= ~(WAKE_LOCK_ACTIVE | WAKE_LOCK_AUTO_EXPIRE);
+		list_del(&lock->link);
+		list_add(&lock->link, &inactive_locks);
+		assign_next_awake_culprit_locked();
+	}
 	if (lock->stat.count) {
-		deleted_wake_locks.stat.count += lock->stat.count;
-		deleted_wake_locks.stat.expire_count += lock->stat.expire_count;
-		deleted_wake_locks.stat.total_time =
-			ktime_add(deleted_wake_locks.stat.total_time,
-				  lock->stat.total_time);
-		deleted_wake_locks.stat.prevent_suspend_time =
-			ktime_add(deleted_wake_locks.stat.prevent_suspend_time,
-				  lock->stat.prevent_suspend_time);
-		deleted_wake_locks.stat.max_time =
-			ktime_add(deleted_wake_locks.stat.max_time,
-				  lock->stat.max_time);
+		ktime_t zero_time = ktime_set(0, 0);
+
+		if (deleted_wake_lock1.stat.count) {
+			// Move data from the most recent deleted WL to the 2nd position, after totalling it
+
+			// Update the totals with the 2nd position which will be replaced
+			if (deleted_wake_lock2.stat.count) {
+				deleted_wake_locks.stat.count += deleted_wake_lock2.stat.count;
+				deleted_wake_locks.stat.expire_count += deleted_wake_lock2.stat.expire_count;
+				deleted_wake_locks.stat.wakeup_count += deleted_wake_lock2.stat.wakeup_count;
+				deleted_wake_locks.stat.total_time =
+					ktime_add(deleted_wake_locks.stat.total_time,
+						  deleted_wake_lock2.stat.total_time);
+				deleted_wake_locks.stat.prevent_suspend_time =
+					ktime_add(deleted_wake_locks.stat.prevent_suspend_time,
+						  deleted_wake_lock2.stat.prevent_suspend_time);
+				deleted_wake_locks.stat.max_time =
+					ktime_add(deleted_wake_locks.stat.max_time,
+						  deleted_wake_lock2.stat.max_time);
+				deleted_wake_locks.discrete_stat.count += deleted_wake_lock2.discrete_stat.count;
+				deleted_wake_locks.discrete_stat.expire_count +=
+					deleted_wake_lock2.discrete_stat.expire_count;
+				deleted_wake_locks.discrete_stat.wakeup_count +=
+					deleted_wake_lock2.discrete_stat.wakeup_count;
+				deleted_wake_locks.discrete_stat.total_time =
+					ktime_add(deleted_wake_locks.discrete_stat.total_time,
+						  deleted_wake_lock2.discrete_stat.total_time);
+				deleted_wake_locks.discrete_stat.prevent_suspend_time =
+					ktime_add(deleted_wake_locks.discrete_stat.prevent_suspend_time,
+						  deleted_wake_lock2.discrete_stat.prevent_suspend_time);
+				deleted_wake_locks.discrete_stat.max_time =
+					ktime_add(deleted_wake_locks.discrete_stat.max_time,
+						  deleted_wake_lock2.discrete_stat.max_time);
+			}
+
+			// Move the stats in the 1st position to the 2nd one
+			strncpy(&deleted_wake_lock2_name[0], deleted_wake_lock1_name, sizeof(deleted_wake_lock2_name) - 1);
+			deleted_wake_lock2_name[sizeof(deleted_wake_lock2_name) - 1] = '\0';
+			deleted_wake_lock2.stat.count = deleted_wake_lock1.stat.count;
+			deleted_wake_lock2.stat.expire_count = deleted_wake_lock1.stat.expire_count;
+			deleted_wake_lock2.stat.wakeup_count = deleted_wake_lock1.stat.wakeup_count;
+			deleted_wake_lock2.stat.total_time = ktime_add(zero_time,
+				deleted_wake_lock1.stat.total_time);
+			deleted_wake_lock2.stat.prevent_suspend_time = ktime_add(zero_time,
+				deleted_wake_lock1.stat.prevent_suspend_time);
+			deleted_wake_lock2.stat.max_time = ktime_add(zero_time,
+				deleted_wake_lock1.stat.max_time);
+			deleted_wake_lock2.discrete_stat.count = deleted_wake_lock1.discrete_stat.count;
+			deleted_wake_lock2.discrete_stat.expire_count = deleted_wake_lock1.discrete_stat.expire_count;
+			deleted_wake_lock2.discrete_stat.wakeup_count = deleted_wake_lock1.discrete_stat.wakeup_count;
+			deleted_wake_lock2.discrete_stat.total_time = ktime_add(zero_time,
+				deleted_wake_lock1.discrete_stat.total_time);
+			deleted_wake_lock2.discrete_stat.prevent_suspend_time = ktime_add(zero_time,
+				deleted_wake_lock1.discrete_stat.prevent_suspend_time);
+			deleted_wake_lock2.discrete_stat.max_time = ktime_add(zero_time,
+				deleted_wake_lock1.discrete_stat.max_time);
+		}
+
+		// Move data from this WL to the 1st position
+		snprintf(&deleted_wake_lock1_name[0], sizeof(deleted_wake_lock1_name), "deleted: %s", lock->name);
+		deleted_wake_lock1.stat.count = lock->stat.count;
+		deleted_wake_lock1.stat.expire_count = lock->stat.expire_count;
+		deleted_wake_lock1.stat.wakeup_count = lock->stat.wakeup_count;
+		deleted_wake_lock1.stat.total_time = ktime_add(zero_time, lock->stat.total_time);
+		deleted_wake_lock1.stat.prevent_suspend_time = ktime_add(zero_time, lock->stat.prevent_suspend_time);
+		deleted_wake_lock1.stat.max_time = ktime_add(zero_time, lock->stat.max_time);
+		deleted_wake_lock1.discrete_stat.count = lock->discrete_stat.count;
+		deleted_wake_lock1.discrete_stat.expire_count = lock->discrete_stat.expire_count;
+		deleted_wake_lock1.discrete_stat.wakeup_count = lock->discrete_stat.wakeup_count;
+		deleted_wake_lock1.discrete_stat.total_time = ktime_add(zero_time, lock->discrete_stat.total_time);
+		deleted_wake_lock1.discrete_stat.prevent_suspend_time = ktime_add(zero_time,
+			lock->discrete_stat.prevent_suspend_time);
+		deleted_wake_lock1.discrete_stat.max_time = ktime_add(zero_time, lock->discrete_stat.max_time);
 	}
 #endif
 	list_del(&lock->link);
@@ -436,22 +713,31 @@ static void wake_lock_internal(
 	BUG_ON(type >= WAKE_LOCK_TYPE_COUNT);
 	BUG_ON(!(lock->flags & WAKE_LOCK_INITIALIZED));
 #ifdef CONFIG_WAKELOCK_STAT
+	if ((type == WAKE_LOCK_SUSPEND) && list_empty(&active_wake_locks[type])) {
+		lock->flags |= WAKE_LOCK_AWAKE_CULPRIT;
+	}
 	if (type == WAKE_LOCK_SUSPEND && wait_for_wakeup) {
 		if (debug_mask & DEBUG_WAKEUP)
 			pr_info("wakeup wake lock: %s\n", lock->name);
 		wait_for_wakeup = 0;
 		lock->stat.wakeup_count++;
+		if (lock->flags & WAKE_LOCK_AWAKE_CULPRIT)
+			lock->discrete_stat.wakeup_count++;
 	}
 	if ((lock->flags & WAKE_LOCK_AUTO_EXPIRE) &&
 	    (long)(lock->expires - jiffies) <= 0) {
 		wake_unlock_stat_locked(lock, 0);
 		lock->stat.last_time = ktime_get();
+		if (lock->flags & WAKE_LOCK_AWAKE_CULPRIT)
+			lock->discrete_stat.last_time = ktime_get();
 	}
 #endif
 	if (!(lock->flags & WAKE_LOCK_ACTIVE)) {
 		lock->flags |= WAKE_LOCK_ACTIVE;
 #ifdef CONFIG_WAKELOCK_STAT
 		lock->stat.last_time = ktime_get();
+		if (lock->flags & WAKE_LOCK_AWAKE_CULPRIT)
+			lock->discrete_stat.last_time = ktime_get();
 #endif
 	}
 	list_del(&lock->link);
@@ -547,6 +833,11 @@ void wake_unlock(struct wake_lock *lock)
 			update_sleep_wait_stats_locked(0);
 #endif
 		}
+#ifdef CONFIG_WAKELOCK_STAT
+		if (has_lock && (lock->flags & WAKE_LOCK_AWAKE_CULPRIT))
+			assign_next_awake_culprit_locked();
+		lock->flags &= ~WAKE_LOCK_AWAKE_CULPRIT;
+#endif
 	}
 	spin_unlock_irqrestore(&list_lock, irqflags);
 }
@@ -558,14 +849,63 @@ int wake_lock_active(struct wake_lock *lock)
 }
 EXPORT_SYMBOL(wake_lock_active);
 
+#ifdef CONFIG_FAST_BOOT
+void wakelock_force_suspend(void)
+{
+	static int cnt;
+
+	if (cnt > 0) {
+		pr_info("%s: duplicated\n", __func__);
+		return;
+	}
+	cnt++;
+
+	msleep(3000);
+	pr_info("%s: fake shut down\n", __func__);
+	queue_work(suspend_work_queue, &suspend_work);
+
+	cnt = 0;
+}
+#endif
+
 static int wakelock_stats_open(struct inode *inode, struct file *file)
 {
-	return single_open(file, wakelock_stats_show, NULL);
+	if (default_stats) {
+		return single_open(file, wakelock_stats_show_discrete, NULL);
+	} else {
+		return single_open(file, wakelock_stats_show_total, NULL);
+	}
+}
+
+static int wakelock_total_stats_open(struct inode *inode, struct file *file)
+{
+	return single_open(file, wakelock_stats_show_total, NULL);
+}
+
+static int wakelock_discrete_stats_open(struct inode *inode, struct file *file)
+{
+	return single_open(file, wakelock_stats_show_discrete, NULL);
 }
 
 static const struct file_operations wakelock_stats_fops = {
 	.owner = THIS_MODULE,
 	.open = wakelock_stats_open,
+	.read = seq_read,
+	.llseek = seq_lseek,
+	.release = single_release,
+};
+
+static const struct file_operations wakelock_total_stats_fops = {
+	.owner = THIS_MODULE,
+	.open = wakelock_total_stats_open,
+	.read = seq_read,
+	.llseek = seq_lseek,
+	.release = single_release,
+};
+
+static const struct file_operations wakelock_discrete_stats_fops = {
+	.owner = THIS_MODULE,
+	.open = wakelock_discrete_stats_open,
 	.read = seq_read,
 	.llseek = seq_lseek,
 	.release = single_release,
@@ -582,6 +922,10 @@ static int __init wakelocks_init(void)
 #ifdef CONFIG_WAKELOCK_STAT
 	wake_lock_init(&deleted_wake_locks, WAKE_LOCK_SUSPEND,
 			"deleted_wake_locks");
+	snprintf(&deleted_wake_lock1_name[0], sizeof(deleted_wake_lock1_name), "deleted: %s", "");
+	wake_lock_init(&deleted_wake_lock1, WAKE_LOCK_SUSPEND, deleted_wake_lock1_name);
+	snprintf(&deleted_wake_lock2_name[0], sizeof(deleted_wake_lock2_name), "deleted: %s", "");
+	wake_lock_init(&deleted_wake_lock2, WAKE_LOCK_SUSPEND, deleted_wake_lock2_name);
 #endif
 	wake_lock_init(&main_wake_lock, WAKE_LOCK_SUSPEND, "main");
 	wake_lock_init(&sync_wake_lock, WAKE_LOCK_SUSPEND, "sync_system");
@@ -601,7 +945,15 @@ static int __init wakelocks_init(void)
 		goto err_platform_driver_register;
 	}
 
-	suspend_work_queue = alloc_workqueue("suspend", WQ_HIGHPRI, 0);
+	reinit_completion(&suspend_sys_sync_comp);
+	suspend_sys_sync_work_queue =
+		create_singlethread_workqueue("suspend_sys_sync");
+	if (suspend_sys_sync_work_queue == NULL) {
+		ret = -ENOMEM;
+		goto err_suspend_sys_sync_work_queue;
+	}
+
+	suspend_work_queue = alloc_workqueue("suspend", WQ_UNBOUND|WQ_HIGHPRI, 0);
 	if (suspend_work_queue == NULL) {
 		ret = -ENOMEM;
 		goto err_suspend_work_queue;
@@ -615,10 +967,13 @@ static int __init wakelocks_init(void)
 
 #ifdef CONFIG_WAKELOCK_STAT
 	proc_create("wakelocks", S_IRUGO, NULL, &wakelock_stats_fops);
+	proc_create("wakelocks_total", S_IRUGO, NULL, &wakelock_total_stats_fops);
+	proc_create("wakelocks_discrete", S_IRUGO, NULL, &wakelock_discrete_stats_fops);
 #endif
 
 	return 0;
 
+err_suspend_sys_sync_work_queue:
 err_sync_work_queue:
 	destroy_workqueue(suspend_work_queue);
 err_suspend_work_queue:
@@ -631,6 +986,8 @@ err_platform_device_register:
 	wake_lock_destroy(&sync_wake_lock);
 	wake_lock_destroy(&main_wake_lock);
 #ifdef CONFIG_WAKELOCK_STAT
+	wake_lock_destroy(&deleted_wake_lock2);
+	wake_lock_destroy(&deleted_wake_lock1);
 	wake_lock_destroy(&deleted_wake_locks);
 #endif
 	return ret;
@@ -639,9 +996,12 @@ err_platform_device_register:
 static void  __exit wakelocks_exit(void)
 {
 #ifdef CONFIG_WAKELOCK_STAT
+	remove_proc_entry("wakelocks_discrete", NULL);
+	remove_proc_entry("wakelocks_total", NULL);
 	remove_proc_entry("wakelocks", NULL);
 #endif
 	destroy_workqueue(suspend_work_queue);
+	destroy_workqueue(suspend_sys_sync_work_queue);
 	destroy_workqueue(sync_work_queue);
 	platform_driver_unregister(&power_driver);
 	platform_device_unregister(&power_device);
@@ -650,6 +1010,8 @@ static void  __exit wakelocks_exit(void)
 	wake_lock_destroy(&sync_wake_lock);
 	wake_lock_destroy(&main_wake_lock);
 #ifdef CONFIG_WAKELOCK_STAT
+	wake_lock_destroy(&deleted_wake_lock2);
+	wake_lock_destroy(&deleted_wake_lock1);
 	wake_lock_destroy(&deleted_wake_locks);
 #endif
 }

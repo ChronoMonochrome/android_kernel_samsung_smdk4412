@@ -28,7 +28,6 @@
 #include <mach/regs-clock.h>
 #include <mach/regs-irq.h>
 #include <asm/irq.h>
-#include <asm/suspend.h>
 
 #include <plat/pm.h>
 #include <mach/pm-core.h>
@@ -53,7 +52,7 @@ void s3c_pm_dbg(const char *fmt, ...)
 	char buff[256];
 
 	va_start(va, fmt);
-	vsprintf(buff, fmt, va);
+	vsnprintf(buff, sizeof(buff), fmt, va);
 	va_end(va);
 
 #ifdef CONFIG_DEBUG_LL
@@ -244,8 +243,7 @@ static void __maybe_unused s3c_pm_show_resume_irqs(int start,
 }
 
 void (*pm_cpu_prep)(void);
-
-int (*pm_cpu_sleep)(unsigned long);
+void (*pm_cpu_sleep)(void);
 void (*pm_cpu_restore)(void);
 int (*pm_prepare)(void);
 void (*pm_finish)(void);
@@ -327,12 +325,21 @@ static int s3c_pm_enter(suspend_state_t state)
 		 * only enable  power key, FUEL ALERT, AP/IF PMIC IRQ
 		 * and SIM Detect Irq
 		 */
+#if defined(CONFIG_MACH_GD2)
+		__raw_writel(0xff7fdf7d, S5P_EINT_WAKEUP_MASK);
+#elif defined(CONFIG_MACH_GC2PD)
+		/* No SIM Detect IRQ */
+		__raw_writel(0xff77df7f, S5P_EINT_WAKEUP_MASK);
+#else /* Default - GC */
 		__raw_writel(0xdf77df7f, S5P_EINT_WAKEUP_MASK);
+#endif
 #else
 		/* Masking external wake up source
 		 * only enable  power key, FUEL ALERT, AP/IF PMIC IRQ */
 		__raw_writel(0xff77df7f, S5P_EINT_WAKEUP_MASK);
 #endif
+		printk(KERN_ALERT"EINT_MASK[ 0x%08x ]\n",
+				__raw_readl(S5P_EINT_WAKEUP_MASK));
 		/* disable all system int */
 		__raw_writel(0xffffffff, S5P_WAKEUP_MASK);
 	}
@@ -353,7 +360,11 @@ static int s3c_pm_enter(suspend_state_t state)
 			__raw_readl(S5P_VA_PMU + 0x2104),
 			__raw_readl(S5P_VA_PMU + 0x2184));
 
-	cpu_suspend(/*0, PHYS_OFFSET - PAGE_OFFSET, */0, pm_cpu_sleep);
+	s3c_cpu_save(0, PLAT_PHYS_OFFSET - PAGE_OFFSET);
+
+	/* restore the cpu state using the kernel's cpu init code. */
+
+	cpu_init();
 
 	s3c_pm_restore_core();
 	s3c_pm_restore_uarts();
