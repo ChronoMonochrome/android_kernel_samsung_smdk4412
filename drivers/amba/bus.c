@@ -282,8 +282,8 @@ static const struct dev_pm_ops amba_pm = {
 	.poweroff	= amba_pm_poweroff,
 	.restore	= amba_pm_restore,
 	SET_RUNTIME_PM_OPS(
-		amba_pm_runtime_suspend,
-		amba_pm_runtime_resume,
+		pm_generic_runtime_suspend,
+		pm_generic_runtime_resume,
 		pm_generic_runtime_idle
 	)
 };
