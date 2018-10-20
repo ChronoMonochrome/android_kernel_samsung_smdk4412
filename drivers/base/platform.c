@@ -23,8 +23,8 @@
 #include <linux/idr.h>
 #include <linux/acpi.h>
 
-#include "base.h"
 #include "power/power.h"
+#include "base.h"
 
 /* For automatically allocated device IDs */
 static DEFINE_IDA(platform_devid_ida);
@@ -789,25 +789,6 @@ int platform_pm_suspend(struct device *dev)
 	return ret;
 }
 
-int platform_pm_suspend_noirq(struct device *dev)
-{
-	struct device_driver *drv = dev->driver;
-	int ret = 0;
-
-	if (!drv)
-		return 0;
-
-	if (drv->pm) {
-		if (drv->pm->suspend_noirq) {
-			printk(KERN_DEBUG "%s: %s+\n", __func__, dev_name(dev));
-			ret = drv->pm->suspend_noirq(dev);
-			printk(KERN_DEBUG "%s: %s-\n", __func__, dev_name(dev));
-		}
-	}
-
-	return ret;
-}
-
 int platform_pm_resume(struct device *dev)
 {
 	struct device_driver *drv = dev->driver;
@@ -907,7 +888,6 @@ int platform_pm_restore(struct device *dev)
 static const struct dev_pm_ops platform_dev_pm_ops = {
 	.runtime_suspend = pm_generic_runtime_suspend,
 	.runtime_resume = pm_generic_runtime_resume,
-	.runtime_idle = pm_generic_runtime_idle,
 	USE_PLATFORM_PM_SLEEP_OPS
 };
 
