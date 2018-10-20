@@ -105,6 +105,7 @@ static struct vm_operations_struct mali_kernel_vm_ops =
 #endif
 };
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(3,10,0)
 #if LINUX_VERSION_CODE < KERNEL_VERSION(3,0,0)
 	#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,35)
 static int mali_mem_shrink(int nr_to_scan, gfp_t gfp_mask)
@@ -160,6 +161,58 @@ struct shrinker mali_mem_shrinker = {
 	.shrink = mali_mem_shrink,
 	.seeks = DEFAULT_SEEKS,
 };
+#else
+static unsigned long
+mali_mem_scan(struct shrinker *shrink, struct shrink_control *sc)
+{
+	unsigned long flags;
+	AllocationList *item;
+	int nr = sc->nr_to_scan;
+	unsigned long freed = 0;
+
+	if (!nr)
+		return SHRINK_STOP;
+
+	if (0 == spin_trylock_irqsave(&allocation_list_spinlock, flags)) {
+		/* Not able to lock. */
+		return -1;
+	}
+
+	while (pre_allocated_memory && (nr--) > 0) {
+		item = pre_allocated_memory;
+		pre_allocated_memory = item->next;
+
+		_kernel_page_release(item->physaddr);
+		_mali_osk_free(item);
+
+		pre_allocated_memory_size_current -= PAGE_SIZE;
+		freed++;
+	}
+	spin_unlock_irqrestore(&allocation_list_spinlock,flags);
+
+	return freed;
+}
+
+static unsigned long mali_mem_count(struct shrinker *shrink,
+		struct shrink_control *sc)
+{
+	int nr = sc->nr_to_scan;
+
+	if (!nr)
+		return 0;
+
+	if (0 == pre_allocated_memory_size_current)
+		return 0;
+
+	return pre_allocated_memory_size_current / PAGE_SIZE;
+}
+
+struct shrinker mali_mem_shrinker = {
+	.scan_objects = mali_mem_scan,
+	.count_objects = mali_mem_count,
+	.seeks = DEFAULT_SEEKS,
+};
+#endif
 
 void mali_osk_low_level_mem_init(void)
 {
