@@ -563,7 +563,7 @@ int set_hsic_lpa_states(int states)
 			pr_info("set hsic lpa phy init\n");
 			break;
 		case STATE_HSIC_LPA_CHECK:
-			if (lpcharge)
+			if (poweroff_charging)
 				return 0;
 			else
 				if (!get_pm_data_by_dev_name("mdm_hsic_pm0"))
@@ -571,7 +571,7 @@ int set_hsic_lpa_states(int states)
 				else
 					return 0;
 		case STATE_HSIC_LPA_ENABLE:
-			if (lpcharge)
+			if (poweroff_charging)
 				return 0;
 			else if (pm_data)
 				return pm_data->shutdown;
@@ -1366,7 +1366,7 @@ static struct platform_driver mdm_pm_driver = {
 static int __init mdm_hsic_pm_init(void)
 {
 	/* in lpm mode, do not load modem driver */
-	if (lpcharge)
+	if (poweroff_charging)
 		return 0;
 	return platform_driver_register(&mdm_pm_driver);
 }

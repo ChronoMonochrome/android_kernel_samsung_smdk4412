@@ -84,19 +84,19 @@ static bool sec_chg_gpio_init(void)
 }
 
 /* Get LP charging mode state */
-unsigned int lpcharge;
+unsigned int poweroff_charging;
 static int battery_get_lpm_state(char *str)
 {
-	get_option(&str, &lpcharge);
-	pr_info("%s: Low power charging mode: %d\n", __func__, lpcharge);
+	get_option(&str, &poweroff_charging);
+	pr_info("%s: Low power charging mode: %d\n", __func__, poweroff_charging);
 
-	return lpcharge;
+	return poweroff_charging;
 }
-__setup("lpcharge=", battery_get_lpm_state);
+__setup("poweroff_charging=", battery_get_lpm_state);
 
 static bool sec_bat_is_lpm(void)
 {
-	return lpcharge == 1 ? true : false;
+	return poweroff_charging == 1 ? true : false;
 }
 
 void check_jig_status(int status)
