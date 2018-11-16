@@ -821,7 +821,7 @@ out:
 /*
  * Handler function for all zram I/O requests.
  */
-static int zram_make_request(struct request_queue *queue, struct bio *bio)
+static void zram_make_request(struct request_queue *queue, struct bio *bio)
 {
 	struct zram *zram = queue->queuedata;
 
@@ -837,13 +837,13 @@ static int zram_make_request(struct request_queue *queue, struct bio *bio)
 	__zram_make_request(zram, bio);
 	up_read(&zram->init_lock);
 
-	return 0;
+	return;
 
 error:
 	up_read(&zram->init_lock);
 	bio_io_error(bio);
 
-	return 0;
+	return;
 }
 
 static void zram_slot_free_notify(struct block_device *bdev,
