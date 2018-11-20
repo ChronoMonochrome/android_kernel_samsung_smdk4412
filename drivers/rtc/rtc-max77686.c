@@ -606,7 +606,7 @@ static irqreturn_t max77686_rtc_alarm2_irq(int irq, void *data)
 	if (strstr(saved_command_line, "charger_detect_boot") != 0)
 		kernel_restart(NULL);
 #else
-	if (lpcharge == 1)
+	if (poweroff_charging == 1)
 		kernel_restart(NULL);
 #endif
 

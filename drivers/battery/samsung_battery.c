@@ -57,15 +57,15 @@ static void battery_error_control(struct battery_info *info);
 #endif
 
 /* Get LP charging mode state */
-unsigned int lpcharge;
+unsigned int poweroff_charging;
 static int battery_get_lpm_state(char *str)
 {
 	if (strncmp(str, "1", 1) == 0)
-		lpcharge = 1;
+		poweroff_charging = 1;
 
-	pr_info("%s: Low power charging mode: %d\n", __func__, lpcharge);
+	pr_info("%s: Low power charging mode: %d\n", __func__, poweroff_charging);
 
-	return lpcharge;
+	return poweroff_charging;
 }
 __setup("lpcharge=", battery_get_lpm_state);
 
@@ -73,14 +73,14 @@ __setup("lpcharge=", battery_get_lpm_state);
 static int bootloader_get_lpm_state(char *str)
 {
 	if (strncmp(str, "charger", 7) == 0)
-		lpcharge = 1;
+		poweroff_charging = 1;
 
-	pr_info("%s: Low power charging mode: %d\n", __func__, lpcharge);
+	pr_info("%s: Low power charging mode: %d\n", __func__, poweroff_charging);
 
-	return lpcharge;
+	return poweroff_charging;
 }
 __setup("androidboot.mode=", bootloader_get_lpm_state);
-EXPORT_SYMBOL(lpcharge);
+EXPORT_SYMBOL(poweroff_charging);
 
 /* Cable type from charger or adc */
 static int battery_get_cable(struct battery_info *info)
@@ -2239,7 +2239,7 @@ static int samsung_battery_probe(struct platform_device *pdev)
 	info->slate_mode = 0;
 
 	/* LPM charging state */
-	info->lpm_state = lpcharge;
+	info->lpm_state = poweroff_charging;
 
 	mutex_init(&info->mon_lock);
 	mutex_init(&info->ops_lock);
