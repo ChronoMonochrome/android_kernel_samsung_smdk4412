@@ -1098,6 +1098,7 @@ int s3cfb_blank(int blank_mode, struct fb_info *fb)
 	return 0;
 }
 
+extern unsigned int poweroff_charging;
 int s3cfb_pan_display(struct fb_var_screeninfo *var, struct fb_info *fb)
 {
 	struct s3cfb_window *win = fb->par;
