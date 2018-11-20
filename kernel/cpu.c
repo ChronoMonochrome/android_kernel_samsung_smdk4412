@@ -10,7 +10,7 @@
 #include <linux/sched.h>
 #include <linux/unistd.h>
 #include <linux/cpu.h>
-#include <linux/export.h>
+#include <linux/module.h>
 #include <linux/kthread.h>
 #include <linux/stop_machine.h>
 #include <linux/mutex.h>
@@ -251,8 +251,12 @@ static int __ref _cpu_down(unsigned int cpu, int tasks_frozen)
 	if (err) {
 		nr_calls--;
 		__cpu_notify(CPU_DOWN_FAILED | mod, hcpu, nr_calls, NULL);
+#ifdef CONFIG_DEBUG_PRINTK
 		printk("%s: attempt to take down CPU %u failed\n",
 				__func__, cpu);
+#else
+		;
+#endif
 		goto out_release;
 	}
 
@@ -324,8 +328,12 @@ static int __cpuinit _cpu_up(unsigned int cpu, int tasks_frozen)
 	ret = __cpu_notify(CPU_UP_PREPARE | mod, hcpu, -1, &nr_calls);
 	if (ret) {
 		nr_calls--;
+#ifdef CONFIG_DEBUG_PRINTK
 		printk(KERN_WARNING "%s: attempt to bring up CPU %u failed\n",
 				__func__, cpu);
+#else
+		;
+#endif
 		goto out_notify;
 	}
 
@@ -426,7 +434,11 @@ int disable_nonboot_cpus(void)
 	cpumask_clear(frozen_cpus);
 	arch_disable_nonboot_cpus_begin();
 
+#ifdef CONFIG_DEBUG_PRINTK
 	printk("Disabling non-boot CPUs ...\n");
+#else
+	;
+#endif
 	for_each_online_cpu(cpu) {
 		if (cpu == first_cpu)
 			continue;
@@ -471,17 +483,29 @@ void __ref enable_nonboot_cpus(void)
 	if (cpumask_empty(frozen_cpus))
 		goto out;
 
+#ifdef CONFIG_DEBUG_PRINTK
 	printk(KERN_INFO "Enabling non-boot CPUs ...\n");
+#else
+	;
+#endif
 
 	arch_enable_nonboot_cpus_begin();
 
 	for_each_cpu(cpu, frozen_cpus) {
 		error = _cpu_up(cpu, 1);
 		if (!error) {
+#ifdef CONFIG_DEBUG_PRINTK
 			printk(KERN_INFO "CPU%d is up\n", cpu);
+#else
+			;
+#endif
 			continue;
 		}
+#ifdef CONFIG_DEBUG_PRINTK
 		printk(KERN_WARNING "Error taking CPU%d up: %d\n", cpu, error);
+#else
+		;
+#endif
 	}
 
 	arch_enable_nonboot_cpus_end();
