@@ -73,7 +73,7 @@ static char *supply_list[] = {
 };
 
 /* Get LP charging mode state */
-unsigned int lpcharge;
+unsigned int poweroff_charging;
 
 static enum power_supply_property sec_battery_properties[] = {
 	POWER_SUPPLY_PROP_STATUS,
@@ -246,7 +246,7 @@ static int check_ta_conn(struct battery_data *battery)
 #ifdef CONFIG_SAMSUNG_LPM_MODE
 static void lpm_mode_check(struct battery_data *battery)
 {
-	battery->charging_mode_booting = lpcharge =
+	battery->charging_mode_booting = poweroff_charging =
 				battery->pdata->check_lp_charging_boot();
 	pr_info("%s : charging_mode_booting(%d)\n", __func__,
 			battery->charging_mode_booting);

@@ -214,7 +214,7 @@ struct spi_v_buff {
 	void __iomem *mmio;
 };
 
-extern unsigned int lpcharge;
+extern unsigned int poweroff_charging;
 extern int get_console_suspended(void);
 static void spi_work(struct work_struct *work);
 
