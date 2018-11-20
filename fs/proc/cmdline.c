@@ -3,13 +3,13 @@
 #include <linux/proc_fs.h>
 #include <linux/seq_file.h>
 
-#ifdef CONFIG_BATTERY_SEC_U1
+#ifdef CONFIG_ARCH_EXYNOS
 extern int poweroff_charging;
 #endif
 
 static int cmdline_proc_show(struct seq_file *m, void *v)
 {
-#ifdef CONFIG_BATTERY_SEC_U1
+#ifdef CONFIG_ARCH_EXYNOS
 	if (poweroff_charging) {
 		seq_printf(m, "%s %s\n", saved_command_line,
 				"androidboot.mode=charger");
