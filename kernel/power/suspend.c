@@ -8,10 +8,13 @@
  * This file is released under the GPLv2.
  */
 
+#include <linux/module.h>
+#include <linux/kmod.h>
 #include <linux/string.h>
 #include <linux/delay.h>
 #include <linux/errno.h>
 #include <linux/init.h>
+#include <linux/kmod.h>
 #include <linux/console.h>
 #include <linux/cpu.h>
 #include <linux/syscalls.h>
@@ -24,12 +27,14 @@
 #include <linux/export.h>
 #include <linux/suspend.h>
 #include <linux/syscore_ops.h>
-#include <linux/ftrace.h>
 #include <trace/events/power.h>
 
 #include "power.h"
 
 const char *const pm_states[PM_SUSPEND_MAX] = {
+#ifdef CONFIG_EARLYSUSPEND
+	[PM_SUSPEND_ON]		= "on",
+#endif
 	[PM_SUSPEND_STANDBY]	= "standby",
 	[PM_SUSPEND_MEM]	= "mem",
 };
@@ -37,16 +42,15 @@ const char *const pm_states[PM_SUSPEND_MAX] = {
 static const struct platform_suspend_ops *suspend_ops;
 
 /**
- * suspend_set_ops - Set the global suspend method table.
- * @ops: Suspend operations to use.
+ *	suspend_set_ops - Set the global suspend method table.
+ *	@ops:	Pointer to ops structure.
  */
 void suspend_set_ops(const struct platform_suspend_ops *ops)
 {
-	lock_system_sleep();
+	mutex_lock(&pm_mutex);
 	suspend_ops = ops;
-	unlock_system_sleep();
+	mutex_unlock(&pm_mutex);
 }
-EXPORT_SYMBOL_GPL(suspend_set_ops);
 
 bool valid_state(suspend_state_t state)
 {
@@ -58,17 +62,16 @@ bool valid_state(suspend_state_t state)
 }
 
 /**
- * suspend_valid_only_mem - Generic memory-only valid callback.
+ * suspend_valid_only_mem - generic memory-only valid callback
  *
- * Platform drivers that implement mem suspend only and only need to check for
- * that in their .valid() callback can use this instead of rolling their own
- * .valid() callback.
+ * Platform drivers that implement mem suspend only and only need
+ * to check for that in their .valid callback can use this instead
+ * of rolling their own .valid callback.
  */
 int suspend_valid_only_mem(suspend_state_t state)
 {
 	return state == PM_SUSPEND_MEM;
 }
-EXPORT_SYMBOL_GPL(suspend_valid_only_mem);
 
 static int suspend_test(int level)
 {
@@ -83,11 +86,10 @@ static int suspend_test(int level)
 }
 
 /**
- * suspend_prepare - Prepare for entering system sleep state.
+ *	suspend_prepare - Do prep work before entering low-power state.
  *
- * Common code run for every system sleep state that can be entered (except for
- * hibernation).  Run suspend notifiers, allocate the "suspend" console and
- * freeze processes.
+ *	This is common code that is called for each state that we're entering.
+ *	Run suspend notifiers, allocate a console and stop all processes.
  */
 static int suspend_prepare(void)
 {
@@ -102,12 +104,16 @@ static int suspend_prepare(void)
 	if (error)
 		goto Finish;
 
+	error = usermodehelper_disable();
+	if (error)
+		goto Finish;
+
 	error = suspend_freeze_processes();
 	if (!error)
 		return 0;
 
-	suspend_stats.failed_freeze++;
-	dpm_save_failed_step(SUSPEND_FREEZE);
+	suspend_thaw_processes();
+	usermodehelper_enable();
  Finish:
 	pm_notifier_call_chain(PM_POST_SUSPEND);
 	pm_restore_console();
@@ -126,10 +132,16 @@ void __attribute__ ((weak)) arch_suspend_enable_irqs(void)
 	local_irq_enable();
 }
 
+#if !defined(CONFIG_CPU_EXYNOS4210)
+#define CHECK_POINT printk(KERN_DEBUG "%s:%d\n", __func__, __LINE__)
+#else
+#define CHECK_POINT
+#endif
+
 /**
- * suspend_enter - Make the system enter the given sleep state.
- * @state: System sleep state to enter.
- * @wakeup: Returns information that the sleep state should not be re-entered.
+ * suspend_enter - enter the desired system sleep state.
+ * @state: State to enter
+ * @wakeup: Returns information that suspend should not be entered again.
  *
  * This function should be called after devices have been suspended.
  */
@@ -137,17 +149,23 @@ static int suspend_enter(suspend_state_t state, bool *wakeup)
 {
 	int error;
 
+	CHECK_POINT;
+
 	if (suspend_ops->prepare) {
 		error = suspend_ops->prepare();
 		if (error)
 			goto Platform_finish;
 	}
 
-	error = dpm_suspend_end(PMSG_SUSPEND);
+	CHECK_POINT;
+
+	error = dpm_suspend_noirq(PMSG_SUSPEND);
 	if (error) {
 		printk(KERN_ERR "PM: Some devices failed to power down\n");
 		goto Platform_finish;
 	}
+
+	CHECK_POINT;
 
 	if (suspend_ops->prepare_late) {
 		error = suspend_ops->prepare_late();
@@ -162,10 +180,15 @@ static int suspend_enter(suspend_state_t state, bool *wakeup)
 	if (error || suspend_test(TEST_CPUS))
 		goto Enable_cpus;
 
+	CHECK_POINT;
+
 	arch_suspend_disable_irqs();
 	BUG_ON(!irqs_disabled());
 
 	error = syscore_suspend();
+
+	CHECK_POINT;
+
 	if (!error) {
 		*wakeup = pm_wakeup_pending();
 		if (!(suspend_test(TEST_CORE) || *wakeup)) {
@@ -185,7 +208,7 @@ static int suspend_enter(suspend_state_t state, bool *wakeup)
 	if (suspend_ops->wake)
 		suspend_ops->wake();
 
-	dpm_resume_start(PMSG_RESUME);
+	dpm_resume_noirq(PMSG_RESUME);
 
  Platform_finish:
 	if (suspend_ops->finish)
@@ -195,8 +218,9 @@ static int suspend_enter(suspend_state_t state, bool *wakeup)
 }
 
 /**
- * suspend_devices_and_enter - Suspend devices and enter system sleep state.
- * @state: System sleep state to enter.
+ *	suspend_devices_and_enter - suspend devices and enter the desired system
+ *				    sleep state.
+ *	@state:		  state to enter
  */
 int suspend_devices_and_enter(suspend_state_t state)
 {
@@ -213,7 +237,6 @@ int suspend_devices_and_enter(suspend_state_t state)
 			goto Close;
 	}
 	suspend_console();
-	ftrace_stop();
 	suspend_test_start();
 	error = dpm_suspend_start(PMSG_SUSPEND);
 	if (error) {
@@ -233,7 +256,6 @@ int suspend_devices_and_enter(suspend_state_t state)
 	suspend_test_start();
 	dpm_resume_end(PMSG_RESUME);
 	suspend_test_finish("resume devices");
-	ftrace_start();
 	resume_console();
  Close:
 	if (suspend_ops->end)
@@ -248,29 +270,68 @@ int suspend_devices_and_enter(suspend_state_t state)
 }
 
 /**
- * suspend_finish - Clean up before finishing the suspend sequence.
+ *	suspend_finish - Do final work before exiting suspend sequence.
  *
- * Call platform code to clean up, restart processes, and free the console that
- * we've allocated. This routine is not called for hibernation.
+ *	Call platform code to clean up, restart processes, and free the
+ *	console that we've allocated. This is not called for suspend-to-disk.
  */
 static void suspend_finish(void)
 {
 	suspend_thaw_processes();
+	usermodehelper_enable();
 	pm_notifier_call_chain(PM_POST_SUSPEND);
 	pm_restore_console();
 }
 
+#ifdef CONFIG_PM_WATCHDOG_TIMEOUT
+void pm_wd_timeout(unsigned long data)
+{
+	struct pm_wd_data *wd_data = (void *)data;
+	struct task_struct *tsk = wd_data->tsk;
+
+	pr_emerg("%s: PM watchdog timeout: %d seconds\n",  __func__,
+			wd_data->timeout);
+
+	pr_emerg("stack:\n");
+	show_stack(tsk, NULL);
+
+	BUG();
+}
+
+void pm_wd_add_timer(struct timer_list *timer, struct pm_wd_data *data,
+			int timeout)
+{
+	data->timeout = timeout;
+	data->tsk = get_current();
+	init_timer_on_stack(timer);
+	timer->expires = jiffies + HZ * data->timeout;
+	timer->function = pm_wd_timeout;
+	timer->data = (unsigned long)data;
+	add_timer(timer);
+}
+
+void pm_wd_del_timer(struct timer_list *timer)
+{
+	del_timer_sync(timer);
+	destroy_timer_on_stack(timer);
+}
+#endif
+
 /**
- * enter_state - Do common work needed to enter system sleep state.
- * @state: System sleep state to enter.
+ *	enter_state - Do common work of entering low-power state.
+ *	@state:		pm_state structure for state we're entering.
  *
- * Make sure that no one else is trying to put the system into a sleep state.
- * Fail if that's not the case.  Otherwise, prepare for system suspend, make the
- * system enter the given sleep state and clean up after wakeup.
+ *	Make sure we're the only ones trying to enter a sleep state. Fail
+ *	if someone has beat us to it, since we don't want anything weird to
+ *	happen when we wake up.
+ *	Then, do the setup for suspend, enter the state, and cleaup (after
+ *	we've woken up).
  */
-static int enter_state(suspend_state_t state)
+int enter_state(suspend_state_t state)
 {
 	int error;
+	struct timer_list timer;
+	struct pm_wd_data data;
 
 	if (!valid_state(state))
 		return -ENODEV;
@@ -296,34 +357,28 @@ static int enter_state(suspend_state_t state)
 	pm_restore_gfp_mask();
 
  Finish:
+	pm_wd_add_timer(&timer, &data, 15);
+
 	pr_debug("PM: Finishing wakeup.\n");
 	suspend_finish();
+
+	pm_wd_del_timer(&timer);
  Unlock:
 	mutex_unlock(&pm_mutex);
 	return error;
 }
 
 /**
- * pm_suspend - Externally visible function for suspending the system.
- * @state: System sleep state to enter.
+ *	pm_suspend - Externally visible function for suspending system.
+ *	@state:		Enumerated value of state to enter.
  *
- * Check if the value of @state represents one of the supported states,
- * execute enter_state() and update system suspend statistics.
+ *	Determine whether or not value is within range, get state
+ *	structure, and enter (above).
  */
 int pm_suspend(suspend_state_t state)
 {
-	int error;
-
-	if (state <= PM_SUSPEND_ON || state >= PM_SUSPEND_MAX)
-		return -EINVAL;
-
-	error = enter_state(state);
-	if (error) {
-		suspend_stats.fail++;
-		dpm_save_failed_errno(error);
-	} else {
-		suspend_stats.success++;
-	}
-	return error;
+	if (state > PM_SUSPEND_ON && state <= PM_SUSPEND_MAX)
+		return enter_state(state);
+	return -EINVAL;
 }
 EXPORT_SYMBOL(pm_suspend);

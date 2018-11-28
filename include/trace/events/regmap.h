@@ -55,15 +55,6 @@ DEFINE_EVENT(regmap_reg, regmap_reg_read,
 
 );
 
-DEFINE_EVENT(regmap_reg, regmap_reg_read_cache,
-
-	TP_PROTO(struct device *dev, unsigned int reg,
-		 unsigned int val),
-
-	TP_ARGS(dev, reg, val)
-
-);
-
 DECLARE_EVENT_CLASS(regmap_block,
 
 	TP_PROTO(struct device *dev, unsigned int reg, int count),
@@ -113,66 +104,6 @@ DEFINE_EVENT(regmap_block, regmap_hw_write_done,
 	TP_PROTO(struct device *dev, unsigned int reg, int count),
 
 	TP_ARGS(dev, reg, count)
-);
-
-TRACE_EVENT(regcache_sync,
-
-	TP_PROTO(struct device *dev, const char *type,
-		 const char *status),
-
-	TP_ARGS(dev, type, status),
-
-	TP_STRUCT__entry(
-		__string(       name,           dev_name(dev)   )
-		__string(	status,		status		)
-		__string(	type,		type		)
-		__field(	int,		type		)
-	),
-
-	TP_fast_assign(
-		__assign_str(name, dev_name(dev));
-		__assign_str(status, status);
-		__assign_str(type, type);
-	),
-
-	TP_printk("%s type=%s status=%s", __get_str(name),
-		  __get_str(type), __get_str(status))
-);
-
-DECLARE_EVENT_CLASS(regmap_bool,
-
-	TP_PROTO(struct device *dev, bool flag),
-
-	TP_ARGS(dev, flag),
-
-	TP_STRUCT__entry(
-		__string(	name,		dev_name(dev)	)
-		__field(	int,		flag		)
-	),
-
-	TP_fast_assign(
-		__assign_str(name, dev_name(dev));
-		__entry->flag = flag;
-	),
-
-	TP_printk("%s flag=%d", __get_str(name),
-		  (int)__entry->flag)
-);
-
-DEFINE_EVENT(regmap_bool, regmap_cache_only,
-
-	TP_PROTO(struct device *dev, bool flag),
-
-	TP_ARGS(dev, flag)
-
-);
-
-DEFINE_EVENT(regmap_bool, regmap_cache_bypass,
-
-	TP_PROTO(struct device *dev, bool flag),
-
-	TP_ARGS(dev, flag)
-
 );
 
 #endif /* _TRACE_REGMAP_H */

@@ -18,7 +18,7 @@
 #include <linux/etherdevice.h>
 #include <linux/moduleparam.h>
 #include <linux/rtnetlink.h>
-#include <linux/pm_qos.h>
+#include <linux/pm_qos_params.h>
 #include <linux/crc32.h>
 #include <linux/slab.h>
 #include <linux/export.h>

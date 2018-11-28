@@ -583,9 +583,6 @@ bytes respectively. Such letter suffixes can also be entirely omitted.
 			/proc/<pid>/coredump_filter.
 			See also Documentation/filesystems/proc.txt.
 
-	cpuidle.off=1	[CPU_IDLE]
-			disable the cpuidle sub-system
-
 	cpcihp_generic=	[HW,PCI] Generic port I/O CompactPCI driver
 			Format:
 			<first_slot>,<last_slot>,<port>,<enum_bit>[,<debug>]
@@ -2392,13 +2389,6 @@ bytes respectively. Such letter suffixes can also be entirely omitted.
 			given by "resume=" at which the swap header is located,
 			in <PAGE_SIZE> units (needed only for swap files).
 			See  Documentation/power/swsusp-and-swap-files.txt
-
-	resumedelay=	[HIBERNATION] Delay (in seconds) to pause before attempting to
-			read the resume files
-
-	resumewait	[HIBERNATION] Wait (indefinitely) for resume device to show up.
-			Useful for devices that are detected asynchronously
-			(e.g. USB and MMC devices).
 
 	hibernate=	[HIBERNATION]
 		noresume	Don't check if there's a hibernation image

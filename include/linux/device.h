@@ -591,7 +591,7 @@ struct device_dma_parameters {
  * 		minimizes board-specific #ifdefs in drivers.
  * @power:	For device power management.
  * 		See Documentation/power/devices.txt for details.
- * @pm_domain:	Provide callbacks that are executed during system suspend,
+ * @pwr_domain:	Provide callbacks that are executed during system suspend,
  * 		hibernation, system resume and during runtime PM transitions
  * 		along with subsystem-level and driver-level callbacks.
  * @numa_node:	NUMA node this device is close to.
@@ -643,7 +643,7 @@ struct device {
 	void		*platform_data;	/* Platform specific data, device
 					   core doesn't touch it */
 	struct dev_pm_info	power;
-	struct dev_pm_domain	*pm_domain;
+	struct dev_power_domain	*pwr_domain;
 
 #ifdef CONFIG_NUMA
 	int		numa_node;	/* NUMA node this device is close to */
@@ -713,11 +713,6 @@ static inline void set_dev_node(struct device *dev, int node)
 }
 #endif
 
-static inline struct pm_subsys_data *dev_to_psd(struct device *dev)
-{
-	return dev ? dev->power.subsys_data : NULL;
-}
-
 static inline unsigned int dev_get_uevent_suppress(const struct device *dev)
 {
 	return dev->kobj.uevent_suppress;
@@ -748,11 +743,6 @@ static inline void device_disable_async_suspend(struct device *dev)
 static inline bool device_async_suspend_enabled(struct device *dev)
 {
 	return !!dev->power.async_suspend;
-}
-
-static inline void pm_suspend_ignore_children(struct device *dev, bool enable)
-{
-	dev->power.ignore_children = enable;
 }
 
 static inline void device_lock(struct device *dev)

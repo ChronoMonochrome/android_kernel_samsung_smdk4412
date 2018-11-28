@@ -84,6 +84,11 @@ struct busfreq_data {
 	struct exynos4_ppmu dmc[2];
 
 	struct notifier_block pm_notifier;
+
+	/* Gurantee high freq with high cpu freq */
+	struct notifier_block cpuf_notifier;
+	struct pm_qos_request_list cpuf_enforce;
+
 	struct mutex lock;
 
 	/* Dividers calculated at boot/probe-time */

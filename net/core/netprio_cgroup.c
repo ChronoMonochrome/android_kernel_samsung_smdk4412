@@ -23,8 +23,9 @@
 #include <net/sock.h>
 #include <net/netprio_cgroup.h>
 
-static struct cgroup_subsys_state *cgrp_create(struct cgroup *cgrp);
-static void cgrp_destroy(struct cgroup *cgrp);
+static struct cgroup_subsys_state *cgrp_create(struct cgroup_subsys *ss,
+					       struct cgroup *cgrp);
+static void cgrp_destroy(struct cgroup_subsys *ss, struct cgroup *cgrp);
 static int cgrp_populate(struct cgroup_subsys *ss, struct cgroup *cgrp);
 
 struct cgroup_subsys net_prio_subsys = {
@@ -120,7 +121,8 @@ static void update_netdev_tables(void)
 	rtnl_unlock();
 }
 
-static struct cgroup_subsys_state *cgrp_create(struct cgroup *cgrp)
+static struct cgroup_subsys_state *cgrp_create(struct cgroup_subsys *ss,
+						 struct cgroup *cgrp)
 {
 	struct cgroup_netprio_state *cs;
 	int ret;
@@ -144,7 +146,7 @@ static struct cgroup_subsys_state *cgrp_create(struct cgroup *cgrp)
 	return &cs->css;
 }
 
-static void cgrp_destroy(struct cgroup *cgrp)
+static void cgrp_destroy(struct cgroup_subsys *ss, struct cgroup *cgrp)
 {
 	struct cgroup_netprio_state *cs;
 	struct net_device *dev;

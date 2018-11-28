@@ -24,7 +24,6 @@
 #include <linux/kallsyms.h>
 #include <linux/mutex.h>
 #include <linux/async.h>
-#include <linux/pm_runtime.h>
 
 #include "base.h"
 #include "power/power.h"
@@ -637,11 +636,6 @@ static void klist_children_put(struct klist_node *n)
  * may be used for reference counting of @dev after calling this
  * function.
  *
- * All fields in @dev must be initialized by the caller to 0, except
- * for those explicitly set to some other value.  The simplest
- * approach is to use kzalloc() to allocate the structure containing
- * @dev.
- *
  * NOTE: Use put_device() to give up your reference instead of freeing
  * @dev directly once you have called this function.
  */
@@ -941,13 +935,6 @@ int device_private_init(struct device *dev)
  * to the global and sibling lists for the device, then
  * adds it to the other relevant subsystems of the driver model.
  *
- * Do not call this routine or device_register() more than once for
- * any device structure.  The driver model core is not designed to work
- * with devices that get unregistered and then spring back to life.
- * (Among other things, it's very hard to guarantee that all references
- * to the previous incarnation of @dev have been dropped.)  Allocate
- * and register a fresh new struct device instead.
- *
  * NOTE: _Never_ directly free @dev after calling this function, even
  * if it returned an error! Always use put_device() to give up your
  * reference instead.
@@ -1040,7 +1027,7 @@ int device_add(struct device *dev)
 	device_pm_add(dev);
 
 	/* Notify clients of device addition.  This call must come
-	 * after dpm_sysfs_add() and before kobject_uevent().
+	 * after dpm_sysf_add() and before kobject_uevent().
 	 */
 	if (dev->bus)
 		blocking_notifier_call_chain(&dev->bus->p->bus_notifier,
@@ -1107,9 +1094,6 @@ name_error:
  * I.e. you should only call the two helpers separately if
  * have a clearly defined need to use and refcount the device
  * before it is added to the hierarchy.
- *
- * For more information, see the kerneldoc for device_initialize()
- * and device_add().
  *
  * NOTE: _Never_ directly free @dev after calling this function, even
  * if it returned an error! Always use put_device() to give up the
@@ -1819,10 +1803,19 @@ void device_shutdown(void)
 		list_del_init(&dev->kobj.entry);
 		spin_unlock(&devices_kset->list_lock);
 
-		/* Don't allow any more runtime suspends */
-		pm_runtime_get_noresume(dev);
-		pm_runtime_barrier(dev);
-
+#if defined(CONFIG_MACH_Q1_BD) || defined(CONFIG_MACH_PX) || defined(CONFIG_MACH_MIDAS)
+		/* Temporary log to analyze a problem during shutdown */
+		if (dev->bus && dev->bus->shutdown) {
+			dev_info(dev, "shutdown +: %pF\n", dev->bus->shutdown);
+			dev->bus->shutdown(dev);
+			dev_info(dev, "shutdown -\n");
+		} else if (dev->driver && dev->driver->shutdown) {
+			dev_info(dev, "shutdown +: %pF\n",
+						dev->driver->shutdown);
+			dev->driver->shutdown(dev);
+			dev_info(dev, "shutdown -\n");
+		}
+#else
 		if (dev->bus && dev->bus->shutdown) {
 			dev_dbg(dev, "shutdown\n");
 			dev->bus->shutdown(dev);
@@ -1830,6 +1823,7 @@ void device_shutdown(void)
 			dev_dbg(dev, "shutdown\n");
 			dev->driver->shutdown(dev);
 		}
+#endif
 		put_device(dev);
 
 		spin_lock(&devices_kset->list_lock);

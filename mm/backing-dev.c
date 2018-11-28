@@ -318,7 +318,7 @@ static void wakeup_timer_fn(unsigned long data)
 	if (bdi->wb.task) {
 		trace_writeback_wake_thread(bdi);
 		wake_up_process(bdi->wb.task);
-	} else if (bdi->dev) {
+	} else {
 		/*
 		 * When bdi tasks are inactive for long time, they are killed.
 		 * In this case we have to wake-up the forker thread which
@@ -584,8 +584,6 @@ EXPORT_SYMBOL(bdi_register_dev);
  */
 static void bdi_wb_shutdown(struct backing_dev_info *bdi)
 {
-	struct task_struct *task;
-
 	if (!bdi_cap_writeback_dirty(bdi))
 		return;
 
@@ -602,15 +600,14 @@ static void bdi_wb_shutdown(struct backing_dev_info *bdi)
 
 	/*
 	 * Finally, kill the kernel thread. We don't need to be RCU
-	 * safe anymore, since the bdi is gone from visibility.
+	 * safe anymore, since the bdi is gone from visibility. Force
+	 * unfreeze of the thread before calling kthread_stop(), otherwise
+	 * it would never exet if it is currently stuck in the refrigerator.
 	 */
-	spin_lock_bh(&bdi->wb_lock);
-	task = bdi->wb.task;
-	bdi->wb.task = NULL;
-	spin_unlock_bh(&bdi->wb_lock);
-
-	if (task)
-		kthread_stop(task);
+	if (bdi->wb.task) {
+		thaw_process(bdi->wb.task);
+		kthread_stop(bdi->wb.task);
+	}
 }
 
 /*
@@ -630,9 +627,7 @@ static void bdi_prune_sb(struct backing_dev_info *bdi)
 
 void bdi_unregister(struct backing_dev_info *bdi)
 {
-	struct device *dev = bdi->dev;
-
-	if (dev) {
+	if (bdi->dev) {
 		bdi_set_min_ratio(bdi, 0);
 		trace_writeback_bdi_unregister(bdi);
 		bdi_prune_sb(bdi);
@@ -641,12 +636,8 @@ void bdi_unregister(struct backing_dev_info *bdi)
 		if (!bdi_cap_flush_forker(bdi))
 			bdi_wb_shutdown(bdi);
 		bdi_debug_unregister(bdi);
-
-		spin_lock_bh(&bdi->wb_lock);
+		device_unregister(bdi->dev);
 		bdi->dev = NULL;
-		spin_unlock_bh(&bdi->wb_lock);
-
-		device_unregister(dev);
 	}
 }
 EXPORT_SYMBOL(bdi_unregister);

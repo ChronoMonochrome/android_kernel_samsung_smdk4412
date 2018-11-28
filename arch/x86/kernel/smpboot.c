@@ -50,7 +50,6 @@
 #include <linux/tboot.h>
 #include <linux/stackprotector.h>
 #include <linux/gfp.h>
-#include <linux/cpuidle.h>
 
 #include <asm/acpi.h>
 #include <asm/desc.h>
@@ -1410,8 +1409,7 @@ void native_play_dead(void)
 	tboot_shutdown(TB_SHUTDOWN_WFS);
 
 	mwait_play_dead();	/* Only returns on failure */
-	if (cpuidle_play_dead())
-		hlt_play_dead();
+	hlt_play_dead();
 }
 
 #else /* ... !CONFIG_HOTPLUG_CPU */
