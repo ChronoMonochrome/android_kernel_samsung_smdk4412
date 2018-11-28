@@ -6,3 +6,4 @@
 #include <asm/switch_to.h>
 #include <asm/system_info.h>
 #include <asm/system_misc.h>
+#include <asm/cp15.h>
