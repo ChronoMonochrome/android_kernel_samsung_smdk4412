@@ -166,7 +166,7 @@ static int create_path(const char *nodepath)
 {
 	char *path;
 	char *s;
-	int err = 0;
+	int err;
 
 	/* parent directories do not exist, create them */
 	path = kstrdup(nodepath, GFP_KERNEL);
@@ -376,7 +376,7 @@ int devtmpfs_mount(const char *mntdir)
 	return err;
 }
 
-static DECLARE_COMPLETION(setup_done);
+static __initdata DECLARE_COMPLETION(setup_done);
 
 static int handle(const char *name, umode_t mode, struct device *dev)
 {
@@ -406,16 +406,16 @@ static int devtmpfsd(void *p)
 			requests = NULL;
 			spin_unlock(&req_lock);
 			while (req) {
-				struct req *next = req->next;
 				req->err = handle(req->name, req->mode, req->dev);
 				complete(&req->done);
-				req = next;
+				req = req->next;
 			}
 			spin_lock(&req_lock);
 		}
-		__set_current_state(TASK_INTERRUPTIBLE);
+		set_current_state(TASK_INTERRUPTIBLE);
 		spin_unlock(&req_lock);
 		schedule();
+		__set_current_state(TASK_RUNNING);
 	}
 	return 0;
 out:

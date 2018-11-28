@@ -32,25 +32,6 @@ struct device platform_bus = {
 EXPORT_SYMBOL_GPL(platform_bus);
 
 /**
- * arch_setup_pdev_archdata - Allow manipulation of archdata before its used
- * @pdev: platform device
- *
- * This is called before platform_device_add() such that any pdev_archdata may
- * be setup before the platform_notifier is called.  So if a user needs to
- * manipulate any relevant information in the pdev_archdata they can do:
- *
- * 	platform_devic_alloc()
- * 	... manipulate ...
- * 	platform_device_add()
- *
- * And if they don't care they can just call platform_device_register() and
- * everything will just work out.
- */
-void __weak arch_setup_pdev_archdata(struct platform_device *pdev)
-{
-}
-
-/**
  * platform_get_resource - get a resource for a device
  * @dev: platform device
  * @type: resource type
@@ -192,7 +173,6 @@ struct platform_device *platform_device_alloc(const char *name, int id)
 		pa->pdev.id = id;
 		device_initialize(&pa->pdev.dev);
 		pa->pdev.dev.release = platform_device_release;
-		arch_setup_pdev_archdata(&pa->pdev);
 	}
 
 	return pa ? &pa->pdev : NULL;
@@ -354,7 +334,6 @@ EXPORT_SYMBOL_GPL(platform_device_del);
 int platform_device_register(struct platform_device *pdev)
 {
 	device_initialize(&pdev->dev);
-	arch_setup_pdev_archdata(pdev);
 	return platform_device_add(pdev);
 }
 EXPORT_SYMBOL_GPL(platform_device_register);
@@ -626,7 +605,7 @@ static int platform_uevent(struct device *dev, struct kobj_uevent_env *env)
 		return rc;
 
 	add_uevent_var(env, "MODALIAS=%s%s", PLATFORM_MODULE_PREFIX,
-			pdev->name);
+		(pdev->id_entry) ? pdev->id_entry->name : pdev->name);
 	return 0;
 }
 
@@ -700,6 +679,25 @@ static int platform_legacy_resume(struct device *dev)
 	return ret;
 }
 
+int platform_pm_prepare(struct device *dev)
+{
+	struct device_driver *drv = dev->driver;
+	int ret = 0;
+
+	if (drv && drv->pm && drv->pm->prepare)
+		ret = drv->pm->prepare(dev);
+
+	return ret;
+}
+
+void platform_pm_complete(struct device *dev)
+{
+	struct device_driver *drv = dev->driver;
+
+	if (drv && drv->pm && drv->pm->complete)
+		drv->pm->complete(dev);
+}
+
 #endif /* CONFIG_PM_SLEEP */
 
 #ifdef CONFIG_SUSPEND
@@ -740,6 +738,22 @@ int platform_pm_resume(struct device *dev)
 	return ret;
 }
 
+int platform_pm_resume_noirq(struct device *dev)
+{
+	struct device_driver *drv = dev->driver;
+	int ret = 0;
+
+	if (!drv)
+		return 0;
+
+	if (drv->pm) {
+		if (drv->pm->resume_noirq)
+			ret = drv->pm->resume_noirq(dev);
+	}
+
+	return ret;
+}
+
 #endif /* CONFIG_SUSPEND */
 
 #ifdef CONFIG_HIBERNATE_CALLBACKS
@@ -757,6 +771,22 @@ int platform_pm_freeze(struct device *dev)
 			ret = drv->pm->freeze(dev);
 	} else {
 		ret = platform_legacy_suspend(dev, PMSG_FREEZE);
+	}
+
+	return ret;
+}
+
+int platform_pm_freeze_noirq(struct device *dev)
+{
+	struct device_driver *drv = dev->driver;
+	int ret = 0;
+
+	if (!drv)
+		return 0;
+
+	if (drv->pm) {
+		if (drv->pm->freeze_noirq)
+			ret = drv->pm->freeze_noirq(dev);
 	}
 
 	return ret;
@@ -780,6 +810,22 @@ int platform_pm_thaw(struct device *dev)
 	return ret;
 }
 
+int platform_pm_thaw_noirq(struct device *dev)
+{
+	struct device_driver *drv = dev->driver;
+	int ret = 0;
+
+	if (!drv)
+		return 0;
+
+	if (drv->pm) {
+		if (drv->pm->thaw_noirq)
+			ret = drv->pm->thaw_noirq(dev);
+	}
+
+	return ret;
+}
+
 int platform_pm_poweroff(struct device *dev)
 {
 	struct device_driver *drv = dev->driver;
@@ -798,6 +844,22 @@ int platform_pm_poweroff(struct device *dev)
 	return ret;
 }
 
+int platform_pm_poweroff_noirq(struct device *dev)
+{
+	struct device_driver *drv = dev->driver;
+	int ret = 0;
+
+	if (!drv)
+		return 0;
+
+	if (drv->pm) {
+		if (drv->pm->poweroff_noirq)
+			ret = drv->pm->poweroff_noirq(dev);
+	}
+
+	return ret;
+}
+
 int platform_pm_restore(struct device *dev)
 {
 	struct device_driver *drv = dev->driver;
@@ -811,6 +873,22 @@ int platform_pm_restore(struct device *dev)
 			ret = drv->pm->restore(dev);
 	} else {
 		ret = platform_legacy_resume(dev);
+	}
+
+	return ret;
+}
+
+int platform_pm_restore_noirq(struct device *dev)
+{
+	struct device_driver *drv = dev->driver;
+	int ret = 0;
+
+	if (!drv)
+		return 0;
+
+	if (drv->pm) {
+		if (drv->pm->restore_noirq)
+			ret = drv->pm->restore_noirq(dev);
 	}
 
 	return ret;

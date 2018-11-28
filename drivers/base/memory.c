@@ -297,22 +297,11 @@ static int memory_block_change_state(struct memory_block *mem,
 
 	ret = memory_block_action(mem->start_section_nr, to_state);
 
-	if (ret) {
+	if (ret)
 		mem->state = from_state_req;
-		goto out;
-	}
+	else
+		mem->state = to_state;
 
-	mem->state = to_state;
-	switch (mem->state) {
-	case MEM_OFFLINE:
-		kobject_uevent(&mem->dev.kobj, KOBJ_OFFLINE);
-		break;
-	case MEM_ONLINE:
-		kobject_uevent(&mem->dev.kobj, KOBJ_ONLINE);
-		break;
-	default:
-		break;
-	}
 out:
 	mutex_unlock(&mem->state_mutex);
 	return ret;
@@ -574,36 +563,19 @@ static int init_memory_block(struct memory_block **memory,
 }
 
 static int add_memory_section(int nid, struct mem_section *section,
-			struct memory_block **mem_p,
 			unsigned long state, enum mem_add_context context)
 {
-	struct memory_block *mem = NULL;
-	int scn_nr = __section_nr(section);
+	struct memory_block *mem;
 	int ret = 0;
 
 	mutex_lock(&mem_sysfs_mutex);
 
-	if (context == BOOT) {
-		/* same memory block ? */
-		if (mem_p && *mem_p)
-			if (scn_nr >= (*mem_p)->start_section_nr &&
-			    scn_nr <= (*mem_p)->end_section_nr) {
-				mem = *mem_p;
-				kobject_get(&mem->dev.kobj);
-			}
-	} else
-		mem = find_memory_block(section);
-
+	mem = find_memory_block(section);
 	if (mem) {
 		mem->section_count++;
 		kobject_put(&mem->dev.kobj);
-	} else {
+	} else
 		ret = init_memory_block(&mem, section, state);
-		/* store memory_block pointer for next loop */
-		if (!ret && context == BOOT)
-			if (mem_p)
-				*mem_p = mem;
-	}
 
 	if (!ret) {
 		if (context == HOTPLUG &&
@@ -646,7 +618,7 @@ int remove_memory_block(unsigned long node_id, struct mem_section *section,
  */
 int register_new_memory(int nid, struct mem_section *section)
 {
-	return add_memory_section(nid, section, NULL, MEM_OFFLINE, HOTPLUG);
+	return add_memory_section(nid, section, MEM_OFFLINE, HOTPLUG);
 }
 
 int unregister_memory_section(struct mem_section *section)
@@ -666,7 +638,6 @@ int __init memory_dev_init(void)
 	int ret;
 	int err;
 	unsigned long block_sz;
-	struct memory_block *mem = NULL;
 
 	ret = subsys_system_register(&memory_subsys, NULL);
 	if (ret)
@@ -682,10 +653,7 @@ int __init memory_dev_init(void)
 	for (i = 0; i < NR_MEM_SECTIONS; i++) {
 		if (!present_section_nr(i))
 			continue;
-		/* don't need to reuse memory_block if only one per block */
-		err = add_memory_section(0, __nr_to_section(i),
-				 (sections_per_block == 1) ? NULL : &mem,
-					 MEM_ONLINE,
+		err = add_memory_section(0, __nr_to_section(i), MEM_ONLINE,
 					 BOOT);
 		if (!ret)
 			ret = err;

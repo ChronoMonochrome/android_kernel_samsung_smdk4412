@@ -711,10 +711,9 @@ static void mark_nosave_pages(struct memory_bitmap *bm)
 	list_for_each_entry(region, &nosave_regions, list) {
 		unsigned long pfn;
 
-		pr_debug("PM: Marking nosave pages: [mem %#010llx-%#010llx]\n",
-			 (unsigned long long) region->start_pfn << PAGE_SHIFT,
-			 ((unsigned long long) region->end_pfn << PAGE_SHIFT)
-				- 1);
+		pr_debug("PM: Marking nosave pages: %016lx - %016lx\n",
+				region->start_pfn << PAGE_SHIFT,
+				region->end_pfn << PAGE_SHIFT);
 
 		for (pfn = region->start_pfn; pfn < region->end_pfn; pfn++)
 			if (pfn_valid(pfn)) {
@@ -813,8 +812,7 @@ unsigned int snapshot_additional_pages(struct zone *zone)
 	unsigned int res;
 
 	res = DIV_ROUND_UP(zone->spanned_pages, BM_BITS_PER_BLOCK);
-	res += DIV_ROUND_UP(res * sizeof(struct bm_block),
-			    LINKED_PAGE_DATA_SIZE);
+	res += DIV_ROUND_UP(res * sizeof(struct bm_block), PAGE_SIZE);
 	return 2 * res;
 }
 
@@ -858,9 +856,6 @@ static struct page *saveable_highmem_page(struct zone *zone, unsigned long pfn)
 
 	if (swsusp_page_is_forbidden(page) ||  swsusp_page_is_free(page) ||
 	    PageReserved(page))
-		return NULL;
-
-	if (page_is_guard(page))
 		return NULL;
 
 	return page;
@@ -923,9 +918,6 @@ static struct page *saveable_page(struct zone *zone, unsigned long pfn)
 
 	if (PageReserved(page)
 	    && (!kernel_page_present(page) || pfn_is_nosave(pfn)))
-		return NULL;
-
-	if (page_is_guard(page))
 		return NULL;
 
 	return page;
@@ -1001,20 +993,20 @@ static void copy_data_page(unsigned long dst_pfn, unsigned long src_pfn)
 	s_page = pfn_to_page(src_pfn);
 	d_page = pfn_to_page(dst_pfn);
 	if (PageHighMem(s_page)) {
-		src = kmap_atomic(s_page);
-		dst = kmap_atomic(d_page);
+		src = kmap_atomic(s_page, KM_USER0);
+		dst = kmap_atomic(d_page, KM_USER1);
 		do_copy_page(dst, src);
-		kunmap_atomic(dst);
-		kunmap_atomic(src);
+		kunmap_atomic(dst, KM_USER1);
+		kunmap_atomic(src, KM_USER0);
 	} else {
 		if (PageHighMem(d_page)) {
 			/* Page pointed to by src may contain some kernel
 			 * data modified by kmap_atomic()
 			 */
 			safe_copy_page(buffer, s_page);
-			dst = kmap_atomic(d_page);
+			dst = kmap_atomic(d_page, KM_USER0);
 			copy_page(dst, buffer);
-			kunmap_atomic(dst);
+			kunmap_atomic(dst, KM_USER0);
 		} else {
 			safe_copy_page(page_address(d_page), s_page);
 		}
@@ -1280,6 +1272,79 @@ static unsigned long minimum_image_size(unsigned long saveable)
 	return saveable <= size ? 0 : saveable - size;
 }
 
+#ifdef CONFIG_FULL_PAGE_RECLAIM
+static int is_exist_entry(pgd_t *pgd, int i)
+{
+	pmd_t *pmd;
+
+	pgd = pgd+i;
+
+	if (pgd_none(*pgd))
+		return 0;
+
+	if (pgd_bad(*pgd))
+		return 0;
+
+	pmd = pmd_offset(pgd, 0);
+
+	if (pmd_none(*pmd))
+		return 0;
+
+	if (pmd_bad(*pmd))
+		return 0;
+
+	return 1;
+}
+
+static int show_process_pte_size(void)
+{
+	struct task_struct *p;
+	int i;
+	int count;
+	int tot_count = 0;
+	int kernel_did = 0;
+	int k_count = 0;
+	int task_struct_size = 0;
+
+	read_lock(&tasklist_lock);
+	for_each_process(p) {
+		count = 0;
+		task_struct_size += sizeof(struct task_struct);
+		if (p->comm[0] == '[') {
+			printk(KERN_DEBUG "%s skip\n", p->comm);
+			continue;
+		}
+		if (p->mm == NULL) {
+			printk(KERN_DEBUG "%s skip\n", p->comm);
+			continue;
+		}
+		if (p->mm->pgd == NULL)
+			continue;
+
+		for (i = 0; i < 1536; i++) {
+			if (is_exist_entry(p->mm->pgd, i))
+				count++;
+		}
+		if (!kernel_did) {
+			for (i = 1536; i < 2048; i++) {
+				if (is_exist_entry(p->mm->pgd, i))
+					k_count++;
+			}
+			kernel_did = 1;
+		}
+		printk(KERN_INFO "%s : pgd entry count = %d, size = %d K\n",
+					p->comm, count, (16 + count * 4));
+		tot_count = tot_count + (16 + count * 4);
+	}
+	printk(KERN_INFO "PAGE TABLE ==> total size = %d K , kernel = %d K\n",
+			tot_count, k_count * 4);
+	printk(KERN_INFO "task_struct_size = %d K\n", task_struct_size / 1024);
+	read_unlock(&tasklist_lock);
+
+	return 0;
+}
+#endif /* CONFIG_FULL_PAGE_RECLAIM */
+
 /**
  * hibernate_preallocate_memory - Preallocate memory for hibernation image
  *
@@ -1312,6 +1377,16 @@ int hibernate_preallocate_memory(void)
 
 	printk(KERN_INFO "PM: Preallocating image memory... ");
 	do_gettimeofday(&start);
+
+#ifdef CONFIG_FULL_PAGE_RECLAIM
+	/* First of all, throw out unnecessary page frames for saving */
+	do {
+		pages = shrink_all_memory(ULONG_MAX);
+		printk(KERN_INFO "\bdone (%lu pages freed)\n", pages);
+	/* shrink all pages */
+	} while (pages);
+	show_process_pte_size();
+#endif
 
 	error = memory_bm_create(&orig_bm, GFP_IMAGE, PG_ANY);
 	if (error)
@@ -1346,9 +1421,6 @@ int hibernate_preallocate_memory(void)
 	avail_normal = count;
 	count += highmem;
 	count -= totalreserve_pages;
-
-	/* Add number of pages required for page keys (s390 only). */
-	size += page_key_additional_pages(saveable);
 
 	/* Compute the maximum number of saveable pages to leave in memory. */
 	max_size = (count - (size + PAGES_FOR_IO)) / 2
@@ -1673,8 +1745,6 @@ pack_pfns(unsigned long *buf, struct memory_bitmap *bm)
 		buf[j] = memory_bm_next_pfn(bm);
 		if (unlikely(buf[j] == BM_END_OF_MAP))
 			break;
-		/* Save page key for data page (s390 only). */
-		page_key_read(buf + j);
 	}
 }
 
@@ -1729,9 +1799,9 @@ int snapshot_read_next(struct snapshot_handle *handle)
 			 */
 			void *kaddr;
 
-			kaddr = kmap_atomic(page);
+			kaddr = kmap_atomic(page, KM_USER0);
 			copy_page(buffer, kaddr);
-			kunmap_atomic(kaddr);
+			kunmap_atomic(kaddr, KM_USER0);
 			handle->buffer = buffer;
 		} else {
 			handle->buffer = page_address(page);
@@ -1833,9 +1903,6 @@ static int unpack_orig_pfns(unsigned long *buf, struct memory_bitmap *bm)
 	for (j = 0; j < PAGE_SIZE / sizeof(long); j++) {
 		if (unlikely(buf[j] == BM_END_OF_MAP))
 			break;
-
-		/* Extract and buffer page key for data page (s390 only). */
-		page_key_memorize(buf + j);
 
 		if (memory_bm_pfn_present(bm, buf[j]))
 			memory_bm_set_bit(bm, buf[j]);
@@ -2015,9 +2082,9 @@ static void copy_last_highmem_page(void)
 	if (last_highmem_page) {
 		void *dst;
 
-		dst = kmap_atomic(last_highmem_page);
+		dst = kmap_atomic(last_highmem_page, KM_USER0);
 		copy_page(dst, buffer);
-		kunmap_atomic(dst);
+		kunmap_atomic(dst, KM_USER0);
 		last_highmem_page = NULL;
 	}
 }
@@ -2239,11 +2306,6 @@ int snapshot_write_next(struct snapshot_handle *handle)
 		if (error)
 			return error;
 
-		/* Allocate buffer for page keys. */
-		error = page_key_alloc(nr_copy_pages);
-		if (error)
-			return error;
-
 	} else if (handle->cur <= nr_meta_pages + 1) {
 		error = unpack_orig_pfns(buffer, &copy_bm);
 		if (error)
@@ -2264,8 +2326,6 @@ int snapshot_write_next(struct snapshot_handle *handle)
 		}
 	} else {
 		copy_last_highmem_page();
-		/* Restore page key for data page (s390 only). */
-		page_key_write(handle->buffer);
 		handle->buffer = get_buffer(&orig_bm, &ca);
 		if (IS_ERR(handle->buffer))
 			return PTR_ERR(handle->buffer);
@@ -2287,9 +2347,6 @@ int snapshot_write_next(struct snapshot_handle *handle)
 void snapshot_write_finalize(struct snapshot_handle *handle)
 {
 	copy_last_highmem_page();
-	/* Restore page key for data page (s390 only). */
-	page_key_write(handle->buffer);
-	page_key_free();
 	/* Free only if we have loaded the image entirely */
 	if (handle->cur > 1 && handle->cur > nr_meta_pages + nr_copy_pages) {
 		memory_bm_free(&orig_bm, PG_UNSAFE_CLEAR);
@@ -2310,13 +2367,13 @@ swap_two_pages_data(struct page *p1, struct page *p2, void *buf)
 {
 	void *kaddr1, *kaddr2;
 
-	kaddr1 = kmap_atomic(p1);
-	kaddr2 = kmap_atomic(p2);
+	kaddr1 = kmap_atomic(p1, KM_USER0);
+	kaddr2 = kmap_atomic(p2, KM_USER1);
 	copy_page(buf, kaddr1);
 	copy_page(kaddr1, kaddr2);
 	copy_page(kaddr2, buf);
-	kunmap_atomic(kaddr2);
-	kunmap_atomic(kaddr1);
+	kunmap_atomic(kaddr2, KM_USER1);
+	kunmap_atomic(kaddr1, KM_USER0);
 }
 
 /**

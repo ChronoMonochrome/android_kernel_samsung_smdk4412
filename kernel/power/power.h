@@ -50,8 +50,6 @@ static inline char *check_image_kernel(struct swsusp_info *info)
 #define SPARE_PAGES	((1024 * 1024) >> PAGE_SHIFT)
 
 /* kernel/power/hibernate.c */
-extern bool freezer_test_done;
-
 extern int hibernation_snapshot(int platform_mode);
 extern int hibernation_restore(int platform_mode);
 extern int hibernation_platform_enter(void);
@@ -74,6 +72,7 @@ static struct kobj_attribute _name##_attr = {	\
 	.store	= _name##_store,		\
 }
 
+extern int noresume;
 /* Preferred image size in bytes (default 500 MB) */
 extern unsigned long image_size;
 /* Size of memory reserved for drivers (default SPARE_PAGES x PAGE_SIZE) */
@@ -148,7 +147,6 @@ extern int swsusp_swap_in_use(void);
  */
 #define SF_PLATFORM_MODE	1
 #define SF_NOCOMPRESS_MODE	2
-#define SF_CRC32_MODE	        4
 
 /* kernel/power/hibernate.c */
 extern int swsusp_check(void);
@@ -177,11 +175,13 @@ extern const char *const pm_states[];
 
 extern bool valid_state(suspend_state_t state);
 extern int suspend_devices_and_enter(suspend_state_t state);
+extern int enter_state(suspend_state_t state);
 #else /* !CONFIG_SUSPEND */
 static inline int suspend_devices_and_enter(suspend_state_t state)
 {
 	return -ENOSYS;
 }
+static inline int enter_state(suspend_state_t state) { return -ENOSYS; }
 static inline bool valid_state(suspend_state_t state) { return false; }
 #endif /* !CONFIG_SUSPEND */
 
@@ -229,25 +229,7 @@ extern int pm_test_level;
 #ifdef CONFIG_SUSPEND_FREEZER
 static inline int suspend_freeze_processes(void)
 {
-	int error;
-
-	error = freeze_processes();
-	/*
-	 * freeze_processes() automatically thaws every task if freezing
-	 * fails. So we need not do anything extra upon error.
-	 */
-	if (error)
-		return error;
-
-	error = freeze_kernel_threads();
-	/*
-	 * freeze_kernel_threads() thaws only kernel threads upon freezing
-	 * failure. So we have to thaw the userspace tasks ourselves.
-	 */
-	if (error)
-		thaw_processes();
-
-	return error;
+	return freeze_processes();
 }
 
 static inline void suspend_thaw_processes(void)
@@ -263,4 +245,46 @@ static inline int suspend_freeze_processes(void)
 static inline void suspend_thaw_processes(void)
 {
 }
+#endif
+
+#ifdef CONFIG_WAKELOCK
+/* kernel/power/wakelock.c */
+extern struct workqueue_struct *suspend_work_queue;
+extern struct wake_lock main_wake_lock;
+extern struct workqueue_struct *sync_work_queue;
+extern struct wake_lock sync_wake_lock;
+extern suspend_state_t requested_suspend_state;
+#endif
+
+#ifdef CONFIG_USER_WAKELOCK
+ssize_t wake_lock_show(struct kobject *kobj, struct kobj_attribute *attr,
+			char *buf);
+ssize_t wake_lock_store(struct kobject *kobj, struct kobj_attribute *attr,
+			const char *buf, size_t n);
+ssize_t wake_unlock_show(struct kobject *kobj, struct kobj_attribute *attr,
+			char *buf);
+ssize_t  wake_unlock_store(struct kobject *kobj, struct kobj_attribute *attr,
+			const char *buf, size_t n);
+#endif
+
+#ifdef CONFIG_EARLYSUSPEND
+/* kernel/power/earlysuspend.c */
+void request_suspend_state(suspend_state_t state);
+suspend_state_t get_suspend_state(void);
+#endif
+
+struct pm_wd_data {
+	struct task_struct *tsk;
+	int timeout;
+};
+#ifdef CONFIG_PM_WATCHDOG_TIMEOUT
+void pm_wd_timeout(unsigned long data);
+void pm_wd_add_timer(struct timer_list *timer, struct pm_wd_data *data,
+			int timeout);
+void pm_wd_del_timer(struct timer_list *timer);
+#else
+static inline void pm_wd_timeout(unsigned long data) { }
+static inline void pm_wd_add_timer(struct timer_list *timer,
+				struct pm_wd_data *data, int timeout) { }
+static inline void pm_wd_del_timer(struct timer_list *timer) { }
 #endif

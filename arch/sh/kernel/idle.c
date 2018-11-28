@@ -16,11 +16,10 @@
 #include <linux/thread_info.h>
 #include <linux/irqflags.h>
 #include <linux/smp.h>
-#include <linux/cpuidle.h>
-#include <linux/atomic.h>
 #include <asm/pgalloc.h>
+#include <asm/system.h>
+#include <linux/atomic.h>
 #include <asm/smp.h>
-#include <asm/bl_bit.h>
 
 void (*pm_idle)(void);
 
@@ -102,8 +101,7 @@ void cpu_idle(void)
 			local_irq_disable();
 			/* Don't trace irqs off for idle */
 			stop_critical_timings();
-			if (cpuidle_idle_call())
-				pm_idle();
+			pm_idle();
 			/*
 			 * Sanity check to ensure that pm_idle() returns
 			 * with IRQs enabled
@@ -114,7 +112,9 @@ void cpu_idle(void)
 
 		rcu_idle_exit();
 		tick_nohz_idle_exit();
-		schedule_preempt_disabled();
+		preempt_enable_no_resched();
+		schedule();
+		preempt_disable();
 	}
 }
 

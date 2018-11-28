@@ -36,7 +36,6 @@
 #include <linux/resource.h>
 #include <linux/notifier.h>
 #include <linux/suspend.h>
-#include <linux/rwsem.h>
 #include <asm/uaccess.h>
 
 #include <trace/events/module.h>
@@ -51,7 +50,6 @@ static struct workqueue_struct *khelper_wq;
 static kernel_cap_t usermodehelper_bset = CAP_FULL_SET;
 static kernel_cap_t usermodehelper_inheritable = CAP_FULL_SET;
 static DEFINE_SPINLOCK(umh_sysctl_lock);
-static DECLARE_RWSEM(umhelper_sem);
 
 #ifdef CONFIG_MODULES
 
@@ -320,126 +318,33 @@ static void __call_usermodehelper(struct work_struct *work)
  * If set, call_usermodehelper_exec() will exit immediately returning -EBUSY
  * (used for preventing user land processes from being created after the user
  * land has been frozen during a system-wide hibernation or suspend operation).
- * Should always be manipulated under umhelper_sem acquired for write.
  */
-static enum umh_disable_depth usermodehelper_disabled = UMH_DISABLED;
+static int usermodehelper_disabled = 1;
 
 /* Number of helpers running */
 static atomic_t running_helpers = ATOMIC_INIT(0);
 
 /*
- * Wait queue head used by usermodehelper_disable() to wait for all running
+ * Wait queue head used by usermodehelper_pm_callback() to wait for all running
  * helpers to finish.
  */
 static DECLARE_WAIT_QUEUE_HEAD(running_helpers_waitq);
 
 /*
- * Used by usermodehelper_read_lock_wait() to wait for usermodehelper_disabled
- * to become 'false'.
- */
-static DECLARE_WAIT_QUEUE_HEAD(usermodehelper_disabled_waitq);
-
-/*
  * Time to wait for running_helpers to become zero before the setting of
- * usermodehelper_disabled in usermodehelper_disable() fails
+ * usermodehelper_disabled in usermodehelper_pm_callback() fails
  */
 #define RUNNING_HELPERS_TIMEOUT	(5 * HZ)
 
-int usermodehelper_read_trylock(void)
-{
-	DEFINE_WAIT(wait);
-	int ret = 0;
-
-	down_read(&umhelper_sem);
-	for (;;) {
-		prepare_to_wait(&usermodehelper_disabled_waitq, &wait,
-				TASK_INTERRUPTIBLE);
-		if (!usermodehelper_disabled)
-			break;
-
-		if (usermodehelper_disabled == UMH_DISABLED)
-			ret = -EAGAIN;
-
-		up_read(&umhelper_sem);
-
-		if (ret)
-			break;
-
-		schedule();
-		try_to_freeze();
-
-		down_read(&umhelper_sem);
-	}
-	finish_wait(&usermodehelper_disabled_waitq, &wait);
-	return ret;
-}
-EXPORT_SYMBOL_GPL(usermodehelper_read_trylock);
-
-long usermodehelper_read_lock_wait(long timeout)
-{
-	DEFINE_WAIT(wait);
-
-	if (timeout < 0)
-		return -EINVAL;
-
-	down_read(&umhelper_sem);
-	for (;;) {
-		prepare_to_wait(&usermodehelper_disabled_waitq, &wait,
-				TASK_UNINTERRUPTIBLE);
-		if (!usermodehelper_disabled)
-			break;
-
-		up_read(&umhelper_sem);
-
-		timeout = schedule_timeout(timeout);
-		if (!timeout)
-			break;
-
-		down_read(&umhelper_sem);
-	}
-	finish_wait(&usermodehelper_disabled_waitq, &wait);
-	return timeout;
-}
-EXPORT_SYMBOL_GPL(usermodehelper_read_lock_wait);
-
-void usermodehelper_read_unlock(void)
-{
-	up_read(&umhelper_sem);
-}
-EXPORT_SYMBOL_GPL(usermodehelper_read_unlock);
-
 /**
- * __usermodehelper_set_disable_depth - Modify usermodehelper_disabled.
- * depth: New value to assign to usermodehelper_disabled.
- *
- * Change the value of usermodehelper_disabled (under umhelper_sem locked for
- * writing) and wakeup tasks waiting for it to change.
+ * usermodehelper_disable - prevent new helpers from being started
  */
-void __usermodehelper_set_disable_depth(enum umh_disable_depth depth)
-{
-	down_write(&umhelper_sem);
-	usermodehelper_disabled = depth;
-	wake_up(&usermodehelper_disabled_waitq);
-	up_write(&umhelper_sem);
-}
-
-/**
- * __usermodehelper_disable - Prevent new helpers from being started.
- * @depth: New value to assign to usermodehelper_disabled.
- *
- * Set usermodehelper_disabled to @depth and wait for running helpers to exit.
- */
-int __usermodehelper_disable(enum umh_disable_depth depth)
+int usermodehelper_disable(void)
 {
 	long retval;
 
-	if (!depth)
-		return -EINVAL;
-
-	down_write(&umhelper_sem);
-	usermodehelper_disabled = depth;
-	up_write(&umhelper_sem);
-
+	usermodehelper_disabled = 1;
+	smp_mb();
 	/*
 	 * From now on call_usermodehelper_exec() won't start any new
 	 * helpers, so it is sufficient if running_helpers turns out to
@@ -452,9 +357,26 @@ int __usermodehelper_disable(enum umh_disable_depth depth)
 	if (retval)
 		return 0;
 
-	__usermodehelper_set_disable_depth(UMH_ENABLED);
+	usermodehelper_disabled = 0;
 	return -EAGAIN;
 }
+
+/**
+ * usermodehelper_enable - allow new helpers to be started again
+ */
+void usermodehelper_enable(void)
+{
+	usermodehelper_disabled = 0;
+}
+
+/**
+ * usermodehelper_is_disabled - check if new helpers are allowed to be started
+ */
+bool usermodehelper_is_disabled(void)
+{
+	return usermodehelper_disabled;
+}
+EXPORT_SYMBOL_GPL(usermodehelper_is_disabled);
 
 static void helper_lock(void)
 {

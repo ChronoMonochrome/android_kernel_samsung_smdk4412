@@ -1067,7 +1067,9 @@ static void copy_flags(unsigned long clone_flags, struct task_struct *p)
 
 	new_flags &= ~(PF_SUPERPRIV | PF_WQ_WORKER);
 	new_flags |= PF_FORKNOEXEC;
+	new_flags |= PF_STARTING;
 	p->flags = new_flags;
+	clear_freeze_flag(p);
 }
 
 SYSCALL_DEFINE1(set_tid_address, int __user *, tidptr)
@@ -1607,6 +1609,14 @@ long do_fork(unsigned long clone_flags,
 			init_completion(&vfork);
 			get_task_struct(p);
 		}
+
+		/*
+		 * We set PF_STARTING at creation in case tracing wants to
+		 * use this to distinguish a fully live task from one that
+		 * hasn't finished SIGSTOP raising yet.  Now we clear it
+		 * and set the child going.
+		 */
+		p->flags &= ~PF_STARTING;
 
 		wake_up_new_task(p);
 
