@@ -5089,7 +5089,7 @@ wl_cfg80211_afx_handler(struct work_struct *work)
 	if (afx_instance != NULL && cfg->afx_hdl->is_active) {
 		if (cfg->afx_hdl->is_listen && cfg->afx_hdl->my_listen_chan) {
 			ret = wl_cfgp2p_discover_listen(cfg, cfg->afx_hdl->my_listen_chan,
-				(100 * (1 + (random32() % 3)))); /* 100ms ~ 300ms */
+				(100 * (1 + (prandom_u32() % 3)))); /* 100ms ~ 300ms */
 		} else {
 			ret = wl_cfgp2p_act_frm_search(cfg, cfg->afx_hdl->dev,
 				cfg->afx_hdl->bssidx, cfg->afx_hdl->peer_listen_chan,
