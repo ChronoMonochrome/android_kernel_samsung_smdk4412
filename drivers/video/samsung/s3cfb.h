@@ -497,8 +497,8 @@ extern void s3cfb_set_lcd_info(struct s3cfb_global *ctrl);
 
 #ifdef CONFIG_FB_S5P_MIPI_DSIM
 extern int s3cfb_vsync_status_check(void);
-extern void s5p_dsim_early_suspend(void);
-extern void s5p_dsim_late_resume(void);
+extern void s5p_dsim_fb_suspend(void);
+extern void s5p_dsim_fb_resume(void);
 extern void set_dsim_hs_clk_toggle_count(u8 count);
 extern void set_dsim_lcd_enabled(u8 enable);
 #endif

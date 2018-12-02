@@ -45,9 +45,9 @@
 #include "s5p_dsim_lowlevel.h"
 #include "s3cfb.h"
 
-#ifdef CONFIG_HAS_WAKELOCK
-#include <linux/wakelock.h>
-#include <linux/earlysuspend.h>
+#ifdef CONFIG_FB
+#include <linux/notifier.h>
+#include <linux/fb.h>
 #include <linux/suspend.h>
 #endif
 
@@ -793,7 +793,7 @@ static void s5p_dsim_set_clock(struct dsim_global *dsim,
 	}
 }
 
-static int s5p_dsim_late_resume_init_dsim(struct dsim_global *dsim)
+static int s5p_dsim_fb_resume_init_dsim(struct dsim_global *dsim)
 {
 	unsigned int dsim_base = dsim->reg_base;
 
@@ -1180,8 +1180,8 @@ static int s5p_dsim_fifo_clear(struct dsim_global *dsim)
 }
 #endif
 
-#ifdef CONFIG_HAS_EARLYSUSPEND
-void s5p_dsim_early_suspend(void)
+#ifdef CONFIG_FB
+void s5p_dsim_fb_suspend(void)
 {
 	u32 int_stat = 0;
 	pm_message_t state;
@@ -1234,7 +1234,7 @@ void s5p_dsim_early_suspend(void)
 	return;
 }
 
-void s5p_dsim_late_resume(void)
+void s5p_dsim_fb_resume(void)
 {
 	struct dsim_global *dsim = g_dsim;
 
@@ -1251,7 +1251,7 @@ void s5p_dsim_late_resume(void)
 		dsim->mipi_ddi_pd->lcd_power_on(dsim->dev, 1);
 	usleep_range(25000, 25000);
 
-	s5p_dsim_late_resume_init_dsim(dsim);
+	s5p_dsim_fb_resume_init_dsim(dsim);
 	s5p_dsim_init_link(dsim);
 	usleep_range(10000, 10000);
 
@@ -1424,8 +1424,8 @@ static struct dsim_ops s5p_dsim_ops = {
 	.cmd_write	= s5p_dsim_wr_data,
 	.cmd_read	= s5p_dsim_rd_data,
 	.cmd_dcs_read	= s5p_dsim_dcs_rd_data,
-	.suspend	= s5p_dsim_early_suspend,
-	.resume		= s5p_dsim_late_resume,
+	.suspend	= s5p_dsim_fb_suspend,
+	.resume		= s5p_dsim_fb_resume,
 };
 
 static int s5p_dsim_probe(struct platform_device *pdev)
@@ -1593,11 +1593,11 @@ static int s5p_dsim_probe(struct platform_device *pdev)
 
 #if 0
 #ifdef CONFIG_HAS_WAKELOCK
-#ifdef CONFIG_HAS_EARLYSUSPEND
-	dsim->early_suspend.suspend = s5p_dsim_early_suspend;
-	dsim->early_suspend.resume = s5p_dsim_late_resume;
+#ifdef CONFIG_FB
+	dsim->early_suspend.suspend = s5p_dsim_fb_suspend;
+	dsim->early_suspend.resume = s5p_dsim_fb_resume;
 	dsim->early_suspend.level = EARLY_SUSPEND_LEVEL_DISABLE_FB - 1;
-	register_early_suspend(&dsim->early_suspend);
+	register_fb_suspend(&dsim->early_suspend);
 #endif
 #endif
 #endif
@@ -1626,7 +1626,7 @@ static int s5p_dsim_remove(struct platform_device *pdev)
 static struct platform_driver s5p_dsim_driver = {
 	.probe = s5p_dsim_probe,
 	.remove = s5p_dsim_remove,
-#ifndef CONFIG_HAS_EARLYSUSPEND
+#ifndef CONFIG_FB
 	.suspend = s5p_dsim_suspend,
 	.resume = s5p_dsim_resume,
 #endif
