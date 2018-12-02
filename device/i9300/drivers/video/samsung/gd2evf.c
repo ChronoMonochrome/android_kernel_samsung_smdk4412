@@ -413,7 +413,7 @@ static DEVICE_ATTR(auto_brightness, 0644, auto_brightness_show, auto_brightness_
 
 #if defined(CONFIG_PM)
 #ifdef CONFIG_HAS_EARLYSUSPEND
-void gd2evf_early_suspend(struct early_suspend *h)
+void gd2evf_fb_suspend(struct early_suspend *h)
 {
 	struct lcd_info *lcd = container_of(h, struct lcd_info ,
 								early_suspend);
@@ -424,7 +424,7 @@ void gd2evf_early_suspend(struct early_suspend *h)
 	return ;
 }
 
-void gd2evf_late_resume(struct early_suspend *h)
+void gd2evf_fb_resume(struct early_suspend *h)
 {
 	struct lcd_info *lcd = container_of(h, struct lcd_info ,
 								early_suspend);
@@ -504,10 +504,10 @@ static int gd2evf_probe(struct spi_device *spi)
 	dev_set_drvdata(&spi->dev, lcd);
 
 #ifdef CONFIG_HAS_EARLYSUSPEND
-	lcd->early_suspend.suspend = gd2evf_early_suspend;
-	lcd->early_suspend.resume = NULL;	/* gd2evf_late_resume; */
+	lcd->early_suspend.suspend = gd2evf_fb_suspend;
+	lcd->early_suspend.resume = NULL;	/* gd2evf_fb_resume; */
 	lcd->early_suspend.level = EARLY_SUSPEND_LEVEL_DISABLE_FB - 1;
-	register_early_suspend(&lcd->early_suspend);
+	register_fb_suspend(&lcd->early_suspend);
 #endif
 
 	return 0;

@@ -26,10 +26,10 @@
 #include <plat/regs-dsim.h>
 #include <mach/dsim.h>
 #include <mach/mipi_ddi.h>
-#ifdef CONFIG_HAS_EARLYSUSPEND
-#include <linux/earlysuspend.h>
+#ifdef CONFIG_FB
+#include <linux/notifier.h>
+#include <linux/fb.h>
 #endif
-
 #include "s5p-dsim.h"
 #include "s3cfb.h"
 
@@ -102,8 +102,8 @@ static const unsigned int candela_table[GAMMA_MAX] = {
 	220,	234,	249,	265,	282,	300,	400
 };
 
-extern void (*lcd_early_suspend)(void);
-extern void (*lcd_late_resume)(void);
+extern void (*lcd_fb_suspend)(void);
+extern void (*lcd_fb_resume)(void);
 
 static int _s6e88a0_write(struct lcd_info *lcd, const unsigned char *seq, int len)
 {
@@ -1237,7 +1237,7 @@ static DEVICE_ATTR(parameter, 0444, parameter_show, NULL);
 #ifdef CONFIG_HAS_EARLYSUSPEND
 static struct lcd_info *g_lcd;
 
-void s6e88a0_early_suspend(void)
+void s6e88a0_fb_suspend(void)
 {
 	struct lcd_info *lcd = g_lcd;
 
@@ -1249,7 +1249,7 @@ void s6e88a0_early_suspend(void)
 	return;
 }
 
-void s6e88a0_late_resume(void)
+void s6e88a0_fb_resume(void)
 {
 	struct lcd_info *lcd = g_lcd;
 
@@ -1376,8 +1376,8 @@ static int s6e88a0_probe(struct device *dev)
 
 	update_brightness(lcd, 1);
 
-	lcd_early_suspend = s6e88a0_early_suspend;
-	lcd_late_resume = s6e88a0_late_resume;
+	lcd_fb_suspend = s6e88a0_fb_suspend;
+	lcd_fb_resume = s6e88a0_fb_resume;
 
 	dev_info(&lcd->ld->dev, "%s lcd panel driver has been probed.\n", __FILE__);
 

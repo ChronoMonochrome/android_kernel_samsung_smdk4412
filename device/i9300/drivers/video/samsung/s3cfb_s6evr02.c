@@ -29,10 +29,10 @@
 #include <plat/regs-dsim.h>
 #include <mach/dsim.h>
 #include <mach/mipi_ddi.h>
-#ifdef CONFIG_HAS_EARLYSUSPEND
-#include <linux/earlysuspend.h>
+#ifdef CONFIG_FB
+#include <linux/notifier.h>
+#include <linux/fb.h>
 #endif
-
 #include "s5p-dsim.h"
 #include "s3cfb.h"
 #include "s6evr02_param.h"
@@ -118,8 +118,8 @@ static unsigned int aid_candela_table[GAMMA_MAX] = {
 };
 #endif
 
-extern void (*lcd_early_suspend)(void);
-extern void (*lcd_late_resume)(void);
+extern void (*lcd_fb_suspend)(void);
+extern void (*lcd_fb_resume)(void);
 
 #if defined(GPIO_ERR_FG)
 static void err_fg_detection_work(struct work_struct *work)
@@ -1068,10 +1068,7 @@ static DEVICE_ATTR(auto_brightness, 0644, auto_brightness_show, auto_brightness_
 #ifdef CONFIG_HAS_EARLYSUSPEND
 static struct lcd_info *g_lcd;
 
-int s6e8ax0_suspended;
-int s6e8ax0_fix_fence;
-
-void s6evr02_early_suspend(void)
+void s6evr02_fb_suspend(void)
 {
 	struct lcd_info *lcd = g_lcd;
 
@@ -1098,13 +1095,11 @@ void s6evr02_early_suspend(void)
 
 	s6evr02_power(lcd, FB_BLANK_POWERDOWN);
 	dev_info(&lcd->ld->dev, "-%s\n", __func__);
-	s6e8ax0_suspended = 1;
-	s6e8ax0_fix_fence = 1;
 
 	return ;
 }
 
-void s6evr02_late_resume(void)
+void s6evr02_fb_resume(void)
 {
 	struct lcd_info *lcd = g_lcd;
 	s6e8ax0_suspended = 0;
@@ -1128,6 +1123,8 @@ void s6evr02_late_resume(void)
 	dev_info(&lcd->ld->dev, "-%s\n", __func__);
 
 	set_dsim_lcd_enabled(1);
+
+	lcd->fb_suspended = false;
 
 	return ;
 }
@@ -1204,6 +1201,7 @@ static int s6evr02_probe(struct device *dev)
 	lcd->ldi_enable = 1;
 	lcd->connected = 1;
 	lcd->auto_brightness = 0;
+	lcd->fb_suspended = false;
 
 	ret = device_create_file(&lcd->ld->dev, &dev_attr_power_reduce);
 	if (ret < 0)
@@ -1295,8 +1293,8 @@ static int s6evr02_probe(struct device *dev)
 	}
 #endif
 
-	lcd_early_suspend = s6evr02_early_suspend;
-	lcd_late_resume = s6evr02_late_resume;
+	lcd_fb_suspend = s6evr02_fb_suspend;
+	lcd_fb_resume = s6evr02_fb_resume;
 
 	return 0;
 

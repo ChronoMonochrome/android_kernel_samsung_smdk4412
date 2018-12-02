@@ -63,7 +63,8 @@ struct lcd_info {
 	struct lcd_device		*ld;
 	struct backlight_device		*bd;
 	struct lcd_platform_data	*lcd_pd;
-	struct early_suspend		early_suspend;
+	struct notifier_block fb_notif;
+	bool fb_suspended;
 
 #ifndef CONFIG_SAMSUNG_PRODUCT_SHIP
 	unsigned char			id[LDI_ID_LEN];
@@ -228,20 +229,20 @@ static unsigned char TRANS_BRIGHTNESS[] = {
 	249,	250,	251,	252,	253,	254,	255,	255,
 };
 
-extern void (*lcd_early_suspend)(void);
-extern void (*lcd_late_resume)(void);
+extern void (*lcd_fb_suspend)(void);
+extern void (*lcd_fb_resume)(void);
 
 #if defined(GPIO_OLED_DET)
 static void esd_reset_lcd(struct lcd_info *lcd)
 {
 	dev_info(&lcd->ld->dev, "++%s\n", __func__);
-	if (lcd_early_suspend)
-		lcd_early_suspend();
+	if (lcd_fb_suspend)
+		lcd_fb_suspend();
 	lcd->dsim->ops->suspend();
 
 	lcd->dsim->ops->resume();
-	if (lcd_late_resume)
-		lcd_late_resume();
+	if (lcd_fb_resume)
+		lcd_fb_resume();
 	dev_info(&lcd->ld->dev, "--%s\n", __func__);
 }
 
@@ -648,7 +649,7 @@ static void s6d6aa1_read_id(struct lcd_info *lcd, u8 *buf)
 #ifdef CONFIG_HAS_EARLYSUSPEND
 struct lcd_info *g_lcd;
 
-void s6d6aa1_early_suspend(void)
+void s6d6aa1_fb_suspend(void)
 {
 	struct lcd_info *lcd = g_lcd;
 
@@ -671,7 +672,7 @@ void s6d6aa1_early_suspend(void)
 	return ;
 }
 
-void s6d6aa1_late_resume(void)
+void s6d6aa1_fb_resume(void)
 {
 	struct lcd_info *lcd = g_lcd;
 
@@ -693,6 +694,8 @@ Turning OFF/ON the LCD voltages as requested by H/W Team request for factory tes
 	dev_info(&lcd->ld->dev, "-%s\n", __func__);
 
 	set_dsim_lcd_enabled(1);
+
+	lcd->fb_suspended = false;
 
 	return ;
 }
@@ -770,8 +773,8 @@ static int s6d6aa1_probe(struct device *dev)
 		}
 #endif
 
-	lcd_early_suspend = s6d6aa1_early_suspend;
-	lcd_late_resume = s6d6aa1_late_resume;
+	lcd_fb_suspend = s6d6aa1_fb_suspend;
+	lcd_fb_resume = s6d6aa1_fb_resume;
 
 	return 0;
 
