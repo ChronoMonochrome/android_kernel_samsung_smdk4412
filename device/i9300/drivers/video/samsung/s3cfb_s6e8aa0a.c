@@ -216,8 +216,8 @@ static unsigned int elvss_offset_table[ELVSS_STATUS_MAX] = {
 static void s3cfb_reinitialize_lcd(void);
 static int s6e8ax0_read_ddi_status_reg(struct lcd_info *lcd, u8 *buf);
 #endif
-extern void (*lcd_early_suspend)(void);
-extern void (*lcd_late_resume)(void);
+extern void (*lcd_fb_suspend)(void);
+extern void (*lcd_fb_resume)(void);
 #ifdef DDI_STATUS_REG_PREVENTESD
 static void check_ddi_work(struct work_struct *work)
 {
@@ -1405,7 +1405,7 @@ static DEVICE_ATTR(auto_brightness, 0644, auto_brightness_show, auto_brightness_
 #ifdef CONFIG_HAS_EARLYSUSPEND
 struct lcd_info *g_lcd;
 
-void s6e8ax0_early_suspend(void)
+void s6e8ax0_fb_suspend(void)
 {
 	struct lcd_info *lcd = g_lcd;
 
@@ -1435,7 +1435,7 @@ void s6e8ax0_early_suspend(void)
 	return ;
 }
 
-void s6e8ax0_late_resume(void)
+void s6e8ax0_fb_resume(void)
 {
 	struct lcd_info *lcd = g_lcd;
 
@@ -1459,13 +1459,13 @@ void s6e8ax0_late_resume(void)
 #ifdef DDI_STATUS_REG_PREVENTESD
 static void s3cfb_reinitialize_lcd(void)
 {
-	s6e8ax0_early_suspend();
-	s5p_dsim_early_suspend();
+	s6e8ax0_fb_suspend();
+	s5p_dsim_fb_suspend();
 	msleep(20);
-	s5p_dsim_late_resume();
+	s5p_dsim_fb_resume();
 
 	msleep(20);
-	s6e8ax0_late_resume();
+	s6e8ax0_fb_resume();
 	printk(KERN_INFO "%s, re-initialize LCD - Done\n", __func__);
 }
 #endif
@@ -1693,8 +1693,8 @@ static int s6e8ax0_probe(struct device *dev)
 		schedule_delayed_work(&lcd->check_ddi, msecs_to_jiffies(20000));
 	}
 #endif
-	lcd_early_suspend = s6e8ax0_early_suspend;
-	lcd_late_resume = s6e8ax0_late_resume;
+	lcd_fb_suspend = s6e8ax0_fb_suspend;
+	lcd_fb_resume = s6e8ax0_fb_resume;
 
 	return 0;
 

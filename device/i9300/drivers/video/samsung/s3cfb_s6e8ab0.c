@@ -87,7 +87,8 @@ struct lcd_info {
 	struct lcd_device		*ld;
 	struct backlight_device		*bd;
 	struct lcd_platform_data	*lcd_pd;
-	struct early_suspend		early_suspend;
+	struct notifier_block fb_notif;
+	bool fb_suspended;
 
 	unsigned char			id[LDI_ID_LEN];
 
@@ -105,8 +106,8 @@ struct lcd_info {
 	struct dsim_global		*dsim;
 };
 
-extern void (*lcd_early_suspend)(void);
-extern void (*lcd_late_resume)(void);
+extern void (*lcd_fb_suspend)(void);
+extern void (*lcd_fb_resume)(void);
 
 static int s6e8ax0_write(struct lcd_info *lcd, const unsigned char *seq, int len)
 {
@@ -653,7 +654,7 @@ static DEVICE_ATTR(gamma_table, 0444, gamma_table_show, NULL);
 #ifdef CONFIG_HAS_EARLYSUSPEND
 struct lcd_info *g_lcd;
 
-void s6e8ax0_early_suspend(void)
+void s6e8ax0_fb_suspend(void)
 {
 	struct lcd_info *lcd = g_lcd;
 
@@ -666,7 +667,7 @@ void s6e8ax0_early_suspend(void)
 	return ;
 }
 
-void s6e8ax0_late_resume(void)
+void s6e8ax0_fb_resume(void)
 {
 	struct lcd_info *lcd = g_lcd;
 
@@ -675,6 +676,8 @@ void s6e8ax0_late_resume(void)
 	dev_info(&lcd->ld->dev, "-%s\n", __func__);
 
 	set_dsim_lcd_enabled(1);
+
+	lcd->fb_suspended = false;
 
 	return ;
 }
@@ -830,8 +833,8 @@ static int s6e8ax0_probe(struct device *dev)
 	update_brightness(lcd, 1);
 #endif
 
-	lcd_early_suspend = s6e8ax0_early_suspend;
-	lcd_late_resume = s6e8ax0_late_resume;
+	lcd_fb_suspend = s6e8ax0_fb_suspend;
+	lcd_fb_resume = s6e8ax0_fb_resume;
 
 	return 0;
 

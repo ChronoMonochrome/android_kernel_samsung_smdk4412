@@ -391,7 +391,7 @@ static DEVICE_ATTR(auto_brightness, 0644, auto_brightness_show, auto_brightness_
 #ifdef CONFIG_HAS_EARLYSUSPEND
 struct lcd_info *g_lcd;
 
-void s6e8ax0_early_suspend(void)
+void s6e8ax0_fb_suspend(void)
 {
 	struct lcd_info *lcd = g_lcd;
 
@@ -404,7 +404,7 @@ void s6e8ax0_early_suspend(void)
 	return ;
 }
 
-void s6e8ax0_late_resume(void)
+void s6e8ax0_fb_resume(void)
 {
 	struct lcd_info *lcd = g_lcd;
 

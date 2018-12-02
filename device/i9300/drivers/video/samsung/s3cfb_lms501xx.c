@@ -26,10 +26,10 @@
 #include <plat/regs-dsim.h>
 #include <mach/dsim.h>
 #include <mach/mipi_ddi.h>
-#ifdef CONFIG_HAS_EARLYSUSPEND
-#include <linux/earlysuspend.h>
+#ifdef CONFIG_FB
+#include <linux/notifier.h>
+#include <linux/fb.h>
 #endif
-
 #include "s5p-dsim.h"
 #include "s3cfb.h"
 #include "lms501xx.h"
@@ -64,7 +64,8 @@ struct lcd_info {
 	struct lcd_device		*ld;
 	struct backlight_device		*bd;
 	struct lcd_platform_data	*lcd_pd;
-	struct early_suspend		early_suspend;
+	struct notifier_block fb_notif;
+	bool fb_suspended;
 
 	unsigned char			id[LDI_ID_LEN];
 
@@ -90,8 +91,8 @@ static const unsigned int candela_table[GAMMA_MAX-1] = {
 	230, 240, MAX_BRIGHTNESS, MAX_GAMMA
 };
 
-extern void (*lcd_early_suspend)(void);
-extern void (*lcd_late_resume)(void);
+extern void (*lcd_fb_suspend)(void);
+extern void (*lcd_fb_resume)(void);
 struct LCD_BRIGHTNESS {
 	int off;
 	int deflt;
@@ -874,7 +875,7 @@ static DEVICE_ATTR(auto_brightness, 0644,
 #ifdef CONFIG_HAS_EARLYSUSPEND
 struct lcd_info *g_lcd;
 
-void lms501xx_early_suspend(void)
+void lms501xx_fb_suspend(void)
 {
 	struct lcd_info *lcd = g_lcd;
 
@@ -904,7 +905,7 @@ void lms501xx_early_suspend(void)
 	return ;
 }
 
-void lms501xx_late_resume(void)
+void lms501xx_fb_resume(void)
 {
 	struct lcd_info *lcd = g_lcd;
 
@@ -925,18 +926,20 @@ void lms501xx_late_resume(void)
 
 #endif
 
+	lcd->fb_suspended = false;
+
 	return ;
 }
 #ifdef DDI_STATUS_REG_PREVENTESD
 static void  lms501xx_reinitialize_lcd(void)
 {
-	lms501xx_early_suspend();
-	s5p_dsim_early_suspend();
+	lms501xx_fb_suspend();
+	s5p_dsim_fb_suspend();
 	msleep(20);
-	s5p_dsim_late_resume();
+	s5p_dsim_fb_resume();
 
 	msleep(20);
-	lms501xx_late_resume();
+	lms501xx_fb_resume();
 	printk(KERN_INFO "%s, re-initialize LCD - Done\n", __func__);
 }
 #endif
@@ -1006,6 +1009,7 @@ static int lms501xx_probe(struct device *dev)
 	lcd->ldi_enable = 1;
 	lcd->connected = 1;
 	lcd->auto_brightness = 0;
+	lcd->fb_suspended = false;
 
 	ret = device_create_file(&lcd->ld->dev, &dev_attr_power_reduce);
 	if (ret < 0)
@@ -1058,8 +1062,8 @@ static int lms501xx_probe(struct device *dev)
 		schedule_delayed_work(&lcd->check_ddi, msecs_to_jiffies(20000));
 	}
 #endif
-	lcd_early_suspend = lms501xx_early_suspend;
-	lcd_late_resume = lms501xx_late_resume;
+	lcd_fb_suspend = lms501xx_fb_suspend;
+	lcd_fb_resume = lms501xx_fb_resume;
 
 	return 0;
 
