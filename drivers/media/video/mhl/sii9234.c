@@ -224,7 +224,7 @@ static void goto_d3(void);
 /*////////////////////////////////////////////////////////////////////////////*/
 
 #ifdef CONFIG_MACH_MIDAS
-void sii9234_wake_lock(void)
+void sii9234_pm_stay_awake(void)
 {
 	struct sii9234_data *sii9234 = dev_get_drvdata(sii9244_mhldev);
 	if (!sii9234 || !sii9234->pdata) {
@@ -232,12 +232,12 @@ void sii9234_wake_lock(void)
 			 __func__);
 		return;
 	}
-	wake_lock(&sii9234->mhl_wake_lock);
+	__pm_stay_awake(&sii9234->mhl_wake_lock);
 	pr_debug("%s()\n", __func__);
 }
 EXPORT_SYMBOL(sii9234_wake_lock);
 
-void sii9234_wake_unlock(void)
+void sii9234_pm_relax(void)
 {
 	struct sii9234_data *sii9234 = dev_get_drvdata(sii9244_mhldev);
 	if (!sii9234 || !sii9234->pdata) {
@@ -245,10 +245,10 @@ void sii9234_wake_unlock(void)
 			 __func__);
 		return;
 	}
-	wake_unlock(&sii9234->mhl_wake_lock);
+	__pm_relax(&sii9234->mhl_wake_lock);
 	pr_debug("%s()\n", __func__);
 }
-EXPORT_SYMBOL(sii9234_wake_unlock);
+EXPORT_SYMBOL(sii9234_pm_relax);
 #endif
 
 #ifdef __CONFIG_MHL_SWING_LEVEL__
@@ -3785,14 +3785,14 @@ static ssize_t sysfs_mhl_on_store(struct class *class,
 	if (p[0] == '1') {
 		pr_info("%s() MHL Attached !!\n", __func__);
 #ifdef CONFIG_MACH_MIDAS
-		sii9234_wake_lock();
+		sii9234_pm_stay_awake();
 #endif
 		mhl_onoff_ex(1);
 	} else {
 		pr_info("%s() MHL Detached !!\n", __func__);
 		mhl_onoff_ex(false);
 #ifdef CONFIG_MACH_MIDAS
-		sii9234_wake_unlock();
+		sii9234_pm_relax();
 #endif
 	}
 	return size;
@@ -3957,7 +3957,7 @@ static void sii9234_extcon_work(struct work_struct *work)
 #endif
 #ifdef CONFIG_SAMSUNG_MHL
 #ifdef CONFIG_MACH_MIDAS
-		sii9234_wake_lock();
+		sii9234_pm_stay_awake();
 #endif
 		mhl_onoff_ex(1);
 #endif
@@ -3969,7 +3969,7 @@ static void sii9234_extcon_work(struct work_struct *work)
 #ifdef CONFIG_SAMSUNG_MHL
 		mhl_onoff_ex(false);
 #ifdef CONFIG_MACH_MIDAS
-		sii9234_wake_unlock();
+		sii9234_pm_relax();
 #endif
 #endif
 	}
@@ -4118,7 +4118,7 @@ static int __devinit sii9234_mhl_tx_i2c_probe(struct i2c_client *client,
 	switch_dev_register(&sii9234->mhl_event_switch);
 
 #ifdef CONFIG_MACH_MIDAS
-	wake_lock_init(&sii9234->mhl_wake_lock, WAKE_LOCK_SUSPEND,
+	wakeup_source_init(&sii9234->mhl_wake_lock, 
 		       "mhl_wake_lock");
 	pr_debug("%s(): wake lock is initialized.\n", __func__);
 #endif

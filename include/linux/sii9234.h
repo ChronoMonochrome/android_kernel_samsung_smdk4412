@@ -75,8 +75,8 @@ extern	int	max77693_muic_get_status1_adc_value(void);
 #endif
 
 #ifdef CONFIG_MACH_MIDAS
-extern void sii9234_wake_lock(void);
-extern void sii9234_wake_unlock(void);
+extern void sii9234_pm_stay_awake(void);
+extern void sii9234_pm_relax(void);
 #endif
 
 #ifdef CONFIG_JACK_MON
