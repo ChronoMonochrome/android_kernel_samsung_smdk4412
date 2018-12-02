@@ -23,7 +23,8 @@
 #include <linux/tick.h>
 #include <linux/ktime.h>
 #include <linux/sched.h>
-#include <linux/earlysuspend.h>
+#include <linux/fb.h>
+#include <linux/notifier.h>
 #include <linux/input.h>
 #include <linux/slab.h>
 
@@ -851,6 +852,8 @@ static inline void dbs_timer_exit(struct cpu_dbs_info_s *dbs_info)
 }
 
 /* early_suspend */
+static struct notifier_block fb_notif;
+
 static void cpufreq_dynamic_resume(struct work_struct *work)
 {
 	//unsigned int cpu;
@@ -885,23 +888,51 @@ static void cpufreq_dynamic_suspend(struct work_struct *work)
 	//use this func when there's something useful to do here ;)
 }
 */
-static void dbs_suspend(struct early_suspend *handler)
+static void dbs_suspend()
 {
 	//schedule_work(&suspend_work);
-	suspend = true;
+	if (suspend)
+		return;
+
 	delay = dbs_tuners_ins.suspend_sampling_rate;
+	suspend = true;
 }
 
-static void dbs_resume(struct early_suspend *handler)
+static void dbs_resume()
 {
+	if (!suspend)
+		return;
+
 	queue_work(dbs_wq, &resume_work);
+	suspend = false;
 }
 
-static struct early_suspend dbs_early_suspend = {
-	.level = EARLY_SUSPEND_LEVEL_DISABLE_FB,
-	.suspend = dbs_suspend,
-	.resume = dbs_resume,
-};
+static int fb_notifier_callback(struct notifier_block *self,
+                               unsigned long event, void *data)
+{
+       struct fb_event *evdata = data;
+       int *blank;
+       if (evdata && evdata->data) {
+               if (event == FB_EVENT_BLANK) {
+                       blank = evdata->data;
+                       switch (*blank) {
+                               case FB_BLANK_UNBLANK:
+                               case FB_BLANK_NORMAL:
+                               case FB_BLANK_VSYNC_SUSPEND:
+                               case FB_BLANK_HSYNC_SUSPEND:
+                                       dbs_resume();
+                                       break;
+                               default:
+                               case FB_BLANK_POWERDOWN:
+                                       dbs_suspend();
+                                       break;
+                       }
+               }
+       }
+
+       return 0;
+}
+
 /* end early suspend */
 
 static void hotplug_input_event(struct input_handle *handle,
@@ -1079,7 +1110,9 @@ static int cpufreq_governor_dbs(struct cpufreq_policy *policy,
 			cpufreq_register_notifier(
 					&dbs_cpufreq_notifier_block,
 					CPUFREQ_TRANSITION_NOTIFIER);
-			register_early_suspend(&dbs_early_suspend);
+
+			fb_notif.notifier_call = fb_notifier_callback;
+			fb_register_client(&fb_notif);
 
 			rc = input_register_handler(&hotplug_input_handler);
 			if (rc)
@@ -1106,7 +1139,7 @@ static int cpufreq_governor_dbs(struct cpufreq_policy *policy,
 			cpufreq_unregister_notifier(
 					&dbs_cpufreq_notifier_block,
 					CPUFREQ_TRANSITION_NOTIFIER);
-			unregister_early_suspend(&dbs_early_suspend);
+			fb_unregister_client(&fb_notif);
 			input_unregister_handler(&hotplug_input_handler);
 		}
 
