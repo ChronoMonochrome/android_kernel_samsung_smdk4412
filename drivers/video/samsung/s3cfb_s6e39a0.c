@@ -26,10 +26,10 @@
 #include <plat/regs-dsim.h>
 #include <mach/dsim.h>
 #include <mach/mipi_ddi.h>
-#ifdef CONFIG_HAS_EARLYSUSPEND
-#include <linux/earlysuspend.h>
+#ifdef CONFIG_FB
+#include <linux/notifier.h>
+#include <linux/fb.h>
 #endif
-
 #include "s5p-dsim.h"
 #include "s3cfb.h"
 
@@ -89,7 +89,8 @@ struct lcd_info {
 	struct lcd_device		*ld;
 	struct backlight_device		*bd;
 	struct lcd_platform_data	*lcd_pd;
-	struct early_suspend		early_suspend;
+	struct notifier_block fb_notif;
+	bool fb_suspended;
 
 	unsigned int			lcd_id;
 
@@ -110,8 +111,8 @@ struct lcd_info {
 	struct dsim_global		*dsim;
 };
 
-extern void (*lcd_early_suspend)(void);
-extern void (*lcd_late_resume)(void);
+extern void (*lcd_fb_suspend)(void);
+extern void (*lcd_fb_resume)(void);
 
 static int s6e39a0_write(struct lcd_info *lcd, const unsigned char *seq, int len)
 {
@@ -869,7 +870,7 @@ static DEVICE_ATTR(power_reduce, 0664, power_reduce_show, power_reduce_store);
 #ifdef CONFIG_HAS_EARLYSUSPEND
 struct lcd_info *g_lcd;
 
-void s6e39a0_early_suspend(void)
+void s6e39a0_fb_suspend(void)
 {
 	struct lcd_info *lcd = g_lcd;
 
@@ -880,13 +881,15 @@ void s6e39a0_early_suspend(void)
 	return ;
 }
 
-void s6e39a0_late_resume(void)
+void s6e39a0_fb_resume(void)
 {
 	struct lcd_info *lcd = g_lcd;
 
 	dev_info(&lcd->ld->dev, "+%s\n", __func__);
 	s6e39a0_power(lcd, FB_BLANK_UNBLANK);
 	dev_info(&lcd->ld->dev, "-%s\n", __func__);
+
+	lcd->fb_suspended = false;
 
 	return ;
 }
@@ -1003,10 +1006,10 @@ static int s6e39a0_probe(struct device *dev)
 
 #if 0
 #ifdef CONFIG_HAS_EARLYSUSPEND
-	lcd->early_suspend.suspend = s6e39a0_early_suspend;
-	lcd->early_suspend.resume = s6e39a0_late_resume;
+	lcd->early_suspend.suspend = s6e39a0_fb_suspend;
+	lcd->early_suspend.resume = s6e39a0_fb_resume;
 	lcd->early_suspend.level = EARLY_SUSPEND_LEVEL_DISABLE_FB - 2;
-	register_early_suspend(&lcd->early_suspend);
+	register_fb_suspend(&lcd->early_suspend);
 #endif
 #endif
 
@@ -1037,8 +1040,8 @@ static int s6e39a0_probe(struct device *dev)
 	s6e39a0_adb_brightness_update(lcd, lcd->bd->props.brightness, 1);
 #endif
 
-	lcd_early_suspend = s6e39a0_early_suspend;
-	lcd_late_resume = s6e39a0_late_resume;
+	lcd_fb_suspend = s6e39a0_fb_suspend;
+	lcd_fb_resume = s6e39a0_fb_resume;
 
 	return 0;
 
