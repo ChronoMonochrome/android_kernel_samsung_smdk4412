@@ -764,7 +764,7 @@ struct modem_ctl {
 	struct io_device *bootd;
 
 	/* Wakelock for modem_ctl */
-	struct wake_lock mc_wake_lock;
+	struct wakeup_source mc_wake_lock;
 
 	void (*gpio_revers_bias_clear)(void);
 	void (*gpio_revers_bias_restore)(void);
