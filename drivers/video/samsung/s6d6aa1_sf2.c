@@ -26,10 +26,13 @@
 #include <plat/regs-dsim.h>
 #include <mach/dsim.h>
 #include <mach/mipi_ddi.h>
-#ifdef CONFIG_FB
-#include <linux/notifier.h>
-#include <linux/fb.h>
+#ifdef CONFIG_HAS_EARLYSUSPEND
+#include <linux/earlysuspend.h>
 #endif
+#ifndef CONFIG_SAMSUNG_PRODUCT_SHIP
+#include <linux/regulator/consumer.h>
+#endif
+
 #include "s5p-dsim.h"
 #include "s3cfb.h"
 
@@ -39,6 +42,13 @@
 #define MAX_BRIGHTNESS		255
 #define DEFAULT_BRIGHTNESS		160
 
+#ifndef CONFIG_SAMSUNG_PRODUCT_SHIP
+#ifdef GPIO_LCD_22V_EN_00
+#define GPIO_LCD_POWER_EN GPIO_LCD_22V_EN_00
+#endif
+#define LDI_ID_REG			0xDA
+#define LDI_ID_LEN			3
+#endif //CONFIG_SAMSUNG_PRODUCT_SHIP
 
 struct lcd_info {
 	unsigned int			bl;
@@ -56,9 +66,12 @@ struct lcd_info {
 	struct notifier_block fb_notif;
 	bool fb_suspended;
 
+#ifndef CONFIG_SAMSUNG_PRODUCT_SHIP
+	unsigned char			id[LDI_ID_LEN];
+#endif
 	unsigned int			irq;
 	unsigned int			connected;
-#if defined(GPIO_VGH_DET)
+#if defined(GPIO_OLED_DET)
 	struct delayed_work		vgh_detection;
 	unsigned int			vgh_detection_count;
 
@@ -219,7 +232,7 @@ static unsigned char TRANS_BRIGHTNESS[] = {
 extern void (*lcd_fb_suspend)(void);
 extern void (*lcd_fb_resume)(void);
 
-#if defined(GPIO_VGH_DET)
+#if defined(GPIO_OLED_DET)
 static void esd_reset_lcd(struct lcd_info *lcd)
 {
 	dev_info(&lcd->ld->dev, "++%s\n", __func__);
@@ -238,7 +251,7 @@ static void vgh_detection_work(struct work_struct *work)
 	struct lcd_info *lcd =
 		container_of(work, struct lcd_info, vgh_detection.work);
 
-	int oled_det_level = gpio_get_value(GPIO_VGH_DET);
+	int oled_det_level = gpio_get_value(GPIO_OLED_DET);
 
 	dev_info(&lcd->ld->dev, "%s, %d, %d\n", __func__, lcd->vgh_detection_count, oled_det_level);
 	if (!oled_det_level)
@@ -252,7 +265,7 @@ static irqreturn_t vgh_detection_int(int irq, void *_lcd)
 	dev_info(&lcd->ld->dev, "%s\n", __func__);
 
 	lcd->vgh_detection_count = 0;
-	schedule_delayed_work(&lcd->vgh_detection, msecs_to_jiffies(63));
+	schedule_delayed_work(&lcd->vgh_detection, HZ/16);
 
 	return IRQ_HANDLED;
 }
@@ -598,6 +611,41 @@ static ssize_t auto_brightness_store(struct device *dev,
 
 static DEVICE_ATTR(auto_brightness, 0644, auto_brightness_show, auto_brightness_store);
 
+#ifndef CONFIG_SAMSUNG_PRODUCT_SHIP
+static void s6d6aa1_read_id(struct lcd_info *lcd, u8 *buf)
+{
+	int i;
+	struct regulator *regulator;
+
+	for (i = 0; i < LDI_ID_LEN; i++) {
+		int ret = 0;
+		*(buf+i) = 0x00;
+		ret = s6d6aa1_read(lcd, LDI_ID_REG + i, 1, buf + i, 2);
+		if (!ret) {
+//			lcd->connected = 0;
+			dev_info(&lcd->ld->dev, "lcd is not connected well\n");
+			#if defined(GPIO_MLCD_RST)
+	                gpio_set_value(GPIO_MLCD_RST, GPIO_LEVEL_LOW);
+			#endif
+			#if defined(GPIO_LCD_POWER_EN)
+			gpio_set_value(GPIO_LCD_POWER_EN, GPIO_LEVEL_LOW);
+			#endif
+                        regulator = regulator_get(NULL, "lcd_io_1.8v");
+                        if (IS_ERR(regulator)) {
+                                 pr_err("%s: regulator name : lcd_io_1.8v disable FAIL !!! \n",
+			                 __func__);
+				return;
+			}
+                        if (regulator_is_enabled(regulator))
+				regulator_disable(regulator);
+                        regulator_put(regulator);
+			dev_info(&lcd->ld->dev, "lcd voltages are turned OFF succesfully !!!\n");
+			return;
+		}
+	}
+}
+#endif
+
 #ifdef CONFIG_HAS_EARLYSUSPEND
 struct lcd_info *g_lcd;
 
@@ -609,13 +657,13 @@ void s6d6aa1_fb_suspend(void)
 
 	dev_info(&lcd->ld->dev, "+%s\n", __func__);
 
-#if defined(GPIO_VGH_DET)
+#if defined(GPIO_OLED_DET)
 	disable_irq(lcd->irq);
-	gpio_request(GPIO_VGH_DET, "VGH_DET");
-	s3c_gpio_cfgpin(GPIO_VGH_DET, S3C_GPIO_OUTPUT);
-	s3c_gpio_setpull(GPIO_VGH_DET, S3C_GPIO_PULL_NONE);
-	gpio_direction_output(GPIO_VGH_DET, GPIO_LEVEL_LOW);
-	gpio_free(GPIO_VGH_DET);
+	gpio_request(GPIO_OLED_DET, "OLED_DET");
+	s3c_gpio_cfgpin(GPIO_OLED_DET, S3C_GPIO_OUTPUT);
+	s3c_gpio_setpull(GPIO_OLED_DET, S3C_GPIO_PULL_NONE);
+	gpio_direction_output(GPIO_OLED_DET, GPIO_LEVEL_LOW);
+	gpio_free(GPIO_OLED_DET);
 #endif
 	s6d6aa1_power(lcd, FB_BLANK_POWERDOWN);
 
@@ -630,10 +678,17 @@ void s6d6aa1_fb_resume(void)
 
 	dev_info(&lcd->ld->dev, "+%s\n", __func__);
 
+#ifndef CONFIG_SAMSUNG_PRODUCT_SHIP
+/*Check whether LCD is physically connected or not by reading LCD ID from the LCD panel IC Registers,
+if not connected we will get all zeros, otherwise a Valid ID 0x59,0x10,0x10, Depending on ID we are 
+Turning OFF/ON the LCD voltages as requested by H/W Team request for factory testing*/
+	s6d6aa1_read_id(lcd, lcd->id);
+        dev_info(&lcd->ld->dev, "ID: %x, %x, %x\n", lcd->id[0], lcd->id[1], lcd->id[2]);
+#endif
 	s6d6aa1_power(lcd, FB_BLANK_UNBLANK);
-#if defined(GPIO_VGH_DET)
-	s3c_gpio_cfgpin(GPIO_VGH_DET, S3C_GPIO_SFN(0xf));
-	s3c_gpio_setpull(GPIO_VGH_DET, S3C_GPIO_PULL_NONE);
+#if defined(GPIO_OLED_DET)
+	s3c_gpio_cfgpin(GPIO_OLED_DET, S3C_GPIO_SFN(0xf));
+	s3c_gpio_setpull(GPIO_OLED_DET, S3C_GPIO_PULL_NONE);
 	enable_irq(lcd->irq);
 #endif
 	dev_info(&lcd->ld->dev, "-%s\n", __func__);
@@ -698,16 +753,20 @@ static int s6d6aa1_probe(struct device *dev)
 	mutex_init(&lcd->lock);
 	mutex_init(&lcd->bl_lock);
 
+#ifndef CONFIG_SAMSUNG_PRODUCT_SHIP
+	s6d6aa1_read_id(lcd, lcd->id);
+	dev_info(&lcd->ld->dev, "ID: %x, %x, %x\n", lcd->id[0], lcd->id[1], lcd->id[2]);
+#endif
 	dev_info(&lcd->ld->dev, "s6d6aa1 lcd panel driver has been probed.\n");
 
-#if defined(GPIO_VGH_DET)
+#if defined(GPIO_OLED_DET)
 	if (lcd->connected) {
 		INIT_DELAYED_WORK(&lcd->vgh_detection, vgh_detection_work);
 
-		lcd->irq = gpio_to_irq(GPIO_VGH_DET);
+		lcd->irq = gpio_to_irq(GPIO_OLED_DET);
 
-		s3c_gpio_cfgpin(GPIO_VGH_DET, S3C_GPIO_SFN(0xf));
-		s3c_gpio_setpull(GPIO_VGH_DET, S3C_GPIO_PULL_NONE);
+		s3c_gpio_cfgpin(GPIO_OLED_DET, S3C_GPIO_SFN(0xf));
+		s3c_gpio_setpull(GPIO_OLED_DET, S3C_GPIO_PULL_NONE);
 		if (request_irq(lcd->irq, vgh_detection_int,
 			IRQF_TRIGGER_FALLING, "vgh_detection", lcd))
 			pr_err("failed to reqeust irq. %d\n", lcd->irq);

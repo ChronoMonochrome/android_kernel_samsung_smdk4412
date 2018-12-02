@@ -460,7 +460,7 @@ static DEVICE_ATTR(lcd_type, 0664, lcdtype_show, NULL);
 
 #if defined(CONFIG_PM)
 #ifdef CONFIG_HAS_EARLYSUSPEND
-void nt35560_early_suspend(struct early_suspend *h)
+void nt35560_fb_suspend(struct early_suspend *h)
 {
 	struct lcd_info *lcd = container_of(h, struct lcd_info ,
 								early_suspend);
@@ -471,7 +471,7 @@ void nt35560_early_suspend(struct early_suspend *h)
 	return ;
 }
 
-void nt35560_late_resume(struct early_suspend *h)
+void nt35560_fb_resume(struct early_suspend *h)
 {
 	struct lcd_info *lcd = container_of(h, struct lcd_info ,
 								early_suspend);
@@ -567,10 +567,10 @@ static int nt35560_probe(struct spi_device *spi)
 	dev_set_drvdata(&spi->dev, lcd);
 
 #ifdef CONFIG_HAS_EARLYSUSPEND
-	lcd->early_suspend.suspend = nt35560_early_suspend;
-	lcd->early_suspend.resume = nt35560_late_resume;
+	lcd->early_suspend.suspend = nt35560_fb_suspend;
+	lcd->early_suspend.resume = nt35560_fb_resume;
 	lcd->early_suspend.level = EARLY_SUSPEND_LEVEL_DISABLE_FB - 1;
-	register_early_suspend(&lcd->early_suspend);
+	register_fb_suspend(&lcd->early_suspend);
 #endif
 
 	dev_info(&lcd->ld->dev, "nt35560 panel driver has been probed.\n");

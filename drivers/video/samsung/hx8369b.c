@@ -26,10 +26,10 @@
 #include <plat/regs-dsim.h>
 #include <mach/dsim.h>
 #include <mach/mipi_ddi.h>
-#ifdef CONFIG_HAS_EARLYSUSPEND
-#include <linux/earlysuspend.h>
+#ifdef CONFIG_FB
+#include <linux/notifier.h>
+#include <linux/fb.h>
 #endif
-
 #include "s5p-dsim.h"
 #include "s3cfb.h"
 
@@ -48,7 +48,8 @@ struct lcd_info {
 	struct lcd_device		*ld;
 	struct backlight_device		*bd;
 	struct lcd_platform_data	*lcd_pd;
-	struct early_suspend		early_suspend;
+	struct notifier_block fb_notif;
+	bool fb_suspended;
 
 	unsigned int			irq;
 	unsigned int			connected;
@@ -222,8 +223,8 @@ static const unsigned char SEQ_SLEEP_IN[] = {
 	0x00, 0x00
 };
 
-extern void (*lcd_early_suspend)(void);
-extern void (*lcd_late_resume)(void);
+extern void (*lcd_fb_suspend)(void);
+extern void (*lcd_fb_resume)(void);
 
 static int _hx8369b_write(struct lcd_info *lcd, const unsigned char *seq, int len)
 {
@@ -463,7 +464,7 @@ static DEVICE_ATTR(lcd_type, 0444, lcd_type_show, NULL);
 #ifdef CONFIG_HAS_EARLYSUSPEND
 struct lcd_info *g_lcd;
 
-void hx8369b_early_suspend(void)
+void hx8369b_fb_suspend(void)
 {
 	struct lcd_info *lcd = g_lcd;
 
@@ -478,7 +479,7 @@ void hx8369b_early_suspend(void)
 	return ;
 }
 
-void hx8369b_late_resume(void)
+void hx8369b_fb_resume(void)
 {
 	struct lcd_info *lcd = g_lcd;
 
@@ -489,6 +490,8 @@ void hx8369b_late_resume(void)
 	dev_info(&lcd->ld->dev, "-%s\n", __func__);
 
 	set_dsim_lcd_enabled(1);
+
+	lcd->fb_suspended = false;
 
 	return ;
 }
@@ -536,8 +539,8 @@ static int hx8369b_probe(struct device *dev)
 
 	dev_info(&lcd->ld->dev, "hx8369b lcd panel driver has been probed.\n");
 
-	lcd_early_suspend = hx8369b_early_suspend;
-	lcd_late_resume = hx8369b_late_resume;
+	lcd_fb_suspend = hx8369b_fb_suspend;
+	lcd_fb_resume = hx8369b_fb_resume;
 
 	return 0;
 
