@@ -20,9 +20,7 @@
 #include <linux/workqueue.h>
 #include <linux/timer.h>
 #include <linux/notifier.h>
-#if defined(CONFIG_HAS_EARLYSUSPEND)
-#include <linux/earlysuspend.h>
-#elif defined(CONFIG_FB)
+#if defined(CONFIG_FB)
 #include <linux/fb.h>
 #endif
 
