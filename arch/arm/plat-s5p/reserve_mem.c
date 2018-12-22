@@ -113,37 +113,12 @@ void __init s5p_cma_region_reserve(struct cma_region *regions_normal,
 
 		reg--;
 
-		/* Entire secure regions will be merged into 2
-		 * consecutive regions. */
-		if (align_secure == 0) {
-			size_t size_region2;
-			size_t order_region2;
-			size_t aug_size;
-
-			align_secure = 1 <<
-				(get_order((size_secure + 1) / 2) + PAGE_SHIFT);
-			/* Calculation of a subregion size */
-			size_region2 = size_secure - align_secure;
-			order_region2 = get_order(size_region2) + PAGE_SHIFT;
-			if (order_region2 < 20)
-				order_region2 = 20; /* 1MB */
-			order_region2 -= 3; /* divide by 8 */
-			size_region2 = ALIGN(size_region2, 1 << order_region2);
-
-			aug_size = align_secure + size_region2 - size_secure;
-			if (aug_size > 0) {
-				reg->size += aug_size;
-				size_secure += aug_size;
-				pr_debug("S5P/CMA: "
-					"Augmented size of '%s' by %#x B.\n",
-					reg->name, aug_size);
-			}
-		} else
-			size_secure = ALIGN(size_secure, align_secure);
+		align_secure = SZ_1M;
+		size_secure = ALIGN(size_secure, align_secure);
 
 		pr_info("S5P/CMA: "
-			"Reserving %#x for secure region aligned by %#x.\n",
-						size_secure, align_secure);
+			"Reserving %#x for secure region (%s) aligned by %#x.\n",
+						size_secure, reg->name, align_secure);
 
 		if (paddr_last >= memblock.current_limit) {
 			paddr_last = memblock_find_in_range(0,
