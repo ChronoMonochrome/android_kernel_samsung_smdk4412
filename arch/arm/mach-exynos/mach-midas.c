@@ -2590,6 +2590,16 @@ static void __init exynos4_reserve_mem(void)
 #endif
 		},
 #endif
+
+#if defined(CONFIG_DMA_CMA) && defined(CONFIG_MFC_USE_CMA) \
+	&& defined(CONFIG_VIDEO_SAMSUNG_MEMSIZE_MFC_SECURE)
+		{
+			.name = "mfc-secure",
+			.size = CONFIG_VIDEO_SAMSUNG_MEMSIZE_MFC_SECURE * SZ_1K,
+			.start = 0x5C100000,
+		},
+#endif
+
 #ifdef CONFIG_VIDEO_SAMSUNG_MEMSIZE_MFC_NORMAL
 		{
 			.name = "mfc-normal",
@@ -2625,19 +2635,12 @@ static void __init exynos4_reserve_mem(void)
 			.size = SZ_1M,
 		},
 #else
-#if defined(CONFIG_USE_MFC_CMA) && defined(CONFIG_MACH_M0)
+#if defined(CONFIG_USE_MFC_CMA)
 #ifdef CONFIG_ION_EXYNOS_CONTIGHEAP_SIZE
 		{
 			.name = "ion",
 			.size = CONFIG_ION_EXYNOS_CONTIGHEAP_SIZE * SZ_1K,
 			.start = 0x5F200000,
-		},
-#endif
-#ifdef CONFIG_VIDEO_SAMSUNG_MEMSIZE_MFC_SECURE
-		{
-			.name = "mfc-secure",
-			.size = CONFIG_VIDEO_SAMSUNG_MEMSIZE_MFC_SECURE * SZ_1K,
-			.start = 0x5C100000,
 		},
 #endif
 		{
@@ -3440,7 +3443,7 @@ static void __init exynos4_reserve(void)
 	}
 #endif
 
-#if defined(CONFIG_USE_MFC_CMA) && defined(CONFIG_MACH_M0)
+#if defined(CONFIG_USE_MFC_CMA)
 	ret = dma_declare_contiguous(&s5p_device_mfc.dev,
 			0x02800000, 0x5C800000, 0);
 #endif
