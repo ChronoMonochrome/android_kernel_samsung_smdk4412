@@ -18,7 +18,7 @@
 #include <device/linux/gpio.h>
 #include <linux/delay.h>
 #include <linux/power_supply.h>
-#include <linux/android_alarm.h>
+#include <linux/alarmtimer.h>
 #if defined(CONFIG_S3C_ADC)
 #include <plat/adc.h>
 #endif

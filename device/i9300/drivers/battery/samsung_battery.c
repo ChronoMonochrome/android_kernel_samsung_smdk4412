@@ -30,7 +30,7 @@
 #include <linux/wakelock.h>
 #include <linux/workqueue.h>
 #include <linux/proc_fs.h>
-#include <linux/android_alarm.h>
+#include <linux/alarmtimer.h>
 #include <device/linux/regulator/machine.h>
 #include <linux/battery/samsung_battery.h>
 #include <mach/regs-pmu.h>
@@ -559,7 +559,7 @@ void battery_control_info(struct battery_info *info,
 	}
 }
 
-static void battery_event_alarm(struct alarm *alarm)
+static enum alarmtimer_restart battery_event_alarm(struct alarm *alarm, ktime_t now)
 {
 	struct battery_info *info = container_of(alarm, struct battery_info,
 								 event_alarm);
@@ -571,11 +571,14 @@ static void battery_event_alarm(struct alarm *alarm)
 
 	__pm_stay_awake(&info->monitor_wake_lock);
 	schedule_work(&info->monitor_work);
+
+	return ALARMTIMER_NORESTART;
 }
 
 void battery_event_control(struct battery_info *info)
 {
 	int event_num;
+	struct timespec cur_time;
 	ktime_t interval, next, slack;
 	/* sync with event_type in samsung_battery.h */
 	char *event_type_name[] = { "WCDMA CALL", "GSM CALL", "CALL",
@@ -603,7 +606,7 @@ void battery_event_control(struct battery_info *info)
 		} else if (info->event_state == EVENT_STATE_IN_TIMER) {
 			pr_info("%s: cancel event timer\n", __func__);
 
-			android_alarm_cancel(&info->event_alarm);
+			alarm_cancel(&info->event_alarm);
 
 			info->event_state = EVENT_STATE_SET;
 
@@ -624,14 +627,14 @@ void battery_event_control(struct battery_info *info)
 
 		if (info->event_state == EVENT_STATE_SET) {
 			pr_info("%s: start event timer\n", __func__);
-			info->last_poll = android_alarm_get_elapsed_realtime();
+			get_monotonic_boottime(&cur_time);
+			info->last_poll = timespec_to_ktime(cur_time);
 
 			interval = ktime_set(info->pdata->event_time, 0);
 			next = ktime_add(info->last_poll, interval);
 			slack = ktime_set(20, 0);
 
-			/*alarm_start_range(&info->event_alarm, next,
-						ktime_add(next, slack));*/
+			alarm_start(&info->event_alarm, ktime_add(next, slack));
 
 			info->event_state = EVENT_STATE_IN_TIMER;
 		} else {
@@ -660,7 +663,7 @@ static void battery_notify_full_state(struct battery_info *info)
 	}
 }
 
-static void battery_monitor_alarm(struct alarm *alarm)
+static enum alarmtimer_restart battery_monitor_alarm(struct alarm *alarm, ktime_t now)
 {
 	struct battery_info *info = container_of(alarm, struct battery_info,
 								 monitor_alarm);
@@ -668,17 +671,21 @@ static void battery_monitor_alarm(struct alarm *alarm)
 
 	__pm_stay_awake(&info->monitor_wake_lock);
 	schedule_work(&info->monitor_work);
+
+	return ALARMTIMER_NORESTART;
 }
 
 static void battery_monitor_interval(struct battery_info *info)
 {
+	struct timespec cur_time;
 	ktime_t interval, next, slack;
 	unsigned long flags;
 	pr_debug("%s\n", __func__);
 
 	local_irq_save(flags);
 
-	info->last_poll = android_alarm_get_elapsed_realtime();
+	get_monotonic_boottime(&cur_time);
+	info->last_poll = timespec_to_ktime(cur_time);
 
 	switch (info->monitor_mode) {
 	case MONITOR_CHNG:
@@ -720,11 +727,14 @@ static void battery_monitor_interval(struct battery_info *info)
 	pr_debug("%s: monitor mode(%d), interval(%d)\n", __func__,
 		info->monitor_mode, info->monitor_interval);
 
+	get_monotonic_boottime(&cur_time);
+	info->last_poll = timespec_to_ktime(cur_time);
+
 	interval = ktime_set(info->monitor_interval, 0);
 	next = ktime_add(info->last_poll, interval);
 	slack = ktime_set(20, 0);
 
-	//alarm_start_range(&info->monitor_alarm, next, ktime_add(next, slack));
+	alarm_start(&info->monitor_alarm, ktime_add(next, slack));
 
 	local_irq_restore(flags);
 }
@@ -753,13 +763,12 @@ static bool battery_recharge_cond(struct battery_info *info)
 static bool battery_abstimer_cond(struct battery_info *info)
 {
 	unsigned int abstimer_duration;
-	ktime_t ktime;
 	struct timespec current_time;
 	pr_debug("%s\n", __func__);
 
 	/* always update time for info data */
-	ktime = android_alarm_get_elapsed_realtime();
-	info->current_time = current_time = ktime_to_timespec(ktime);
+	get_monotonic_boottime(&current_time);
+	info->current_time = current_time;
 
 	if ((info->cable_type == POWER_SUPPLY_TYPE_USB) ||
 		(info->full_charged_state != STATUS_NOT_FULL) ||
@@ -782,7 +791,7 @@ static bool battery_abstimer_cond(struct battery_info *info)
 			abstimer_duration =
 				info->pdata->abstimer_charge_duration;
 	}
-/*
+
 	if ((current_time.tv_sec - info->charge_start_time) >
 	    abstimer_duration) {
 		pr_info("%s: abstimer state, t(%d - %d ?? %d)\n", __func__,
@@ -795,7 +804,7 @@ static bool battery_abstimer_cond(struct battery_info *info)
 			(int)current_time.tv_sec, info->charge_start_time,
 							abstimer_duration);
 		info->abstimer_state = false;
-	}*/
+	}
 
 	return info->abstimer_state;
 }
@@ -1066,14 +1075,12 @@ static void battery_charge_control(struct battery_info *info,
 				unsigned int chg_curr, unsigned int in_curr)
 {
 	int charge_state;
-	ktime_t ktime;
 	struct timespec current_time;
 	pr_debug("%s, chg(%d), in(%d)\n", __func__, chg_curr, in_curr);
 
 	mutex_lock(&info->ops_lock);
 
-	ktime = android_alarm_get_elapsed_realtime();
-	current_time = ktime_to_timespec(ktime);
+	get_monotonic_boottime(&current_time);
 
 	if ((info->cable_type != POWER_SUPPLY_TYPE_BATTERY) &&
 		(chg_curr > 0) && (info->siop_state == true)) {
@@ -2115,6 +2122,7 @@ static __devinit int samsung_battery_probe(struct platform_device *pdev)
 {
 	struct battery_info *info;
 	struct samsung_battery_platform_data *pdata = pdev->dev.platform_data;
+	struct timespec cur_time;
 	int ret = -ENODEV;
 	char *temper_src_name[] = { "fuelgauge", "ap adc",
 					"ext adc", "unknown"
@@ -2339,15 +2347,14 @@ static __devinit int samsung_battery_probe(struct platform_device *pdev)
 gpio_bat_det_finish:
 
 	/* Using android alarm for gauging instead of workqueue */
-	info->last_poll = android_alarm_get_elapsed_realtime();
-	android_alarm_init(&info->monitor_alarm,
-			ANDROID_ALARM_ELAPSED_REALTIME_WAKEUP,
-			battery_monitor_alarm);
+	get_monotonic_boottime(&cur_time);
+	info->last_poll = timespec_to_ktime(cur_time);
+	alarm_init(&info->monitor_alarm,
+		ALARM_BOOTTIME, battery_monitor_alarm);
 
 	if (info->pdata->ctia_spec == true)
-		android_alarm_init(&info->event_alarm,
-				ANDROID_ALARM_ELAPSED_REALTIME_WAKEUP,
-				battery_event_alarm);
+		alarm_init(&info->event_alarm,
+			ALARM_BOOTTIME, battery_event_alarm);
 
 	/* update battery init status */
 	schedule_work(&info->monitor_work);
@@ -2403,9 +2410,9 @@ static int __devexit samsung_battery_remove(struct platform_device *pdev)
 
 	remove_proc_entry("battery_info_proc", NULL);
 
-	android_alarm_cancel(&info->monitor_alarm);
+	alarm_cancel(&info->monitor_alarm);
 	if (info->pdata->ctia_spec == true)
-		android_alarm_cancel(&info->event_alarm);
+		alarm_cancel(&info->event_alarm);
 
 	cancel_work_sync(&info->error_work);
 	cancel_work_sync(&info->monitor_work);
