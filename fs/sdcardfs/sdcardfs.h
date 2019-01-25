@@ -44,8 +44,6 @@
 #include <linux/string.h>
 #include "multiuser.h"
 
-#define SDCARDFS_SUPER_MAGIC   0xb550ca10
-
 /* the file system name */
 #define SDCARDFS_NAME "sdcardfs"
 
@@ -58,7 +56,7 @@
 #define SDCARDFS_DIRENT_SIZE 256
 
 /* temporary static uid settings for development */
-#define AID_ROOT          1035	/* uid for accessing /mnt/sdcard & extSdcard */
+#define AID_ROOT             0	/* uid for accessing /mnt/sdcard & extSdcard */
 #define AID_MEDIA_RW      1023	/* internal media storage write access */
 
 #define AID_SDCARD_RW     1015	/* external storage write access */
@@ -71,9 +69,9 @@
 
 #define fix_derived_permission(x)	\
 	do {						\
-		(x)->i_uid = AID_SDCARD_ALL;	\
-		(x)->i_gid = AID_SDCARD_ALL;	\
-		(x)->i_mode = 0777  | ((x)->i_mode & S_IFMT) | SDCARDFS_I(x)->d_mode; \
+		(x)->i_uid = SDCARDFS_I(x)->d_uid;	\
+		(x)->i_gid = SDCARDFS_I(x)->d_gid;	\
+		(x)->i_mode = ((x)->i_mode & S_IFMT) | SDCARDFS_I(x)->d_mode;\
 	} while (0)
 
 /* OVERRIDE_CRED() and REVERT_CRED()
@@ -129,6 +127,11 @@ typedef enum {
 	DERIVE_LEGACY,
 	DERIVE_UNIFIED,
 } derive_t;
+
+typedef enum {
+	LOWER_FS_EXT4,
+	LOWER_FS_FAT,
+} lower_fs_t;
 
 struct sdcardfs_sb_info;
 struct sdcardfs_mount_options;
@@ -196,6 +199,7 @@ struct sdcardfs_mount_options {
 	gid_t write_gid;
 	int split_perms;
 	derive_t derive;
+	lower_fs_t lower_fs;
 	unsigned int reserved_mb;
 };
 
@@ -363,6 +367,8 @@ static inline void sdcardfs_put_real_lower(const struct dentry *dent,
 /* for packagelist.c */
 extern int get_caller_has_rw_locked(void *pkgl_id, derive_t derive);
 extern appid_t get_appid(void *pkgl_id, const char *app_name);
+extern int check_caller_access_to_name(struct inode *parent_node, const char* name,
+                                        derive_t derive, int w_ok, int has_rw);
 extern int open_flags_to_access_mode(int open_flags);
 extern void * packagelist_create(gid_t write_gid);
 extern void packagelist_destroy(void *pkgl_id);
@@ -393,8 +399,6 @@ static inline void unlock_dir(struct dentry *dir)
 	dput(dir);
 }
 
-
-extern struct dentry *kern_path_locked(const char *name, struct path *path);
 static inline int prepare_dir(const char *path_s, uid_t uid, gid_t gid, mode_t mode)
 {
 	int err;

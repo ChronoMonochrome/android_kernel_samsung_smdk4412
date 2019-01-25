@@ -42,6 +42,7 @@ static const match_table_t sdcardfs_tokens = {
 	{Opt_debug, "debug"},
 	{Opt_split, "split"},
 	{Opt_derive, "derive=%s"},
+	{Opt_lower_fs, "lower_fs=%s"},
 	{Opt_reserved_mb, "reserved_mb=%u"},
 	{Opt_err, NULL}
 };
@@ -63,6 +64,8 @@ static int parse_options(struct super_block *sb, char *options, int silent,
 	 * (DERIVE_NONE | DERIVE_LEGACY | DERIVE_UNIFIED) */
 	opts->derive = DERIVE_NONE;
 	opts->split_perms = 0;
+	/* by default, we use LOWER_FS_EXT4 as lower fs type */
+	opts->lower_fs = LOWER_FS_EXT4;
 	/* by default, 0MB is reserved */
 	opts->reserved_mb = 0;
 
@@ -108,6 +111,18 @@ static int parse_options(struct super_block *sb, char *options, int silent,
 				opts->derive = DERIVE_LEGACY;
 			} else if (!strcmp("unified", string_option)) {
 				opts->derive = DERIVE_UNIFIED;
+			} else {
+				kfree(string_option);
+				goto invalid_option;
+			}
+			kfree(string_option);
+			break;
+		case Opt_lower_fs:
+			string_option = match_strdup(&args[0]);
+			if (!strcmp("ext4", string_option)) {
+				opts->lower_fs = LOWER_FS_EXT4;
+			} else if (!strcmp("fat", string_option)) {
+				opts->lower_fs = LOWER_FS_FAT;
 			} else {
 				kfree(string_option);
 				goto invalid_option;
