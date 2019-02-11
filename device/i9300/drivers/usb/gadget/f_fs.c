@@ -2,7 +2,7 @@
  * f_fs.c -- user mode file system API for USB composite function controllers
  *
  * Copyright (C) 2010 Samsung Electronics
- * Author: Michal Nazarewicz <mina86@mina86.com>
+ * Author: Michal Nazarewicz <m.nazarewicz@samsung.com>
  *
  * Based on inode.c (GadgetFS) which was:
  * Copyright (C) 2003-2004 David Brownell
@@ -12,6 +12,15 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
 
@@ -711,7 +720,7 @@ static long ffs_ep0_ioctl(struct file *file, unsigned code, unsigned long value)
 	if (code == FUNCTIONFS_INTERFACE_REVMAP) {
 		struct ffs_function *func = ffs->func;
 		ret = func ? ffs_func_revmap_intf(func, value) : -ENODEV;
-	} else if (gadget && gadget->ops->ioctl) {
+	} else if (gadget->ops->ioctl) {
 		ret = gadget->ops->ioctl(gadget, code, value);
 	} else {
 		ret = -ENOTTY;
@@ -1036,6 +1045,7 @@ static int ffs_sb_fill(struct super_block *sb, void *_data, int silent)
 {
 	struct ffs_sb_fill_data *data = _data;
 	struct inode	*inode;
+	struct dentry	*d;
 	struct ffs_data	*ffs;
 
 	ENTER();
@@ -1043,7 +1053,7 @@ static int ffs_sb_fill(struct super_block *sb, void *_data, int silent)
 	/* Initialise data */
 	ffs = ffs_data_new();
 	if (unlikely(!ffs))
-		goto Enomem;
+		goto enomem0;
 
 	ffs->sb              = sb;
 	ffs->dev_name        = data->dev_name;
@@ -1189,11 +1199,14 @@ ffs_fs_mount(struct file_system_type *t, int flags,
 static void
 ffs_fs_kill_sb(struct super_block *sb)
 {
+	void *ptr;
+
 	ENTER();
 
 	kill_litter_super(sb);
-	if (sb->s_fs_info)
-		ffs_data_put(sb->s_fs_info);
+	ptr = xchg(&sb->s_fs_info, NULL);
+	if (ptr)
+		ffs_data_put(ptr);
 }
 
 static struct file_system_type ffs_fs_type = {
@@ -1257,7 +1270,9 @@ static void ffs_data_put(struct ffs_data *ffs)
 	if (unlikely(atomic_dec_and_test(&ffs->ref))) {
 		pr_info("%s(): freeing\n", __func__);
 		ffs_data_clear(ffs);
-		BUG_ON(waitqueue_active(&ffs->ev.waitq) ||
+		BUG_ON(mutex_is_locked(&ffs->mutex) ||
+		       spin_is_locked(&ffs->ev.waitq.lock) ||
+		       waitqueue_active(&ffs->ev.waitq) ||
 		       waitqueue_active(&ffs->ep0req_completion.wait));
 		kfree(ffs);
 	}
@@ -1364,13 +1379,11 @@ static int functionfs_bind(struct ffs_data *ffs, struct usb_composite_dev *cdev)
 	ffs->ep0req->context = ffs;
 
 	lang = ffs->stringtabs;
-	if (lang) {
-		for (; *lang; ++lang) {
-			struct usb_string *str = (*lang)->strings;
-			int id = first_id;
-			for (; str->s; ++id, ++str)
-				str->id = id;
-		}
+	for (lang = ffs->stringtabs; *lang; ++lang) {
+		struct usb_string *str = (*lang)->strings;
+		int id = first_id;
+		for (; str->s; ++id, ++str)
+			str->id = id;
 	}
 
 	ffs->gadget = cdev->gadget;
@@ -1387,7 +1400,6 @@ static void functionfs_unbind(struct ffs_data *ffs)
 		ffs->ep0req = NULL;
 		ffs->gadget = NULL;
 		ffs_data_put(ffs);
-		clear_bit(FFS_FL_BOUND, &ffs->flags);
 	}
 }
 
@@ -1399,7 +1411,7 @@ static int ffs_epfiles_create(struct ffs_data *ffs)
 	ENTER();
 
 	count = ffs->eps_count;
-	epfiles = kcalloc(count, sizeof(*epfiles), GFP_KERNEL);
+	epfiles = kzalloc(count * sizeof *epfiles, GFP_KERNEL);
 	if (!epfiles)
 		return -ENOMEM;
 
@@ -1478,21 +1490,7 @@ static int functionfs_bind_config(struct usb_composite_dev *cdev,
 
 static void ffs_func_free(struct ffs_function *func)
 {
-	struct ffs_ep *ep         = func->eps;
-	unsigned count            = func->ffs->eps_count;
-	unsigned long flags;
-
 	ENTER();
-
-	/* cleanup after autoconfig */
-	spin_lock_irqsave(&func->ffs->eps_lock, flags);
-	do {
-		if (ep->ep && ep->req)
-			usb_ep_free_request(ep->ep, ep->req);
-		ep->req = NULL;
-		++ep;
-	} while (--count);
-	spin_unlock_irqrestore(&func->ffs->eps_lock, flags);
 
 	ffs_data_put(func->ffs);
 
@@ -1538,12 +1536,7 @@ static int ffs_func_eps_enable(struct ffs_function *func)
 	spin_lock_irqsave(&func->ffs->eps_lock, flags);
 	do {
 		struct usb_endpoint_descriptor *ds;
-		int desc_idx = ffs->gadget->speed == USB_SPEED_HIGH ? 1 : 0;
-		ds = ep->descs[desc_idx];
-		if (!ds) {
-			ret = -EINVAL;
-			break;
-		}
+		ds = ep->descs[ep->descs[1] ? 1 : 0];
 
 		ep->ep->driver_data = ep;
 		ret = usb_ep_enable(ep->ep, ds);

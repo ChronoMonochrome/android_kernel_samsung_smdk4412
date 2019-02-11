@@ -4,6 +4,7 @@
  * Copyright (C) 2010 Stephane Duverger
  *
  * Released under the GPLv2.
+ *
  */
 
 /* verbose messages */
