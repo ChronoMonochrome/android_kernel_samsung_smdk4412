@@ -534,22 +534,12 @@ static irqreturn_t s3c_udc_irq(int irq, void *_dev)
 				reset_available = 1;
 			}
 		} else {
-#ifdef CONFIG_USB_ANDROID_SAMSUNG_COMPOSITE
-			struct usb_composite_dev *cdev;
-#endif
 			reset_available = 1;
 			DEBUG_ISR("\t\tRESET handling skipped\n");
 			wake_lock_timeout(&dev->usbd_wake_lock, HZ * 5);
 			printk(KERN_DEBUG "usb: reset\n");
 			/* report disconnect; the driver is already quiesced */
 			if (dev->driver) {
-#ifdef CONFIG_USB_ANDROID_SAMSUNG_COMPOSITE
-				cdev = get_gadget_data(&dev->gadget);
-				if (cdev != NULL) {
-					cdev->mute_switch = 0;
-					cdev->force_disconnect = 1;
-				}
-#endif
 				spin_unlock(&dev->lock);
 #if defined(CONFIG_MACH_M0_CMCC)
 				pr_info("[YSJ][%s] disconnect gadget",
