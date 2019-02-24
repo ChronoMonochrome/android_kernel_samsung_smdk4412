@@ -983,10 +983,6 @@ static void mdnie_fb_suspend(struct mdnie_info *mdnie)
 	struct lcd_platform_data *pd = mdnie->lcd_pd;
 
 	dev_info(mdnie->dev, "+%s\n", __func__);
-	printk("%s: scenario:%d accessibility:%d", __func__, mdnie->scenario, mdnie->accessibility);
-
-#if defined(CONFIG_FB_MDNIE_PWM)
-	struct lcd_platform_data *pd = mdnie->lcd_pd;
 
 	mdnie->bd_enable = FALSE;
 
@@ -995,11 +991,12 @@ static void mdnie_fb_suspend(struct mdnie_info *mdnie)
 
 	if (pd && pd->power_on)
 		pd->power_on(NULL, 0);
-#endif
+
 	dev_info(mdnie->dev, "-%s\n", __func__);
 
 	return;
 }
+#endif
 
 static void mdnie_fb_resume(struct mdnie_info *mdnie)
 {
@@ -1014,7 +1011,6 @@ static void mdnie_fb_resume(struct mdnie_info *mdnie)
 	dev_info(mdnie->dev, "+%s\n", __func__);
 
 #if defined(CONFIG_FB_MDNIE_PWM)
-	struct lcd_platform_data *pd = mdnie->lcd_pd;
 	if (mdnie->enable)
 		mdnie_pwm_control(mdnie, 0);
 
