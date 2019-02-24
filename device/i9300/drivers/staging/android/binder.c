@@ -32,9 +32,9 @@
 #include <linux/rbtree.h>
 #include <linux/sched.h>
 #include <linux/seq_file.h>
-#include <linux/slab.h>
 #include <linux/uaccess.h>
 #include <linux/vmalloc.h>
+#include <linux/slab.h>
 #include <linux/security.h>
 
 #include "binder.h"
@@ -702,7 +702,7 @@ static int binder_update_page_range(struct binder_proc *proc, int allocate,
 		page = &proc->pages[(page_addr - proc->buffer) / PAGE_SIZE];
 
 		BUG_ON(*page);
-		*page = alloc_page(GFP_KERNEL | __GFP_ZERO);
+		*page = alloc_page(GFP_KERNEL | __GFP_HIGHMEM | __GFP_ZERO);
 		if (*page == NULL) {
 			pr_err("%d: binder_alloc_buf failed for page at %pK\n",
 				proc->pid, page_addr);
@@ -1625,7 +1625,8 @@ static void binder_transaction_buffer_release(struct binder_proc *proc,
 				       debug_id, (u64)fda->num_fds);
 				continue;
 			}
-			fd_array = (u32 *)(parent_buffer + fda->parent_offset);
+			fd_array = (u32 *)(uintptr_t)
+				(parent_buffer + fda->parent_offset);
 			for (fd_index = 0; fd_index < fda->num_fds; fd_index++)
 				task_close_fd(proc, fd_array[fd_index]);
 		} break;
@@ -1829,7 +1830,7 @@ static int binder_translate_fd_array(struct binder_fd_array_object *fda,
 	 * back to the kernel address space to access it
 	 */
 	parent_buffer = parent->buffer - target_proc->user_buffer_offset;
-	fd_array = (u32 *)(parent_buffer + fda->parent_offset);
+	fd_array = (u32 *)(uintptr_t)(parent_buffer + fda->parent_offset);
 	if (!IS_ALIGNED((unsigned long)fd_array, sizeof(u32))) {
 		binder_user_error("%d:%d parent offset not aligned correctly.\n",
 				  proc->pid, thread->pid);
@@ -1895,7 +1896,7 @@ static int binder_fixup_parent(struct binder_transaction *t,
 				  proc->pid, thread->pid);
 		return -EINVAL;
 	}
-	parent_buffer = (u8 *)(parent->buffer -
+	parent_buffer = (u8 *)(uintptr_t)(parent->buffer -
 			       target_proc->user_buffer_offset);
 	*(binder_uintptr_t *)(parent_buffer + bp->parent_offset) = bp->buffer;
 
@@ -2070,16 +2071,6 @@ static void binder_transaction(struct binder_proc *proc,
 		t->from = thread;
 	else
 		t->from = NULL;
-#if defined(CONFIG_MACH_P4NOTE) || defined(CONFIG_MACH_KONA)
-	/* workaround code for invalid binder proc */
-	if (!proc->tsk) {
-		binder_debug(BINDER_DEBUG_FAILED_TRANSACTION,
-			     "binder: %d:%d invalid proc\n",
-			     proc->pid, thread->pid);
-		return_error = BR_FAILED_REPLY;
-		goto err_binder_alloc_buf_failed;
-	}
-#endif
 	t->sender_euid = proc->tsk->cred->euid;
 	t->to_proc = target_proc;
 	t->to_thread = target_thread;
@@ -3354,7 +3345,6 @@ static void binder_vma_open(struct vm_area_struct *vma)
 		     proc->pid, vma->vm_start, vma->vm_end,
 		     (vma->vm_end - vma->vm_start) / SZ_1K, vma->vm_flags,
 		     (unsigned long)pgprot_val(vma->vm_page_prot));
-	dump_stack();
 }
 
 static void binder_vma_close(struct vm_area_struct *vma)
