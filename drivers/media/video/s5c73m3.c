@@ -75,8 +75,7 @@ struct device *bus_dev;
 			}
 
 #ifdef CONFIG_VIDEO_S5C73M3_WAKELOCK
-static struct wakeup_source s5c73m3_wakelock;
-static bool s5c73m3_wakelock_active = false;
+static struct wake_lock s5c73m3_wakelock;
 #endif
 
 struct s5c73m3_fw_version camfw_info[S5C73M3_PATH_MAX];
@@ -1344,10 +1343,9 @@ retry:
 	switch (val) {
 	case FLASH_MODE_OFF:
 #ifdef CONFIG_VIDEO_S5C73M3_WAKELOCK
-		if (s5c73m3_wakelock_active) {
+		if (wake_lock_active(&s5c73m3_wakelock)) {
 			pr_err("%s: FLASH_MODE_OFF: release wakelock\n", __func__);
-			__pm_relax(&s5c73m3_wakelock);
-			s5c73m3_wakelock_active = false;
+			wake_unlock(&s5c73m3_wakelock);
 		}
 #endif
 		err = s5c73m3_writeb(sd, S5C73M3_FLASH_MODE,
@@ -1378,10 +1376,9 @@ retry:
 
 	case FLASH_MODE_TORCH:
 #ifdef CONFIG_VIDEO_S5C73M3_WAKELOCK
-		if (!s5c73m3_wakelock_active) {
+		if (!wake_lock_active(&s5c73m3_wakelock)) {
 			pr_err("%s: FLASH_MODE_TORCH: acquire wakelock\n", __func__);
-			__pm_stay_awake(&s5c73m3_wakelock);
-			s5c73m3_wakelock_active = true;
+			wake_lock(&s5c73m3_wakelock);
 		}
 #endif
 		err = s5c73m3_writeb(sd, S5C73M3_FLASH_MODE,
@@ -3750,7 +3747,7 @@ static int __init s5c73m3_mod_init(void)
 	}
 
 #ifdef CONFIG_VIDEO_S5C73M3_WAKELOCK
-	wakeup_source_init(&s5c73m3_wakelock, "s5c73m3_wake_lock");
+	wake_lock_init(&s5c73m3_wakelock, WAKE_LOCK_SUSPEND, "s5c73m3_wake_lock");
 #endif
 
 	return i2c_add_driver(&s5c73m3_i2c_driver);
@@ -3758,9 +3755,6 @@ static int __init s5c73m3_mod_init(void)
 
 static void __exit s5c73m3_mod_exit(void)
 {
-#ifdef CONFIG_VIDEO_S5C73M3_WAKELOCK
-	wakeup_source_trash(&s5c73m3_wakelock);
-#endif
 	i2c_del_driver(&s5c73m3_i2c_driver);
 }
 module_init(s5c73m3_mod_init);
