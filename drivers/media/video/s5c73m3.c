@@ -75,7 +75,7 @@ struct device *bus_dev;
 			}
 
 #ifdef CONFIG_VIDEO_S5C73M3_WAKELOCK
-static struct wake_lock s5c73m3_wakelock;
+static bool s5c73m3_wakelock_active = false;
 #endif
 
 struct s5c73m3_fw_version camfw_info[S5C73M3_PATH_MAX];
@@ -1343,9 +1343,10 @@ retry:
 	switch (val) {
 	case FLASH_MODE_OFF:
 #ifdef CONFIG_VIDEO_S5C73M3_WAKELOCK
-		if (wake_lock_active(&s5c73m3_wakelock)) {
+		if (s5c73m3_wakelock_active) {
+			s5c73m3_wakelock_active = false;
 			pr_err("%s: FLASH_MODE_OFF: release wakelock\n", __func__);
-			wake_unlock(&s5c73m3_wakelock);
+			pm_wake_unlock("flash");
 		}
 #endif
 		err = s5c73m3_writeb(sd, S5C73M3_FLASH_MODE,
@@ -1376,9 +1377,10 @@ retry:
 
 	case FLASH_MODE_TORCH:
 #ifdef CONFIG_VIDEO_S5C73M3_WAKELOCK
-		if (!wake_lock_active(&s5c73m3_wakelock)) {
+		if (!s5c73m3_wakelock_active) {
+			s5c73m3_wakelock_active = true;
 			pr_err("%s: FLASH_MODE_TORCH: acquire wakelock\n", __func__);
-			wake_lock(&s5c73m3_wakelock);
+			pm_wake_lock("flash");
 		}
 #endif
 		err = s5c73m3_writeb(sd, S5C73M3_FLASH_MODE,
@@ -3745,10 +3747,6 @@ static int __init s5c73m3_mod_init(void)
 					dev_attr_isp_core.attr.name);
 		}
 	}
-
-#ifdef CONFIG_VIDEO_S5C73M3_WAKELOCK
-	wake_lock_init(&s5c73m3_wakelock, WAKE_LOCK_SUSPEND, "s5c73m3_wake_lock");
-#endif
 
 	return i2c_add_driver(&s5c73m3_i2c_driver);
 }
