@@ -21,7 +21,8 @@
 #include <linux/input.h>
 #include <linux/i2c.h>
 #include <linux/wacom_i2c.h>
-#include <linux/earlysuspend.h>
+#include <linux/fb.h>
+#include <linux/notifier.h>
 #include <linux/uaccess.h>
 #include <linux/firmware.h>
 #include "wacom_i2c_func.h"
@@ -93,7 +94,7 @@ static void wacom_i2c_enable(struct wacom_i2c *wac_i2c)
 #endif
 
 	if (en) {
-		wac_i2c->wac_pdata->late_resume_platform_hw();
+		wac_i2c->wac_pdata->fb_resume_platform_hw();
 		schedule_delayed_work(&wac_i2c->resume_work, HZ / 5);
 	}
 }
@@ -119,7 +120,7 @@ static void wacom_i2c_disable(struct wacom_i2c *wac_i2c)
 
 		if (!wake_lock_active(&wac_i2c->wakelock)) {
 			wac_i2c->power_enable = false;
-			wac_i2c->wac_pdata->early_suspend_platform_hw();
+			wac_i2c->wac_pdata->fb_suspend_platform_hw();
 		}
 	}
 }
@@ -600,15 +601,17 @@ static int wacom_i2c_remove(struct i2c_client *client)
 	return 0;
 }
 
-static void wacom_i2c_early_suspend(struct early_suspend *h)
+static void wacom_i2c_fb_suspend(struct wacom_i2c *wac_i2c)
 {
-	struct wacom_i2c *wac_i2c =
-	    container_of(h, struct wacom_i2c, early_suspend);
+	if (wac_i2c->fb_suspended)
+		return;
+
 	printk(KERN_DEBUG "[E-PEN] %s.\n", __func__);
 #ifdef WACOM_STATE_CHECK
 	cancel_delayed_work_sync(&wac_i2c->wac_statecheck_work);
 #endif
 	wacom_i2c_disable(wac_i2c);
+	wac_i2c->fb_suspended = true;
 }
 
 static void wacom_i2c_resume_work(struct work_struct *work)
@@ -682,31 +685,59 @@ static void wac_statecheck_work(struct work_struct *work)
 }
 #endif
 
-
-static void wacom_i2c_late_resume(struct early_suspend *h)
+static void wacom_i2c_fb_resume(struct wacom_i2c *wac_i2c)
 {
-	struct wacom_i2c *wac_i2c =
-	    container_of(h, struct wacom_i2c, early_suspend);
+	if (!wac_i2c->fb_suspended)
+		return;
 
 	printk(KERN_DEBUG "[E-PEN] %s.\n", __func__);
 	wacom_i2c_enable(wac_i2c);
+	wac_i2c->fb_suspended = false;
 }
 
-#ifdef CONFIG_HAS_EARLYSUSPEND
+static int fb_notifier_callback(struct notifier_block *self,
+				unsigned long event, void *data)
+{
+	struct fb_event *evdata = data;
+	int *blank;
+	struct wacom_i2c *wac_i2c = container_of(self, struct wacom_i2c, fb_notif);
+
+	if (evdata && evdata->data && wac_i2c) {
+		if (event == FB_EVENT_BLANK) {
+			blank = evdata->data;
+			switch (*blank) {
+				case FB_BLANK_UNBLANK:
+				case FB_BLANK_NORMAL:
+				case FB_BLANK_VSYNC_SUSPEND:
+				case FB_BLANK_HSYNC_SUSPEND:
+					wacom_i2c_fb_resume(wac_i2c);
+					break;
+				default:
+				case FB_BLANK_POWERDOWN:
+					wacom_i2c_fb_suspend(wac_i2c);
+					break;
+			}
+		}
+	}
+
+	return 0;
+}
+
+#ifdef CONFIG_FB
 #define wacom_i2c_suspend	NULL
 #define wacom_i2c_resume	NULL
 
 #else
 static int wacom_i2c_suspend(struct i2c_client *client, pm_message_t mesg)
 {
-	wacom_i2c_early_suspend();
+	wacom_i2c_fb_suspend();
 	printk(KERN_DEBUG "[E-PEN] %s.\n", __func__);
 	return 0;
 }
 
 static int wacom_i2c_resume(struct i2c_client *client)
 {
-	wacom_i2c_late_resume();
+	wacom_i2c_fb_resume();
 	printk(KERN_DEBUG "[E-PEN] %s.\n", __func__);
 	return 0;
 }
@@ -1365,7 +1396,7 @@ static int wacom_i2c_probe(struct i2c_client *client,
 	/* Reset IC */
 	wacom_i2c_reset_hw(wac_i2c->wac_pdata);
 #elif defined(CONFIG_MACH_T0)
-	wac_i2c->wac_pdata->late_resume_platform_hw();
+	wac_i2c->wac_pdata->fb_resume_platform_hw();
 	msleep(200);
 
 	/*Set data by digitizer type*/
@@ -1395,7 +1426,7 @@ static int wacom_i2c_probe(struct i2c_client *client,
 	/*Set switch type*/
 	wac_i2c->invert_pen_insert = wacom_i2c_invert_by_switch_type();
 #elif defined(CONFIG_MACH_KONA)
-	wac_i2c->wac_pdata->late_resume_platform_hw();
+	wac_i2c->wac_pdata->fb_resume_platform_hw();
 	msleep(200);
 #endif
 #ifdef WACOM_PDCT_WORK_AROUND
@@ -1463,11 +1494,10 @@ static int wacom_i2c_probe(struct i2c_client *client,
 #endif
 
 
-#ifdef CONFIG_HAS_EARLYSUSPEND
-	wac_i2c->early_suspend.level = EARLY_SUSPEND_LEVEL_BLANK_SCREEN + 1;
-	wac_i2c->early_suspend.suspend = wacom_i2c_early_suspend;
-	wac_i2c->early_suspend.resume = wacom_i2c_late_resume;
-	register_early_suspend(&wac_i2c->early_suspend);
+#ifdef CONFIG_FB
+	wac_i2c->fb_suspended = false;
+	wac_i2c->fb_notif.notifier_call = fb_notifier_callback;
+	fb_register_client(&wac_i2c->fb_notif);
 #endif
 
 	wac_i2c->dev = device_create(sec_class, NULL, 0, NULL, "sec_epen");
