@@ -212,7 +212,7 @@ static void ssp_sensorhub_report_library(struct ssp_sensorhub_data *hub_data)
 {
 	input_report_rel(hub_data->sensorhub_input_dev, DATA, DATA);
 	input_sync(hub_data->sensorhub_input_dev);
-	wake_lock_timeout(&hub_data->sensorhub_wake_lock, WAKE_LOCK_TIMEOUT);
+	__pm_wakeup_event(&hub_data->sensorhub_wake_lock, WAKE_LOCK_TIMEOUT);
 }
 
 static void ssp_sensorhub_report_large_library(
@@ -220,7 +220,7 @@ static void ssp_sensorhub_report_large_library(
 {
 	input_report_rel(hub_data->sensorhub_input_dev, LARGE_DATA, LARGE_DATA);
 	input_sync(hub_data->sensorhub_input_dev);
-	wake_lock_timeout(&hub_data->sensorhub_wake_lock, WAKE_LOCK_TIMEOUT);
+	__pm_wakeup_event(&hub_data->sensorhub_wake_lock, WAKE_LOCK_TIMEOUT);
 }
 
 static int ssp_sensorhub_list(struct ssp_sensorhub_data *hub_data,
@@ -481,8 +481,7 @@ int ssp_sensorhub_initialize(struct ssp_data *ssp_data)
 	ssp_data->hub_data = hub_data;
 
 	/* init wakelock, list, waitqueue, completion and spinlock */
-	wake_lock_init(&hub_data->sensorhub_wake_lock, WAKE_LOCK_SUSPEND,
-			"ssp_sensorhub_wake_lock");
+	wakeup_source_init(&hub_data->sensorhub_wake_lock, "ssp_sensorhub_wake_lock");
 	INIT_LIST_HEAD(&hub_data->events_head.list);
 	init_waitqueue_head(&hub_data->sensorhub_wq);
 	init_completion(&hub_data->sensorhub_completion);
@@ -539,7 +538,7 @@ err_misc_register:
 err_input_register_device_sensorhub:
 err_input_allocate_device_sensorhub:
 	complete_all(&hub_data->sensorhub_completion);
-	wake_lock_destroy(&hub_data->sensorhub_wake_lock);
+	wakeup_source_trash(&hub_data->sensorhub_wake_lock);
 	kfree(hub_data);
 exit:
 	return ret;
@@ -557,7 +556,7 @@ void ssp_sensorhub_remove(struct ssp_data *ssp_data)
 	misc_deregister(&hub_data->sensorhub_device);
 	input_unregister_device(hub_data->sensorhub_input_dev);
 	complete_all(&hub_data->sensorhub_completion);
-	wake_lock_destroy(&hub_data->sensorhub_wake_lock);
+	wakeup_source_trash(&hub_data->sensorhub_wake_lock);
 	kfree(hub_data);
 }
 
