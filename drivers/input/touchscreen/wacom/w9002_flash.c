@@ -1121,7 +1121,7 @@ int wacom_i2c_flash(struct wacom_i2c *wac_i2c)
 		printk(KERN_DEBUG "epen: Set FWE\n");
 	}
 #endif
-	wake_lock(&wac_i2c->wakelock);
+	__pm_stay_awake(&wac_i2c->wakelock);
 
 	printk(KERN_DEBUG "epen:start getting the boot loader version\n");
 	/*Obtain boot loader version */
@@ -1239,7 +1239,7 @@ int wacom_i2c_flash(struct wacom_i2c *wac_i2c)
 	printk(KERN_DEBUG "epen: write and verify completed\n");
 
 fw_update_error:
-	wake_unlock(&wac_i2c->wakelock);
+	__pm_relax(&wac_i2c->wakelock);
 
 #ifdef WACOM_HAVE_FWE_PIN
 	if (wac_i2c->have_fwe_pin) {

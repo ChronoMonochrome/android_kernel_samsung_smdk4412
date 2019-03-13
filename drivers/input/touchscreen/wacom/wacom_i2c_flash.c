@@ -570,7 +570,7 @@ int wacom_i2c_flash(struct wacom_i2c *wac_i2c)
 	}
 #endif
 
-	wake_lock(&wac_i2c->wakelock);
+	__pm_stay_awake(&wac_i2c->wakelock);
 
 	ret = wacom_i2c_flash_cmd(wac_i2c);
 	if (ret < 0)
@@ -668,7 +668,7 @@ mcu_type_error:
 		printk(KERN_ERR "[E-PEN] error - wacom_i2c_flash_end\n");
 
 fw_update_error:
-	wake_unlock(&wac_i2c->wakelock);
+	__pm_relax(&wac_i2c->wakelock);
 	return ret;
 }
 
