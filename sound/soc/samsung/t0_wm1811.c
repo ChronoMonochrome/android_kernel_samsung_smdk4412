@@ -78,13 +78,13 @@
 
 #define MAX_ZONE_LIMIT		10
 /* keep this value if you support double-pressed concept */
-#define WAKE_LOCK_TIME		(HZ * 5)	/* 5 sec */
+#define WAKE_LOCK_TIME		(5000)	/* 5 sec */
 #define EAR_CHECK_LOOP_CNT	10
 
 struct wm1811_machine_priv {
 	struct snd_soc_jack jack;
 	struct snd_soc_codec *codec;
-	struct wake_lock jackdet_wake_lock;
+	struct wakeup_source jackdet_wake_lock;
 	void (*lineout_switch_f) (int on);
 	void (*set_main_mic_f) (int on);
 	void (*set_sub_mic_f) (int on);
@@ -666,7 +666,7 @@ static void t0_micdet(void *data)
 	pr_info("%s: detected jack\n", __func__);
 	wm8994->mic_detecting = true;
 
-	wake_lock_timeout(&wm1811->jackdet_wake_lock, 5 * HZ);
+	__pm_wakeup_event(&wm1811->jackdet_wake_lock, 5000);
 
 	snd_soc_update_bits(codec, WM8958_MICBIAS2,
 				WM8958_MICB2_MODE, 0);
@@ -685,7 +685,7 @@ static void t0_mic_id(void *data, u16 status)
 	struct wm8994_priv *wm8994 = snd_soc_codec_get_drvdata(wm1811->codec);
 
 	pr_info("%s: detected jack\n", __func__);
-	wake_lock_timeout(&wm1811->jackdet_wake_lock, 5 * HZ);
+	__pm_wakeup_event(&wm1811->jackdet_wake_lock, 5000);
 
 	/* Either nothing present or just starting detection */
 	if (!(status & WM8958_MICD_STS)) {
@@ -1316,8 +1316,7 @@ static int t0_wm1811_init_paiftx(struct snd_soc_pcm_runtime *rtd)
 	/* To wakeup for earjack event in suspend mode */
 	enable_irq_wake(control->irq);
 
-	wake_lock_init(&wm1811->jackdet_wake_lock,
-					WAKE_LOCK_SUSPEND, "T0_jackdet");
+	wakeup_source_init(&wm1811->jackdet_wake_lock, "T0_jackdet");
 
 	/* To support PBA function test */
 	jack_class = class_create(THIS_MODULE, "audio");
