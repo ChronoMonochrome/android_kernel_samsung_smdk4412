@@ -24,7 +24,7 @@
 
 #define LIST_SIZE			5
 #define MAX_DATA_COPY_TRY		2
-#define WAKE_LOCK_TIMEOUT		(3*HZ)
+#define WAKE_LOCK_TIMEOUT		(3000)
 #define COMPLETION_TIMEOUT		(2*HZ)
 #define DATA				REL_RX
 #define LARGE_DATA			REL_RY
@@ -48,7 +48,7 @@ struct ssp_sensorhub_data {
 	struct ssp_data *ssp_data;
 	struct input_dev *sensorhub_input_dev;
 	struct miscdevice sensorhub_device;
-	struct wake_lock sensorhub_wake_lock;
+	struct wakeup_source sensorhub_wake_lock;
 	struct completion sensorhub_completion;
 	struct task_struct *sensorhub_task;
 	struct sensorhub_event events_head;
