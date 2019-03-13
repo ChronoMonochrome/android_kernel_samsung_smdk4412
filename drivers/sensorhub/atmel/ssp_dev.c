@@ -17,8 +17,12 @@
 /* ssp mcu device ID */
 #define DEVICE_ID			0x55
 
-static void ssp_early_suspend(struct early_suspend *handler);
-static void ssp_late_resume(struct early_suspend *handler);
+#ifdef CONFIG_FB
+static void ssp_fb_suspend(struct ssp_data *data);
+static void ssp_fb_resume(struct ssp_data *data);
+static int fb_notifier_callback(struct notifier_block *self,
+				unsigned long event, void *data);
+#endif
 
 /************************************************************************/
 /* interrupt happened due to transition/change of SSP MCU		*/
@@ -303,10 +307,10 @@ static int ssp_probe(struct i2c_client *client,
 		goto err_symlink_create;
 	}
 
-#ifdef CONFIG_HAS_EARLYSUSPEND
-	data->early_suspend.suspend = ssp_early_suspend;
-	data->early_suspend.resume = ssp_late_resume;
-	register_early_suspend(&data->early_suspend);
+#ifdef CONFIG_FB
+	data->fb_suspended = false;
+	data->fb_notif.notifier_call = fb_notifier_callback;
+	fb_register_client(&data->fb_notif);
 #endif
 
 #ifdef CONFIG_SENSORS_SSP_SENSORHUB
@@ -371,8 +375,8 @@ static void ssp_shutdown(struct i2c_client *client)
 		cancel_delayed_work_sync(&data->work_firmware);
 	}
 
-#ifdef CONFIG_HAS_EARLYSUSPEND
-	unregister_early_suspend(&data->early_suspend);
+#ifdef CONFIG_FB
+	fb_unregister_client(&data->fb_notif);
 #endif
 
 	disable_debug_timer(data);
@@ -404,11 +408,11 @@ static void ssp_shutdown(struct i2c_client *client)
 	kfree(data);
 }
 
-#ifdef CONFIG_HAS_EARLYSUSPEND
-static void ssp_early_suspend(struct early_suspend *handler)
+#ifdef CONFIG_FB
+static void ssp_fb_suspend(struct ssp_data *data)
 {
-	struct ssp_data *data;
-	data = container_of(handler, struct ssp_data, early_suspend);
+	if (data->fb_suspended)
+		return;
 
 	func_dbg();
 	disable_debug_timer(data);
@@ -418,12 +422,13 @@ static void ssp_early_suspend(struct early_suspend *handler)
 	ssp_send_status_cmd(data, MSG2SSP_AP_STATUS_SLEEP);
 
 	data->bCheckSuspend = true;
+	data->fb_suspended = true;
 }
 
-static void ssp_late_resume(struct early_suspend *handler)
+static void ssp_fb_resume(struct ssp_data *data)
 {
-	struct ssp_data *data;
-	data = container_of(handler, struct ssp_data, early_suspend);
+	if (!data->fb_suspended)
+		return;
 
 	func_dbg();
 	enable_debug_timer(data);
@@ -433,9 +438,35 @@ static void ssp_late_resume(struct early_suspend *handler)
 	/* give notice to user that AP goes to sleep */
 	ssp_sensorhub_report_notice(data, MSG2SSP_AP_STATUS_WAKEUP);
 	ssp_send_status_cmd(data, MSG2SSP_AP_STATUS_WAKEUP);
+	data->fb_suspended = false;
 }
 
-#endif /* CONFIG_HAS_EARLYSUSPEND */
+static int fb_notifier_callback(struct notifier_block *self,
+				unsigned long event, void *data)
+{
+	struct fb_event *evdata = data;
+	int *blank;
+	struct ssp_data *info = container_of(self, struct ssp_data, fb_notif);
+ 	if (evdata && evdata->data && info) {
+		if (event == FB_EVENT_BLANK) {
+			blank = evdata->data;
+			switch (*blank) {
+				case FB_BLANK_UNBLANK:
+				case FB_BLANK_NORMAL:
+				case FB_BLANK_VSYNC_SUSPEND:
+				case FB_BLANK_HSYNC_SUSPEND:
+					ssp_fb_suspend(info);
+					break;
+				default:
+				case FB_BLANK_POWERDOWN:
+					ssp_fb_resume(info);
+					break;
+			}
+		}
+	}
+ 	return 0;
+}
+#endif /* CONFIG_FB */
 
 static int ssp_suspend(struct device *dev)
 {
