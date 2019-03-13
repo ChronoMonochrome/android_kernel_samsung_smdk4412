@@ -403,7 +403,7 @@ struct wacom_i2c {
 	struct notifier_block fb_notif;
 	bool fb_suspended;
 	struct mutex lock;
-	struct wake_lock wakelock;
+	struct wakeup_source wakelock;
 	struct device	*dev;
 	int irq;
 #ifdef WACOM_PDCT_WORK_AROUND

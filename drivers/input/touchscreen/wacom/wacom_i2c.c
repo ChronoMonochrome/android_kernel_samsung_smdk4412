@@ -118,10 +118,8 @@ static void wacom_i2c_disable(struct wacom_i2c *wac_i2c)
 #endif
 			forced_release(wac_i2c);
 
-		if (!wake_lock_active(&wac_i2c->wakelock)) {
-			wac_i2c->power_enable = false;
-			wac_i2c->wac_pdata->fb_suspend_platform_hw();
-		}
+		wac_i2c->power_enable = false;
+		wac_i2c->wac_pdata->fb_suspend_platform_hw();
 	}
 }
 
@@ -1522,7 +1520,7 @@ static int wacom_i2c_probe(struct i2c_client *client,
 
 	/*Initializing for semaphor */
 	mutex_init(&wac_i2c->lock);
-	wake_lock_init(&wac_i2c->wakelock, WAKE_LOCK_SUSPEND, "wacom");
+	wakeup_source_init(&wac_i2c->wakelock, "wacom");
 	INIT_DELAYED_WORK(&wac_i2c->resume_work, wacom_i2c_resume_work);
 #if defined(WACOM_IRQ_WORK_AROUND)
 	INIT_DELAYED_WORK(&wac_i2c->pendct_dwork, wacom_i2c_pendct_work);
