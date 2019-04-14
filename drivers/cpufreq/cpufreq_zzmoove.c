@@ -35,13 +35,9 @@
 // #define USE_LCD_NOTIFIER
 
 #include <linux/cpu.h>
-#ifdef USE_LCD_NOTIFIER
-#include <linux/lcd_notify.h>
-#endif /* USE_LCD_NOTIFIER */
 #include <linux/cpufreq.h>
-#if defined(CONFIG_HAS_EARLYSUSPEND) && !defined(DISABLE_POWER_MANAGEMENT)
-#include <linux/earlysuspend.h>
-#endif /* defined(CONFIG_HAS_EARLYSUSPEND)... */
+#include <linux/notifier.h>
+#include <linux/fb.h>
 #ifdef CONFIG_EXYNOS4_EXPORT_TEMP
 #include <linux/exynos4_export_temp.h>		// ZZ: Exynos4 temperatue reading support
 #endif /* CONFIG_EXYNOS4_EXPORT_TEMP */
@@ -8480,16 +8476,15 @@ static inline void dbs_timer_exit(struct cpu_dbs_info_s *dbs_info)
 #endif /* CONFIG_EXYNOS4_EXPORT_TEMP */
 }
 
-#if (defined(CONFIG_HAS_EARLYSUSPEND) || defined(CONFIG_POWERSUSPEND) && !defined(DISABLE_POWER_MANAGEMENT)) || defined(USE_LCD_NOTIFIER)
+static struct notifier_block fb_notif;
+static bool fb_suspended = false;
+
 // raise sampling rate to SR*multiplier and adjust sampling rate/thresholds/hotplug/scaling/freq limit/freq step on blank screen
-#if defined(CONFIG_HAS_EARLYSUSPEND) && !defined(USE_LCD_NOTIFIER)
-static void __cpuinit powersave_early_suspend(struct early_suspend *handler)
-#elif defined(CONFIG_POWERSUSPEND) && !defined(USE_LCD_NOTIFIER) || defined(CONFIG_POWERSUSPEND) && defined(USE_LCD_NOTIFIER)
-static void __cpuinit powersave_suspend(struct power_suspend *handler)
-#elif defined(USE_LCD_NOTIFIER)
 void zzmoove_suspend(void)
-#endif /* defined(CONFIG_HAS_EARLYSUSPEND)... */
 {
+	if (fb_suspended)
+		return;
+
 	if (dbs_tuners_ins.disable_sleep_mode)					// ZZ: exit if sleep mode is disabled
 	    return;
 
@@ -8672,16 +8667,14 @@ void zzmoove_suspend(void)
 #ifdef ZZMOOVE_DEBUG
 	pr_info("[zzmoove/lcd_notifier] Suspend function executed.\n");
 #endif /* ZZMOOVE_DEBUG */
+	fb_suspended = true;
 }
 
-#if defined(CONFIG_HAS_EARLYSUSPEND) && !defined(USE_LCD_NOTIFIER)
-static void __cpuinit powersave_late_resume(struct early_suspend *handler)
-#elif defined(CONFIG_POWERSUSPEND) && !defined(USE_LCD_NOTIFIER) || defined(CONFIG_POWERSUSPEND) && defined(USE_LCD_NOTIFIER)
-static void __cpuinit powersave_resume(struct power_suspend *handler)
-#elif defined(USE_LCD_NOTIFIER)
 void zzmoove_resume(void)
-#endif /* defined(CONFIG_HAS_EARLYSUSPEND)... */
 {
+	if (!fb_suspended)
+		return;
+
 	if (dbs_tuners_ins.disable_sleep_mode)					// ZZ: exit if sleep mode is disabled
 	    return;
 
@@ -8762,21 +8755,34 @@ void zzmoove_resume(void)
 #ifdef ZZMOOVE_DEBUG
 	pr_info("[zzmoove/lcd_notifier] Resume function executed.\n");
 #endif /* ZZMOOVE_DEBUG */
+	fb_suspended = false;
 }
 
-#if defined(CONFIG_HAS_EARLYSUSPEND) && !defined(USE_LCD_NOTIFIER) && !defined(DISABLE_POWER_MANAGEMENT)
-static struct early_suspend __refdata _powersave_early_suspend = {
-  .suspend = powersave_early_suspend,
-  .resume = powersave_late_resume,
-  .level = EARLY_SUSPEND_LEVEL_BLANK_SCREEN,
-};
-#elif defined(CONFIG_POWERSUSPEND) && defined(USE_LCD_NOTIFIER) && !defined (DISABLE_POWER_MANAGEMENT) || defined(CONFIG_POWERSUSPEND) && !defined(USE_LCD_NOTIFIER) && !defined (DISABLE_POWER_MANAGEMENT)
-static struct power_suspend __refdata powersave_powersuspend = {
-  .suspend = powersave_suspend,
-  .resume = powersave_resume,
-};
-#endif /* (defined(CONFIG_HAS_EARLYSUSPEND)... */
-#endif /* (defined(CONFIG_HAS_EARLYSUSPEND)... */
+static int fb_notifier_callback(struct notifier_block *self,
+				unsigned long event, void *data)
+{
+	struct fb_event *evdata = data;
+	int *blank;
+	if (evdata && evdata->data) {
+		if (event == FB_EVENT_BLANK) {
+			blank = evdata->data;
+			switch (*blank) {
+				case FB_BLANK_UNBLANK:
+				case FB_BLANK_NORMAL:
+				case FB_BLANK_VSYNC_SUSPEND:
+				case FB_BLANK_HSYNC_SUSPEND:
+					zzmoove_resume();
+					break;
+				default:
+				case FB_BLANK_POWERDOWN:
+					zzmoove_suspend();
+					break;
+			}
+		}
+	}
+
+	return 0;
+}
 
 static int cpufreq_governor_dbs(struct cpufreq_policy *policy,
 				   unsigned int event)
@@ -8913,12 +8919,9 @@ static int cpufreq_governor_dbs(struct cpufreq_policy *policy,
 		}
 		mutex_unlock(&dbs_mutex);
 		dbs_timer_init(this_dbs_info);
-#if defined(CONFIG_HAS_EARLYSUSPEND) && !defined(USE_LCD_NOTIFIER) && !defined(DISABLE_POWER_MANAGEMENT)
-		register_early_suspend(&_powersave_early_suspend);
-#elif defined(CONFIG_POWERSUSPEND) && !defined(USE_LCD_NOTIFIER) && !defined(DISABLE_POWER_MANAGEMENT) || defined(CONFIG_POWERSUSPEND) && defined(USE_LCD_NOTIFIER) && !defined(DISABLE_POWER_MANAGEMENT)
-		if (cpu == 0)
-		    register_power_suspend(&powersave_powersuspend);
-#endif /* (defined(CONFIG_HAS_EARLYSUSPEND)... */
+		fb_suspended = false;
+		fb_notif.notifier_call = fb_notifier_callback;
+		fb_register_client(&fb_notif);
 		break;
 
 	case CPUFREQ_GOV_STOP:
@@ -8966,12 +8969,8 @@ static int cpufreq_governor_dbs(struct cpufreq_policy *policy,
 		if (!dbs_enable)
 		    sysfs_remove_group(cpufreq_global_kobject,
 		   &dbs_attr_group);
-#if defined(CONFIG_HAS_EARLYSUSPEND) && !defined(USE_LCD_NOTIFIER) && !defined(DISABLE_POWER_MANAGEMENT)
-		unregister_early_suspend(&_powersave_early_suspend);
-#elif defined(CONFIG_POWERSUSPEND) && !defined(USE_LCD_NOTIFIER) && !defined(DISABLE_POWER_MANAGEMENT) || defined(CONFIG_POWERSUSPEND) && defined(USE_LCD_NOTIFIER) && !defined(DISABLE_POWER_MANAGEMENT)
-		if (cpu == 0)
-		    unregister_power_suspend(&powersave_powersuspend);
-#endif /* defined(CONFIG_HAS_EARLYSUSPEND)... */
+		fb_unregister_client(&fb_notif);
+
 		break;
 
 	case CPUFREQ_GOV_LIMITS:
