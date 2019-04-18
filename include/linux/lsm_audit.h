@@ -154,6 +154,13 @@ int ipv6_skb_to_auditdata(struct sk_buff *skb,
 	{ memset((_d), 0, sizeof(struct common_audit_data)); \
 	 (_d)->type = LSM_AUDIT_DATA_##_t; }
 
+#ifdef CONFIG_AUDIT
 void common_lsm_audit(struct common_audit_data *a);
+#else
+static inline void common_lsm_audit(struct common_audit_data *a)
+{
+}
+#endif
+
 
 #endif
