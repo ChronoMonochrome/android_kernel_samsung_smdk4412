@@ -444,6 +444,27 @@ static struct snd_soc_card midas_card = {
 	.late_probe = midas_late_probe,
 };
 
+static struct device *g_dev;
+static struct snd_soc_card *g_card;
+
+static void card_register_fn(struct work_struct *work);
+
+static DECLARE_DELAYED_WORK(card_register_delayedwork, card_register_fn);
+static void card_register_fn(struct work_struct *work)
+{
+	int ret;
+	if (!g_dev || !g_card)
+		return;
+
+	ret = devm_snd_soc_register_card(g_dev, g_card);
+	if (ret < 0) {
+		dev_err(g_dev, "Failed to register card: %d\n", ret);
+
+		if (ret == -EPROBE_DEFER)
+			schedule_delayed_work(&card_register_delayedwork, msecs_to_jiffies(250));
+	}
+}
+
 static int midas_probe(struct platform_device *pdev)
 {
 	struct device *dev = &pdev->dev;
@@ -541,7 +562,14 @@ static int midas_probe(struct platform_device *pdev)
 	ret = devm_snd_soc_register_card(dev, card);
 	if (ret < 0) {
 		dev_err(dev, "Failed to register card: %d\n", ret);
-		goto put_codec_mclk2;
+
+		if (ret == -EPROBE_DEFER) {
+			g_dev = dev;
+			g_card = card;
+
+			schedule_delayed_work(&card_register_delayedwork, msecs_to_jiffies(250));
+		}
+		//goto put_codec_mclk2;
 	}
 
 	return 0;
