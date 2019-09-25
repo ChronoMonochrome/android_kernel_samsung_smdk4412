@@ -362,12 +362,6 @@ static int ump_file_ioctl(struct inode *inode, struct file *filp, unsigned int c
 			err = ump_ion_import_wrapper((u32 __user *)argument, session_data);
 			break;
 #endif
-#ifdef CONFIG_DMA_SHARED_BUFFER
-		case UMP_IOC_DMABUF_IMPORT:
-			err = ump_dmabuf_import_wrapper((u32 __user *)argument,
-							session_data);
-			break;
-#endif
 		case UMP_IOC_RELEASE:
 			err = ump_release_wrapper((u32 __user *)argument, session_data);
 			break;

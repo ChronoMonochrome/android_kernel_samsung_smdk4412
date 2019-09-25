@@ -887,27 +887,6 @@ static struct s5p_usbgadget_platdata smdk4212_usbgadget_pdata;
 static void __init smdk4212_usbgadget_init(void)
 {
 	struct s5p_usbgadget_platdata *pdata = &smdk4212_usbgadget_pdata;
-	struct android_usb_platform_data *android_pdata =
-		s3c_device_android_usb.dev.platform_data;
-	if (android_pdata) {
-		unsigned int cdfs = 0;
-#if defined(CONFIG_MACH_M0_CTC) || defined(CONFIG_MACH_T0_CHN_CTC)
-		unsigned int newluns = 1;
-		cdfs = 1;   /* China CTC required CDFS */
-#elif defined(CONFIG_MACH_T0_USA_VZW)
-		unsigned int newluns = 0;
-		cdfs = 1;   /* VZW required CDFS */
-#else
-		unsigned int newluns = 2;
-#endif
-		printk(KERN_DEBUG "usb: %s: default luns=%d, new luns=%d\n",
-				__func__, android_pdata->nluns, newluns);
-		android_pdata->nluns = newluns;
-		android_pdata->cdfs_support = cdfs;
-	} else {
-		printk(KERN_DEBUG "usb: %s android_pdata is not available\n",
-				__func__);
-	}
 
 	s5p_usbgadget_set_platdata(pdata);
 
@@ -1914,6 +1893,12 @@ static struct platform_device midas_keypad = {
 };
 
 
+#ifdef CONFIG_DRM_MALI
+static struct platform_device midas_device_mali_drm = {
+	.name = "mali_drm",
+	.id   = -1,
+};
+#endif
 
 #ifdef CONFIG_VIDEO_FIMG2D
 static struct fimg2d_platdata fimg2d_data __initdata = {
@@ -2375,6 +2360,9 @@ static struct platform_device *midas_devices[] __initdata = {
 #ifdef CONFIG_VIDEO_EXYNOS_FIMC_LITE
 	&exynos_device_flite0,
 	&exynos_device_flite1,
+#endif
+#ifdef CONFIG_DRM_MALI
+	&midas_device_mali_drm,
 #endif
 #ifdef CONFIG_VIDEO_FIMG2D
 	&s5p_device_fimg2d,

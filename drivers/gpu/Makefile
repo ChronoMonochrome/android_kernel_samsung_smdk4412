@@ -10,3 +10,10 @@ obj-y           += mali400/r3p2/mali/
 obj-y           += mali400/r3p2/ump/
 endif
 endif
+ifeq ($(CONFIG_UMPLOCK),y)
+obj-y			+= mali400/umplock/
+endif
+
+ifeq ($(CONFIG_UMP),y)
+obj-y			+= mali400/ump/
+endif

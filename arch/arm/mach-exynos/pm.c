@@ -31,7 +31,7 @@
 
 #include <mach/regs-irq.h>
 #include <mach/regs-gpio.h>
-#include <mach/regs-clock.h>
+#include <mach/regs-clock4.h>
 #include <mach/regs-pmu.h>
 #include <mach/pm-core.h>
 #include <mach/pmu.h>
