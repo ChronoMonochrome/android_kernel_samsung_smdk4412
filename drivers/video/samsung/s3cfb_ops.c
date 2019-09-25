@@ -118,12 +118,6 @@ int s3cfb_draw_logo(struct fb_info *fb)
 #else /* #ifdef RGB_BOOTSCREEN */
 	u8 *logo_virt_buf;
 
-	if (bootloaderfb) {
-		logo_virt_buf = phys_to_virt(bootloaderfb);
-		memcpy(fb->screen_base, logo_virt_buf, fb->var.yres * fb->fix.line_length);
-		printk(KERN_INFO "Bootloader sent 'bootloaderfb' : %08X\n", bootloaderfb);
-	}
-
 #endif /* #ifdef RGB_BOOTSCREEN */
 #endif
 #endif
@@ -413,8 +407,6 @@ int s3cfb_map_default_video_memory(struct s3cfb_global *fbdev,
 			(unsigned int)fix->smem_start,
 			(unsigned int)fb->screen_base, fix->smem_len);
 
-	if (bootloaderfb)
-		memset(fb->screen_base, 0, fix->smem_len);
 	win->owner = DMA_MEM_FIMD;
 
 #ifdef CONFIG_FB_S5P_SYSMMU
