@@ -760,7 +760,8 @@ CONFIG_SECCOMP=y
 # CONFIG_USE_OF is not set
 CONFIG_ZBOOT_ROM_TEXT=0
 CONFIG_ZBOOT_ROM_BSS=0
-CONFIG_CMDLINE="console=ttySAC2,115200 consoleblank=0 nmi_watchdog=nopanic noinitrd rootfstype=ext4 root=/dev/mmcblk1p1 console=tty0 init=/sbin/init net.ifnames=0 console=ttygs0,115200n8"
+CONFIG_CMDLINE="console=ttySAC2,115200 consoleblank=0 nmi_watchdog=nopanic noinitrd rootfstype=ext4 root=/dev/mmcblk0p12 console=tty0 init=/sbin/init net.ifnames=0 console=ttygs0,115200n8"
+#CONFIG_CMDLINE="console=ttySAC2,115200 consoleblank=0 androidboot.hardware=smdk4x12"
 # CONFIG_CMDLINE_FROM_BOOTLOADER is not set
 # CONFIG_CMDLINE_EXTEND is not set
 CONFIG_CMDLINE_FORCE=y
