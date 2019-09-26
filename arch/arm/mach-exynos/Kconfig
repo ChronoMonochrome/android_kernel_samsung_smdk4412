@@ -1471,7 +1471,7 @@ config EXYNOS_DEV_C2C
 comment "Debugging Feature"
 menuconfig SEC_DEBUG
 	bool "Samsung TN Ramdump Feature"
-	default y
+	default n
 	help
 	  Samsung TN Ramdump Feature. Use INFORM3 and magic number at 0xc0000000.
 
