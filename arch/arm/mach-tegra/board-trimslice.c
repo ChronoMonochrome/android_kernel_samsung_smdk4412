@@ -89,6 +89,7 @@ static struct platform_device *trimslice_devices[] __initdata = {
 	&tegra_sdhci_device4,
 	&tegra_i2s_device1,
 	&tegra_das_device,
+	&tegra_pcm_device,
 	&trimslice_audio_device,
 };
 
