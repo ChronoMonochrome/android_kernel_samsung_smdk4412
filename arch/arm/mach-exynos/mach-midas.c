@@ -134,8 +134,6 @@ struct s3cfb_extdsp_lcd {
 #include <plat/fimg2d.h>
 #include <plat/s5p-sysmmu.h>
 
-#include <mach/sec_debug.h>
-
 #include <mach/gpio-midas.h>
 #if defined(CONFIG_MACH_GC1)
 #include <mach/gc1-power.h>
@@ -1795,46 +1793,46 @@ static struct platform_device samsung_device_battery = {
 struct gpio_keys_button midas_buttons[] = {
 #if defined(CONFIG_MACH_GC1)
 	GPIO_KEYS(KEY_POWER, GPIO_nPOWER,
-			1, 1, sec_debug_check_crash_key),
+			1, 1, NULL),
 	GPIO_KEYS(KEY_CAMERA_FOCUS, GPIO_S1_KEY,
-			1, 1, sec_debug_check_crash_key),
+			1, 1, NULL),
 	/*KEY_CAMERA_SHUTTER*/
 	GPIO_KEYS(0x220, GPIO_S2_KEY,
-			1, 1, sec_debug_check_crash_key),
+			1, 1, NULL),
 	GPIO_KEYS(KEY_CAMERA_ZOOMIN, GPIO_TELE_KEY,
-			1, 1, sec_debug_check_crash_key),
+			1, 1, NULL),
 	GPIO_KEYS(KEY_CAMERA_ZOOMOUT, GPIO_WIDE_KEY,
-			1, 1, sec_debug_check_crash_key),
+			1, 1, NULL),
 	GPIO_KEYS(0x221, GPIO_FAST_TELE_KEY,
-			1, 1, sec_debug_check_crash_key),
+			1, 1, NULL),
 	GPIO_KEYS(0x222, GPIO_FAST_WIDE_KEY,
-			1, 1, sec_debug_check_crash_key),
+			1, 1, NULL),
 #if 0
 	GPIO_KEYS(KEY_HOMEPAGE, GPIO_OK_KEY_ANDROID,
-			1, 1, sec_debug_check_crash_key),
+			1, 1, NULL),
 	GPIO_KEYS(KEY_MENU, GPIO_MENU_KEY,
-			1, 1, sec_debug_check_crash_key),
+			1, 1, NULL),
 	GPIO_KEYS(KEY_BACK, GPIO_BACK_KEY,
-			1, 1, sec_debug_check_crash_key),
+			1, 1, NULL),
 #endif
 #else
 	GPIO_KEYS(KEY_VOLUMEUP, GPIO_VOL_UP,
-		  1, 0, sec_debug_check_crash_key),
+		  1, 0, NULL),
 	GPIO_KEYS(KEY_VOLUMEDOWN, GPIO_VOL_DOWN,
-		  1, 0, sec_debug_check_crash_key),
+		  1, 0, NULL),
 	GPIO_KEYS(KEY_POWER, GPIO_nPOWER,
-		  1, 1, sec_debug_check_crash_key),
+		  1, 1, NULL),
 #endif
 };
 
 #if !defined(CONFIG_MACH_T0) && !defined(CONFIG_MACH_M3)
 struct gpio_keys_button m0_buttons[] = {
 	GPIO_KEYS(KEY_VOLUMEUP, GPIO_VOL_UP_00,
-		  1, 0, sec_debug_check_crash_key),
+		  1, 0, NULL),
 	GPIO_KEYS(KEY_VOLUMEDOWN, GPIO_VOL_DOWN_00,
-		  1, 0, sec_debug_check_crash_key),
+		  1, 0, NULL),
 	GPIO_KEYS(KEY_POWER, GPIO_nPOWER,
-		  1, 1, sec_debug_check_crash_key),
+		  1, 1, NULL),
 };
 #endif
 
@@ -1842,13 +1840,13 @@ struct gpio_keys_button m0_buttons[] = {
 	defined(CONFIG_MACH_C1_USA_ATT)
 struct gpio_keys_button m0_rev11_buttons[] = {
 	GPIO_KEYS(KEY_VOLUMEUP, GPIO_VOL_UP_00,
-		  1, 0, sec_debug_check_crash_key),
+		  1, 0, NULL),
 	GPIO_KEYS(KEY_VOLUMEDOWN, GPIO_VOL_DOWN_00,
-		  1, 0, sec_debug_check_crash_key),
+		  1, 0, NULL),
 	GPIO_KEYS(KEY_POWER, GPIO_nPOWER,
-		  1, 1, sec_debug_check_crash_key),
+		  1, 1, NULL),
 	GPIO_KEYS(KEY_HOMEPAGE, GPIO_OK_KEY_ANDROID,
-		  1, 1, sec_debug_check_crash_key),
+		  1, 1, NULL),
 };
 #endif
 
@@ -1857,26 +1855,26 @@ struct gpio_keys_button m0_rev11_buttons[] = {
 	defined(CONFIG_MACH_BAFFIN))
 struct gpio_keys_button c1_rev04_buttons[] = {
 	GPIO_KEYS(KEY_VOLUMEUP, GPIO_VOL_UP_00,
-		  1, 0, sec_debug_check_crash_key),
+		  1, 0, NULL),
 	GPIO_KEYS(KEY_VOLUMEDOWN, GPIO_VOL_DOWN_00,
-		  1, 0, sec_debug_check_crash_key),
+		  1, 0, NULL),
 	GPIO_KEYS(KEY_POWER, GPIO_nPOWER,
-		  1, 1, sec_debug_check_crash_key),
+		  1, 1, NULL),
 	GPIO_KEYS(KEY_HOMEPAGE, GPIO_OK_KEY_ANDROID,
-		  1, 1, sec_debug_check_crash_key),
+		  1, 1, NULL),
 };
 #endif
 
 #if defined(CONFIG_MACH_T0) || defined(CONFIG_MACH_M3)
 struct gpio_keys_button t0_buttons[] = {
 	GPIO_KEYS(KEY_VOLUMEUP, GPIO_VOL_UP,
-		  1, 0, sec_debug_check_crash_key),
+		  1, 0, NULL),
 	GPIO_KEYS(KEY_VOLUMEDOWN, GPIO_VOL_DOWN,
-		  1, 0, sec_debug_check_crash_key),
+		  1, 0, NULL),
 	GPIO_KEYS(KEY_POWER, GPIO_nPOWER,
-		  1, 1, sec_debug_check_crash_key),
+		  1, 1, NULL),
 	GPIO_KEYS(KEY_HOMEPAGE, GPIO_OK_KEY,
-		  1, 1, sec_debug_check_crash_key),
+		  1, 1, NULL),
 };
 #endif
 
@@ -2793,9 +2791,6 @@ static void __init midas_map_io(void)
 #if defined(CONFIG_S5P_MEM_CMA)
 	exynos4_reserve_mem();
 #endif
-
-	/* as soon as INFORM6 is visible, sec_debug is ready to run */
-	sec_debug_init();
 }
 
 static void __init exynos_sysmmu_init(void)
@@ -3507,7 +3502,6 @@ static void __init exynos4_reserve(void)
 
 static void __init exynos_init_reserve(void)
 {
-	sec_debug_magic_init();
 }
 
 MACHINE_START(SMDK4412, "SMDK4x12")

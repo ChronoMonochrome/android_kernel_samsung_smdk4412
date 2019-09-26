@@ -18,11 +18,11 @@ extern union sec_debug_level_t sec_debug_level;
 
 extern int sec_debug_init(void);
 
-extern int sec_debug_magic_init(void);
+//extern int sec_debug_magic_init(void);
 
-extern void sec_debug_check_crash_key(unsigned int code, int value);
+//extern void sec_debug_check_crash_key(unsigned int code, int value);
 
-extern void sec_getlog_supply_fbinfo(void *p_fb, u32 res_x, u32 res_y, u32 bpp,
+//extern void sec_getlog_supply_fbinfo(void *p_fb, u32 res_x, u32 res_y, u32 bpp,
 				     u32 frames);
 extern void sec_getlog_supply_loggerinfo(void *p_main, void *p_radio,
 					 void *p_events, void *p_system);
