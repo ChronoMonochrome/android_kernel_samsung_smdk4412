@@ -365,20 +365,8 @@ KBUILD_CFLAGS   := -Wall -Wundef -Wstrict-prototypes -Wno-trigraphs \
 		   -Wno-format-security \
 		   -fno-delete-null-pointer-checks \
 		   -mtune=cortex-a9 \
-		   -mlong-calls \
-		   -Werror \
-		   -Wno-error=all \
-		   -Wno-error=declaration-after-statement \
-		   -Wno-error=unused-function \
-		   -Wno-error=unused-label \
-		   -Wno-error=unused-parameter \
-		   -Wno-error=unused-value \
-		   -Wno-error=unused-variable \
-		   -Wno-error=maybe-uninitialized \
-		   -Wno-error=sizeof-pointer-memaccess \
-		   -Wno-error=undef \
-		   -Wno-error=return-type \
-		   -Wno-error=enum-compare
+		   -mlong-calls
+
 KBUILD_AFLAGS_KERNEL :=
 KBUILD_CFLAGS_KERNEL :=
 KBUILD_AFLAGS   := -D__ASSEMBLY__
