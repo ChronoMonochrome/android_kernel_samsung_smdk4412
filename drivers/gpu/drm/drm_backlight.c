@@ -11,9 +11,9 @@
 
 #include <linux/backlight.h>
 #include <linux/lcd.h>
+#include <uapi/drm/drm_mode.h>
 
 #include "drm_backlight.h"
-#include "drm_mode.h"
 
 static DEFINE_MUTEX(drm_bl_mutex);
 static LIST_HEAD(drm_bl_list);
