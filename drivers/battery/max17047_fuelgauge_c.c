@@ -1950,7 +1950,7 @@ static int __devinit max17047_fuelgauge_i2c_probe(struct i2c_client *client,
 	gpio_free(fg_data->pdata->irq_gpio);
 
 	ret = request_threaded_irq(fg_data->irq, NULL,
-				max17047_fuelgauge_isr, IRQF_TRIGGER_FALLING,
+				max17047_fuelgauge_isr, IRQF_TRIGGER_FALLING | IRQF_ONESHOT,
 				"max17047-alert", fg_data);
 	if (ret < 0) {
 		pr_err("%s: fail to request max17047 irq: %d: %d\n",
