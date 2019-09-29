@@ -14,7 +14,7 @@ obj-				:=
 
 # Core support for EXYNOS system
 
-obj-y				+= init.o irq-combiner.o dma.o irq-eint.o ppmu.o
+obj-y				+= init.o dma.o irq-eint.o ppmu.o
 obj-$(CONFIG_ARM_TRUSTZONE)	+= irq-sgi.o
 obj-$(CONFIG_ARCH_EXYNOS4)	+= exynos4-smc.o cpu-exynos4.o clock-exynos4.o pmu-exynos4.o ppc.o
 

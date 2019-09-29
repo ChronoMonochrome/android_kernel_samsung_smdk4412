@@ -14,6 +14,9 @@
 
 extern struct smp_operations exynos_smp_ops;
 
+void combiner_init(void __iomem *combiner_base, struct device_node *np);
+extern void combiner_cascade_irq(unsigned int combiner_nr, unsigned int irq);
+
 extern void exynos_cpu_die(unsigned int cpu);
 extern void __init exynos_timer_init(void);
 

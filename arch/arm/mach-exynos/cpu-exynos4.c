@@ -17,6 +17,10 @@
 
 #include <asm/proc-fns.h>
 #include <asm/hardware/cache-l2x0.h>
+#include <linux/of.h>
+#include <linux/of_fdt.h>
+#include <linux/of_irq.h>
+#include <linux/of_address.h>
 #include <linux/irqchip/arm-gic.h>
 #include <asm/cacheflush.h>
 
@@ -40,12 +44,9 @@
 #include <mach/regs-irq.h>
 #include <mach/regs-pmu.h>
 #include <mach/smc.h>
+#include "common.h"
 
 unsigned int gic_bank_offset __read_mostly;
-
-extern int combiner_init(unsigned int combiner_nr, void __iomem *base,
-			 unsigned int irq_start);
-extern void combiner_cascade_irq(unsigned int combiner_nr, unsigned int irq);
 
 /* Initial IO mappings */
 static struct map_desc exynos4_iodesc[] __initdata = {
@@ -319,24 +320,20 @@ void __init exynos4_init_irq(void)
 
 	gic_bank_offset = soc_is_exynos4412() ? 0x4000 : 0x8000;
 
-	gic_init_bases(0, IRQ_PPI_MCT_L, S5P_VA_GIC_DIST, S5P_VA_GIC_CPU, gic_bank_offset, NULL);
-	gic_arch_extn.irq_set_wake = s3c_irq_wake;
-
-	for (irq = 0; irq < COMMON_COMBINER_NR; irq++) {
-		combiner_init(irq, (void __iomem *)S5P_VA_COMBINER(irq),
-				COMBINER_IRQ(irq, 0));
-		combiner_cascade_irq(irq, COMBINER_MAP(irq));
+	if (!of_have_populated_dt()) {
+		gic_init_bases(0, IRQ_PPI(0), S5P_VA_GIC_DIST, S5P_VA_GIC_CPU, gic_bank_offset, NULL);
+		gic_arch_extn.irq_set_wake = s3c_irq_wake;
 	}
+#ifdef CONFIG_OF
+	else
+		irqchip_init();
+#endif
 
-	if (soc_is_exynos4412() && (samsung_rev() >= EXYNOS4412_REV_1_0)) {
-		for (irq = COMMON_COMBINER_NR; irq < MAX_COMBINER_NR; irq++) {
-			combiner_init(irq, (void __iomem *)S5P_VA_COMBINER(irq),
-					COMBINER_IRQ(irq, 0));
-			combiner_cascade_irq(irq, COMBINER_MAP(irq));
-		}
-	}
+	if (!of_have_populated_dt())
+		combiner_init(S5P_VA_COMBINER_BASE, NULL);
 
-	/* The parameters of s5p_init_irq() are for VIC init.
+	/*
+	 * The parameters of s5p_init_irq() are for VIC init.
 	 * Theses parameters should be NULL and 0 because EXYNOS4
 	 * uses GIC instead of VIC.
 	 */
