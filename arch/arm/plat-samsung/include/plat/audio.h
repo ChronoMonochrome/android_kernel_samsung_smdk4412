@@ -12,6 +12,9 @@
  * one of these defines in order to select appropriate bank
  * of GPIO for AC97 pins
  */
+
+#include <linux/platform_device.h>
+
 #define S3C64XX_AC97_GPD  0
 #define S3C64XX_AC97_GPE  1
 extern void s3c64xx_ac97_setup_gpio(int);
