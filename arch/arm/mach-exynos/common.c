@@ -17,6 +17,7 @@
 #include <linux/device.h>
 #include <linux/gpio.h>
 #include <linux/sched.h>
+#include <linux/delay.h>
 #include <linux/serial_core.h>
 #include <linux/of.h>
 #include <linux/of_fdt.h>
@@ -38,7 +39,9 @@
 #include <mach/regs-irq.h>
 #include <mach/regs-pmu.h>
 #include <mach/regs-gpio.h>
+#include <mach/smc.h>
 
+#include <plat/reset.h>
 #include <plat/audio.h>
 #include <plat/cpu.h>
 #include <plat/exynos4.h>
@@ -59,9 +62,9 @@
 #include <plat/rtc-core.h>
 
 #include "common.h"
+
 #define L2_AUX_VAL 0x7C470001
 #define L2_AUX_MASK 0xC200ffff
-
 
 static const char name_exynos4210[] = "EXYNOS4210";
 static const char name_exynos4212[] = "EXYNOS4212";
@@ -447,31 +450,40 @@ void __init exynos4_map_io(void)
 #endif
 }
 
-#if 0
-static void __init exynos4_init_clocks(int xtal)
+void __init exynos4_init_clocks(int xtal)
 {
 	printk(KERN_DEBUG "%s: initializing clocks\n", __func__);
 
 	s3c24xx_register_baseclocks(xtal);
-	s5p_register_clocks(xtal);
 
 	if (soc_is_exynos4210())
 		exynos4210_register_clocks();
-	else if (soc_is_exynos4212() || soc_is_exynos4412())
+	else
 		exynos4212_register_clocks();
 
+	s5p_register_clocks(xtal);
 	exynos4_register_clocks();
 	exynos4_setup_clocks();
 }
 
+#define COMBINER_MAP(x)	((x < 16) ? IRQ_SPI(x) :	\
+			(x == 16) ? IRQ_SPI(107) :	\
+			(x == 17) ? IRQ_SPI(108) :	\
+			(x == 18) ? IRQ_SPI(48) :	\
+			(x == 19) ? IRQ_SPI(49) : 0)
+
+unsigned int gic_bank_offset __read_mostly;
+
 void __init exynos4_init_irq(void)
 {
-	unsigned int gic_bank_offset;
+	int irq;
 
 	gic_bank_offset = soc_is_exynos4412() ? 0x4000 : 0x8000;
 
-	if (!of_have_populated_dt())
+	if (!of_have_populated_dt()) {
 		gic_init_bases(0, IRQ_PPI(0), S5P_VA_GIC_DIST, S5P_VA_GIC_CPU, gic_bank_offset, NULL);
+		gic_arch_extn.irq_set_wake = s3c_irq_wake;
+	}
 #ifdef CONFIG_OF
 	else
 		irqchip_init();
@@ -488,82 +500,138 @@ void __init exynos4_init_irq(void)
 	s5p_init_irq(NULL, 0);
 }
 
-struct bus_type exynos_subsys = {
-	.name		= "exynos-core",
-	.dev_name	= "exynos-core",
+struct bus_type exynos4_subsys = {
+	.name	= "exynos4-core",
+	.dev_name	= "exynos4-core",
 };
 
 static struct device exynos4_dev = {
-	.bus	= &exynos_subsys,
+	.bus	= &exynos4_subsys,
 };
 
-static int __init exynos_core_init(void)
+static int __init exynos4_core_init(void)
 {
-	return subsys_system_register(&exynos_subsys, NULL);
+	return subsys_system_register(&exynos4_subsys, NULL);
 }
-core_initcall(exynos_core_init);
+
+core_initcall(exynos4_core_init);
 
 #ifdef CONFIG_CACHE_L2X0
+#ifdef CONFIG_ARM_TRUSTZONE
+#if defined(CONFIG_PL310_ERRATA_588369) || defined(CONFIG_PL310_ERRATA_727915)
+static void exynos4_l2x0_set_debug(unsigned long val)
+{
+	exynos_smc(SMC_CMD_L2X0DEBUG, val, 0, 0);
+}
+#endif
+#endif
+
 static int __init exynos4_l2x0_cache_init(void)
 {
-	int ret;
+	u32 tag_latency = 0x110;
+	u32 data_latency = soc_is_exynos4210() ? 0x110 : 0x120;
+	u32 prefetch = (soc_is_exynos4412() &&
+			samsung_rev() >= EXYNOS4412_REV_1_0) ?
+			0x71000007 : 0x30000007;
+	u32 aux_val = 0x7C470001;
+	u32 aux_mask = 0xC200FFFF;
 
-	if (soc_is_exynos5250() || soc_is_exynos5440())
-		return 0;
+#ifdef CONFIG_ARM_TRUSTZONE
+	exynos_smc(SMC_CMD_L2X0SETUP1, tag_latency, data_latency, prefetch);
+	exynos_smc(SMC_CMD_L2X0SETUP2,
+		   L2X0_DYNAMIC_CLK_GATING_EN | L2X0_STNDBY_MODE_EN,
+		   aux_val, aux_mask);
+	exynos_smc(SMC_CMD_L2X0INVALL, 0, 0, 0);
+	exynos_smc(SMC_CMD_L2X0CTRL, 1, 0, 0);
+#else
+	__raw_writel(tag_latency, S5P_VA_L2CC + L2X0_TAG_LATENCY_CTRL);
+	__raw_writel(data_latency, S5P_VA_L2CC + L2X0_DATA_LATENCY_CTRL);
+	__raw_writel(prefetch, S5P_VA_L2CC + L2X0_PREFETCH_CTRL);
+	__raw_writel(L2X0_DYNAMIC_CLK_GATING_EN | L2X0_STNDBY_MODE_EN,
+		     S5P_VA_L2CC + L2X0_POWER_CTRL);
+#endif
 
-	ret = l2x0_of_init(L2_AUX_VAL, L2_AUX_MASK);
-	if (!ret) {
-		l2x0_regs_phys = virt_to_phys(&l2x0_saved_regs);
-		clean_dcache_area(&l2x0_regs_phys, sizeof(unsigned long));
-		return 0;
-	}
+	l2x0_init(S5P_VA_L2CC, aux_val, aux_mask);
 
-	if (!(__raw_readl(S5P_VA_L2CC + L2X0_CTRL) & 0x1)) {
-		l2x0_saved_regs.phy_base = EXYNOS4_PA_L2CC;
-		/* TAG, Data Latency Control: 2 cycles */
-		l2x0_saved_regs.tag_latency = 0x110;
-
-		if (soc_is_exynos4212() || soc_is_exynos4412())
-			l2x0_saved_regs.data_latency = 0x120;
-		else
-			l2x0_saved_regs.data_latency = 0x110;
-
-		l2x0_saved_regs.prefetch_ctrl = 0x30000007;
-		l2x0_saved_regs.pwr_ctrl =
-			(L2X0_DYNAMIC_CLK_GATING_EN | L2X0_STNDBY_MODE_EN);
-
-		l2x0_regs_phys = virt_to_phys(&l2x0_saved_regs);
-
-		__raw_writel(l2x0_saved_regs.tag_latency,
-				S5P_VA_L2CC + L2X0_TAG_LATENCY_CTRL);
-		__raw_writel(l2x0_saved_regs.data_latency,
-				S5P_VA_L2CC + L2X0_DATA_LATENCY_CTRL);
-
-		/* L2X0 Prefetch Control */
-		__raw_writel(l2x0_saved_regs.prefetch_ctrl,
-				S5P_VA_L2CC + L2X0_PREFETCH_CTRL);
-
-		/* L2X0 Power Control */
-		__raw_writel(l2x0_saved_regs.pwr_ctrl,
-				S5P_VA_L2CC + L2X0_POWER_CTRL);
-
-		clean_dcache_area(&l2x0_regs_phys, sizeof(unsigned long));
-		clean_dcache_area(&l2x0_saved_regs, sizeof(struct l2x0_regs));
-	}
-
-	l2x0_init(S5P_VA_L2CC, L2_AUX_VAL, L2_AUX_MASK);
+#ifdef CONFIG_ARM_TRUSTZONE
+#if defined(CONFIG_PL310_ERRATA_588369) || defined(CONFIG_PL310_ERRATA_727915)
+	outer_cache.set_debug = exynos4_l2x0_set_debug;
+#endif
+#endif
+	/* Enable the full line of zero */
+	enable_cache_foz();
 	return 0;
 }
+
+//early_initcall(exynos4_l2x0_cache_init);
 early_initcall(exynos4_l2x0_cache_init);
 #endif
 
-static int __init exynos_init(void)
+static void exynos4_sw_reset(void)
 {
-	printk(KERN_INFO "EXYNOS: Initializing architecture\n");
+	int count = 3;
+
+	while (count--) {
+		__raw_writel(0x1, EXYNOS_SWRESET);
+		mdelay(500);
+	}
+}
+
+static void __iomem *exynos4_pmu_init_zero[] = {
+	S5P_CMU_RESET_ISP_SYS,
+	S5P_CMU_SYSCLK_ISP_SYS,
+};
+
+static void exynos4_idle(void)
+{
+	if (!need_resched())
+		cpu_do_idle();
+
+	local_irq_enable();
+}
+
+int __init exynos4_init(void)
+{
+	unsigned int value;
+	unsigned int tmp;
+	unsigned int i;
+
+	printk(KERN_INFO "EXYNOS4: Initializing architecture\n");
+
+	/* set idle function */
+	arm_pm_idle = exynos4_idle;
+
+	/*
+	 * on exynos4x12, CMU reset system power register should to be set 0x0
+	 */
+	if (!soc_is_exynos4210()) {
+		for (i = 0; i < ARRAY_SIZE(exynos4_pmu_init_zero); i++)
+			__raw_writel(0x0, exynos4_pmu_init_zero[i]);
+	}
+
+	/* set sw_reset function */
+	s5p_reset_hook = exynos4_sw_reset;
+
+	/* Disable auto wakeup from power off mode */
+	for (i = 0; i < num_possible_cpus(); i++) {
+		tmp = __raw_readl(S5P_ARM_CORE_OPTION(i));
+		tmp &= ~S5P_CORE_OPTION_DIS;
+		__raw_writel(tmp, S5P_ARM_CORE_OPTION(i));
+	}
+
+	if (soc_is_exynos4212() || soc_is_exynos4412()) {
+		value = __raw_readl(S5P_AUTOMATIC_WDT_RESET_DISABLE);
+		value &= ~S5P_SYS_WDTRESET;
+		__raw_writel(value, S5P_AUTOMATIC_WDT_RESET_DISABLE);
+		value = __raw_readl(S5P_MASK_WDT_RESET_REQUEST);
+		value &= ~S5P_SYS_WDTRESET;
+		__raw_writel(value, S5P_MASK_WDT_RESET_REQUEST);
+	}
 
 	return device_register(&exynos4_dev);
 }
 
+#if 0
 /* uart registration process */
 
 static void __init exynos4_init_uarts(struct s3c2410_uartcfg *cfg, int no)
