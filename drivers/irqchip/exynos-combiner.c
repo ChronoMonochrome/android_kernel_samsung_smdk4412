@@ -18,6 +18,7 @@
 #include <asm/mach/irq.h>
 
 #include <plat/cpu.h>
+#include <mach/map.h>
 
 #include "irqchip.h"
 
@@ -31,10 +32,11 @@ struct combiner_chip_data {
 	unsigned int irq_offset;
 	unsigned int irq_mask;
 	void __iomem *base;
+	unsigned int parent_irq;
 };
 
 static struct irq_domain *combiner_irq_domain;
-static struct combiner_chip_data combiner_data[MAX_COMBINER_NR];
+static struct combiner_chip_data combiner_data[EXYNOS4_MAX_COMBINER_NR];
 
 static inline void __iomem *combiner_base(struct irq_data *data)
 {
@@ -46,14 +48,14 @@ static inline void __iomem *combiner_base(struct irq_data *data)
 
 static void combiner_mask_irq(struct irq_data *data)
 {
-	u32 mask = 1 << (data->hwirq % 32);
+	u32 mask = 1 << (data->irq % 32);
 
 	__raw_writel(mask, combiner_base(data) + COMBINER_ENABLE_CLEAR);
 }
 
 static void combiner_unmask_irq(struct irq_data *data)
 {
-	u32 mask = 1 << (data->hwirq % 32);
+	u32 mask = 1 << (data->irq % 32);
 
 	__raw_writel(mask, combiner_base(data) + COMBINER_ENABLE_SET);
 }
@@ -72,8 +74,10 @@ static void combiner_handle_cascade_irq(unsigned int irq, struct irq_desc *desc)
 	spin_unlock(&irq_controller_lock);
 	status &= chip_data->irq_mask;
 
-	if (status == 0)
+	if (status == 0) {
+		do_bad_IRQ(irq, desc);
 		goto out;
+	}
 
 	combiner_irq = __ffs(status);
 
@@ -87,13 +91,32 @@ static void combiner_handle_cascade_irq(unsigned int irq, struct irq_desc *desc)
 	chained_irq_exit(chip, desc);
 }
 
+#ifdef CONFIG_SMP
+static int combiner_set_affinity(struct irq_data *d,
+				 const struct cpumask *mask_val,
+				 bool force)
+{
+	struct combiner_chip_data *cd = irq_data_get_irq_chip_data(d);
+	struct irq_chip *chip = irq_get_chip(cd->parent_irq);
+	struct irq_data *pd = irq_get_irq_data(cd->parent_irq);
+
+	if (chip && chip->irq_set_affinity)
+		return chip->irq_set_affinity(pd, mask_val, force);
+	else
+		return -EINVAL;
+}
+#endif
+
 static struct irq_chip combiner_chip = {
 	.name		= "COMBINER",
 	.irq_mask	= combiner_mask_irq,
 	.irq_unmask	= combiner_unmask_irq,
+#ifdef CONFIG_SMP
+	.irq_set_affinity	= combiner_set_affinity,
+#endif
 };
 
-static void __init combiner_cascade_irq(unsigned int combiner_nr, unsigned int irq)
+void __init combiner_cascade_irq(unsigned int combiner_nr, unsigned int irq)
 {
 	unsigned int max_nr;
 
@@ -107,6 +130,8 @@ static void __init combiner_cascade_irq(unsigned int combiner_nr, unsigned int i
 	if (irq_set_handler_data(irq, &combiner_data[combiner_nr]) != 0)
 		BUG();
 	irq_set_chained_handler(irq, combiner_handle_cascade_irq);
+
+	combiner_data[combiner_nr].parent_irq = irq;
 }
 
 static void __init combiner_init_one(unsigned int combiner_nr,
