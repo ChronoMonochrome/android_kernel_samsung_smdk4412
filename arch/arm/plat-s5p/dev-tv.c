@@ -28,14 +28,14 @@ static struct resource s5p_hdmi_resources[] = {
 		.flags	= IORESOURCE_MEM,
 	},
 	[1] = {
-		.start	= IRQ_TVOUT_HPD,
-		.end	= IRQ_TVOUT_HPD,
+		.start	= EXYNOS4_IRQ_TVOUT_HPD,
+		.end	= EXYNOS4_IRQ_TVOUT_HPD,
 		.flags	= IORESOURCE_IRQ,
 		.name	= "external_irq"
 	},
 	[2] = {
-		.start	= IRQ_HDMI,
-		.end	= IRQ_HDMI,
+		.start	= EXYNOS4_IRQ_HDMI,
+		.end	= EXYNOS4_IRQ_HDMI,
 		.flags	= IORESOURCE_IRQ,
 		.name	= "internal_irq"
 	},
@@ -83,8 +83,8 @@ static struct resource s5p_mixer_resources[] = {
 		.name	= "vp"
 	},
 	[2] = {
-		.start	= IRQ_MIXER,
-		.end	= IRQ_MIXER,
+		.start	= EXYNOS4_IRQ_MIXER,
+		.end	= EXYNOS4_IRQ_MIXER,
 		.flags	= IORESOURCE_IRQ,
 		.name	= "irq"
 	}
@@ -98,8 +98,8 @@ static struct resource s5p_mixer_resources[] = {
 		.name	= "mxr"
 	},
 	[2] = {
-		.start	= IRQ_MIXER,
-		.end	= IRQ_MIXER,
+		.start	= EXYNOS4_IRQ_MIXER,
+		.end	= EXYNOS4_IRQ_MIXER,
 		.flags	= IORESOURCE_IRQ,
 		.name	= "irq"
 	}
@@ -127,8 +127,8 @@ static struct resource s5p_sdo_resources[] = {
 		.flags	= IORESOURCE_MEM,
 	},
 	[1] = {
-		.start	= IRQ_SDO,
-		.end	= IRQ_SDO,
+		.start	= EXYNOS4_IRQ_SDO,
+		.end	= EXYNOS4_IRQ_SDO,
 		.flags	= IORESOURCE_IRQ,
 	}
 };
@@ -154,8 +154,8 @@ static struct resource s5p_cec_resources[] = {
 		.flags  = IORESOURCE_MEM,
 	},
 	[1] = {
-		.start  = IRQ_CEC,
-		.end    = IRQ_CEC,
+		.start  = EXYNOS4_IRQ_CEC,
+		.end    = EXYNOS4_IRQ_CEC,
 		.flags  = IORESOURCE_IRQ,
 	},
 };

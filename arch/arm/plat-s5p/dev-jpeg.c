@@ -20,8 +20,8 @@ static struct resource s5p_jpeg_resource[] = {
 		.flags = IORESOURCE_MEM,
 	},
 	[1] = {
-		.start = IRQ_JPEG,
-		.end   = IRQ_JPEG,
+		.start = EXYNOS4_IRQ_JPEG,
+		.end   = EXYNOS4_IRQ_JPEG,
 		.flags = IORESOURCE_IRQ,
 	}
 };

@@ -17,25 +17,25 @@
 
 static struct resource s5p_pmu_resource[] = {
 	{
-		.start	= IRQ_PMU,
-		.end	= IRQ_PMU,
+		.start	= EXYNOS4_IRQ_PMU,
+		.end	= EXYNOS4_IRQ_PMU,
 		.flags	= IORESOURCE_IRQ,
 	},
 #if CONFIG_NR_CPUS > 1
 	{
-		.start	= IRQ_PMU_CPU1,
-		.end	= IRQ_PMU_CPU1,
+		.start	= EXYNOS4_IRQ_PMU_CPU1,
+		.end	= EXYNOS4_IRQ_PMU_CPU1,
 		.flags	= IORESOURCE_IRQ,
 	},
 #endif
 #if CONFIG_NR_CPUS > 2
 	{
-		.start	= IRQ_PMU_CPU2,
-		.end	= IRQ_PMU_CPU2,
+		.start	= EXYNOS4_IRQ_PMU_CPU2,
+		.end	= EXYNOS4_IRQ_PMU_CPU2,
 		.flags	= IORESOURCE_IRQ,
 	}, {
-		.start	= IRQ_PMU_CPU3,
-		.end	= IRQ_PMU_CPU3,
+		.start	= EXYNOS4_IRQ_PMU_CPU3,
+		.end	= EXYNOS4_IRQ_PMU_CPU3,
 		.flags	= IORESOURCE_IRQ,
 	},
 #endif

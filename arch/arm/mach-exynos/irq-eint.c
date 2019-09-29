@@ -29,10 +29,10 @@ static DEFINE_SPINLOCK(eint_lock);
 static unsigned int eint0_15_data[16];
 
 static unsigned int eint0_15_src_int[16] = {
-	IRQ_EINT0, IRQ_EINT1, IRQ_EINT2, IRQ_EINT3,
-	IRQ_EINT4, IRQ_EINT5, IRQ_EINT6, IRQ_EINT7,
-	IRQ_EINT8, IRQ_EINT9, IRQ_EINT10, IRQ_EINT11,
-	IRQ_EINT12, IRQ_EINT13, IRQ_EINT14, IRQ_EINT15,
+	EXYNOS4_IRQ_EINT0, EXYNOS4_IRQ_EINT1, EXYNOS4_IRQ_EINT2, EXYNOS4_IRQ_EINT3,
+	EXYNOS4_IRQ_EINT4, EXYNOS4_IRQ_EINT5, EXYNOS4_IRQ_EINT6, EXYNOS4_IRQ_EINT7,
+	EXYNOS4_IRQ_EINT8, EXYNOS4_IRQ_EINT9, EXYNOS4_IRQ_EINT10, EXYNOS4_IRQ_EINT11,
+	EXYNOS4_IRQ_EINT12, EXYNOS4_IRQ_EINT13, EXYNOS4_IRQ_EINT14, EXYNOS4_IRQ_EINT15,
 };
 
 static inline void exynos_irq_eint_mask(struct irq_data *data)
@@ -218,7 +218,7 @@ int __init exynos_init_irq_eint(void)
 		set_irq_flags(IRQ_EINT(irq), IRQF_VALID);
 	}
 
-	irq_set_chained_handler(IRQ_EINT16_31, exynos_irq_demux_eint16_31);
+	irq_set_chained_handler(EXYNOS4_IRQ_EINT16_31, exynos_irq_demux_eint16_31);
 
 	for (irq = 0 ; irq <= 15 ; irq++) {
 		eint0_15_data[irq] = IRQ_EINT(irq);

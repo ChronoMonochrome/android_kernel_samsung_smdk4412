@@ -26,8 +26,8 @@ static struct resource s3c_tsi_resource[] = {
 		.flags = IORESOURCE_MEM,
 	},
 	[1] = {
-		.start = IRQ_TSI,
-		.end   = IRQ_TSI,
+		.start = EXYNOS4_IRQ_TSI,
+		.end   = EXYNOS4_IRQ_TSI,
 		.flags = IORESOURCE_IRQ,
 	}
 };

@@ -28,14 +28,14 @@ static struct resource s3c_adc_resource[] = {
 	},
 	[1] = {
 #if defined(CONFIG_TOUCHSCREEN_S3C2410)
-		.start = IRQ_TC,
-		.end   = IRQ_TC,
+		.start = EXYNOS4_IRQ_TC,
+		.end   = EXYNOS4_IRQ_TC,
 #endif
 		.flags = IORESOURCE_IRQ,
 	},
 	[2] = {
-		.start = IRQ_ADC,
-		.end   = IRQ_ADC,
+		.start = EXYNOS4_IRQ_ADC,
+		.end   = EXYNOS4_IRQ_ADC,
 		.flags = IORESOURCE_IRQ,
 	},
 };

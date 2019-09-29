@@ -1158,8 +1158,8 @@ int boost_busfreq(struct device *dev, int enable)
 // only for T0 USB HOST
 int clear_cpu0_from_usbhost_irq(int enable)
 {
-	unsigned int irq = IRQ_USB_HOST;
-//	unsigned int irq = IRQ_USB_HSOTG;
+	unsigned int irq = EXYNOS4_IRQ_USB_HOST;
+//	unsigned int irq = EXYNOS4_IRQ_USB_HSOTG;
 
 	cpumask_var_t new_value;
 	int err = 0;

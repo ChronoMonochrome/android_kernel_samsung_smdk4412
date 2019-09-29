@@ -1048,10 +1048,10 @@ int samsung_gpiolib_to_irq(struct gpio_chip *chip, unsigned int offset)
 static int s3c24xx_gpiolib_fbank_to_irq(struct gpio_chip *chip, unsigned offset)
 {
 	if (offset < 4)
-		return IRQ_EINT0 + offset;
+		return EXYNOS4_IRQ_EINT0 + offset;
 
 	if (offset < 8)
-		return IRQ_EINT4 + offset - 4;
+		return EXYNOS4_IRQ_EINT4 + offset - 4;
 
 	return -EINVAL;
 }
@@ -1118,7 +1118,7 @@ struct samsung_gpio_chip s3c24xx_gpios[] = {
 			.to_irq	= s3c24xx_gpiolib_fbank_to_irq,
 		},
 	}, {
-		.irq_base = IRQ_EINT8,
+		.irq_base = EXYNOS4_IRQ_EINT8,
 		.chip	= {
 			.base	= S3C2410_GPG(0),
 			.owner	= THIS_MODULE,
@@ -2482,8 +2482,8 @@ static __init int samsung_gpiolib_init(void)
 		samsung_gpiolib_add_4bit_chips(exynos4_gpios_3, nr_chips, S5P_VA_GPIO3);
 
 #if defined(CONFIG_CPU_EXYNOS4210) && defined(CONFIG_S5P_GPIO_INT)
-		s5p_register_gpioint_bank(IRQ_GPIO_XA, 0, IRQ_GPIO1_NR_GROUPS);
-		s5p_register_gpioint_bank(IRQ_GPIO_XB, IRQ_GPIO1_NR_GROUPS, IRQ_GPIO2_NR_GROUPS);
+		s5p_register_gpioint_bank(EXYNOS4_IRQ_GPIO_XA, 0, EXYNOS4_IRQ_GPIO1_NR_GROUPS);
+		s5p_register_gpioint_bank(EXYNOS4_IRQ_GPIO_XB, EXYNOS4_IRQ_GPIO1_NR_GROUPS, EXYNOS4_IRQ_GPIO2_NR_GROUPS);
 #endif
 	} else {
 		WARN(1, "Unknown SoC in gpio-samsung, no GPIOs added\n");

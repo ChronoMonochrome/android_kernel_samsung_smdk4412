@@ -22,7 +22,7 @@ static void exynos_sw_reset(void)
 	int count = 3;
 
 	while (count--) {
-		__raw_writel(0x1, S5P_SWRESET);
+		__raw_writel(0x1, EXYNOS_SWRESET);
 		mdelay(500);
 	}
 }

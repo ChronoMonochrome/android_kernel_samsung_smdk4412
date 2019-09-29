@@ -23,8 +23,8 @@ static struct resource exynos_flite0_resource[] = {
 		.flags	= IORESOURCE_MEM,
 	},
 	[1] = {
-		.start	= IRQ_FIMC_LITE0,
-		.end	= IRQ_FIMC_LITE0,
+		.start	= EXYNOS4_IRQ_FIMC_LITE0,
+		.end	= EXYNOS4_IRQ_FIMC_LITE0,
 		.flags	= IORESOURCE_IRQ,
 	},
 };
@@ -43,8 +43,8 @@ static struct resource exynos_flite1_resource[] = {
 		.flags	= IORESOURCE_MEM,
 	},
 	[1] = {
-		.start	= IRQ_FIMC_LITE1,
-		.end	= IRQ_FIMC_LITE1,
+		.start	= EXYNOS4_IRQ_FIMC_LITE1,
+		.end	= EXYNOS4_IRQ_FIMC_LITE1,
 		.flags	= IORESOURCE_IRQ,
 	},
 };

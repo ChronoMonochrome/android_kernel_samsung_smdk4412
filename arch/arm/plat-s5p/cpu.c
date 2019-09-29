@@ -75,7 +75,7 @@ static struct cpu_table cpu_ids[] __initdata = {
 		.name		= name_s5pv210,
 	}, {
 		.idcode		= EXYNOS4210_CPU_ID,
-		.idmask		= EXYNOS_CPU_MASK,
+		.idmask		= EXYNOS4_CPU_MASK,
 		.map_io		= exynos4_map_io,
 		.init_clocks	= exynos4_init_clocks,
 		.init_uarts	= exynos4_init_uarts,
@@ -83,7 +83,7 @@ static struct cpu_table cpu_ids[] __initdata = {
 		.name		= name_exynos4210,
 	}, {
 		.idcode		= EXYNOS4212_CPU_ID,
-		.idmask		= EXYNOS_CPU_MASK,
+		.idmask		= EXYNOS4_CPU_MASK,
 		.map_io		= exynos4_map_io,
 		.init_clocks	= exynos4_init_clocks,
 		.init_uarts	= exynos4_init_uarts,
@@ -91,7 +91,7 @@ static struct cpu_table cpu_ids[] __initdata = {
 		.name		= name_exynos4212,
 	}, {
 		.idcode		= EXYNOS4412_CPU_ID,
-		.idmask		= EXYNOS_CPU_MASK,
+		.idmask		= EXYNOS4_CPU_MASK,
 		.map_io		= exynos4_map_io,
 		.init_clocks	= exynos4_init_clocks,
 		.init_uarts	= exynos4_init_uarts,
@@ -100,15 +100,15 @@ static struct cpu_table cpu_ids[] __initdata = {
 
 	}, {
 		.idcode         = EXYNOS5210_CPU_ID,
-		.idmask         = EXYNOS_CPU_MASK,
+		.idmask         = EXYNOS4_CPU_MASK,
 		.map_io         = exynos5_map_io,
 		.init_clocks    = exynos5_init_clocks,
 		.init_uarts     = exynos5_init_uarts,
 		.init           = exynos5_init,
 		.name           = name_exynos5210,
 	}, {
-		.idcode         = EXYNOS5250_CPU_ID,
-		.idmask         = EXYNOS_CPU_MASK,
+		.idcode         = EXYNOS5250_SOC_ID,
+		.idmask         = EXYNOS4_CPU_MASK,
 		.map_io         = exynos5_map_io,
 		.init_clocks    = exynos5_init_clocks,
 		.init_uarts     = exynos5_init_uarts,

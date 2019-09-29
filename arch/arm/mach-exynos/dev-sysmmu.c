@@ -86,7 +86,7 @@ SYSMMU_PLATFORM_DEVICE(2d,	15);
 
 #define DEFINE_SYSMMU_RESOURCE(core, mem, irq)				\
 	DEFINE_RES_MEM_NAMED(core##_PA_SYSMMU_##mem, SZ_4K, #mem),	\
-	DEFINE_RES_IRQ_NAMED(core##_IRQ_SYSMMU_##irq##_0, #mem)
+	DEFINE_RES_IRQ_NAMED(core##_EXYNOS4_IRQ_SYSMMU_##irq##_0, #mem)
 
 #define SYSMMU_RESOURCE_DEFINE(core, ipname, mem, irq)			\
 	SYSMMU_RESOURCE(core, ipname) {					\

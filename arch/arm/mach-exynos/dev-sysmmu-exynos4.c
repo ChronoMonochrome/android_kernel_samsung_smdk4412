@@ -32,8 +32,8 @@ static struct resource sysmmu_resource_##ipname[] =\
 		.end	= EXYNOS_PA_SYSMMU(base) + SZ_4K - 1,\
 		.flags	= IORESOURCE_MEM,\
 	}, {\
-		.start	= IRQ_SYSMMU_##irq##_0,\
-		.end	= IRQ_SYSMMU_##irq##_0,\
+		.start	= EXYNOS4_IRQ_SYSMMU_##irq##_0,\
+		.end	= EXYNOS4_IRQ_SYSMMU_##irq##_0,\
 		.flags	= IORESOURCE_IRQ,\
 	},\
 }

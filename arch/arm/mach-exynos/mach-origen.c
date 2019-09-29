@@ -418,7 +418,7 @@ struct max8997_platform_data __initdata origen_max8997_pdata = {
 	.buck1_gpiodvs	= false,
 	.buck2_gpiodvs	= false,
 	.buck5_gpiodvs	= false,
-	.irq_base	= IRQ_GPIO_END + 1,
+	.irq_base	= EXYNOS4_IRQ_GPIO_END + 1,
 
 	.ignore_gpiodvs_side_effect = true,
 	.buck125_default_idx = 0x0,

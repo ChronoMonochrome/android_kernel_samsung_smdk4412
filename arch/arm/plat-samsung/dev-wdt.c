@@ -25,8 +25,8 @@ static struct resource s3c_wdt_resource[] = {
 		.flags	= IORESOURCE_MEM,
 	},
 	[1] = {
-		.start	= IRQ_WDT,
-		.end	= IRQ_WDT,
+		.start	= EXYNOS4_IRQ_WDT,
+		.end	= EXYNOS4_IRQ_WDT,
 		.flags	= IORESOURCE_IRQ,
 	}
 };

@@ -450,8 +450,8 @@ static struct resource cdma_modem_res[] = {
 	},
 	[1] = {
 		.name = "dpram_irq",
-		.start = IRQ_MODEM_IF,
-		.end = IRQ_MODEM_IF,
+		.start = EXYNOS4_IRQ_MODEM_IF,
+		.end = EXYNOS4_IRQ_MODEM_IF,
 		.flags = IORESOURCE_IRQ,
 	},
 };

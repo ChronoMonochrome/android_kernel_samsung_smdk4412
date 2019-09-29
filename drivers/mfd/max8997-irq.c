@@ -138,17 +138,17 @@ static struct max8997_irq_data max8997_irqs[] = {
 		.reg = 4,
 		.mask = MAX8997_IRQ_WTSR_MASK,
 	},
-	[MAX8997_IRQ_ADC] = {
+	[MAX8997_EXYNOS4_IRQ_ADC] = {
 		.reg = 5,
-		.mask = MAX8997_IRQ_ADC_MASK,
+		.mask = MAX8997_EXYNOS4_IRQ_ADC_MASK,
 	},
-	[MAX8997_IRQ_ADCLOW] = {
+	[MAX8997_EXYNOS4_IRQ_ADCLOW] = {
 		.reg = 5,
-		.mask = MAX8997_IRQ_ADCLOW_MASK,
+		.mask = MAX8997_EXYNOS4_IRQ_ADCLOW_MASK,
 	},
-	[MAX8997_IRQ_ADCERR] = {
+	[MAX8997_EXYNOS4_IRQ_ADCERR] = {
 		.reg = 5,
-		.mask = MAX8997_IRQ_ADCERR_MASK,
+		.mask = MAX8997_EXYNOS4_IRQ_ADCERR_MASK,
 	},
 	[MAX8997_IRQ_CHGTYP] = {
 		.reg = 6,

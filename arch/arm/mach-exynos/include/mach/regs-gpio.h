@@ -16,6 +16,14 @@
 #include <mach/map.h>
 #include <mach/irqs.h>
 
+#define EINT_REG_NR(x)			(EINT_OFFSET(x) >> 3)
+#define EINT_CON(b, x)			(b + 0xE00 + (EINT_REG_NR(x) * 4))
+#define EINT_FLTCON(b, x)		(b + 0xE80 + (EINT_REG_NR(x) * 4))
+#define EINT_MASK(b, x)			(b + 0xF00 + (EINT_REG_NR(x) * 4))
+#define EINT_PEND(b, x)			(b + 0xF40 + (EINT_REG_NR(x) * 4))
+
+#define EINT_OFFSET_BIT(x)		(1 << (EINT_OFFSET(x) & 0x7))
+
 #if defined(CONFIG_ARCH_EXYNOS4)
 #define EINT_BASE_ADD			S5P_VA_GPIO2
 #define EINT_GPIO_0(x)			EXYNOS4_GPX0(x)

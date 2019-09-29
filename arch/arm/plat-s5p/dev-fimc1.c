@@ -24,8 +24,8 @@ static struct resource s5p_fimc1_resource[] = {
 		.flags	= IORESOURCE_MEM,
 	},
 	[1] = {
-		.start	= IRQ_FIMC1,
-		.end	= IRQ_FIMC1,
+		.start	= EXYNOS4_IRQ_FIMC1,
+		.end	= EXYNOS4_IRQ_FIMC1,
 		.flags	= IORESOURCE_IRQ,
 	},
 };

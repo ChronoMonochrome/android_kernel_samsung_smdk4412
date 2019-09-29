@@ -71,7 +71,7 @@ Melfas touchkey register
 #define _3_TOUCH_SCL_28V GPIO_3_TOUCH_SCL
 #define _3_GPIO_TOUCH_EN	GPIO_TOUCH_EN
 #define _3_GPIO_TOUCH_INT	GPIO_3_TOUCH_INT
-//#define IRQ_TOUCH_INT S5P_GPIOINT_BASE+22
+//#define IRQ_TOUCH_INT EXYNOS4_S5P_GPIOINT_BASE+22
 #define IRQ_TOUCH_INT gpio_to_irq(GPIO_3_TOUCH_INT)
 
 static unsigned int HWREV=7;

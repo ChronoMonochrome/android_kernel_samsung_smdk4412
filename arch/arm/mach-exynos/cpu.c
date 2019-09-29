@@ -146,7 +146,7 @@ static void exynos_idle(void)
 
 static void exynos4_sw_reset(void)
 {
-	__raw_writel(0x1, S5P_SWRESET);
+	__raw_writel(0x1, EXYNOS_SWRESET);
 }
 
 /*
@@ -225,7 +225,7 @@ void __init exynos4_init_irq(void)
 	gic_arch_extn.irq_unmask = exynos4_gic_irq_fix_base;
 	gic_arch_extn.irq_mask = exynos4_gic_irq_fix_base;
 
-	for (irq = 0; irq < MAX_COMBINER_NR; irq++) {
+	for (irq = 0; irq < EXYNOS4_MAX_COMBINER_NR; irq++) {
 
 		combiner_init(irq, (void __iomem *)S5P_VA_COMBINER(irq),
 				COMBINER_IRQ(irq, 0));

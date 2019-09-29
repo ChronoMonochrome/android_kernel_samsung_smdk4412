@@ -25,8 +25,8 @@ static struct resource samsung_keypad_resources[] = {
 		.flags	= IORESOURCE_MEM,
 	},
 	[1] = {
-		.start	= IRQ_KEYPAD,
-		.end	= IRQ_KEYPAD,
+		.start	= EXYNOS4_IRQ_KEYPAD,
+		.end	= EXYNOS4_IRQ_KEYPAD,
 		.flags	= IORESOURCE_IRQ,
 	},
 };

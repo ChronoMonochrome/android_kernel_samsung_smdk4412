@@ -40,5 +40,5 @@ void __init s5pv210_common_init_uarts(struct s3c2410_uartcfg *cfg, int no)
 		}
 	}
 
-	s3c24xx_init_uartdevs("s5pv210-uart", s5p_uart_resources, cfg, no);
+	s3c24xx_init_uartdevs("s5pv210-uart", exynos4_uart_resources, cfg, no);
 }

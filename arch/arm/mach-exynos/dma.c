@@ -45,8 +45,8 @@ static struct resource exynos_mdma_resource[] = {
 		.flags = IORESOURCE_MEM,
 	},
 	[1] = {
-		.start	= IRQ_MDMA1,
-		.end	= IRQ_MDMA1,
+		.start	= EXYNOS4_IRQ_MDMA1,
+		.end	= EXYNOS4_IRQ_MDMA1,
 		.flags	= IORESOURCE_IRQ,
 	},
 };
@@ -117,8 +117,8 @@ static struct resource exynos_pdma0_resource[] = {
 		.flags	= IORESOURCE_MEM,
 	},
 	[1] = {
-		.start	= IRQ_PDMA0,
-		.end	= IRQ_PDMA0,
+		.start	= EXYNOS4_IRQ_PDMA0,
+		.end	= EXYNOS4_IRQ_PDMA0,
 		.flags	= IORESOURCE_IRQ,
 	},
 };
@@ -252,8 +252,8 @@ static struct resource exynos_pdma1_resource[] = {
 		.flags	= IORESOURCE_MEM,
 	},
 	[1] = {
-		.start	= IRQ_PDMA1,
-		.end	= IRQ_PDMA1,
+		.start	= EXYNOS4_IRQ_PDMA1,
+		.end	= EXYNOS4_IRQ_PDMA1,
 		.flags	= IORESOURCE_IRQ,
 	},
 };

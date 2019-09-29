@@ -287,7 +287,7 @@ void interrupt_set_cpucore(int set)
 	{
 #if defined(CONFIG_MACH_UNIVERSAL5422)
 		irq_set_affinity(EXYNOS5_IRQ_HSMMC1, cpumask_of(DPC_CPUCORE));
-		irq_set_affinity(EXYNOS_IRQ_EINT16_31, cpumask_of(DPC_CPUCORE));
+		irq_set_affinity(EXYNOS_EXYNOS4_IRQ_EINT16_31, cpumask_of(DPC_CPUCORE));
 #elif defined(CONFIG_MACH_UNIVERSAL5430)
 		irq_set_affinity(IRQ_SPI(226), cpumask_of(DPC_CPUCORE));
 		irq_set_affinity(IRQ_SPI(2), cpumask_of(DPC_CPUCORE));
@@ -295,7 +295,7 @@ void interrupt_set_cpucore(int set)
 	} else {
 #if defined(CONFIG_MACH_UNIVERSAL5422)
 		irq_set_affinity(EXYNOS5_IRQ_HSMMC1, cpumask_of(PRIMARY_CPUCORE));
-		irq_set_affinity(EXYNOS_IRQ_EINT16_31, cpumask_of(PRIMARY_CPUCORE));
+		irq_set_affinity(EXYNOS_EXYNOS4_IRQ_EINT16_31, cpumask_of(PRIMARY_CPUCORE));
 #elif defined(CONFIG_MACH_UNIVERSAL5430)
 		irq_set_affinity(IRQ_SPI(226), cpumask_of(PRIMARY_CPUCORE));
 		irq_set_affinity(IRQ_SPI(2), cpumask_of(PRIMARY_CPUCORE));

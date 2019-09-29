@@ -2506,7 +2506,7 @@ static struct s5m_regulator_data pegasus_regulators[] = {
 
 static struct s5m_platform_data exynos4_s5m8767_pdata = {
 	.device_type		= S5M8767X,
-	.irq_base		= IRQ_BOARD_START,
+	.irq_base		= EXYNOS4_IRQ_BOARD_START,
 	.num_regulators		= ARRAY_SIZE(pegasus_regulators),
 	.regulators		= pegasus_regulators,
 	.cfg_pmic_irq		= s5m_cfg_irq,

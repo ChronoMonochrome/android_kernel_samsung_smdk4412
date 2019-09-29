@@ -291,11 +291,11 @@ extern int s3c_gpio_slp_setpull_updown(unsigned int pin, unsigned int config);
 
 #define GPIO_FM_RST	EXYNOS4_GPC1(0)
 
-#define IRQ_IPC_SRDY		IRQ_EINT8
-#define IRQ_PHONE_ACTIVE	IRQ_EINT14
-#define IRQ_IPC_SRDY		IRQ_EINT8
-#define IRQ_IPC_SUB_SRDY	IRQ_EINT9
-#define IRQ_CP_DUMP_INT	IRQ_EINT10
+#define IRQ_IPC_SRDY		EXYNOS4_IRQ_EINT8
+#define IRQ_PHONE_ACTIVE	EXYNOS4_IRQ_EINT14
+#define IRQ_IPC_SRDY		EXYNOS4_IRQ_EINT8
+#define IRQ_IPC_SUB_SRDY	EXYNOS4_IRQ_EINT9
+#define IRQ_CP_DUMP_INT	EXYNOS4_IRQ_EINT10
 #endif
 
 #define GPIO_OK_KEY_ANDROID	EXYNOS4_GPX0(1)		/*system_rev == 11*/

@@ -32,8 +32,8 @@ static struct resource s5p_i2c_resource[] = {
 		.flags = IORESOURCE_MEM,
 	},
 	[1] = {
-		.start = IRQ_IIC_HDMIPHY,
-		.end   = IRQ_IIC_HDMIPHY,
+		.start = EXYNOS4_IRQ_IIC_HDMIPHY,
+		.end   = EXYNOS4_IRQ_IIC_HDMIPHY,
 		.flags = IORESOURCE_IRQ,
 	},
 };

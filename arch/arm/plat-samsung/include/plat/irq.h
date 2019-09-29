@@ -19,7 +19,7 @@
 #define irqdbf(x...)
 #define irqdbf2(x...)
 
-#define EXTINT_OFF (IRQ_EINT4 - 4)
+#define EXTINT_OFF (EXYNOS4_IRQ_EINT4 - 4)
 
 /* these are exported for arch/arm/mach-* usage */
 extern struct irq_chip s3c_irq_level_chip;

@@ -465,8 +465,8 @@ static struct resource exynos5_ahci_resource[] = {
 		.flags	= IORESOURCE_MEM,
 	},
 	[1] = {
-		.start	= IRQ_SATA,
-		.end	= IRQ_SATA,
+		.start	= EXYNOS4_IRQ_SATA,
+		.end	= EXYNOS4_IRQ_SATA,
 		.flags	= IORESOURCE_IRQ,
 	},
 };

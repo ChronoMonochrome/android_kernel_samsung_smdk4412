@@ -182,7 +182,7 @@ static struct wm8994_pdata wm1811_pdata = {
 		       WM8994_GP_FN_PIN_SPECIFIC, /* BCLK3 */
 	},
 
-	.irq_base = IRQ_BOARD_CODEC_START,
+	.irq_base = EXYNOS4_IRQ_BOARD_CODEC_START,
 
 	/* The enable is shared but assign it to LDO1 for software */
 	.ldo = {

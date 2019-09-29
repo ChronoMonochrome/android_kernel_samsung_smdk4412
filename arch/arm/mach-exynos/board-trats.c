@@ -1698,8 +1698,8 @@ static struct melfas_mms_platform_data melfas_mms_ts_pdata_rotate = {
 #ifdef CONFIG_DRM_EXYNOS
 static struct resource exynos_drm_resource[] = {
 	[0] = {
-		.start = IRQ_FIMD0_VSYNC,
-		.end   = IRQ_FIMD0_VSYNC,
+		.start = EXYNOS4_IRQ_FIMD0_VSYNC,
+		.end   = EXYNOS4_IRQ_FIMD0_VSYNC,
 		.flags = IORESOURCE_IRQ,
 	},
 };
@@ -1749,8 +1749,8 @@ static struct resource exynos4_fimd_lite_resource[] = {
 		.flags	= IORESOURCE_MEM,
 	},
 	[1] = {
-		.start	= IRQ_LCD_LITE0,
-		.end	= IRQ_LCD_LITE0,
+		.start	= EXYNOS4_IRQ_LCD_LITE0,
+		.end	= EXYNOS4_IRQ_LCD_LITE0,
 		.flags	= IORESOURCE_IRQ,
 	},
 };
@@ -3020,7 +3020,7 @@ static void max8997_register_buck1dvs_funcs(struct max8997_buck1_dvs_funcs *ptr)
 static struct max8997_platform_data exynos4_max8997_info = {
 	.num_regulators = ARRAY_SIZE(max8997_regulators),
 	.regulators	= &max8997_regulators[0],
-	.irq_base	= IRQ_BOARD_START,
+	.irq_base	= EXYNOS4_IRQ_BOARD_START,
 	.wakeup		= 1,
 	.buck1_gpiodvs	= false,
 	.buck1_max_vol	= 1350000,

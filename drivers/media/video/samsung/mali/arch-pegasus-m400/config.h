@@ -44,34 +44,34 @@ static _mali_osk_resource_t arch_configuration [] =
 		.type = MALI400GP,
 		.description = "Mali-400 GP",
 		.base = GP_ADDR,
-		.irq = IRQ_GP_3D,
+		.irq = EXYNOS4_IRQ_GP_3D,
 		.mmu_id = 1
 	},
 	{
 		.type = MALI400PP,
 		.base = PP0_ADDR,
-		.irq = IRQ_PP0_3D,
+		.irq = EXYNOS4_IRQ_PP0_3D,
 		.description = "Mali-400 PP 0",
 		.mmu_id = 2
 	},
 	{
 		.type = MALI400PP,
 		.base = PP1_ADDR,
-		.irq = IRQ_PP1_3D,
+		.irq = EXYNOS4_IRQ_PP1_3D,
 		.description = "Mali-400 PP 1",
 		.mmu_id = 3
 	},
 	{
 		.type = MALI400PP,
 		.base = PP2_ADDR,
-		.irq = IRQ_PP2_3D,
+		.irq = EXYNOS4_IRQ_PP2_3D,
 		.description = "Mali-400 PP 2",
 		.mmu_id = 4
 	},
 	{
 		.type = MALI400PP,
 		.base = PP3_ADDR,
-		.irq = IRQ_PP3_3D,
+		.irq = EXYNOS4_IRQ_PP3_3D,
 		.description = "Mali-400 PP 3",
 		.mmu_id = 5
 	},
@@ -79,35 +79,35 @@ static _mali_osk_resource_t arch_configuration [] =
 	{
 		.type = MMU,
 		.base = GP_MMU_ADDR,
-		.irq = IRQ_GPMMU_3D,
+		.irq = EXYNOS4_IRQ_GPMMU_3D,
 		.description = "Mali-400 MMU for GP",
 		.mmu_id = 1
 	},
 	{
 		.type = MMU,
 		.base = PP0_MMU_ADDR,
-		.irq = IRQ_PPMMU0_3D,
+		.irq = EXYNOS4_IRQ_PPMMU0_3D,
 		.description = "Mali-400 MMU for PP 0",
 		.mmu_id = 2
 	},
 	{
 		.type = MMU,
 		.base = PP1_MMU_ADDR,
-		.irq = IRQ_PPMMU1_3D,
+		.irq = EXYNOS4_IRQ_PPMMU1_3D,
 		.description = "Mali-400 MMU for PP 1",
 		.mmu_id = 3
 	},
 	{
 		.type = MMU,
 		.base = PP2_MMU_ADDR,
-		.irq = IRQ_PPMMU2_3D,
+		.irq = EXYNOS4_IRQ_PPMMU2_3D,
 		.description = "Mali-400 MMU for PP 2",
 		.mmu_id = 4
 	},
 	{
 		.type = MMU,
 		.base = PP3_MMU_ADDR,
-		.irq = IRQ_PPMMU3_3D,
+		.irq = EXYNOS4_IRQ_PPMMU3_3D,
 		.description = "Mali-400 MMU for PP 3",
 		.mmu_id = 5
 	},

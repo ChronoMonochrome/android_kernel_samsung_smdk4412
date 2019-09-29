@@ -27,8 +27,8 @@ static struct resource s5p_tmu_resource[] = {
 		.flags	= IORESOURCE_MEM,
 	},
 	[1] = {
-		.start	= IRQ_TMU,
-		.end	= IRQ_TMU,
+		.start	= EXYNOS4_IRQ_TMU,
+		.end	= EXYNOS4_IRQ_TMU,
 		.flags	= IORESOURCE_IRQ,
 	}
 };

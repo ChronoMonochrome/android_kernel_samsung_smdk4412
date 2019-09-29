@@ -31,8 +31,8 @@ static struct resource s5p_onenand_resources[] = {
 		.flags	= IORESOURCE_MEM,
 	},
 	[2] = {
-		.start	= IRQ_ONENAND_AUDI,
-		.end	= IRQ_ONENAND_AUDI,
+		.start	= EXYNOS4_IRQ_ONENAND_AUDI,
+		.end	= EXYNOS4_IRQ_ONENAND_AUDI,
 		.flags	= IORESOURCE_IRQ,
 	},
 };

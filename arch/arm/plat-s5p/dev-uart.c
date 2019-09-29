@@ -169,7 +169,7 @@ static struct resource s5p_uart5_resource[] = {
 #endif
 };
 
-struct s3c24xx_uart_resources s5p_uart_resources[] __initdata = {
+struct s3c24xx_uart_resources exynos4_uart_resources[] __initdata = {
 	[0] = {
 		.resources	= s5p_uart0_resource,
 		.nr_resources	= ARRAY_SIZE(s5p_uart0_resource),

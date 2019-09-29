@@ -492,7 +492,7 @@ static bool is_muic_default_uart_path_cp(void)
 }
 
 struct max77693_platform_data exynos4_max77693_info = {
-	.irq_base	= IRQ_BOARD_IFIC_START,
+	.irq_base	= EXYNOS4_IRQ_BOARD_IFIC_START,
 	.irq_gpio	= GPIO_IF_PMIC_IRQ,
 	.wakeup		= 1,
 	.muic = &max77693_muic,

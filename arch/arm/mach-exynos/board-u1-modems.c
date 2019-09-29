@@ -124,14 +124,14 @@ static struct modem_io_t umts_io_devices[] = {
 static struct resource umts_modem_res[] = {
 	[0] = {
 		.name = "umts_phone_active",
-		.start = IRQ_EINT14,	/* GPIO_PHONE_ACTIVE */
-		.end = IRQ_EINT14,	/* GPIO_PHONE_ACTIVE */
+		.start = EXYNOS4_IRQ_EINT14,	/* GPIO_PHONE_ACTIVE */
+		.end = EXYNOS4_IRQ_EINT14,	/* GPIO_PHONE_ACTIVE */
 		.flags = IORESOURCE_IRQ,
 	},
 	[1] = {
 		.name = "link_pm_hostwake",
-		.start = IRQ_EINT9,	/* GPIO_IPC_HOST_WAKEUP */
-		.end = IRQ_EINT9,		/* GPIO_IPC_HOST_WAKEUP */
+		.start = EXYNOS4_IRQ_EINT9,	/* GPIO_IPC_HOST_WAKEUP */
+		.end = EXYNOS4_IRQ_EINT9,		/* GPIO_IPC_HOST_WAKEUP */
 		.flags = IORESOURCE_IRQ,
 	},
 };

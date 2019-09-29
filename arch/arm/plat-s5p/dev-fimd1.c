@@ -35,18 +35,18 @@ static struct resource s5p_fimd1_resource[] = {
 		.flags  = IORESOURCE_MEM,
 	},
 	[1] = {
-		.start  = IRQ_FIMD1_VSYNC,
-		.end    = IRQ_FIMD1_VSYNC,
+		.start  = EXYNOS4_IRQ_FIMD1_VSYNC,
+		.end    = EXYNOS4_IRQ_FIMD1_VSYNC,
 		.flags  = IORESOURCE_IRQ,
 	},
 	[2] = {
-		.start  = IRQ_FIMD1_FIFO,
-		.end    = IRQ_FIMD1_FIFO,
+		.start  = EXYNOS4_IRQ_FIMD1_FIFO,
+		.end    = EXYNOS4_IRQ_FIMD1_FIFO,
 		.flags  = IORESOURCE_IRQ,
 	},
 	[3] = {
-		.start  = IRQ_FIMD1_SYSTEM,
-		.end    = IRQ_FIMD1_SYSTEM,
+		.start  = EXYNOS4_IRQ_FIMD1_SYSTEM,
+		.end    = EXYNOS4_IRQ_FIMD1_SYSTEM,
 		.flags  = IORESOURCE_IRQ,
 	},
 };

@@ -637,15 +637,15 @@ static __init int exynos5_gpiolib_init(void)
 	samsung_gpiolib_add_4bit_chips_no_pm(exynos5_gpio_no_pm_4bit, nr_chips);
 
 #if defined(CONFIG_CPU_EXYNOS5250) && defined(CONFIG_S5P_GPIO_INT)
-	s5p_register_gpioint_bank(IRQ_GPIO_XA, 0, IRQ_GPIO1_NR_GROUPS);
-	s5p_register_gpioint_bank(IRQ_GPIO_XB,
-				  IRQ_GPIO1_NR_GROUPS,
-				  IRQ_GPIO2_NR_GROUPS);
-	s5p_register_gpioint_bank(IRQ_GPIO_C2C,
-				  IRQ_GPIO1_NR_GROUPS + IRQ_GPIO2_NR_GROUPS,
+	s5p_register_gpioint_bank(EXYNOS4_IRQ_GPIO_XA, 0, EXYNOS4_IRQ_GPIO1_NR_GROUPS);
+	s5p_register_gpioint_bank(EXYNOS4_IRQ_GPIO_XB,
+				  EXYNOS4_IRQ_GPIO1_NR_GROUPS,
+				  EXYNOS4_IRQ_GPIO2_NR_GROUPS);
+	s5p_register_gpioint_bank(EXYNOS4_IRQ_GPIO_C2C,
+				  EXYNOS4_IRQ_GPIO1_NR_GROUPS + EXYNOS4_IRQ_GPIO2_NR_GROUPS,
 				  IRQ_GPIO3_NR_GROUPS);
 	s5p_register_gpioint_bank(IRQ_GPIO,
-				  IRQ_GPIO1_NR_GROUPS + IRQ_GPIO2_NR_GROUPS +
+				  EXYNOS4_IRQ_GPIO1_NR_GROUPS + EXYNOS4_IRQ_GPIO2_NR_GROUPS +
 				  IRQ_GPIO3_NR_GROUPS,
 				  IRQ_GPIO4_NR_GROUPS);
 #endif

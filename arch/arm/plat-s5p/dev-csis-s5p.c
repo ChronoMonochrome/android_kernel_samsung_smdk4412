@@ -24,8 +24,8 @@ static struct resource s3c_csis0_resource[] = {
 		.flags	= IORESOURCE_MEM,
 	},
 	[1] = {
-		.start	= IRQ_MIPICSI0,
-		.end	= IRQ_MIPICSI0,
+		.start	= EXYNOS4_IRQ_MIPICSI0,
+		.end	= EXYNOS4_IRQ_MIPICSI0,
 		.flags	= IORESOURCE_IRQ,
 	},
 };
@@ -81,8 +81,8 @@ static struct resource s3c_csis1_resource[] = {
 		.flags	= IORESOURCE_MEM,
 	},
 	[1] = {
-		.start	= IRQ_MIPICSI1,
-		.end	= IRQ_MIPICSI1,
+		.start	= EXYNOS4_IRQ_MIPICSI1,
+		.end	= EXYNOS4_IRQ_MIPICSI1,
 		.flags	= IORESOURCE_IRQ,
 	},
 };

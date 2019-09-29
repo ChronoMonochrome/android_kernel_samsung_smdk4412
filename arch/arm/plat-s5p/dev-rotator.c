@@ -22,8 +22,8 @@ static struct resource exynos_rot_resource[] = {
 		.flags	= IORESOURCE_MEM,
 	},
 	[1] = {
-		.start	= IRQ_ROTATOR,
-		.end	= IRQ_ROTATOR,
+		.start	= EXYNOS4_IRQ_ROTATOR,
+		.end	= EXYNOS4_IRQ_ROTATOR,
 		.flags	= IORESOURCE_IRQ,
 	},
 };

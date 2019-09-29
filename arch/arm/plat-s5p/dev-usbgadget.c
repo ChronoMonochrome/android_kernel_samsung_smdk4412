@@ -29,8 +29,8 @@ static struct resource s3c_usbgadget_resource[] = {
 		.flags = IORESOURCE_MEM,
 	},
 	[1] = {
-		.start = IRQ_USB_HSOTG,
-		.end   = IRQ_USB_HSOTG,
+		.start = EXYNOS4_IRQ_USB_HSOTG,
+		.end   = EXYNOS4_IRQ_USB_HSOTG,
 		.flags = IORESOURCE_IRQ,
 	}
 };

@@ -21,8 +21,8 @@ static struct resource s5p_mipi_csis0_resource[] = {
 		.flags = IORESOURCE_MEM,
 	},
 	[1] = {
-		.start = IRQ_MIPICSI0,
-		.end   = IRQ_MIPICSI0,
+		.start = EXYNOS4_IRQ_MIPICSI0,
+		.end   = EXYNOS4_IRQ_MIPICSI0,
 		.flags = IORESOURCE_IRQ,
 	}
 };

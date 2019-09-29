@@ -227,7 +227,7 @@ int __init s5p_init_irq_eint(void)
 		set_irq_flags(irq, IRQF_VALID);
 	}
 
-	irq_set_chained_handler(IRQ_EINT16_31, s5p_irq_demux_eint16_31);
+	irq_set_chained_handler(EXYNOS4_IRQ_EINT16_31, s5p_irq_demux_eint16_31);
 	return 0;
 }
 

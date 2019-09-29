@@ -1216,7 +1216,7 @@ static int srp_probe(struct platform_device *pdev)
 		goto err5;
 	}
 
-	ret = request_irq(IRQ_AUDIO_SS, srp_irq, IRQF_DISABLED, "samsung-rp", pdev);
+	ret = request_irq(EXYNOS4_IRQ_AUDIO_SS, srp_irq, IRQF_DISABLED, "samsung-rp", pdev);
 	if (ret < 0) {
 		srp_err("SRP: Fail to claim SRP(AUDIO_SS) irq\n");
 		goto err6;
@@ -1236,7 +1236,7 @@ static int srp_probe(struct platform_device *pdev)
 	return 0;
 
 err7:
-	free_irq(IRQ_AUDIO_SS, pdev);
+	free_irq(EXYNOS4_IRQ_AUDIO_SS, pdev);
 err6:
 	srp_remove_fw_buff(&pdev->dev);
 err5:
@@ -1255,7 +1255,7 @@ err1:
 
 static int srp_remove(struct platform_device *pdev)
 {
-	free_irq(IRQ_AUDIO_SS, pdev);
+	free_irq(EXYNOS4_IRQ_AUDIO_SS, pdev);
 	srp_remove_fw_buff(&pdev->dev);
 
 	misc_deregister(&srp_miscdev);

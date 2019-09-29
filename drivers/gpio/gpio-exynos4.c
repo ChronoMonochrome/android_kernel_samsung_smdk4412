@@ -667,8 +667,8 @@ static __init int exynos4_gpiolib_init(void)
 		samsung_gpiolib_add_4bit_chips(exynos4212_gpio_4bit, nr_chips);
 	}
 
-	s5p_register_gpioint_bank(IRQ_GPIO_XA, 0, IRQ_GPIO1_NR_GROUPS);
-	s5p_register_gpioint_bank(IRQ_GPIO_XB, IRQ_GPIO1_NR_GROUPS, IRQ_GPIO2_NR_GROUPS);
+	s5p_register_gpioint_bank(EXYNOS4_IRQ_GPIO_XA, 0, EXYNOS4_IRQ_GPIO1_NR_GROUPS);
+	s5p_register_gpioint_bank(EXYNOS4_IRQ_GPIO_XB, EXYNOS4_IRQ_GPIO1_NR_GROUPS, EXYNOS4_IRQ_GPIO2_NR_GROUPS);
 
 	return 0;
 }

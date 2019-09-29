@@ -1048,7 +1048,7 @@ static struct device *nuri_cm_devices[] = {
 static void __init nuri_power_init(void)
 {
 	int gpio;
-	int irq_base = IRQ_GPIO_END + 1;
+	int irq_base = EXYNOS4_IRQ_GPIO_END + 1;
 	int ta_en = 0;
 
 	nuri_max8997_pdata.irq_base = irq_base;

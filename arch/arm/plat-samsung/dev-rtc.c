@@ -23,13 +23,13 @@ static struct resource s3c_rtc_resource[] = {
 		.flags	= IORESOURCE_MEM,
 	},
 	[1] = {
-		.start	= IRQ_RTC_ALARM,
-		.end	= IRQ_RTC_ALARM,
+		.start	= EXYNOS4_IRQ_RTC_ALARM,
+		.end	= EXYNOS4_IRQ_RTC_ALARM,
 		.flags	= IORESOURCE_IRQ,
 	},
 	[2] = {
-		.start	= IRQ_RTC_TIC,
-		.end	= IRQ_RTC_TIC,
+		.start	= EXYNOS4_IRQ_RTC_TIC,
+		.end	= EXYNOS4_IRQ_RTC_TIC,
 		.flags	= IORESOURCE_IRQ
 	}
 };

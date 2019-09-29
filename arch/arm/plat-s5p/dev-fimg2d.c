@@ -28,8 +28,8 @@ static struct resource s5p_fimg2d_resource[] = {
 		.flags	= IORESOURCE_MEM,
 	},
 	[1] = {
-		.start	= IRQ_2D,
-		.end	= IRQ_2D,
+		.start	= EXYNOS4_IRQ_2D,
+		.end	= EXYNOS4_IRQ_2D,
 		.flags	= IORESOURCE_IRQ,
 	}
 };

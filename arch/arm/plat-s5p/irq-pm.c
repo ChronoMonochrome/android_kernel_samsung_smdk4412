@@ -27,7 +27,7 @@
 
 /* state for IRQs over sleep */
 
-/* default is to allow for EINT0..EINT31, and IRQ_RTC_TIC, IRQ_RTC_ALARM,
+/* default is to allow for EINT0..EINT31, and EXYNOS4_IRQ_RTC_TIC, EXYNOS4_IRQ_RTC_ALARM,
  * as wakeup sources
  *
  * set bit to 1 in allow bitfield to enable the wakeup settings on it
@@ -41,9 +41,9 @@ int s3c_irq_wake(struct irq_data *data, unsigned int state)
 	unsigned long irqbit;
 
 	switch (data->irq) {
-	case IRQ_RTC_TIC:
-	case IRQ_RTC_ALARM:
-		irqbit = 1 << (data->irq + 1 - IRQ_RTC_ALARM);
+	case EXYNOS4_IRQ_RTC_TIC:
+	case EXYNOS4_IRQ_RTC_ALARM:
+		irqbit = 1 << (data->irq + 1 - EXYNOS4_IRQ_RTC_ALARM);
 		if (!state)
 			s3c_irqwake_intmask |= irqbit;
 		else

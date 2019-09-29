@@ -29,8 +29,8 @@ static struct resource s5p_ace_resource[] = {
 	},
 #elif defined(CONFIG_ARCH_EXYNOS4) || defined(CONFIG_ARCH_EXYNOS5)
 	[1] = {
-		.start	= IRQ_INTFEEDCTRL_SSS,
-		.end	= IRQ_INTFEEDCTRL_SSS,
+		.start	= EXYNOS4_IRQ_INTFEEDCTRL_SSS,
+		.end	= EXYNOS4_IRQ_INTFEEDCTRL_SSS,
 		.flags	= IORESOURCE_IRQ,
 	},
 #endif

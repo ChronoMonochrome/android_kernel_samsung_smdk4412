@@ -23,8 +23,8 @@ static struct resource s5p_mfc_resource[] = {
 		.flags	= IORESOURCE_MEM,
 	},
 	[1] = {
-		.start	= IRQ_MFC,
-		.end	= IRQ_MFC,
+		.start	= EXYNOS4_IRQ_MFC,
+		.end	= EXYNOS4_IRQ_MFC,
 		.flags	= IORESOURCE_IRQ,
 	},
 };

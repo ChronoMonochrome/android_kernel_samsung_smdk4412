@@ -62,7 +62,7 @@
 #ifdef IRQ_DPRAM_AP_INT_N
 #undef IRQ_DPRAM_AP_INT_N
 #endif
-#define IRQ_DPRAM_AP_INT_N  IRQ_MODEM_IF /*IDPRAM's special interrupt in AP*/
+#define IRQ_DPRAM_AP_INT_N  EXYNOS4_IRQ_MODEM_IF /*IDPRAM's special interrupt in AP*/
 
 #define S5PV310_MDM_IF_SEL 2
 

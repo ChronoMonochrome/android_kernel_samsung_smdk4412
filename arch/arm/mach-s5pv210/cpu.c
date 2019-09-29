@@ -113,7 +113,7 @@ static void s5pv210_idle(void)
 
 static void s5pv210_sw_reset(void)
 {
-	__raw_writel(0x1, S5P_SWRESET);
+	__raw_writel(0x1, EXYNOS_SWRESET);
 }
 
 /* s5pv210_map_io

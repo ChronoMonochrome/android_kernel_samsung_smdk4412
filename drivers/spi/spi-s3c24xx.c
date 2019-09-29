@@ -265,7 +265,7 @@ extern struct spi_fiq_code s3c24xx_spi_fiq_rx;
  */
 static inline u32 ack_bit(unsigned int irq)
 {
-	return 1 << (irq - IRQ_EINT0);
+	return 1 << (irq - EXYNOS4_IRQ_EINT0);
 }
 
 /**

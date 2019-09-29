@@ -98,8 +98,8 @@ static struct resource exynos_dwmci_resource[] = {
 		.flags	= IORESOURCE_MEM,
 	},
 	[1] = {
-		.start	= IRQ_DWMCI,
-		.end	= IRQ_DWMCI,
+		.start	= EXYNOS4_IRQ_DWMCI,
+		.end	= EXYNOS4_IRQ_DWMCI,
 		.flags	= IORESOURCE_IRQ,
 	}
 };
@@ -202,9 +202,9 @@ void __init exynos_dwmci_set_platdata(struct dw_mci_board *pd, u32 slot_id)
 				exynos_device_dwmci0.resource[0].end =
 					EXYNOS_PA_DWMCI + SZ_4K - 1;
 				exynos_device_dwmci0.resource[1].start =
-					IRQ_DWMCI;
+					EXYNOS4_IRQ_DWMCI;
 				exynos_device_dwmci0.resource[1].end =
-					IRQ_DWMCI;
+					EXYNOS4_IRQ_DWMCI;
 			}
 			npd = s3c_set_platdata(pd, sizeof(struct dw_mci_board),
 				&exynos_device_dwmci0);

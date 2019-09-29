@@ -407,7 +407,7 @@ static int idma_open(struct snd_pcm_substream *substream)
 	if (prtd == NULL)
 		return -ENOMEM;
 
-	ret = request_irq(IRQ_I2S0, iis_irq, 0, "i2s", prtd);
+	ret = request_irq(EXYNOS4_IRQ_I2S0, iis_irq, 0, "i2s", prtd);
 	if (ret < 0) {
 		pr_err("fail to claim i2s irq , ret = %d\n", ret);
 		kfree(prtd);
@@ -428,7 +428,7 @@ static int idma_close(struct snd_pcm_substream *substream)
 
 	pr_debug("Entered %s, prtd = %p\n", __func__, prtd);
 
-	free_irq(IRQ_I2S0, prtd);
+	free_irq(EXYNOS4_IRQ_I2S0, prtd);
 
 	if (!prtd)
 		pr_err("idma_close called with prtd == NULL\n");

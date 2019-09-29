@@ -161,8 +161,8 @@ static struct resource exynos_spi0_resource[] = {
 		.flags = IORESOURCE_DMA,
 	},
 	[3] = {
-		.start = IRQ_SPI0,
-		.end   = IRQ_SPI0,
+		.start = EXYNOS4_IRQ_SPI0,
+		.end   = EXYNOS4_IRQ_SPI0,
 		.flags = IORESOURCE_IRQ,
 	},
 };
@@ -207,8 +207,8 @@ static struct resource exynos_spi1_resource[] = {
 		.flags = IORESOURCE_DMA,
 	},
 	[3] = {
-		.start = IRQ_SPI1,
-		.end   = IRQ_SPI1,
+		.start = EXYNOS4_IRQ_SPI1,
+		.end   = EXYNOS4_IRQ_SPI1,
 		.flags = IORESOURCE_IRQ,
 	},
 };
@@ -251,8 +251,8 @@ static struct resource exynos_spi2_resource[] = {
 		.flags = IORESOURCE_DMA,
 	},
 	[3] = {
-		.start = IRQ_SPI2,
-		.end   = IRQ_SPI2,
+		.start = EXYNOS4_IRQ_SPI2,
+		.end   = EXYNOS4_IRQ_SPI2,
 		.flags = IORESOURCE_IRQ,
 	},
 };

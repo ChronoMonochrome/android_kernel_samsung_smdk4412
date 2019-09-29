@@ -33,8 +33,8 @@ static struct resource s5p_mipi_dsim_resource[] = {
 		.flags = IORESOURCE_MEM,
 	},
 	[1] = {
-		.start = IRQ_MIPIDSI0,
-		.end   = IRQ_MIPIDSI0,
+		.start = EXYNOS4_IRQ_MIPIDSI0,
+		.end   = EXYNOS4_IRQ_MIPIDSI0,
 		.flags = IORESOURCE_IRQ,
 	},
 };

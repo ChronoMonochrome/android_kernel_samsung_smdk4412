@@ -55,20 +55,20 @@ static struct resource s5p_tvout_resources[] = {
 		.name	= "s5p-i2c-hdmi-phy"
 	},
 	[5] = {
-		.start  = IRQ_MIXER,
-		.end    = IRQ_MIXER,
+		.start  = EXYNOS4_IRQ_MIXER,
+		.end    = EXYNOS4_IRQ_MIXER,
 		.flags  = IORESOURCE_IRQ,
 		.name	= "s5p-mixer"
 	},
 	[6] = {
-		.start  = IRQ_HDMI,
-		.end    = IRQ_HDMI,
+		.start  = EXYNOS4_IRQ_HDMI,
+		.end    = EXYNOS4_IRQ_HDMI,
 		.flags  = IORESOURCE_IRQ,
 		.name	= "s5p-hdmi"
 	},
 	[7] = {
-		.start  = IRQ_TVENC,
-		.end    = IRQ_TVENC,
+		.start  = EXYNOS4_IRQ_TVENC,
+		.end    = EXYNOS4_IRQ_TVENC,
 		.flags  = IORESOURCE_IRQ,
 		.name	= "s5p-sdo"
 	},
@@ -91,8 +91,8 @@ EXPORT_SYMBOL(s5p_device_tvout);
 /* HPD */
 static struct resource s5p_hpd_resources[] = {
 	[0] = {
-		.start  = IRQ_TVOUT_HPD,
-		.end    = IRQ_TVOUT_HPD,
+		.start  = EXYNOS4_IRQ_TVOUT_HPD,
+		.end    = EXYNOS4_IRQ_TVOUT_HPD,
 		.flags  = IORESOURCE_IRQ,
 	},
 };
@@ -145,8 +145,8 @@ static struct resource s5p_cec_resources[] = {
 		.flags  = IORESOURCE_MEM,
 	},
 	[1] = {
-		.start  = IRQ_CEC,
-		.end    = IRQ_CEC,
+		.start  = EXYNOS4_IRQ_CEC,
+		.end    = EXYNOS4_IRQ_CEC,
 		.flags  = IORESOURCE_IRQ,
 	},
 };

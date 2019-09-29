@@ -296,16 +296,16 @@ void __init s5p6440_init_uarts(struct s3c2410_uartcfg *cfg, int no)
 	int uart;
 
 	for (uart = 0; uart < no; uart++) {
-		s5p_uart_resources[uart].resources->start = S5P6440_PA_UART(uart);
-		s5p_uart_resources[uart].resources->end = S5P6440_PA_UART(uart) + S5P_SZ_UART;
+		exynos4_uart_resources[uart].resources->start = S5P6440_PA_UART(uart);
+		exynos4_uart_resources[uart].resources->end = S5P6440_PA_UART(uart) + S5P_SZ_UART;
 	}
 
-	s3c24xx_init_uartdevs("s3c6400-uart", s5p_uart_resources, cfg, no);
+	s3c24xx_init_uartdevs("s3c6400-uart", exynos4_uart_resources, cfg, no);
 }
 
 void __init s5p6450_init_uarts(struct s3c2410_uartcfg *cfg, int no)
 {
-	s3c24xx_init_uartdevs("s3c6400-uart", s5p_uart_resources, cfg, no);
+	s3c24xx_init_uartdevs("s3c6400-uart", exynos4_uart_resources, cfg, no);
 }
 
 #define eint_offset(irq)	((irq) - IRQ_EINT(0))

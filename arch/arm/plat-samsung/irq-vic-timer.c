@@ -51,8 +51,8 @@ static void s3c_irq_timer_ack(struct irq_data *d)
  */
 void __init s3c_init_vic_timer_irq(unsigned int num, unsigned int timer_irq)
 {
-	unsigned int pirq[5] = { IRQ_TIMER0_VIC, IRQ_TIMER1_VIC, IRQ_TIMER2_VIC,
-				 IRQ_TIMER3_VIC, IRQ_TIMER4_VIC };
+	unsigned int pirq[5] = { EXYNOS4_IRQ_TIMER0_VIC, EXYNOS4_IRQ_TIMER1_VIC, EXYNOS4_IRQ_TIMER2_VIC,
+				 EXYNOS4_IRQ_TIMER3_VIC, EXYNOS4_IRQ_TIMER4_VIC };
 	struct irq_chip_generic *s3c_tgc;
 	struct irq_chip_type *ct;
 	unsigned int i;

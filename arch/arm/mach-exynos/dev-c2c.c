@@ -34,13 +34,13 @@ static struct resource exynos_c2c_resource[] = {
 		.flags  = IORESOURCE_MEM,
 	},
 	[2] = {
-		.start  = IRQ_C2C_SSCM0,
-		.end    = IRQ_C2C_SSCM0,
+		.start  = EXYNOS4_IRQ_C2C_SSCM0,
+		.end    = EXYNOS4_IRQ_C2C_SSCM0,
 		.flags  = IORESOURCE_IRQ,
 	},
 	[3] = {
-		.start  = IRQ_C2C_SSCM1,
-		.end    = IRQ_C2C_SSCM1,
+		.start  = EXYNOS4_IRQ_C2C_SSCM1,
+		.end    = EXYNOS4_IRQ_C2C_SSCM1,
 		.flags  = IORESOURCE_IRQ,
 	},
 };

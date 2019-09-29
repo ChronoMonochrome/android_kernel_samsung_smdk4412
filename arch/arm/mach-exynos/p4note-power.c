@@ -258,7 +258,7 @@ static struct max8997_regulator_data max8997_regulators[] = {
 };
 
 struct max8997_platform_data exynos4_max8997_info = {
-	.irq_base = IRQ_BOARD_PMIC_START,
+	.irq_base = EXYNOS4_IRQ_BOARD_PMIC_START,
 	.num_regulators = ARRAY_SIZE(max8997_regulators),
 	.regulators = max8997_regulators,
 	.buck1_max_vol = 1100000,
@@ -610,7 +610,7 @@ struct max77686_platform_data exynos4_max77686_info = {
 	.num_regulators = ARRAY_SIZE(max77686_regulators),
 	.regulators = max77686_regulators,
 	.irq_gpio	= GPIO_PMIC_IRQ,
-	.irq_base	= IRQ_BOARD_PMIC_START,
+	.irq_base	= EXYNOS4_IRQ_BOARD_PMIC_START,
 	.wakeup		= 1,
 
 	.opmode_data = max77686_opmode_data,
@@ -1061,7 +1061,7 @@ struct s5m_platform_data exynos4_s5m8767_info = {
 	.buck3_ramp_enable	= true,
 	.buck4_ramp_enable	= true,
 	.irq_gpio	= GPIO_PMIC_IRQ,
-	.irq_base	= IRQ_BOARD_PMIC_START,
+	.irq_base	= EXYNOS4_IRQ_BOARD_PMIC_START,
 	.wakeup		= 1,
 
 	.opmode_data = s5m8767_opmode_data,

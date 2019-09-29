@@ -311,7 +311,7 @@ static int max8925_rtc_suspend(struct device *dev)
 	struct max8925_chip *chip = dev_get_drvdata(pdev->dev.parent);
 
 	if (device_may_wakeup(dev))
-		chip->wakeup_flag |= 1 << MAX8925_IRQ_RTC_ALARM0;
+		chip->wakeup_flag |= 1 << MAX8925_EXYNOS4_IRQ_RTC_ALARM0;
 	return 0;
 }
 static int max8925_rtc_resume(struct device *dev)
@@ -320,7 +320,7 @@ static int max8925_rtc_resume(struct device *dev)
 	struct max8925_chip *chip = dev_get_drvdata(pdev->dev.parent);
 
 	if (device_may_wakeup(dev))
-		chip->wakeup_flag &= ~(1 << MAX8925_IRQ_RTC_ALARM0);
+		chip->wakeup_flag &= ~(1 << MAX8925_EXYNOS4_IRQ_RTC_ALARM0);
 	return 0;
 }
 #endif

@@ -91,8 +91,8 @@ struct platform_device s3c_device_ac97 = {
 #ifdef CONFIG_PLAT_S3C24XX
 static struct resource s3c_adc_resource[] = {
 	[0] = DEFINE_RES_MEM(S3C24XX_PA_ADC, S3C24XX_SZ_ADC),
-	[1] = DEFINE_RES_IRQ(IRQ_TC),
-	[2] = DEFINE_RES_IRQ(IRQ_ADC),
+	[1] = DEFINE_RES_IRQ(EXYNOS4_IRQ_TC),
+	[2] = DEFINE_RES_IRQ(EXYNOS4_IRQ_ADC),
 };
 
 struct platform_device s3c_device_adc = {
@@ -106,8 +106,8 @@ struct platform_device s3c_device_adc = {
 #if defined(CONFIG_SAMSUNG_DEV_ADC)
 static struct resource s3c_adc_resource[] = {
 	[0] = DEFINE_RES_MEM(SAMSUNG_PA_ADC, SZ_256),
-	[1] = DEFINE_RES_IRQ(IRQ_TC),
-	[2] = DEFINE_RES_IRQ(IRQ_ADC),
+	[1] = DEFINE_RES_IRQ(EXYNOS4_IRQ_TC),
+	[2] = DEFINE_RES_IRQ(EXYNOS4_IRQ_ADC),
 };
 
 struct platform_device s3c_device_adc = {
@@ -191,7 +191,7 @@ void __init s3c_fb_set_platdata(struct s3c_fb_platdata *pd)
 #ifdef CONFIG_S5P_DEV_FIMC0
 static struct resource s5p_fimc0_resource[] = {
 	[0] = DEFINE_RES_MEM(S5P_PA_FIMC0, SZ_4K),
-	[1] = DEFINE_RES_IRQ(IRQ_FIMC0),
+	[1] = DEFINE_RES_IRQ(EXYNOS4_IRQ_FIMC0),
 };
 
 struct platform_device s5p_device_fimc0 = {
@@ -214,7 +214,7 @@ struct platform_device s5p_device_fimc_md = {
 #ifdef CONFIG_S5P_DEV_FIMC1
 static struct resource s5p_fimc1_resource[] = {
 	[0] = DEFINE_RES_MEM(S5P_PA_FIMC1, SZ_4K),
-	[1] = DEFINE_RES_IRQ(IRQ_FIMC1),
+	[1] = DEFINE_RES_IRQ(EXYNOS4_IRQ_FIMC1),
 };
 
 struct platform_device s5p_device_fimc1 = {
@@ -232,7 +232,7 @@ struct platform_device s5p_device_fimc1 = {
 #ifdef CONFIG_S5P_DEV_FIMC2
 static struct resource s5p_fimc2_resource[] = {
 	[0] = DEFINE_RES_MEM(S5P_PA_FIMC2, SZ_4K),
-	[1] = DEFINE_RES_IRQ(IRQ_FIMC2),
+	[1] = DEFINE_RES_IRQ(EXYNOS4_IRQ_FIMC2),
 };
 
 struct platform_device s5p_device_fimc2 = {
@@ -250,7 +250,7 @@ struct platform_device s5p_device_fimc2 = {
 #ifdef CONFIG_S5P_DEV_FIMC3
 static struct resource s5p_fimc3_resource[] = {
 	[0] = DEFINE_RES_MEM(S5P_PA_FIMC3, SZ_4K),
-	[1] = DEFINE_RES_IRQ(IRQ_FIMC3),
+	[1] = DEFINE_RES_IRQ(EXYNOS4_IRQ_FIMC3),
 };
 
 struct platform_device s5p_device_fimc3 = {
@@ -270,9 +270,9 @@ struct platform_device s5p_device_fimc3 = {
 #ifdef CONFIG_S5P_DEV_FIMD0
 static struct resource s5p_fimd0_resource[] = {
 	[0] = DEFINE_RES_MEM(S5P_PA_FIMD0, SZ_32K),
-	[1] = DEFINE_RES_IRQ(IRQ_FIMD0_VSYNC),
-	[2] = DEFINE_RES_IRQ(IRQ_FIMD0_FIFO),
-	[3] = DEFINE_RES_IRQ(IRQ_FIMD0_SYSTEM),
+	[1] = DEFINE_RES_IRQ(EXYNOS4_IRQ_FIMD0_VSYNC),
+	[2] = DEFINE_RES_IRQ(EXYNOS4_IRQ_FIMD0_FIFO),
+	[3] = DEFINE_RES_IRQ(EXYNOS4_IRQ_FIMD0_SYSTEM),
 };
 
 struct platform_device s5p_device_fimd0 = {
@@ -314,7 +314,7 @@ void __init s3c_hwmon_set_platdata(struct s3c_hwmon_pdata *pd)
 #ifdef CONFIG_S3C_DEV_HSMMC
 static struct resource s3c_hsmmc_resource[] = {
 	[0] = DEFINE_RES_MEM(S3C_PA_HSMMC0, SZ_4K),
-	[1] = DEFINE_RES_IRQ(IRQ_HSMMC0),
+	[1] = DEFINE_RES_IRQ(EXYNOS4_IRQ_HSMMC0),
 };
 
 struct s3c_sdhci_platdata s3c_hsmmc0_def_platdata = {
@@ -345,7 +345,7 @@ void s3c_sdhci0_set_platdata(struct s3c_sdhci_platdata *pd)
 #ifdef CONFIG_S3C_DEV_HSMMC1
 static struct resource s3c_hsmmc1_resource[] = {
 	[0] = DEFINE_RES_MEM(S3C_PA_HSMMC1, SZ_4K),
-	[1] = DEFINE_RES_IRQ(IRQ_HSMMC1),
+	[1] = DEFINE_RES_IRQ(EXYNOS4_IRQ_HSMMC1),
 };
 
 struct s3c_sdhci_platdata s3c_hsmmc1_def_platdata = {
@@ -378,7 +378,7 @@ void s3c_sdhci1_set_platdata(struct s3c_sdhci_platdata *pd)
 #ifdef CONFIG_S3C_DEV_HSMMC2
 static struct resource s3c_hsmmc2_resource[] = {
 	[0] = DEFINE_RES_MEM(S3C_PA_HSMMC2, SZ_4K),
-	[1] = DEFINE_RES_IRQ(IRQ_HSMMC2),
+	[1] = DEFINE_RES_IRQ(EXYNOS4_IRQ_HSMMC2),
 };
 
 struct s3c_sdhci_platdata s3c_hsmmc2_def_platdata = {
@@ -409,7 +409,7 @@ void s3c_sdhci2_set_platdata(struct s3c_sdhci_platdata *pd)
 #ifdef CONFIG_S3C_DEV_HSMMC3
 static struct resource s3c_hsmmc3_resource[] = {
 	[0] = DEFINE_RES_MEM(S3C_PA_HSMMC3, SZ_4K),
-	[1] = DEFINE_RES_IRQ(IRQ_HSMMC3),
+	[1] = DEFINE_RES_IRQ(EXYNOS4_IRQ_HSMMC3),
 };
 
 struct s3c_sdhci_platdata s3c_hsmmc3_def_platdata = {
@@ -441,7 +441,7 @@ void s3c_sdhci3_set_platdata(struct s3c_sdhci_platdata *pd)
 
 static struct resource s3c_i2c0_resource[] = {
 	[0] = DEFINE_RES_MEM(S3C_PA_IIC, SZ_4K),
-	[1] = DEFINE_RES_IRQ(IRQ_IIC),
+	[1] = DEFINE_RES_IRQ(EXYNOS4_IRQ_IIC),
 };
 
 struct platform_device s3c_device_i2c0 = {
@@ -479,7 +479,7 @@ void __init s3c_i2c0_set_platdata(struct s3c2410_platform_i2c *pd)
 #ifdef CONFIG_S3C_DEV_I2C1
 static struct resource s3c_i2c1_resource[] = {
 	[0] = DEFINE_RES_MEM(S3C_PA_IIC1, SZ_4K),
-	[1] = DEFINE_RES_IRQ(IRQ_IIC1),
+	[1] = DEFINE_RES_IRQ(EXYNOS4_IRQ_IIC1),
 };
 
 struct platform_device s3c_device_i2c1 = {
@@ -509,7 +509,7 @@ void __init s3c_i2c1_set_platdata(struct s3c2410_platform_i2c *pd)
 #ifdef CONFIG_S3C_DEV_I2C2
 static struct resource s3c_i2c2_resource[] = {
 	[0] = DEFINE_RES_MEM(S3C_PA_IIC2, SZ_4K),
-	[1] = DEFINE_RES_IRQ(IRQ_IIC2),
+	[1] = DEFINE_RES_IRQ(EXYNOS4_IRQ_IIC2),
 };
 
 struct platform_device s3c_device_i2c2 = {
@@ -539,7 +539,7 @@ void __init s3c_i2c2_set_platdata(struct s3c2410_platform_i2c *pd)
 #ifdef CONFIG_S3C_DEV_I2C3
 static struct resource s3c_i2c3_resource[] = {
 	[0] = DEFINE_RES_MEM(S3C_PA_IIC3, SZ_4K),
-	[1] = DEFINE_RES_IRQ(IRQ_IIC3),
+	[1] = DEFINE_RES_IRQ(EXYNOS4_IRQ_IIC3),
 };
 
 struct platform_device s3c_device_i2c3 = {
@@ -569,7 +569,7 @@ void __init s3c_i2c3_set_platdata(struct s3c2410_platform_i2c *pd)
 #ifdef CONFIG_S3C_DEV_I2C4
 static struct resource s3c_i2c4_resource[] = {
 	[0] = DEFINE_RES_MEM(S3C_PA_IIC4, SZ_4K),
-	[1] = DEFINE_RES_IRQ(IRQ_IIC4),
+	[1] = DEFINE_RES_IRQ(EXYNOS4_IRQ_IIC4),
 };
 
 struct platform_device s3c_device_i2c4 = {
@@ -599,7 +599,7 @@ void __init s3c_i2c4_set_platdata(struct s3c2410_platform_i2c *pd)
 #ifdef CONFIG_S3C_DEV_I2C5
 static struct resource s3c_i2c5_resource[] = {
 	[0] = DEFINE_RES_MEM(S3C_PA_IIC5, SZ_4K),
-	[1] = DEFINE_RES_IRQ(IRQ_IIC5),
+	[1] = DEFINE_RES_IRQ(EXYNOS4_IRQ_IIC5),
 };
 
 struct platform_device s3c_device_i2c5 = {
@@ -629,7 +629,7 @@ void __init s3c_i2c5_set_platdata(struct s3c2410_platform_i2c *pd)
 #ifdef CONFIG_S3C_DEV_I2C6
 static struct resource s3c_i2c6_resource[] = {
 	[0] = DEFINE_RES_MEM(S3C_PA_IIC6, SZ_4K),
-	[1] = DEFINE_RES_IRQ(IRQ_IIC6),
+	[1] = DEFINE_RES_IRQ(EXYNOS4_IRQ_IIC6),
 };
 
 struct platform_device s3c_device_i2c6 = {
@@ -659,7 +659,7 @@ void __init s3c_i2c6_set_platdata(struct s3c2410_platform_i2c *pd)
 #ifdef CONFIG_S3C_DEV_I2C7
 static struct resource s3c_i2c7_resource[] = {
 	[0] = DEFINE_RES_MEM(S3C_PA_IIC7, SZ_4K),
-	[1] = DEFINE_RES_IRQ(IRQ_IIC7),
+	[1] = DEFINE_RES_IRQ(EXYNOS4_IRQ_IIC7),
 };
 
 struct platform_device s3c_device_i2c7 = {
@@ -691,7 +691,7 @@ void __init s3c_i2c7_set_platdata(struct s3c2410_platform_i2c *pd)
 #ifdef CONFIG_S5P_DEV_I2C_HDMIPHY
 static struct resource s5p_i2c_resource[] = {
 	[0] = DEFINE_RES_MEM(S5P_PA_IIC_HDMIPHY, SZ_4K),
-	[1] = DEFINE_RES_IRQ(IRQ_IIC_HDMIPHY),
+	[1] = DEFINE_RES_IRQ(EXYNOS4_IRQ_IIC_HDMIPHY),
 };
 
 struct platform_device s5p_device_i2c_hdmiphy = {
@@ -777,7 +777,7 @@ void s3c_ide_set_platdata(struct s3c_ide_platdata *pdata)
 #ifdef CONFIG_SAMSUNG_DEV_KEYPAD
 static struct resource samsung_keypad_resources[] = {
 	[0] = DEFINE_RES_MEM(SAMSUNG_PA_KEYPAD, SZ_32),
-	[1] = DEFINE_RES_IRQ(IRQ_KEYPAD),
+	[1] = DEFINE_RES_IRQ(EXYNOS4_IRQ_KEYPAD),
 };
 
 struct platform_device samsung_device_keypad = {
@@ -840,7 +840,7 @@ void __init s3c24xx_fb_set_platdata(struct s3c2410fb_mach_info *pd)
 #ifdef CONFIG_S5P_DEV_MFC
 static struct resource s5p_mfc_resource[] = {
 	[0] = DEFINE_RES_MEM(S5P_PA_MFC, SZ_64K),
-	[1] = DEFINE_RES_IRQ(IRQ_MFC),
+	[1] = DEFINE_RES_IRQ(EXYNOS4_IRQ_MFC),
 };
 
 struct platform_device s5p_device_mfc = {
@@ -1056,7 +1056,7 @@ void s3c64xx_onenand1_set_platdata(struct onenand_platform_data *pdata)
 static struct resource s5p_onenand_resources[] = {
 	[0] = DEFINE_RES_MEM(S5P_PA_ONENAND, SZ_128K),
 	[1] = DEFINE_RES_MEM(S5P_PA_ONENAND_DMA, SZ_8K),
-	[2] = DEFINE_RES_IRQ(IRQ_ONENAND_AUDI),
+	[2] = DEFINE_RES_IRQ(EXYNOS4_IRQ_ONENAND_AUDI),
 };
 
 struct platform_device s5p_device_onenand = {
@@ -1071,7 +1071,7 @@ struct platform_device s5p_device_onenand = {
 
 #ifdef CONFIG_PLAT_S5P
 static struct resource s5p_pmu_resource[] = {
-	DEFINE_RES_IRQ(IRQ_PMU)
+	DEFINE_RES_IRQ(EXYNOS4_IRQ_PMU)
 };
 
 struct platform_device s5p_device_pmu = {
@@ -1144,8 +1144,8 @@ struct platform_device s3c_device_rtc = {
 #ifdef CONFIG_S3C_DEV_RTC
 static struct resource s3c_rtc_resource[] = {
 	[0] = DEFINE_RES_MEM(S3C_PA_RTC, SZ_256),
-	[1] = DEFINE_RES_IRQ(IRQ_RTC_ALARM),
-	[2] = DEFINE_RES_IRQ(IRQ_RTC_TIC),
+	[1] = DEFINE_RES_IRQ(EXYNOS4_IRQ_RTC_ALARM),
+	[2] = DEFINE_RES_IRQ(EXYNOS4_IRQ_RTC_TIC),
 };
 
 struct platform_device s3c_device_rtc = {
@@ -1183,7 +1183,7 @@ void __init s3c24xx_mci_set_platdata(struct s3c24xx_mci_pdata *pdata)
 #ifdef CONFIG_PLAT_S3C24XX
 static struct resource s3c_spi0_resource[] = {
 	[0] = DEFINE_RES_MEM(S3C24XX_PA_SPI, SZ_32),
-	[1] = DEFINE_RES_IRQ(IRQ_SPI0),
+	[1] = DEFINE_RES_IRQ(EXYNOS4_IRQ_SPI0),
 };
 
 struct platform_device s3c_device_spi0 = {
@@ -1199,7 +1199,7 @@ struct platform_device s3c_device_spi0 = {
 
 static struct resource s3c_spi1_resource[] = {
 	[0] = DEFINE_RES_MEM(S3C24XX_PA_SPI1, SZ_32),
-	[1] = DEFINE_RES_IRQ(IRQ_SPI1),
+	[1] = DEFINE_RES_IRQ(EXYNOS4_IRQ_SPI1),
 };
 
 struct platform_device s3c_device_spi1 = {
@@ -1219,7 +1219,7 @@ struct platform_device s3c_device_spi1 = {
 #ifdef CONFIG_PLAT_S3C24XX
 static struct resource s3c_ts_resource[] = {
 	[0] = DEFINE_RES_MEM(S3C24XX_PA_ADC, S3C24XX_SZ_ADC),
-	[1] = DEFINE_RES_IRQ(IRQ_TC),
+	[1] = DEFINE_RES_IRQ(EXYNOS4_IRQ_TC),
 };
 
 struct platform_device s3c_device_ts = {
@@ -1240,7 +1240,7 @@ void __init s3c24xx_ts_set_platdata(struct s3c2410_ts_mach_info *hard_s3c2410ts_
 #ifdef CONFIG_SAMSUNG_DEV_TS
 static struct resource s3c_ts_resource[] = {
 	[0] = DEFINE_RES_MEM(SAMSUNG_PA_ADC, SZ_256),
-	[1] = DEFINE_RES_IRQ(IRQ_TC),
+	[1] = DEFINE_RES_IRQ(EXYNOS4_IRQ_TC),
 };
 
 static struct s3c2410_ts_mach_info default_ts_data __initdata = {
@@ -1272,7 +1272,7 @@ void __init s3c24xx_ts_set_platdata(struct s3c2410_ts_mach_info *pd)
 
 static struct resource s5p_hdmi_resources[] = {
 	[0] = DEFINE_RES_MEM(S5P_PA_HDMI, SZ_1M),
-	[1] = DEFINE_RES_IRQ(IRQ_HDMI),
+	[1] = DEFINE_RES_IRQ(EXYNOS4_IRQ_HDMI),
 };
 
 struct platform_device s5p_device_hdmi = {
@@ -1284,7 +1284,7 @@ struct platform_device s5p_device_hdmi = {
 
 static struct resource s5p_sdo_resources[] = {
 	[0] = DEFINE_RES_MEM(S5P_PA_SDO, SZ_64K),
-	[1] = DEFINE_RES_IRQ(IRQ_SDO),
+	[1] = DEFINE_RES_IRQ(EXYNOS4_IRQ_SDO),
 };
 
 struct platform_device s5p_device_sdo = {
@@ -1297,7 +1297,7 @@ struct platform_device s5p_device_sdo = {
 static struct resource s5p_mixer_resources[] = {
 	[0] = DEFINE_RES_MEM_NAMED(S5P_PA_MIXER, SZ_64K, "mxr"),
 	[1] = DEFINE_RES_MEM_NAMED(S5P_PA_VP, SZ_64K, "vp"),
-	[2] = DEFINE_RES_IRQ_NAMED(IRQ_MIXER, "irq"),
+	[2] = DEFINE_RES_IRQ_NAMED(EXYNOS4_IRQ_MIXER, "irq"),
 };
 
 struct platform_device s5p_device_mixer = {
@@ -1373,7 +1373,7 @@ void __init s3c24xx_udc_set_platdata(struct s3c2410_udc_mach_info *pd)
 #ifdef CONFIG_S5P_DEV_USB_EHCI
 static struct resource s5p_ehci_resource[] = {
 	[0] = DEFINE_RES_MEM(S5P_PA_EHCI, SZ_256),
-	[1] = DEFINE_RES_IRQ(IRQ_USB_HOST),
+	[1] = DEFINE_RES_IRQ(EXYNOS4_IRQ_USB_HOST),
 };
 
 struct platform_device s5p_device_ehci = {
@@ -1451,7 +1451,7 @@ void __init s3c24xx_hsudc_set_platdata(struct s3c24xx_hsudc_platdata *pd)
 #ifdef CONFIG_S3C_DEV_WDT
 static struct resource s3c_wdt_resource[] = {
 	[0] = DEFINE_RES_MEM(S3C_PA_WDT, SZ_1K),
-	[1] = DEFINE_RES_IRQ(IRQ_WDT),
+	[1] = DEFINE_RES_IRQ(EXYNOS4_IRQ_WDT),
 };
 
 struct platform_device s3c_device_wdt = {

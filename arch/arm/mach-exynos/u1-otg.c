@@ -109,8 +109,8 @@ static struct resource s3c_usb_otghcd_resource[] = {
 		.flags = IORESOURCE_MEM,
 	},
 	[1] = {
-		.start = IRQ_USB_HSOTG,
-		.end   = IRQ_USB_HSOTG,
+		.start = EXYNOS4_IRQ_USB_HSOTG,
+		.end   = EXYNOS4_IRQ_USB_HSOTG,
 		.flags = IORESOURCE_IRQ,
 	}
 };
@@ -147,7 +147,7 @@ static void c210_otghost_start(struct s3c_udc *dev)
 	host_state_notify(&host_notifier_pdata.ndev, NOTIFY_HOST_ADD);
 
 	pr_info("otg start: udc %p, regs %p\n", dev, dev->regs);
-	free_irq(IRQ_USB_HSOTG, dev);
+	free_irq(EXYNOS4_IRQ_USB_HSOTG, dev);
 
 	if (otghost_data.start)
 		otghost_data.start((u32)dev->regs);
@@ -174,11 +174,11 @@ static int c210_otghost_stop(struct s3c_udc *dev)
 		pr_info("otg request_irq irq %p, dev %p\n",
 				pdata->udc_irq, dev);
 
-		ret = request_irq(IRQ_USB_HSOTG,
+		ret = request_irq(EXYNOS4_IRQ_USB_HSOTG,
 				pdata->udc_irq, 0, "s3c-udc", dev);
 		if (ret != 0) {
 			pr_info("otg host - can't get irq %i, err %d\n",
-					IRQ_USB_HSOTG, ret);
+					EXYNOS4_IRQ_USB_HSOTG, ret);
 			return -1;
 		}
 	}

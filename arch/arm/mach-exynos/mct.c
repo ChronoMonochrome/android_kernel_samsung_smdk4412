@@ -267,7 +267,7 @@ static void exynos4_clockevent_init(void)
 	mct_comp_device.cpumask = cpumask_of(0);
 	clockevents_register_device(&mct_comp_device);
 
-	setup_irq(IRQ_MCT_G0, &mct_comp_event_irq);
+	setup_irq(EXYNOS4_IRQ_MCT_G0, &mct_comp_event_irq);
 }
 
 #ifdef CONFIG_LOCAL_TIMERS
@@ -432,15 +432,15 @@ static int __cpuinit exynos4_local_timer_setup(struct clock_event_device *evt)
 	if (mct_int_type == MCT_INT_SPI) {
 		if (cpu == 0) {
 			mct_tick0_event_irq.dev_id = mevt;
-			evt->irq = IRQ_MCT_L0;
+			evt->irq = EXYNOS4_IRQ_MCT_L0;
 		} else {
 			mct_tick1_event_irq.dev_id = mevt;
-			evt->irq = IRQ_MCT_L1;
+			evt->irq = EXYNOS4_IRQ_MCT_L1;
 			irq_set_affinity(evt->irq, cpumask_of(1));
 		}
 		enable_irq(evt->irq);
 	} else {
-		enable_percpu_irq(IRQ_MCT_LOCALTIMER, 0);
+		enable_percpu_irq(EXYNOS4_IRQ_MCT_LOCALTIMER, 0);
 	}
 
 	return 0;
@@ -453,7 +453,7 @@ static void exynos4_local_timer_stop(struct clock_event_device *evt)
 	if (mct_int_type == MCT_INT_SPI)
 		disable_irq(evt->irq);
 	else
-		disable_percpu_irq(IRQ_MCT_LOCALTIMER);
+		disable_percpu_irq(EXYNOS4_IRQ_MCT_LOCALTIMER);
 }
 
 static struct local_timer_ops exynos4_mct_tick_ops __cpuinitdata = {
@@ -464,10 +464,10 @@ static struct local_timer_ops exynos4_mct_tick_ops __cpuinitdata = {
 static void __init exynos4_local_timer_init(void)
 {
 	if (mct_int_type == MCT_INT_SPI) {
-		setup_irq(IRQ_MCT_L0, &mct_tick0_event_irq);
-		disable_irq(IRQ_MCT_L0);
-		setup_irq(IRQ_MCT_L1, &mct_tick1_event_irq);
-		disable_irq(IRQ_MCT_L1);
+		setup_irq(EXYNOS4_IRQ_MCT_L0, &mct_tick0_event_irq);
+		disable_irq(EXYNOS4_IRQ_MCT_L0);
+		setup_irq(EXYNOS4_IRQ_MCT_L1, &mct_tick1_event_irq);
+		disable_irq(EXYNOS4_IRQ_MCT_L1);
 	}
 }
 #endif /* CONFIG_LOCAL_TIMERS */
@@ -483,11 +483,11 @@ static void __init exynos4_timer_resources(void)
 	if (mct_int_type == MCT_INT_PPI) {
 		int err;
 
-		err = request_percpu_irq(IRQ_MCT_LOCALTIMER,
+		err = request_percpu_irq(EXYNOS4_IRQ_MCT_LOCALTIMER,
 					 exynos4_mct_tick_isr, "MCT",
 					 &percpu_mct_tick);
 		WARN(err, "MCT: can't request IRQ %d (%d)\n",
-		     IRQ_MCT_LOCALTIMER, err);
+		     EXYNOS4_IRQ_MCT_LOCALTIMER, err);
 	}
 
 	local_timer_register(&exynos4_mct_tick_ops);

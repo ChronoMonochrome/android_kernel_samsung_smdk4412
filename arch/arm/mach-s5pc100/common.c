@@ -213,7 +213,7 @@ int __init s5pc100_init(void)
 
 void __init s5pc100_init_uarts(struct s3c2410_uartcfg *cfg, int no)
 {
-	s3c24xx_init_uartdevs("s3c6400-uart", s5p_uart_resources, cfg, no);
+	s3c24xx_init_uartdevs("s3c6400-uart", exynos4_uart_resources, cfg, no);
 }
 
 void s5pc100_restart(char mode, const char *cmd)

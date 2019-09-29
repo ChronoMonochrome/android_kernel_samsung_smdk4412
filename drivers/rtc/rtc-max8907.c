@@ -199,7 +199,7 @@ static int max8907_rtc_probe(struct platform_device *pdev)
 	}
 
 	rtc->irq = regmap_irq_get_virq(max8907->irqc_rtc,
-				       MAX8907_IRQ_RTC_ALARM0);
+				       MAX8907_EXYNOS4_IRQ_RTC_ALARM0);
 	if (rtc->irq < 0) {
 		ret = rtc->irq;
 		goto err_unregister;

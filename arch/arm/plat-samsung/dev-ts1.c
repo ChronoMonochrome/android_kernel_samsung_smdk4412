@@ -30,8 +30,8 @@ static struct resource s3c_ts_resource[] = {
 		.flags = IORESOURCE_MEM,
 	},
 	[1] = {
-		.start = IRQ_PEN1,
-		.end   = IRQ_PEN1,
+		.start = EXYNOS4_IRQ_PEN1,
+		.end   = EXYNOS4_IRQ_PEN1,
 		.flags = IORESOURCE_IRQ,
 	},
 };

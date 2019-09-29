@@ -637,7 +637,7 @@ struct s5m_opmode_data s5m8767_opmode_data[S5M8767_REG_MAX] = {
 
 static struct s5m_platform_data smdk5250_s5m8767_pdata = {
 	.device_type		= S5M8767X,
-	.irq_base		= IRQ_BOARD_START,
+	.irq_base		= EXYNOS4_IRQ_BOARD_START,
 	.num_regulators		= ARRAY_SIZE(gaia_regulators),
 	.regulators		= gaia_regulators,
 	.cfg_pmic_irq		= s5m_cfg_irq,

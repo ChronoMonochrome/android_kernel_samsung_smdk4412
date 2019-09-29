@@ -26,13 +26,13 @@ static struct resource exynos4_fimc_is_resource[] = {
 		.flags	= IORESOURCE_MEM,
 	},
 	[1] = {
-		.start	= IRQ_FIMC_IS0,
-		.end	= IRQ_FIMC_IS0,
+		.start	= EXYNOS4_IRQ_FIMC_IS0,
+		.end	= EXYNOS4_IRQ_FIMC_IS0,
 		.flags	= IORESOURCE_IRQ,
 	},
 	[2] = {
-		.start	= IRQ_FIMC_IS1,
-		.end	= IRQ_FIMC_IS1,
+		.start	= EXYNOS4_IRQ_FIMC_IS1,
+		.end	= EXYNOS4_IRQ_FIMC_IS1,
 		.flags	= IORESOURCE_IRQ,
 	},
 };

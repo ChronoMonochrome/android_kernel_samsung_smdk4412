@@ -3831,7 +3831,7 @@ static void max8997_register_buck1dvs_funcs(struct max8997_buck1_dvs_funcs *ptr)
 static struct max8997_platform_data exynos4_max8997_info = {
 	.num_regulators = ARRAY_SIZE(max8997_regulators),
 	.regulators	= &max8997_regulators[0],
-	.irq_base	= IRQ_BOARD_START,
+	.irq_base	= EXYNOS4_IRQ_BOARD_START,
 	.wakeup		= 1,
 	.buck1_gpiodvs	= false,
 	.buck1_max_vol	= 1350000,

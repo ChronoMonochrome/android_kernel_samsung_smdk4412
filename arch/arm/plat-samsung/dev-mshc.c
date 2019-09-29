@@ -32,8 +32,8 @@ static struct resource s3c_mshci_resource[] = {
 		.flags = IORESOURCE_MEM,
 	},
 	[1] = {
-		.start = IRQ_DWMCI,
-		.end   = IRQ_DWMCI,
+		.start = EXYNOS4_IRQ_DWMCI,
+		.end   = EXYNOS4_IRQ_DWMCI,
 		.flags = IORESOURCE_IRQ,
 	}
 };

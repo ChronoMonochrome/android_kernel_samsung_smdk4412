@@ -253,7 +253,7 @@ static DEFINE_TIMER(touch_timer, touch_timer_fire, 0, 0);
  * @irq: The interrupt number
  * @dev_id: The device ID.
  *
- * Called when the IRQ_TC is fired for a pen up or down event.
+ * Called when the EXYNOS4_IRQ_TC is fired for a pen up or down event.
  */
 static irqreturn_t stylus_irq(int irq, void *dev_id)
 {

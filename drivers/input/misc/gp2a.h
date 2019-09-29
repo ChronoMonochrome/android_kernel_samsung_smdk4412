@@ -7,7 +7,7 @@
 
 //#define DELAY_PRX 1
 
-#define IRQ_GP2A_INT IRQ_EINT2  /*s3c64xx int number */
+#define IRQ_GP2A_INT EXYNOS4_IRQ_EINT2  /*s3c64xx int number */
 
 #define I2C_DF_NOTIFY			0x01 /* for i2c */
 

@@ -29,8 +29,8 @@ static struct resource s3c_hsmmc_resource[] = {
 		.flags = IORESOURCE_MEM,
 	},
 	[1] = {
-		.start = IRQ_HSMMC0,
-		.end   = IRQ_HSMMC0,
+		.start = EXYNOS4_IRQ_HSMMC0,
+		.end   = EXYNOS4_IRQ_HSMMC0,
 		.flags = IORESOURCE_IRQ,
 	}
 };

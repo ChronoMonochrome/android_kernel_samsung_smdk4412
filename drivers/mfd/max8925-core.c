@@ -315,13 +315,13 @@ static struct max8925_irq_data max8925_irqs[] = {
 		.mask_reg	= MAX8925_ON_OFF_IRQ2_MASK,
 		.offs		= 1 << 1,
 	},
-	[MAX8925_IRQ_RTC_ALARM1] = {
+	[MAX8925_EXYNOS4_IRQ_RTC_ALARM1] = {
 		.reg		= MAX8925_RTC_IRQ,
 		.mask_reg	= MAX8925_RTC_IRQ_MASK,
 		.offs		= 1 << 2,
 		.flags		= FLAGS_RTC,
 	},
-	[MAX8925_IRQ_RTC_ALARM0] = {
+	[MAX8925_EXYNOS4_IRQ_RTC_ALARM0] = {
 		.reg		= MAX8925_RTC_IRQ,
 		.mask_reg	= MAX8925_RTC_IRQ_MASK,
 		.offs		= 1 << 3,

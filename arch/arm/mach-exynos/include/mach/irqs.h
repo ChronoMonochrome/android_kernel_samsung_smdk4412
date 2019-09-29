@@ -32,12 +32,9 @@
 #define EXYNOS4_MAX_COMBINER_NR		20
 #define EXYNOS5_MAX_COMBINER_NR		32
 
-#if defined(CONFIG_ARCH_EXYNOS4)
+#define EXYNOS_IRQ_EINT16_31		IRQ_SPI(32)
+
 #include "irqs-exynos4.h"
-#elif defined(CONFIG_ARCH_EXYNOS5)
 #include "irqs-exynos5.h"
-#else
-#error "ARCH_EXYNOS* is not defined"
-#endif
 
 #endif /* __ASM_ARCH_IRQS_H */

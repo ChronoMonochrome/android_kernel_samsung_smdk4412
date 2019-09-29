@@ -33,23 +33,23 @@ static struct s3c_uart_irq uart_irqs[] = {
 	[0] = {
 		.regs		= S5P_VA_UART0,
 		.base_irq	= IRQ_S5P_UART_BASE0,
-		.parent_irq	= IRQ_UART0,
+		.parent_irq	= EXYNOS4_IRQ_UART0,
 	},
 	[1] = {
 		.regs		= S5P_VA_UART1,
 		.base_irq	= IRQ_S5P_UART_BASE1,
-		.parent_irq	= IRQ_UART1,
+		.parent_irq	= EXYNOS4_IRQ_UART1,
 	},
 	[2] = {
 		.regs		= S5P_VA_UART2,
 		.base_irq	= IRQ_S5P_UART_BASE2,
-		.parent_irq	= IRQ_UART2,
+		.parent_irq	= EXYNOS4_IRQ_UART2,
 	},
 #if CONFIG_SERIAL_SAMSUNG_UARTS > 3
 	[3] = {
 		.regs		= S5P_VA_UART3,
 		.base_irq	= IRQ_S5P_UART_BASE3,
-		.parent_irq	= IRQ_UART3,
+		.parent_irq	= EXYNOS4_IRQ_UART3,
 	},
 #endif
 };

@@ -30,8 +30,8 @@ static struct resource s3c_i2c_resource[] = {
 		.flags	= IORESOURCE_MEM,
 	},
 	[1] = {
-		.start	= IRQ_IIC7,
-		.end	= IRQ_IIC7,
+		.start	= EXYNOS4_IRQ_IIC7,
+		.end	= EXYNOS4_IRQ_IIC7,
 		.flags	= IORESOURCE_IRQ,
 	},
 };

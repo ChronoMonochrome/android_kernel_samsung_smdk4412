@@ -28,8 +28,8 @@ static struct resource s5p_ehci_resource[] = {
 		.flags	= IORESOURCE_MEM,
 	},
 	[1] = {
-		.start	= IRQ_USB_HOST,
-		.end	= IRQ_USB_HOST,
+		.start	= EXYNOS4_IRQ_USB_HOST,
+		.end	= EXYNOS4_IRQ_USB_HOST,
 		.flags	= IORESOURCE_IRQ,
 	}
 };
@@ -78,8 +78,8 @@ static struct resource s5p_ohci_resource[] = {
 		.flags = IORESOURCE_MEM,
 	},
 	[1] = {
-		.start = IRQ_USB_HOST,
-		.end   = IRQ_USB_HOST,
+		.start = EXYNOS4_IRQ_USB_HOST,
+		.end   = EXYNOS4_IRQ_USB_HOST,
 		.flags = IORESOURCE_IRQ,
 	}
 };
