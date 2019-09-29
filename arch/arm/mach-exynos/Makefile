@@ -16,7 +16,7 @@ obj-				:=
 
 obj-y				+= init.o dma.o irq-eint.o ppmu.o
 obj-$(CONFIG_ARM_TRUSTZONE)	+= irq-sgi.o
-obj-$(CONFIG_ARCH_EXYNOS4)	+= exynos4-smc.o cpu-exynos4.o clock-exynos4.o pmu-exynos4.o ppc.o
+obj-$(CONFIG_ARCH_EXYNOS4)	+= exynos4-smc.o cpu-exynos4.o clock-exynos4.o pmu-exynos4.o ppc.o common.o
 
 CFLAGS_exynos4-smc.o :=$(call as-instr,.arch_extension sec,-DREQUIRES_SEC=1)
 obj-$(CONFIG_ARCH_EXYNOS5)	+= cpu-exynos5.o clock-exynos5.o pmu-exynos5.o

@@ -14,7 +14,6 @@ obj-				:=
 
 obj-y				+= dev-pmu.o
 obj-y				+= dev-uart.o
-obj-y				+= cpu.o
 obj-y				+= clock.o
 obj-y				+= irq.o
 obj-y				+= reset.o
