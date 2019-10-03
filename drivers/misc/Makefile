@@ -90,7 +90,6 @@ obj-$(CONFIG_MACH_M0_CTC)   += cw_tty.o
 # Secure OS Mobicore Interface
 CFLAGS_tzic.o :=$(call as-instr,.arch_extension sec,-DREQUIRES_SEC=1)
 obj-$(CONFIG_MOBICORE_SUPPORT)  += tzic.o
-obj-$(CONFIG_UID_CPUTIME) += uid_cputime.o
 obj-$(CONFIG_USB_SWITCH_FSA9480) += fsa9480.o
 obj-$(CONFIG_ALTERA_STAPL)	+=altera-stapl/
 obj-$(CONFIG_INTEL_MEI)		+= mei/
