@@ -483,7 +483,7 @@ struct io_device {
 	struct modem_ctl *mc;
 	struct modem_shared *msd;
 
-	struct wakeup_source wakelock;
+	struct wake_lock wakelock;
 	long waketime;
 
 	/* DO NOT use __current_link directly
@@ -764,7 +764,7 @@ struct modem_ctl {
 	struct io_device *bootd;
 
 	/* Wakelock for modem_ctl */
-	struct wakeup_source mc_wake_lock;
+	struct wake_lock mc_wake_lock;
 
 	void (*gpio_revers_bias_clear)(void);
 	void (*gpio_revers_bias_restore)(void);
