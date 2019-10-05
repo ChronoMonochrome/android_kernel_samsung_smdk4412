@@ -27,9 +27,8 @@
 #include <linux/lcd.h>
 #include <linux/backlight.h>
 #include <linux/ld9040.h>
-#ifdef CONFIG_FB
-#include <linux/fb.h>
-#include <linux/notifier.h>
+#ifdef CONFIG_HAS_EARLYSUSPEND
+#include <linux/earlysuspend.h>
 #endif
 
 #define SLEEPMSEC		0x1000
@@ -82,10 +81,8 @@ struct lcd_info  {
 	struct lcd_device		*ld;
 	struct backlight_device		*bd;
 	struct lcd_platform_data	*lcd_pd;
-#ifdef CONFIG_FB
-	struct notifier_block 		fb_notif;
-	bool 				fb_suspended;
-#endif
+	struct early_suspend		early_suspend;
+
 #ifdef SMART_DIMMING
 	unsigned char			id[3];
 	struct str_smart_dim		smart;
@@ -984,13 +981,11 @@ static ssize_t auto_brightness_store(struct device *dev,
 static DEVICE_ATTR(auto_brightness, 0644, auto_brightness_show, auto_brightness_store);
 
 #if defined(CONFIG_PM)
-#ifdef CONFIG_FB
-void ld9040_fb_suspend(struct lcd_info *lcd)
+#ifdef CONFIG_HAS_EARLYSUSPEND
+void ld9040_early_suspend(struct early_suspend *h)
 {
-	if (lcd->fb_suspended)
-		return;
-
-	lcd->fb_suspended = true;
+	struct lcd_info *lcd = container_of(h, struct lcd_info ,
+								early_suspend);
 	dev_info(&lcd->ld->dev, "+%s\n", __func__);
 	ld9040_power(lcd, FB_BLANK_POWERDOWN);
 	dev_info(&lcd->ld->dev, "-%s\n", __func__);
@@ -998,43 +993,15 @@ void ld9040_fb_suspend(struct lcd_info *lcd)
 	return ;
 }
 
-void ld9040_fb_resume(struct lcd_info *lcd)
+void ld9040_late_resume(struct early_suspend *h)
 {
-	if (!lcd->fb_suspended)
-		return;
-
-	lcd->fb_suspended = false;
+	struct lcd_info *lcd = container_of(h, struct lcd_info ,
+								early_suspend);
 	dev_info(&lcd->ld->dev, "+%s\n", __func__);
 	ld9040_power(lcd, FB_BLANK_UNBLANK);
 	dev_info(&lcd->ld->dev, "-%s\n", __func__);
 
 	return ;
-}
-
-int ld9040_fb_notifier_callback(struct notifier_block *self,
-				unsigned long event, void *data)
-{
-	struct fb_event *evdata = data;
-	int *blank;
-	struct lcd_info *lcd = container_of(self, struct lcd_info, fb_notif);
-	if (evdata && evdata->data && lcd) {
-		if (event == FB_EVENT_BLANK) {
-			blank = evdata->data;
-			switch (*blank) {
-				case FB_BLANK_UNBLANK:
-				case FB_BLANK_NORMAL:
-				case FB_BLANK_VSYNC_SUSPEND:
-				case FB_BLANK_HSYNC_SUSPEND:
-					ld9040_fb_resume(lcd);
-					break;
-				default:
-				case FB_BLANK_POWERDOWN:
-					ld9040_fb_suspend(lcd);
-					break;
-			}
-		}
-	}
-	return 0;
 }
 #endif
 #endif
@@ -1153,10 +1120,11 @@ static int ld9040_probe(struct spi_device *spi)
 
 	dev_set_drvdata(&spi->dev, lcd);
 
-#ifdef CONFIG_FB
-	lcd->fb_suspended = false;
-	lcd->fb_notif.notifier_call = ld9040_fb_notifier_callback;
-	fb_register_client(&lcd->fb_notif);
+#ifdef CONFIG_HAS_EARLYSUSPEND
+	lcd->early_suspend.suspend = ld9040_early_suspend;
+	lcd->early_suspend.resume = ld9040_late_resume;
+	lcd->early_suspend.level = EARLY_SUSPEND_LEVEL_DISABLE_FB - 1;
+	register_early_suspend(&lcd->early_suspend);
 #endif
 
 	if (pdata->lcdtype == LCDTYPE_M2)
