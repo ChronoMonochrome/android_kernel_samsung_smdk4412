@@ -19,8 +19,6 @@ config ARCH_EXYNOS4
 	select ARM_ERRATA_751472
 	select ARM_ERRATA_754322
 	select ARM_ERRATA_764369
-	select HAS_WAKELOCK
-	select HAS_EARLYSUSPEND
 	help
 	  Samsung EXYNOS4 series based systems
 
@@ -1839,9 +1837,3 @@ config EXYNOS_REBOOT_RECOVERY
 	help
 	  Always reboot to recovery. Useful for kernel crash debugging.
 	  Say N if unsure.
-
-config HAS_WAKELOCK
-	bool
-
-config HAS_EARLYSUSPEND
-	bool
