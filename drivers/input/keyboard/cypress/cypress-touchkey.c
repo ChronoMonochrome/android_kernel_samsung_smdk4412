@@ -27,10 +27,7 @@
 #include <linux/gpio.h>
 #include <linux/miscdevice.h>
 #include <linux/uaccess.h>
-#ifdef CONFIG_FB
-#include <linux/notifier.h>
-#include <linux/fb.h>
-#endif
+#include <linux/earlysuspend.h>
 #include <linux/io.h>
 #include <linux/regulator/consumer.h>
 #include <linux/regulator/driver.h>
@@ -1155,12 +1152,11 @@ static irqreturn_t touchkey_interrupt(int irq, void *dev_id)
 }
 #endif
 
-#ifdef CONFIG_FB
-static int sec_touchkey_fb_suspend(struct touchkey_i2c *tkey_i2c)
+#ifdef CONFIG_HAS_EARLYSUSPEND
+static int sec_touchkey_early_suspend(struct early_suspend *h)
 {
-	if (tkey_i2c->fb_suspended)
-		return 0;
-
+	struct touchkey_i2c *tkey_i2c =
+		container_of(h, struct touchkey_i2c, early_suspend);
 	int ret;
 	int i;
 
@@ -1185,7 +1181,6 @@ static int sec_touchkey_fb_suspend(struct touchkey_i2c *tkey_i2c)
 			"[TouchKey-BLN] %s: BLN is still active\n",
 			__func__);
 		set_touchkey_debug('S');
-		tkey_i2c->fb_suspended = true;
 		return 0;
 	}
 #endif
@@ -1197,11 +1192,10 @@ static int sec_touchkey_fb_suspend(struct touchkey_i2c *tkey_i2c)
 #endif
 	touchkey_enable = 0;
 	set_touchkey_debug('S');
-	printk(KERN_DEBUG "[TouchKey] sec_touchkey_fb_suspend\n");
+	printk(KERN_DEBUG "[TouchKey] sec_touchkey_early_suspend\n");
 	if (touchkey_enable < 0) {
 		printk(KERN_DEBUG "[TouchKey] ---%s---touchkey_enable: %d\n",
 		       __func__, touchkey_enable);
-		tkey_i2c->fb_suspended = true;
 		return 0;
 	}
 
@@ -1211,15 +1205,14 @@ static int sec_touchkey_fb_suspend(struct touchkey_i2c *tkey_i2c)
 	/* disable ldo11 */
 	tkey_i2c->pdata->power_on(0);
 
-	tkey_i2c->fb_suspended = true;
 	return 0;
 }
 
-static int sec_touchkey_fb_resume(struct touchkey_i2c *tkey_i2c)
+static int sec_touchkey_late_resume(struct early_suspend *h)
 {
-	if (!tkey_i2c->fb_suspended)
-		return 0;
 
+	struct touchkey_i2c *tkey_i2c =
+		container_of(h, struct touchkey_i2c, early_suspend);
 #ifdef TEST_JIG_MODE
 	unsigned char get_touch = 0x40;
 #endif
@@ -1243,7 +1236,6 @@ static int sec_touchkey_fb_resume(struct touchkey_i2c *tkey_i2c)
 #endif
 		enable_irq(tkey_i2c->irq);
 
-		tkey_i2c->fb_suspended = false;
 		return 0;
 	}
 #endif
@@ -1254,7 +1246,6 @@ static int sec_touchkey_fb_resume(struct touchkey_i2c *tkey_i2c)
 	if (touchkey_enable < 0) {
 		printk(KERN_DEBUG "[TouchKey] ---%s---touchkey_enable: %d\n",
 		       __func__, touchkey_enable);
-		tkey_i2c->fb_suspended = false;
 		return 0;
 	}
 	msleep(50);
@@ -1292,35 +1283,6 @@ static int sec_touchkey_fb_resume(struct touchkey_i2c *tkey_i2c)
 	}
 #endif
 	enable_irq(tkey_i2c->irq);
-
-	tkey_i2c->fb_suspended = false;
-	return 0;
-}
-
-static int fb_notifier_callback(struct notifier_block *self,
-				unsigned long event, void *data)
-{
-	struct fb_event *evdata = data;
-	int *blank;
-	struct touchkey_i2c *tkey_i2c = container_of(self, struct touchkey_i2c, fb_notif);
-
-	if (evdata && evdata->data && tkey_i2c) {
-		if (event == FB_EVENT_BLANK) {
-			blank = evdata->data;
-			switch (*blank) {
-				case FB_BLANK_UNBLANK:
-				case FB_BLANK_NORMAL:
-				case FB_BLANK_VSYNC_SUSPEND:
-				case FB_BLANK_HSYNC_SUSPEND:
-					sec_touchkey_fb_resume(tkey_i2c);
-					break;
-				default:
-				case FB_BLANK_POWERDOWN:
-					sec_touchkey_fb_suspend(tkey_i2c);
-					break;
-			}
-		}
-	}
 
 	return 0;
 }
@@ -2794,10 +2756,12 @@ static int i2c_touchkey_probe(struct i2c_client *client,
 	}
 #endif
 
-#ifdef CONFIG_FB
-	tkey_i2c->fb_suspended = false;
-	tkey_i2c->fb_notif.notifier_call = fb_notifier_callback;
-	fb_register_client(&tkey_i2c->fb_notif);
+#ifdef CONFIG_HAS_EARLYSUSPEND
+	tkey_i2c->early_suspend.suspend =
+		(void *)sec_touchkey_early_suspend;
+	tkey_i2c->early_suspend.resume =
+		(void *)sec_touchkey_late_resume;
+	register_early_suspend(&tkey_i2c->early_suspend);
 #endif
 
 #if defined(TK_HAS_AUTOCAL)
