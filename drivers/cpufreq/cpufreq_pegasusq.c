@@ -1518,7 +1518,7 @@ static struct notifier_block fb_notif;
 static bool fb_suspended = false;
 unsigned int prev_freq_step;
 unsigned int prev_sampling_rate;
-static void cpufreq_pegasusq_fb_suspend(void)
+static void cpufreq_pegasusq_fb_suspend()
 {
 	if (fb_suspended)
 		return;
@@ -1538,7 +1538,7 @@ static void cpufreq_pegasusq_fb_suspend(void)
 #endif
 	fb_suspended = true;
 }
-static void cpufreq_pegasusq_fb_resume(void)
+static void cpufreq_pegasusq_fb_resume()
 {
 	if (!fb_suspended)
 		return;
