@@ -369,7 +369,7 @@ struct io_device {
 	struct modem_ctl *mc;
 	struct modem_shared *msd;
 
-	struct wakeup_source wakelock;
+	struct wake_lock wakelock;
 	long waketime;
 
 	/* DO NOT use __current_link directly
