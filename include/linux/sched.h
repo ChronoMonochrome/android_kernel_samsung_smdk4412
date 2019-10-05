@@ -2443,6 +2443,7 @@ extern void flush_itimer_signals(void);
 
 extern void do_group_exit(int);
 
+extern void daemonize(const char *, ...);
 extern int do_execve(struct filename *,
 		     const char __user * const __user *,
 		     const char __user * const __user *);
