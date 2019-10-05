@@ -474,7 +474,7 @@ static int g2d_remove(struct platform_device *dev)
 }
 
 #if defined(CONFIG_FB)
-void g2d_fb_suspend(void)
+void g2d_fb_suspend()
 {
 	if (g2d_dev->fb_suspended)
 		return;
@@ -509,7 +509,7 @@ void g2d_fb_suspend(void)
 #endif
 }
 
-void g2d_fb_resume(void)
+void g2d_fb_resume()
 {
 	if (!g2d_dev->fb_suspended)
 		return;
