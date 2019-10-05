@@ -45,11 +45,14 @@
 #include "s3cfb_mdnie.h"
 #include "mdnie.h"
 #endif
+#ifdef CONFIG_HAS_WAKELOCK
+#include <linux/wakelock.h>
 #ifdef CONFIG_FB
 #include <linux/notifier.h>
 #include <linux/fb.h>
 #endif
 #include <linux/suspend.h>
+#endif
 
 #if defined(CONFIG_MACH_U1_BD) && defined(CONFIG_TARGET_LOCALE_KOR)
 #include <mach/regs-clock.h>
@@ -1310,10 +1313,12 @@ static int s3cfb_probe(struct platform_device *pdev)
 #endif
 #endif
 
+#ifdef CONFIG_HAS_WAKELOCK
 #ifdef CONFIG_FB
 		fbdev[i]->fb_suspended = false;
 		fbdev[i]->fb_notif.notifier_call = fb_notifier_callback;
 		fb_register_client(&fbdev[i]->fb_notif);
+#endif
 #endif
 #if defined(CONFIG_FB_S5P_VSYNC_THREAD)
 		init_waitqueue_head(&fbdev[i]->vsync_info.wait);
@@ -1416,8 +1421,10 @@ static int s3cfb_remove(struct platform_device *pdev)
 	for (i = 0; i < FIMD_MAX; i++) {
 		fbdev[i] = fbfimd->fbdev[i];
 
+#ifdef CONFIG_HAS_WAKELOCK
 #ifdef CONFIG_FB
 		fb_unregister_client(&fbdev[i]->fb_notif);
+#endif
 #endif
 		free_irq(fbdev[i]->irq, fbdev[i]);
 		iounmap(fbdev[i]->regs);

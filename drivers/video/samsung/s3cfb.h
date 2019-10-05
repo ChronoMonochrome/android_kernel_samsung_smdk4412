@@ -16,9 +16,12 @@
 #ifdef __KERNEL__
 #include <linux/mutex.h>
 #include <linux/fb.h>
+#ifdef CONFIG_HAS_WAKELOCK
 #ifdef CONFIG_FB
 #include <linux/notifier.h>
 #include <linux/fb.h>
+#endif
+#include <linux/wakelock.h>
 #endif
 #include <plat/fb-s5p.h>
 #endif
@@ -237,9 +240,12 @@ struct s3cfb_global {
 	struct sw_sync_timeline *timeline;
 	int			timeline_max;
 	unsigned int		support_fence;
+#ifdef CONFIG_HAS_WAKELOCK
 #ifdef CONFIG_FB
 	struct notifier_block 	fb_notif;
 	bool 			fb_suspended;
+#endif
+	struct wake_lock	idle_lock;
 #endif
 #ifdef FEATURE_BUSFREQ_LOCK
 	atomic_t		busfreq_lock_cnt;	/* Bus frequency Lock count */
