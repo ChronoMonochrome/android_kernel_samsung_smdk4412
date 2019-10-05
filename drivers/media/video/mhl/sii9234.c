@@ -224,7 +224,7 @@ void sii9234_wake_lock(void)
 	wake_lock(&sii9234->mhl_wake_lock);
 	pr_debug("%s()\n", __func__);
 }
-EXPORT_SYMBOL(sii9234_pm_stay_awake);
+EXPORT_SYMBOL(sii9234_wake_lock);
 
 void sii9234_wake_unlock(void)
 {
