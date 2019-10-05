@@ -26,7 +26,7 @@
 #include <linux/fb.h>
 #endif
 
-#include <linux/platform_data/modem.h>
+#include "modem.h"
 #include "modem_prj.h"
 
 #define DPRAM_MAGIC_CODE	0xAA
