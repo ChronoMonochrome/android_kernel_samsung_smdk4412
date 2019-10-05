@@ -20,7 +20,7 @@
 #include <linux/platform_device.h>
 
 #include <mach/c2c.h>
-#include <linux/platform_data/modem.h>
+#include "modem.h"
 #include "modem_prj.h"
 #include "modem_utils.h"
 
