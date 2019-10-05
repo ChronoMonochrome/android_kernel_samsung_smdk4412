@@ -28,12 +28,15 @@
 #include <linux/delay.h>
 
 #include <asm/cacheflush.h>
+#include <linux/pm_qos_params.h>
 
 #include "fimc.h"
 
 #ifdef CONFIG_MACH_KONA
 extern fimc_is;
 #endif
+
+static struct pm_qos_request_list bus_qos_pm_qos_req;
 
 static const struct v4l2_fmtdesc capture_fmts[] = {
 	{
@@ -2681,6 +2684,7 @@ int fimc_streamon_capture(void *fh)
 	struct fimc_capinfo *cap = ctrl->cap;
 	struct v4l2_frmsizeenum cam_frmsize;
 	struct v4l2_control is_ctrl;
+	void __iomem *qos_regs;
 
 	int rot = 0, i;
 	int ret = 0;
@@ -2861,6 +2865,25 @@ int fimc_streamon_capture(void *fh)
 	if (ctrl->flite_sd && fimc_cam_use)
 		v4l2_subdev_call(ctrl->flite_sd, video, s_stream, 1);
 
+	if (!ctrl->is.sd && cap->movie_mode &&
+		!((cam->width == 880 && cam->height == 720))) {
+		printk(KERN_INFO "\n\n\n%s pm_qos_req is called..\n", __func__ );
+		/*dev_lock(ctrl->bus_dev, ctrl->dev, (unsigned long)400200);*/
+		//pm_qos_add_request(&bus_qos_pm_qos_req, PM_QOS_BUS_QOS, 1);
+
+		/* ioremap for register block */
+		qos_regs = ioremap(0x11a00400, 0x10);
+		if (!qos_regs) {
+			fimc_err("%s: failed to remap io region\n", __func__);
+			return -1;
+		}
+		writel(0x3, qos_regs + 0x0);
+		writel(0x1, qos_regs + 0x4);
+		fimc_err("0x11a00400 = 0x%x , 0x11a00404 = 0x%x \n", readl(qos_regs + 0), readl(qos_regs + 4));
+
+		iounmap(qos_regs);
+	}
+
 	fimc_hwset_camera_type(ctrl);
 	fimc_hwset_camera_polarity(ctrl);
 	fimc_hwset_enable_lastend(ctrl);
@@ -2962,6 +2985,7 @@ int fimc_streamoff_capture(void *fh)
 
 	struct s3c_platform_fimc *pdata = to_fimc_plat(ctrl->dev);
 	int ret = 0;
+	void __iomem *qos_regs;
 
 	printk(KERN_INFO "%s++ fimc%d\n", __func__, ctrl->id);
 
@@ -3024,6 +3048,25 @@ int fimc_streamoff_capture(void *fh)
 			v4l2_subdev_call(ctrl->cam->sd, video, s_stream, 0);
 	} else {
 		fimc_hwset_reset(ctrl);
+	}
+
+	if (!ctrl->is.sd && cap->movie_mode &&
+		!(ctrl->cam->width == 880 && ctrl->cam->height == 720)) {
+		printk(KERN_INFO "\n\n\n%s pm_qos_req is removed..\n", __func__ );
+		pm_qos_remove_request(&bus_qos_pm_qos_req);
+		/*dev_unlock(ctrl->bus_dev, ctrl->dev);*/
+
+		/* ioremap for register block */
+		qos_regs = ioremap(0x11a00400, 0x10);
+		if (!qos_regs) {
+			fimc_err("%s: failed to remap io region\n", __func__);
+			return -1;
+		}
+		writel(0x0, qos_regs + 0x0);
+		writel(0x0, qos_regs + 0x4);
+		fimc_err("0x11a00400 = 0x%x , 0x11a00404 = 0x%x \n", readl(qos_regs + 0), readl(qos_regs + 4));
+
+		iounmap(qos_regs);
 	}
 
 	/* disable camera power */
