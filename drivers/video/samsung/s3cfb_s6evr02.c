@@ -521,7 +521,7 @@ static int s6evr02_set_elvss(struct lcd_info *lcd, u8 force)
 	case 240 ... 250:
 		elvss_level = ELVSS_STATUS_240;
 		break;
-	case 299:
+	case 255 ... 299:
 		elvss_level = ELVSS_STATUS_300;
 		break;
 	}
@@ -925,9 +925,10 @@ static int s6evr02_get_brightness(struct backlight_device *bd)
 
 static int s6evr02_check_fb(struct lcd_device *ld, struct fb_info *fb)
 {
+	struct s3cfb_window *win = fb->par;
 	struct lcd_info *lcd = lcd_get_data(ld);
 
-	//dev_info(&lcd->ld->dev, "%s, fb%d\n", __func__, fb->node);
+	//dev_info(&lcd->ld->dev, "%s, fb%d\n", __func__, win->id);
 
 	return 0;
 }
@@ -1068,9 +1069,6 @@ static DEVICE_ATTR(auto_brightness, 0644, auto_brightness_show, auto_brightness_
 #ifdef CONFIG_HAS_EARLYSUSPEND
 static struct lcd_info *g_lcd;
 
-int s6e8ax0_suspended;
-int s6e8ax0_fix_fence;
-
 void s6evr02_early_suspend(void)
 {
 	struct lcd_info *lcd = g_lcd;
@@ -1098,8 +1096,6 @@ void s6evr02_early_suspend(void)
 
 	s6evr02_power(lcd, FB_BLANK_POWERDOWN);
 	dev_info(&lcd->ld->dev, "-%s\n", __func__);
-	s6e8ax0_suspended = 1;
-	s6e8ax0_fix_fence = 1;
 
 	return ;
 }
@@ -1107,7 +1103,6 @@ void s6evr02_early_suspend(void)
 void s6evr02_late_resume(void)
 {
 	struct lcd_info *lcd = g_lcd;
-	s6e8ax0_suspended = 0;
 
 	dev_info(&lcd->ld->dev, "+%s\n", __func__);
 	s6evr02_power(lcd, FB_BLANK_UNBLANK);
