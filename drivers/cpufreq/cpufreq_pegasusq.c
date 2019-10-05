@@ -31,9 +31,8 @@
 #include <linux/suspend.h>
 #include <linux/reboot.h>
 
-#ifdef CONFIG_FB
-#include <linux/notifier.h>
-#include <linux/fb.h>
+#ifdef CONFIG_HAS_EARLYSUSPEND
+#include <linux/earlysuspend.h>
 #endif
 #define EARLYSUSPEND_HOTPLUGLOCK 1
 
@@ -297,8 +296,8 @@ static struct dbs_tuners {
 	unsigned int boost_freq;
 	unsigned int boost_mincpus;
 #endif
-#ifdef CONFIG_FB
-	int fb_suspend;
+#ifdef CONFIG_HAS_EARLYSUSPEND
+	int early_suspend;
 #endif
 } dbs_tuners_ins = {
 	.up_threshold = DEF_FREQUENCY_UP_THRESHOLD,
@@ -317,8 +316,8 @@ static struct dbs_tuners {
 	.min_cpu_lock = DEF_MIN_CPU_LOCK,
 	.hotplug_lock = ATOMIC_INIT(0),
 	.dvfs_debug = 0,
-#ifdef CONFIG_FB
-	.fb_suspend = -1,
+#ifdef CONFIG_HAS_EARLYSUSPEND
+	.early_suspend = -1,
 #endif
 };
 
@@ -417,8 +416,8 @@ void cpufreq_pegasusq_min_cpu_unlock(void)
 	lock = atomic_read(&g_hotplug_lock);
 	if (lock == 0)
 		return;
-#if defined(CONFIG_FB) && EARLYSUSPEND_HOTPLUGLOCK
-	if (dbs_tuners_ins.fb_suspend >= 0) { /* if LCD is off-state */
+#if defined(CONFIG_HAS_EARLYSUSPEND) && EARLYSUSPEND_HOTPLUGLOCK
+	if (dbs_tuners_ins.early_suspend >= 0) { /* if LCD is off-state */
 		atomic_set(&g_hotplug_lock, 1);
 		apply_hotplug_lock();
 		return;
@@ -1513,17 +1512,14 @@ static struct notifier_block reboot_notifier = {
 	.notifier_call = reboot_notifier_call,
 };
 
-#ifdef CONFIG_FB
-static struct notifier_block fb_notif;
-static bool fb_suspended = false;
+#ifdef CONFIG_HAS_EARLYSUSPEND
+static struct early_suspend early_suspend;
 unsigned int prev_freq_step;
 unsigned int prev_sampling_rate;
-static void cpufreq_pegasusq_fb_suspend()
+static void cpufreq_pegasusq_early_suspend(struct early_suspend *h)
 {
-	if (fb_suspended)
-		return;
 #if EARLYSUSPEND_HOTPLUGLOCK
-	dbs_tuners_ins.fb_suspend =
+	dbs_tuners_ins.early_suspend =
 		atomic_read(&g_hotplug_lock);
 #endif
 	prev_freq_step = dbs_tuners_ins.freq_step;
@@ -1536,49 +1532,19 @@ static void cpufreq_pegasusq_fb_suspend()
 	apply_hotplug_lock();
 	stop_rq_work();
 #endif
-	fb_suspended = true;
 }
-static void cpufreq_pegasusq_fb_resume()
+static void cpufreq_pegasusq_late_resume(struct early_suspend *h)
 {
-	if (!fb_suspended)
-		return;
 #if EARLYSUSPEND_HOTPLUGLOCK
-	atomic_set(&g_hotplug_lock, dbs_tuners_ins.fb_suspend);
+	atomic_set(&g_hotplug_lock, dbs_tuners_ins.early_suspend);
 #endif
-	dbs_tuners_ins.fb_suspend = -1;
+	dbs_tuners_ins.early_suspend = -1;
 	dbs_tuners_ins.freq_step = prev_freq_step;
 	dbs_tuners_ins.sampling_rate = prev_sampling_rate;
 #if EARLYSUSPEND_HOTPLUGLOCK
 	apply_hotplug_lock();
 	start_rq_work();
 #endif
-	fb_suspended = false;
-}
-
-static int fb_notifier_callback(struct notifier_block *self,
-				unsigned long event, void *data)
-{
-	struct fb_event *evdata = data;
-	int *blank;
-	if (evdata && evdata->data) {
-		if (event == FB_EVENT_BLANK) {
-			blank = evdata->data;
-			switch (*blank) {
-				case FB_BLANK_UNBLANK:
-				case FB_BLANK_NORMAL:
-				case FB_BLANK_VSYNC_SUSPEND:
-				case FB_BLANK_HSYNC_SUSPEND:
-					cpufreq_pegasusq_fb_resume();
-					break;
-				default:
-				case FB_BLANK_POWERDOWN:
-					cpufreq_pegasusq_fb_suspend();
-					break;
-			}
-		}
-	}
-
-	return 0;
 }
 #endif
 
@@ -1645,16 +1611,14 @@ static int cpufreq_governor_dbs(struct cpufreq_policy *policy,
 #if !EARLYSUSPEND_HOTPLUGLOCK
 		register_pm_notifier(&pm_notifier);
 #endif
-#ifdef CONFIG_FB
-		fb_suspended = false;
-		fb_notif.notifier_call = fb_notifier_callback;
-		fb_register_client(&fb_notif);
+#ifdef CONFIG_HAS_EARLYSUSPEND
+		register_early_suspend(&early_suspend);
 #endif
 		break;
 
 	case CPUFREQ_GOV_STOP:
-#ifdef CONFIG_FB
-		fb_unregister_client(&fb_notif);
+#ifdef CONFIG_HAS_EARLYSUSPEND
+		unregister_early_suspend(&early_suspend);
 #endif
 #if !EARLYSUSPEND_HOTPLUGLOCK
 		unregister_pm_notifier(&pm_notifier);
@@ -1721,6 +1685,12 @@ static int __init cpufreq_gov_dbs_init(void)
 	ret = cpufreq_register_governor(&cpufreq_gov_pegasusq);
 	if (ret)
 		goto err_reg;
+
+#ifdef CONFIG_HAS_EARLYSUSPEND
+	early_suspend.level = EARLY_SUSPEND_LEVEL_DISABLE_FB;
+	early_suspend.suspend = cpufreq_pegasusq_early_suspend;
+	early_suspend.resume = cpufreq_pegasusq_late_resume;
+#endif
 
 	return ret;
 
