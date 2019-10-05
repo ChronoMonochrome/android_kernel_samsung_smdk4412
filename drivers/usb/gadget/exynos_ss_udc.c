@@ -2029,7 +2029,9 @@ static void exynos_ss_udc_handle_devt(struct exynos_ss_udc *udc, u32 event)
 		break;
 
 	case EXYNOS_USB3_DEVT_EVENT_ConnectDone:
-		__pm_stay_awake(&udc->usbd_wake_lock);
+#if defined(USE_WAKE_LOCK)
+		wake_lock(&udc->usbd_wake_lock);
+#endif
 		dev_dbg(udc->dev, "Connection Done");
 		EXYNOS_SS_UDC_CABLE_CONNECT(udc, true);
 		exynos_ss_udc_irq_connectdone(udc);
@@ -2047,7 +2049,9 @@ static void exynos_ss_udc_handle_devt(struct exynos_ss_udc *udc, u32 event)
 		udc->state = USB_STATE_NOTATTACHED;
 		EXYNOS_SS_UDC_CABLE_CONNECT(udc, false);
 
-		__pm_wakeup_event(&udc->usbd_wake_lock, 5000);
+#if defined(USE_WAKE_LOCK)
+		wake_lock_timeout(&udc->usbd_wake_lock, HZ * 5);
+#endif
 		break;
 
 	default:
@@ -2865,7 +2869,10 @@ static int exynos_ss_udc_probe(struct platform_device *pdev)
 
 	udc->irq = ret;
 
-	wakeup_source_init(&udc->usbd_wake_lock, "usb device wake lock");
+#if defined(USE_WAKE_LOCK)
+	wake_lock_init(&udc->usbd_wake_lock, WAKE_LOCK_SUSPEND,
+			"usb device wake lock");
+#endif
 	ret = request_irq(udc->irq,
 			exynos_ss_udc_irq,
 			IRQF_SHARED,
