@@ -15,9 +15,8 @@
 #include <linux/delay.h>
 #include <linux/wakelock.h>
 
-#ifdef CONFIG_FB
-#include <linux/fb.h>
-#include <linux/notifier.h>
+#ifdef CONFIG_HAS_EARLYSUSPEND
+#include <linux/earlysuspend.h>
 #endif
 
 #define NAMEBUF 12
@@ -386,8 +385,8 @@ struct wacom_g5_platform_data {
 	int (*exit_platform_hw)(void);
 	int (*suspend_platform_hw)(void);
 	int (*resume_platform_hw)(void);
-	int (*fb_suspend_platform_hw)(void);
-	int (*fb_resume_platform_hw)(void);
+	int (*early_suspend_platform_hw)(void);
+	int (*late_resume_platform_hw)(void);
 	int (*reset_platform_hw)(void);
 	void (*register_cb)(struct wacom_g5_callbacks *);
 };
@@ -397,8 +396,7 @@ struct wacom_i2c {
 	struct i2c_client *client;
 	struct i2c_client *client_boot;
 	struct input_dev *input_dev;
-	struct notifier_block fb_notif;
-	bool fb_suspended;
+	struct early_suspend early_suspend;
 	struct mutex lock;
 	struct wake_lock wakelock;
 	struct device	*dev;
