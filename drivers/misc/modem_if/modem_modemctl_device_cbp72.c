@@ -22,7 +22,7 @@
 #include <linux/sched.h>
 #include <linux/platform_device.h>
 
-#include <linux/platform_data/modem.h>
+#include "modem.h"
 #include "modem_prj.h"
 #include "modem_link_device_dpram.h"
 
