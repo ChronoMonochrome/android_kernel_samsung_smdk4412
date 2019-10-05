@@ -13,10 +13,7 @@
  *
  */
 
-#ifdef CONFIG_FB
-#include <linux/fb.h>
-#include <linux/notifier.h>
-#endif
+#include <linux/earlysuspend.h>
 #include <linux/module.h>
 #include <linux/input.h>
 #include <linux/gpio_event.h>
@@ -27,10 +24,7 @@
 struct gpio_event {
 	struct gpio_event_input_devs *input_devs;
 	const struct gpio_event_platform_data *info;
-#ifdef CONFIG_FB
-	struct notifier_block fb_notif;
-	bool fb_suspended;
-#endif
+	struct early_suspend early_suspend;
 	void *state[0];
 };
 
@@ -107,51 +101,21 @@ err_no_func:
 	return ret;
 }
 
-#ifdef CONFIG_FB
-void gpio_event_suspend(struct gpio_event *ip)
+#ifdef CONFIG_HAS_EARLYSUSPEND
+void gpio_event_suspend(struct early_suspend *h)
 {
-	if (ip->fb_suspended)
-		return;
-
-	ip->fb_suspended = true;
+	struct gpio_event *ip;
+	ip = container_of(h, struct gpio_event, early_suspend);
 	gpio_event_call_all_func(ip, GPIO_EVENT_FUNC_SUSPEND);
 	ip->info->power(ip->info, 0);
 }
 
-void gpio_event_resume(struct gpio_event *ip)
+void gpio_event_resume(struct early_suspend *h)
 {
-	if (!ip->fb_suspended)
-		return;
-
-	ip->fb_suspended = false;
+	struct gpio_event *ip;
+	ip = container_of(h, struct gpio_event, early_suspend);
 	ip->info->power(ip->info, 1);
 	gpio_event_call_all_func(ip, GPIO_EVENT_FUNC_RESUME);
-}
-
-static int fb_notifier_callback(struct notifier_block *self,
-				unsigned long event, void *data)
-{
-	struct fb_event *evdata = data;
-	int *blank;
-	struct gpio_event *ip = container_of(self, struct gpio_event, fb_notif);
-	if (evdata && evdata->data && ip) {
-		if (event == FB_EVENT_BLANK) {
-			blank = evdata->data;
-			switch (*blank) {
-				case FB_BLANK_UNBLANK:
-				case FB_BLANK_NORMAL:
-				case FB_BLANK_VSYNC_SUSPEND:
-				case FB_BLANK_HSYNC_SUSPEND:
-					gpio_event_resume(ip);
-					break;
-				default:
-				case FB_BLANK_POWERDOWN:
-					gpio_event_suspend(ip);
-					break;
-			}
-		}
-	}
-	return 0;
 }
 #endif
 
@@ -206,10 +170,11 @@ static int gpio_event_probe(struct platform_device *pdev)
 	ip->input_devs->count = dev_count;
 	ip->info = event_info;
 	if (event_info->power) {
-#ifdef CONFIG_FB
-	ip->fb_suspended = false;
-	ip->fb_notif.notifier_call = fb_notifier_callback;
-	fb_register_client(&ip->fb_notif);
+#ifdef CONFIG_HAS_EARLYSUSPEND
+		ip->early_suspend.level = EARLY_SUSPEND_LEVEL_BLANK_SCREEN + 1;
+		ip->early_suspend.suspend = gpio_event_suspend;
+		ip->early_suspend.resume = gpio_event_resume;
+		register_early_suspend(&ip->early_suspend);
 #endif
 		ip->info->power(ip->info, 1);
 	}
@@ -234,8 +199,8 @@ err_input_register_device_failed:
 	gpio_event_call_all_func(ip, GPIO_EVENT_FUNC_UNINIT);
 err_call_all_func_failed:
 	if (event_info->power) {
-#ifdef CONFIG_FB
-		fb_unregister_client(&ip->fb_notif);
+#ifdef CONFIG_HAS_EARLYSUSPEND
+		unregister_early_suspend(&ip->early_suspend);
 #endif
 		ip->info->power(ip->info, 0);
 	}
@@ -258,8 +223,8 @@ static int gpio_event_remove(struct platform_device *pdev)
 
 	gpio_event_call_all_func(ip, GPIO_EVENT_FUNC_UNINIT);
 	if (ip->info->power) {
-#ifdef CONFIG_FB
-		fb_unregister_client(&ip->fb_notif);
+#ifdef CONFIG_HAS_EARLYSUSPEND
+		unregister_early_suspend(&ip->early_suspend);
 #endif
 		ip->info->power(ip->info, 0);
 	}
