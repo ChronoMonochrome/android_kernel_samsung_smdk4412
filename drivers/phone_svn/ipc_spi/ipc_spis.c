@@ -2206,7 +2206,7 @@ static int ipc_spi_thread(void *data)
 		goto exit;
 	}
 #else
-	if (poweroff_charging == 1) {
+	if (lpcharge == 1) {
 		printk(KERN_ERR "[LPM mode] ipc_spi_thread exit!\n");
 		goto exit;
 	}
