@@ -24,7 +24,7 @@
 #include <linux/platform_device.h>
 #include <linux/cma.h>
 #include <plat/devs.h>
-#include <linux/platform_data/modem.h>
+#include "modem.h"
 #include "modem_prj.h"
 #ifdef CONFIG_FAST_BOOT
 #include <linux/fake_shut_down.h>
