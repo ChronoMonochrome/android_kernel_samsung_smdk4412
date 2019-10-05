@@ -374,7 +374,7 @@ static struct platform_driver mdm_modem_driver = {
 static int __init mdm_modem_init(void)
 {
 	/* in lpm mode, do not load modem driver */
-	if (poweroff_charging)
+	if (lpcharge)
 		return 0;
 	return platform_driver_probe(&mdm_modem_driver, mdm_modem_probe);
 }
