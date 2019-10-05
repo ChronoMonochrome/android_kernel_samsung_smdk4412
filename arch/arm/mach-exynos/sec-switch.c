@@ -383,7 +383,7 @@ void max77693_muic_mhl_cb(int attached)
 		pr_info("MHL Attached !!\n");
 #ifdef CONFIG_SAMSUNG_MHL
 #ifdef CONFIG_MACH_MIDAS
-		sii9234_pm_stay_awake();
+		sii9234_wake_lock();
 #endif
 		mhl_onoff_ex(1);
 #endif
@@ -393,7 +393,7 @@ void max77693_muic_mhl_cb(int attached)
 #ifdef CONFIG_SAMSUNG_MHL
 		mhl_onoff_ex(false);
 #ifdef CONFIG_MACH_MIDAS
-		sii9234_pm_relax();
+		sii9234_wake_unlock();
 #endif
 #endif
 	}
