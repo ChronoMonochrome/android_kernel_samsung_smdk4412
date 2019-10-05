@@ -31,8 +31,6 @@
 #include <linux/of_gpio.h>
 #include <linux/spinlock.h>
 
-#include <linux/earlysuspend.h>
-
 struct gpio_button_data {
 	const struct gpio_keys_button *button;
 	struct input_dev *input;
@@ -384,13 +382,8 @@ static void gpio_keys_irq_timer(unsigned long _data)
 
 	spin_lock_irqsave(&bdata->lock, flags);
 	if (bdata->key_pressed) {
-		if((button->code == KEY_POWER) && (!!state == 1) && (get_suspend_state() > 0))
-			request_suspend_state(0);
-		else
-		{
-			input_event(input, EV_KEY, button->code, 0);
-			input_sync(input);
-		}
+		input_event(input, EV_KEY, bdata->button->code, 0);
+		input_sync(input);
 		bdata->key_pressed = false;
 	}
 	spin_unlock_irqrestore(&bdata->lock, flags);

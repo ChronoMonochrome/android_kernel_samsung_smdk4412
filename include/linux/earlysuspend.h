@@ -16,7 +16,6 @@
 #ifndef _LINUX_EARLYSUSPEND_H
 #define _LINUX_EARLYSUSPEND_H
 
-#include <linux/suspend.h>
 #ifdef CONFIG_HAS_EARLYSUSPEND
 #include <linux/list.h>
 #endif
@@ -53,6 +52,4 @@ void unregister_early_suspend(struct early_suspend *handler);
 #define unregister_early_suspend(handler) do { } while (0)
 #endif
 
-void request_suspend_state(suspend_state_t new_state);
-suspend_state_t get_suspend_state(void);
 #endif
