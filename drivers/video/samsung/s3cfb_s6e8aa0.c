@@ -1543,6 +1543,7 @@ static ssize_t brightness_config_store(struct device *dev,
 
 static DEVICE_ATTR(brightness_config, 0666, brightness_config_show, brightness_config_store);
 
+#ifdef CONFIG_HAS_EARLYSUSPEND
 struct lcd_info *g_lcd;
 
 int s6e8ax0_suspended;
@@ -1602,6 +1603,7 @@ void s6e8ax0_fb_resume(void)
 
 	return ;
 }
+#endif
 
 static void s6e8ax0_read_id(struct lcd_info *lcd, u8 *buf)
 {
