@@ -26,6 +26,7 @@
 #include <linux/delay.h>
 #include <linux/gpio.h>
 #include <linux/i2c-gpio.h>
+#include <asm/system_info.h>
 #include <mach/irqs.h>
 #include <mach/pmu.h>
 #include <plat/iic.h>

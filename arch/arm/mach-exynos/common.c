@@ -32,10 +32,12 @@
 #include <asm/proc-fns.h>
 #include <asm/exception.h>
 #include <asm/hardware/cache-l2x0.h>
+#include <asm/system_misc.h>
 #include <asm/mach/map.h>
 #include <asm/mach/irq.h>
 #include <asm/mmu-legacy.h>
 #include <asm/cacheflush.h>
+#include <asm/system_misc.h>
 
 #include <mach/regs-irq.h>
 #include <mach/regs-pmu.h>

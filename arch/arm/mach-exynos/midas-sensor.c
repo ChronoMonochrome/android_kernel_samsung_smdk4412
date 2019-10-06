@@ -22,6 +22,7 @@
 #include <mach/gpio.h>
 #include "midas.h"
 
+#include <asm/system_info.h>
 #ifdef CONFIG_SENSORS_SSP
 #include <linux/ssp_platformdata.h>
 #endif

@@ -1,7 +1,7 @@
 #include <linux/gpio.h>
 #include <linux/i2c.h>
 #include <linux/nfc/pn65n.h>
-
+#include <asm/system_info.h>
 #include <plat/gpio-cfg.h>
 #include <mach/regs-gpio.h>
 #include <mach/gpio.h>

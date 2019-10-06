@@ -6,6 +6,8 @@
 #include <linux/delay.h>
 #include <linux/sii9234.h>
 
+#include <asm/system_info.h>
+
 #include <plat/gpio-cfg.h>
 #include <mach/regs-gpio.h>
 #include <mach/gpio.h>

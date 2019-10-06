@@ -42,6 +42,8 @@
 #include <linux/delay.h>
 #include <linux/extcon.h>
 
+#include <asm/system_info.h>
+
 #define DEV_NAME	"max77693-muic"
 
 /* for providing API */

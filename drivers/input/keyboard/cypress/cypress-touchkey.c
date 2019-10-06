@@ -22,6 +22,7 @@
 #include <linux/delay.h>
 #include <linux/platform_device.h>
 #include <linux/input.h>
+#include <asm/system_info.h>
 #include <mach/regs-gpio.h>
 #include <plat/gpio-cfg.h>
 #include <linux/gpio.h>

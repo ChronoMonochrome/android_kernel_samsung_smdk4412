@@ -2,6 +2,7 @@
 #include <linux/err.h>
 #include <linux/kernel.h>
 #include <linux/platform_device.h>
+#include <asm/system_info.h>
 #include <mach/gpio.h>
 #include <plat/gpio-cfg.h>
 #include <mach/board-gps.h>

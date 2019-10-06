@@ -45,6 +45,8 @@
 #include <linux/stmpe811-adc.h>
 #endif
 
+#include <asm/system_info.h>
+
 static char *supply_list[] = {
 	"battery",
 };
