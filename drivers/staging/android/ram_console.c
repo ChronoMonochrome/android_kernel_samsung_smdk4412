@@ -15,11 +15,13 @@
 
 #include <linux/console.h>
 #include <linux/init.h>
+#include <linux/slab.h>
 #include <linux/module.h>
 #include <linux/platform_device.h>
 #include <linux/proc_fs.h>
 #include <linux/string.h>
 #include <linux/uaccess.h>
+#include <linux/io.h>
 #include <linux/platform_data/ram_console.h>
 
 #ifdef CONFIG_ANDROID_RAM_CONSOLE_ERROR_CORRECTION
@@ -33,7 +35,7 @@ struct ram_console_buffer {
 	uint8_t     data[0];
 };
 
-#define RAM_CONSOLE_SIG (0x4d474f4c) /* LOGM */
+#define RAM_CONSOLE_SIG (0x43474244) /* DBGC */
 
 #ifdef CONFIG_ANDROID_RAM_CONSOLE_EARLY_INIT
 static char __initdata
@@ -142,7 +144,7 @@ ram_console_write(struct console *console, const char *s, unsigned int count)
 static struct console ram_console = {
 	.name	= "ram",
 	.write	= ram_console_write,
-	.flags	= CON_PRINTBUFFER | CON_ENABLED | CON_ANYTIME,
+	.flags	= CON_PRINTBUFFER | CON_ENABLED,
 	.index	= -1,
 };
 
@@ -180,14 +182,14 @@ ram_console_save_old(struct ram_console_buffer *buffer, const char *bootinfo,
 		numerr = ram_console_decode_rs8(block, size, par);
 		if (numerr > 0) {
 #if 0
-			printk(KERN_INFO "ram_console: error in block %p, %d\n",
-			       block, numerr);
+//			printk(KERN_INFO "ram_console: error in block %p, %d\n",
+;
 #endif
 			ram_console_corrected_bytes += numerr;
 		} else if (numerr < 0) {
 #if 0
-			printk(KERN_INFO "ram_console: uncorrectable error in "
-			       "block %p\n", block);
+//			printk(KERN_INFO "ram_console: uncorrectable error in "
+;
 #endif
 			ram_console_bad_blocks++;
 		}
@@ -213,8 +215,8 @@ ram_console_save_old(struct ram_console_buffer *buffer, const char *bootinfo,
 	if (dest == NULL) {
 		dest = kmalloc(total_size, GFP_KERNEL);
 		if (dest == NULL) {
-			printk(KERN_ERR
-			       "ram_console: failed to allocate buffer\n");
+//			printk(KERN_ERR
+;
 			return;
 		}
 	}
@@ -276,7 +278,7 @@ static int __init ram_console_init(struct ram_console_buffer *buffer,
 	 */
 	ram_console_rs_decoder = init_rs(ECC_SYMSIZE, ECC_POLY, 0, 1, ECC_SIZE);
 	if (ram_console_rs_decoder == NULL) {
-		printk(KERN_INFO "ram_console: init_rs failed\n");
+;
 		return 0;
 	}
 
@@ -288,11 +290,11 @@ static int __init ram_console_init(struct ram_console_buffer *buffer,
 
 	numerr = ram_console_decode_rs8(buffer, sizeof(*buffer), par);
 	if (numerr > 0) {
-		printk(KERN_INFO "ram_console: error in header, %d\n", numerr);
+;
 		ram_console_corrected_bytes += numerr;
 	} else if (numerr < 0) {
-		printk(KERN_INFO
-		       "ram_console: uncorrectable error in header\n");
+//		printk(KERN_INFO
+;
 		ram_console_bad_blocks++;
 	}
 #endif
@@ -300,18 +302,18 @@ static int __init ram_console_init(struct ram_console_buffer *buffer,
 	if (buffer->sig == RAM_CONSOLE_SIG) {
 		if (buffer->size > ram_console_buffer_size
 		    || buffer->start > buffer->size)
-			printk(KERN_INFO "ram_console: found existing invalid "
-			       "buffer, size %d, start %d\n",
-			       buffer->size, buffer->start);
+//			printk(KERN_INFO "ram_console: found existing invalid "
+//			       "buffer, size %d, start %d\n",
+;
 		else {
-			printk(KERN_INFO "ram_console: found existing buffer, "
-			       "size %d, start %d\n",
-			       buffer->size, buffer->start);
+//			printk(KERN_INFO "ram_console: found existing buffer, "
+//			       "size %d, start %d\n",
+;
 			ram_console_save_old(buffer, bootinfo, old_buf);
 		}
 	} else {
-		printk(KERN_INFO "ram_console: no valid data in buffer "
-		       "(sig = 0x%08x)\n", buffer->sig);
+//		printk(KERN_INFO "ram_console: no valid data in buffer "
+;
 	}
 
 	buffer->sig = RAM_CONSOLE_SIG;
@@ -335,6 +337,10 @@ static int __init ram_console_early_init(void)
 		ram_console_old_log_init_buffer);
 }
 #else
+#if defined(CONFIG_MACH_JANICE)
+#define LDI_MTP_LENGTH 21
+char mtp_data_from_boot[21];
+#endif
 static int ram_console_driver_probe(struct platform_device *pdev)
 {
 	struct resource *res = pdev->resource;
@@ -343,30 +349,31 @@ static int ram_console_driver_probe(struct platform_device *pdev)
 	void *buffer;
 	const char *bootinfo = NULL;
 	struct ram_console_platform_data *pdata = pdev->dev.platform_data;
+	#if defined(CONFIG_MACH_JANICE)
+	char *start_addr;
+	#endif
 
 	if (res == NULL || pdev->num_resources != 1 ||
 	    !(res->flags & IORESOURCE_MEM)) {
-		printk(KERN_ERR "ram_console: invalid resource, %p %d flags "
-		       "%lx\n", res, pdev->num_resources, res ? res->flags : 0);
+//		printk(KERN_ERR "ram_console: invalid resource, %p %d flags "
+;
 		return -ENXIO;
 	}
-	if (!res->start || !res->end) {
-		printk(KERN_ERR "ram_console: invalid start %zx or end %zx\n",
-		       res->start, res->end);
-		return -ENXIO;
-	}
-	buffer_size = res->end - res->start + 1;
+	buffer_size = (res->end - res->start + 1) - PAGE_SIZE * 10;
 	start = res->start;
-	printk(KERN_INFO "ram_console: got buffer at %zx, size %zx\n",
-	       start, buffer_size);
-	buffer = phys_to_virt(res->start);
+	printk(KERN_INFO "ram_console: got buffer at %zx, size %zx\n", start, buffer_size);
+	buffer = ioremap(res->start, buffer_size);
 	if (buffer == NULL) {
-		printk(KERN_ERR "ram_console: failed to map memory\n");
+;
 		return -ENOMEM;
 	}
 
 	if (pdata)
 		bootinfo = pdata->bootinfo;
+	#if defined(CONFIG_MACH_JANICE)
+	start_addr = buffer + buffer_size  -  LDI_MTP_LENGTH;
+	memcpy(mtp_data_from_boot , start_addr , LDI_MTP_LENGTH);
+	#endif
 
 	return ram_console_init(buffer, buffer_size, bootinfo, NULL/* allocate */);
 }
@@ -417,24 +424,23 @@ static int __init ram_console_late_init(void)
 #ifdef CONFIG_ANDROID_RAM_CONSOLE_EARLY_INIT
 	ram_console_old_log = kmalloc(ram_console_old_log_size, GFP_KERNEL);
 	if (ram_console_old_log == NULL) {
-		printk(KERN_ERR
-		       "ram_console: failed to allocate buffer for old log\n");
+//		printk(KERN_ERR
+;
 		ram_console_old_log_size = 0;
 		return 0;
 	}
 	memcpy(ram_console_old_log,
 	       ram_console_old_log_init_buffer, ram_console_old_log_size);
 #endif
-	entry = create_proc_entry("last_kmsg", S_IFREG | S_IRUGO, NULL);
+	entry = proc_create_data("last_kmsg", S_IFREG | S_IRUGO, NULL, &ram_console_file_ops, NULL);
 	if (!entry) {
-		printk(KERN_ERR "ram_console: failed to create proc entry\n");
+;
 		kfree(ram_console_old_log);
 		ram_console_old_log = NULL;
 		return 0;
 	}
 
-	entry->proc_fops = &ram_console_file_ops;
-	entry->size = ram_console_old_log_size;
+	proc_set_size(entry, ram_console_old_log_size);
 	return 0;
 }
 
