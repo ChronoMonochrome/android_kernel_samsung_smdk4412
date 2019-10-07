@@ -17,15 +17,21 @@
 
 #include <linux/irq.h>
 
-struct sys_device;
+struct device;
 
 #ifdef CONFIG_PM
 
 extern __init int s3c_pm_init(void);
+extern __init int s3c64xx_pm_init(void);
 
 #else
 
 static inline int s3c_pm_init(void)
+{
+	return 0;
+}
+
+static inline int s3c64xx_pm_init(void)
 {
 	return 0;
 }
@@ -42,7 +48,7 @@ extern unsigned long s3c_irqwake_eintallow;
 /* per-cpu sleep functions */
 
 extern void (*pm_cpu_prep)(void);
-extern int (*pm_cpu_sleep)(unsigned long);
+extern void (*pm_cpu_sleep)(void);
 extern void (*pm_cpu_restore)(void);
 extern int (*pm_prepare)(void);
 extern void (*pm_finish)(void);
@@ -56,6 +62,7 @@ extern unsigned char pm_uart_udivslot;  /* true to save UART UDIVSLOT */
 
 /* from sleep.S */
 
+extern int  s3c_cpu_save(unsigned long *saveblk, long);
 extern void s3c_cpu_resume(void);
 
 extern void s3c2410_cpu_suspend(void);
