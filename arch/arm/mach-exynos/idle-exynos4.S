@@ -55,11 +55,9 @@ ENTRY(exynos4_enter_lp)
 	mrc	p15, 0, r2, c15, c0, 1	@ read diagnostic register
 	str	r2, [r0], #4
 
-	adr	r3, BSYM(exynos4_finish_suspend)
+	ldr	r3, =resume_with_mmu
 	bl	cpu_suspend
-	ldmfd	sp!, { r3 - r12, pc }
 
-exynos4_finish_suspend:
 	mov	r0, sp
 
 	mrc	p15, 0, r1, c2, c0, 0	@ TTB 0
@@ -134,6 +132,8 @@ resume_with_mmu:
 
 	mov	r0, #1
 early_wakeup:
+
+	ldmfd	sp!, { r3 - r12, pc }
 
 	.ltorg
 
