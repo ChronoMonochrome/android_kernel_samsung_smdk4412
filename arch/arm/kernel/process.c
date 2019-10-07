@@ -213,14 +213,14 @@ void arch_cpu_idle(void)
 		default_idle();
 }
 
-enum reboot_mode reboot_mode = REBOOT_HARD;
+static char reboot_mode = 'h';
 
-static int __init reboot_setup(char *str)
+int __init reboot_setup(char *str)
 {
-	if ('s' == str[0])
-		reboot_mode = REBOOT_SOFT;
+	reboot_mode = str[0];
 	return 1;
 }
+
 __setup("reboot=", reboot_setup);
 
 /*
