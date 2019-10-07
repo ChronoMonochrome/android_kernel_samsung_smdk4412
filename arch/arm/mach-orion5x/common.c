@@ -350,7 +350,7 @@ void __init orion5x_init(void)
 	orion5x_wdt_init();
 }
 
-void orion5x_restart(enum reboot_mode mode, const char *cmd)
+void orion5x_restart(char mode, const char *cmd)
 {
 	/*
 	 * Enable and issue soft reset

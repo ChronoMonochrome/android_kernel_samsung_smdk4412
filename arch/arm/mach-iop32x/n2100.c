@@ -288,7 +288,7 @@ static void n2100_power_off(void)
 		;
 }
 
-static void n2100_restart(enum reboot_mode mode, const char *cmd)
+static void n2100_restart(char mode, const char *cmd)
 {
 	int ret;
 

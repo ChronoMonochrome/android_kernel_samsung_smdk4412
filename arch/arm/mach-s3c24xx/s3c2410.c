@@ -22,7 +22,6 @@
 #include <linux/syscore_ops.h>
 #include <linux/serial_core.h>
 #include <linux/platform_device.h>
-#include <linux/reboot.h>
 #include <linux/io.h>
 
 #include <asm/mach/arch.h>
@@ -198,9 +197,9 @@ int __init s3c2410a_init(void)
 	return s3c2410_init();
 }
 
-void s3c2410_restart(enum reboot_mode mode, const char *cmd)
+void s3c2410_restart(char mode, const char *cmd)
 {
-	if (mode == REBOOT_SOFT) {
+	if (mode == 's') {
 		soft_restart(0);
 	}
 

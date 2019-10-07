@@ -18,7 +18,6 @@
 #include <linux/gpio.h>
 #include <linux/init.h>
 #include <linux/irqchip/mxs.h>
-#include <linux/reboot.h>
 #include <linux/micrel_phy.h>
 #include <linux/of_address.h>
 #include <linux/of_platform.h>
@@ -479,7 +478,7 @@ static void __init mxs_machine_init(void)
 /*
  * Reset the system. It is called by machine_restart().
  */
-static void mxs_restart(enum reboot_mode mode, const char *cmd)
+static void mxs_restart(char mode, const char *cmd)
 {
 	if (reset_addr) {
 		/* reset the chip */

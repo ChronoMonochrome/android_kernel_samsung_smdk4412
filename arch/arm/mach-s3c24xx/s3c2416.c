@@ -35,7 +35,6 @@
 #include <linux/syscore_ops.h>
 #include <linux/clk.h>
 #include <linux/io.h>
-#include <linux/reboot.h>
 
 #include <asm/mach/arch.h>
 #include <asm/mach/map.h>
@@ -79,9 +78,9 @@ static struct device s3c2416_dev = {
 	.bus		= &s3c2416_subsys,
 };
 
-void s3c2416_restart(enum reboot_mode mode, const char *cmd)
+void s3c2416_restart(char mode, const char *cmd)
 {
-	if (mode == REBOOT_SOFT)
+	if (mode == 's')
 		soft_restart(0);
 
 	__raw_writel(S3C2443_SWRST_RESET, S3C2443_SWRST);

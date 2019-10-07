@@ -11,8 +11,6 @@
 #ifndef __ARCH_DOVE_COMMON_H
 #define __ARCH_DOVE_COMMON_H
 
-#include <linux/reboot.h>
-
 struct mv643xx_eth_platform_data;
 struct mv_sata_platform_data;
 
@@ -44,6 +42,6 @@ void dove_spi1_init(void);
 void dove_i2c_init(void);
 void dove_sdio0_init(void);
 void dove_sdio1_init(void);
-void dove_restart(enum reboot_mode, const char *);
+void dove_restart(char, const char *);
 
 #endif

@@ -31,7 +31,6 @@
 #include <linux/regulator/machine.h>
 #include <linux/io.h>
 #include <linux/module.h>
-#include <linux/reboot.h>
 
 #include <asm/setup.h>
 #include <asm/mach-types.h>
@@ -927,10 +926,10 @@ static inline void spitz_i2c_init(void) {}
  ******************************************************************************/
 static void spitz_poweroff(void)
 {
-	pxa_restart(REBOOT_GPIO, NULL);
+	pxa_restart('g', NULL);
 }
 
-static void spitz_restart(enum reboot_mode mode, const char *cmd)
+static void spitz_restart(char mode, const char *cmd)
 {
 	uint32_t msc0 = __raw_readl(MSC0);
 	/* Bootloader magic for a reboot */

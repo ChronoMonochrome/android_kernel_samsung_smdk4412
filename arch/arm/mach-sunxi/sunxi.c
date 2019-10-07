@@ -19,7 +19,6 @@
 #include <linux/of_irq.h>
 #include <linux/of_platform.h>
 #include <linux/io.h>
-#include <linux/reboot.h>
 
 #include <asm/mach/arch.h>
 #include <asm/mach/map.h>
@@ -44,7 +43,7 @@
 
 static void __iomem *wdt_base;
 
-static void sun4i_restart(enum reboot_mode mode, const char *cmd)
+static void sun4i_restart(char mode, const char *cmd)
 {
 	if (!wdt_base)
 		return;

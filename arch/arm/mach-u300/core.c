@@ -300,11 +300,11 @@ static void __init u300_init_check_chip(void)
 /* Forward declare this function from the watchdog */
 void coh901327_watchdog_reset(void);
 
-static void u300_restart(enum reboot_mode mode, const char *cmd)
+static void u300_restart(char mode, const char *cmd)
 {
 	switch (mode) {
-	case REBOOT_SOFT:
-	case REBOOT_HARD:
+	case 's':
+	case 'h':
 #ifdef CONFIG_COH901327_WATCHDOG
 		coh901327_watchdog_reset();
 #endif

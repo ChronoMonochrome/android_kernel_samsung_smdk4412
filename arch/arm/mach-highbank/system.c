@@ -15,14 +15,13 @@
  */
 #include <linux/io.h>
 #include <asm/proc-fns.h>
-#include <linux/reboot.h>
 
 #include "core.h"
 #include "sysregs.h"
 
-void highbank_restart(enum reboot_mode mode, const char *cmd)
+void highbank_restart(char mode, const char *cmd)
 {
-	if (mode == REBOOT_HARD)
+	if (mode == 'h')
 		highbank_set_pwr_hard_reset();
 	else
 		highbank_set_pwr_soft_reset();

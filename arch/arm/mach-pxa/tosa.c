@@ -36,7 +36,6 @@
 #include <linux/input/matrix_keypad.h>
 #include <linux/i2c/pxa-i2c.h>
 #include <linux/usb/gpio_vbus.h>
-#include <linux/reboot.h>
 
 #include <asm/setup.h>
 #include <asm/mach-types.h>
@@ -912,10 +911,10 @@ static struct platform_device *devices[] __initdata = {
 
 static void tosa_poweroff(void)
 {
-	pxa_restart(REBOOT_GPIO, NULL);
+	pxa_restart('g', NULL);
 }
 
-static void tosa_restart(enum reboot_mode mode, const char *cmd)
+static void tosa_restart(char mode, const char *cmd)
 {
 	uint32_t msc0 = __raw_readl(MSC0);
 

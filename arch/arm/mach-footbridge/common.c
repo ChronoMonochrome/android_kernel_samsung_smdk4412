@@ -196,9 +196,9 @@ void __init footbridge_map_io(void)
 	vga_base = PCIMEM_BASE;
 }
 
-void footbridge_restart(enum reboot_mode mode, const char *cmd)
+void footbridge_restart(char mode, const char *cmd)
 {
-	if (mode == REBOOT_SOFT) {
+	if (mode == 's') {
 		/* Jump into the ROM */
 		soft_restart(0x41000000);
 	} else {

@@ -11,8 +11,6 @@
 #ifndef __ARCH_KIRKWOOD_COMMON_H
 #define __ARCH_KIRKWOOD_COMMON_H
 
-#include <linux/reboot.h>
-
 struct dsa_platform_data;
 struct mv643xx_eth_platform_data;
 struct mv_sata_platform_data;
@@ -55,7 +53,7 @@ void kirkwood_audio_init(void);
 void kirkwood_cpuidle_init(void);
 void kirkwood_cpufreq_init(void);
 
-void kirkwood_restart(enum reboot_mode, const char *);
+void kirkwood_restart(char, const char *);
 void kirkwood_clk_init(void);
 
 #ifdef CONFIG_PM
