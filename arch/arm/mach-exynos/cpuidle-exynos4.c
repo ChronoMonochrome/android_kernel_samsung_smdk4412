@@ -56,7 +56,7 @@
 				(S5P_VA_SYSRAM + 0x20) : S5P_INFORM6)
 #endif
 
-#include <asm/hardware/gic.h>
+#include <linux/irqchip/arm-gic.h>
 #include <plat/map-base.h>
 #include <plat/map-s5p.h>
 
