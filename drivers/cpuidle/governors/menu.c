@@ -21,15 +21,6 @@
 #include <linux/math64.h>
 #include <linux/module.h>
 
-/*
- * Please note when changing the tuning values:
- * If (MAX_INTERESTING-1) * RESOLUTION > UINT_MAX, the result of
- * a scaling operation multiplication may overflow on 32 bit platforms.
- * In that case, #define RESOLUTION as ULL to get 64 bit result:
- * #define RESOLUTION 1024ULL
- *
- * The default values do not overflow.
- */
 #define BUCKETS 12
 #define INTERVALS 8
 #define RESOLUTION 1024
@@ -123,11 +114,11 @@ struct menu_device {
 	int             needs_update;
 
 	unsigned int	expected_us;
-	unsigned int	predicted_us;
+	u64		predicted_us;
 	unsigned int	exit_us;
 	unsigned int	bucket;
-	unsigned int	correction_factor[BUCKETS];
-	unsigned int	intervals[INTERVALS];
+	u64		correction_factor[BUCKETS];
+	u32		intervals[INTERVALS];
 	int		interval_ptr;
 };
 
@@ -197,7 +188,7 @@ static inline int performance_multiplier(void)
 
 static DEFINE_PER_CPU(struct menu_device, menu_devices);
 
-static void menu_update(struct cpuidle_driver *drv, struct cpuidle_device *dev);
+static void menu_update(struct cpuidle_device *dev);
 
 /* This implements DIV_ROUND_CLOSEST but avoids 64 bit division */
 static u64 div_round64(u64 dividend, u32 divisor)
@@ -213,20 +204,16 @@ static u64 div_round64(u64 dividend, u32 divisor)
  */
 static void get_typical_interval(struct menu_device *data)
 {
-	int i, divisor;
-	unsigned int max, thresh;
-	uint64_t avg, stddev;
-
-	thresh = UINT_MAX; /* Discard outliers above this value */
+	int i = 0, divisor = 0;
+	uint64_t max = 0, avg = 0, stddev = 0;
+	int64_t thresh = LLONG_MAX; /* Discard outliers above this value. */
 
 again:
 
-	/* First calculate the average of past intervals */
-	max = 0;
-	avg = 0;
-	divisor = 0;
+	/* first calculate average and standard deviation of the past */
+	max = avg = divisor = stddev = 0;
 	for (i = 0; i < INTERVALS; i++) {
-		unsigned int value = data->intervals[i];
+		int64_t value = data->intervals[i];
 		if (value <= thresh) {
 			avg += value;
 			divisor++;
@@ -236,38 +223,15 @@ again:
 	}
 	do_div(avg, divisor);
 
-	/* Then try to determine standard deviation */
-	stddev = 0;
 	for (i = 0; i < INTERVALS; i++) {
-		unsigned int value = data->intervals[i];
+		int64_t value = data->intervals[i];
 		if (value <= thresh) {
 			int64_t diff = value - avg;
 			stddev += diff * diff;
 		}
 	}
 	do_div(stddev, divisor);
-	/*
-	 * The typical interval is obtained when standard deviation is small
-	 * or standard deviation is small compared to the average interval.
-	 *
-	 * int_sqrt() formal parameter type is unsigned long. When the
-	 * greatest difference to an outlier exceeds ~65 ms * sqrt(divisor)
-	 * the resulting squared standard deviation exceeds the input domain
-	 * of int_sqrt on platforms where unsigned long is 32 bits in size.
-	 * In such case reject the candidate average.
-	 *
-	 * Use this result only if there is no timer to wake us up sooner.
-	 */
-	if (likely(stddev <= ULONG_MAX)) {
-		stddev = int_sqrt(stddev);
-		if (((avg > stddev * 6) && (divisor * 4 >= INTERVALS * 3))
-							|| stddev <= 20) {
-			if (data->expected_us > avg)
-				data->predicted_us = avg;
-			return;
-		}
-	}
-
+	stddev = int_sqrt(stddev);
 	/*
 	 * If we have outliers to the upside in our distribution, discard
 	 * those by setting the threshold to exclude these outliers, then
@@ -276,29 +240,37 @@ again:
 	 *
 	 * This can deal with workloads that have long pauses interspersed
 	 * with sporadic activity with a bunch of short pauses.
+	 *
+	 * The typical interval is obtained when standard deviation is small
+	 * or standard deviation is small compared to the average interval.
 	 */
-	if ((divisor * 4) <= INTERVALS * 3)
+	if (((avg > stddev * 6) && (divisor * 4 >= INTERVALS * 3))
+							|| stddev <= 20) {
+		data->predicted_us = avg;
 		return;
 
-	thresh = max - 1;
-	goto again;
+	} else if ((divisor * 4) > INTERVALS * 3) {
+		/* Exclude the max interval */
+		thresh = max - 1;
+		goto again;
+	}
 }
 
 /**
  * menu_select - selects the next idle state to enter
- * @drv: cpuidle driver containing state data
  * @dev: the CPU
  */
-static int menu_select(struct cpuidle_driver *drv, struct cpuidle_device *dev)
+static int menu_select(struct cpuidle_device *dev)
 {
 	struct menu_device *data = &__get_cpu_var(menu_devices);
 	int latency_req = pm_qos_request(PM_QOS_CPU_DMA_LATENCY);
+	int power_usage = INT_MAX;
 	int i;
 	int multiplier;
 	struct timespec t;
 
 	if (data->needs_update) {
-		menu_update(drv, dev);
+		menu_update(dev);
 		data->needs_update = 0;
 	}
 
@@ -326,13 +298,8 @@ static int menu_select(struct cpuidle_driver *drv, struct cpuidle_device *dev)
 	if (data->correction_factor[data->bucket] == 0)
 		data->correction_factor[data->bucket] = RESOLUTION * DECAY;
 
-	/*
-	 * Force the result of multiplication to be 64 bits even if both
-	 * operands are 32 bits.
-	 * Make sure to round up for half microseconds.
-	 */
-	data->predicted_us = div_round64((uint64_t)data->expected_us *
-					 data->correction_factor[data->bucket],
+	/* Make sure to round up for half microseconds */
+	data->predicted_us = div_round64(data->expected_us * data->correction_factor[data->bucket],
 					 RESOLUTION * DECAY);
 
 	get_typical_interval(data);
@@ -341,20 +308,17 @@ static int menu_select(struct cpuidle_driver *drv, struct cpuidle_device *dev)
 	 * We want to default to C1 (hlt), not to busy polling
 	 * unless the timer is happening really really soon.
 	 */
-	if (data->expected_us > 5 &&
-	    !drv->states[CPUIDLE_DRIVER_STATE_START].disabled &&
-		dev->states_usage[CPUIDLE_DRIVER_STATE_START].disable == 0)
+	if (data->expected_us > 5)
 		data->last_state_idx = CPUIDLE_DRIVER_STATE_START;
 
 	/*
 	 * Find the idle state with the lowest power while satisfying
 	 * our constraints.
 	 */
-	for (i = CPUIDLE_DRIVER_STATE_START; i < drv->state_count; i++) {
-		struct cpuidle_state *s = &drv->states[i];
-		struct cpuidle_state_usage *su = &dev->states_usage[i];
+	for (i = CPUIDLE_DRIVER_STATE_START; i < dev->state_count; i++) {
+		struct cpuidle_state *s = &dev->states[i];
 
-		if (s->disabled || su->disable)
+		if (s->flags & CPUIDLE_FLAG_IGNORE)
 			continue;
 		if (s->target_residency > data->predicted_us)
 			continue;
@@ -363,8 +327,11 @@ static int menu_select(struct cpuidle_driver *drv, struct cpuidle_device *dev)
 		if (s->exit_latency * multiplier > data->predicted_us)
 			continue;
 
-		data->last_state_idx = i;
-		data->exit_us = s->exit_latency;
+		if (s->power_usage < power_usage) {
+			power_usage = s->power_usage;
+			data->last_state_idx = i;
+			data->exit_us = s->exit_latency;
+		}
 	}
 
 	return data->last_state_idx;
@@ -373,32 +340,28 @@ static int menu_select(struct cpuidle_driver *drv, struct cpuidle_device *dev)
 /**
  * menu_reflect - records that data structures need update
  * @dev: the CPU
- * @index: the index of actual entered state
  *
  * NOTE: it's important to be fast here because this operation will add to
  *       the overall exit latency.
  */
-static void menu_reflect(struct cpuidle_device *dev, int index)
+static void menu_reflect(struct cpuidle_device *dev)
 {
 	struct menu_device *data = &__get_cpu_var(menu_devices);
-	data->last_state_idx = index;
-	if (index >= 0)
-		data->needs_update = 1;
+	data->needs_update = 1;
 }
 
 /**
  * menu_update - attempts to guess what happened after entry
- * @drv: cpuidle driver containing state data
  * @dev: the CPU
  */
-static void menu_update(struct cpuidle_driver *drv, struct cpuidle_device *dev)
+static void menu_update(struct cpuidle_device *dev)
 {
 	struct menu_device *data = &__get_cpu_var(menu_devices);
 	int last_idx = data->last_state_idx;
 	unsigned int last_idle_us = cpuidle_get_last_residency(dev);
-	struct cpuidle_state *target = &drv->states[last_idx];
+	struct cpuidle_state *target = &dev->states[last_idx];
 	unsigned int measured_us;
-	unsigned int new_factor;
+	u64 new_factor;
 
 	/*
 	 * Ugh, this idle state doesn't support residency measurements, so we
@@ -419,9 +382,10 @@ static void menu_update(struct cpuidle_driver *drv, struct cpuidle_device *dev)
 		measured_us -= data->exit_us;
 
 
-	/* Update our correction ratio */
-	new_factor = data->correction_factor[data->bucket];
-	new_factor -= new_factor / DECAY;
+	/* update our correction ratio */
+
+	new_factor = data->correction_factor[data->bucket]
+			* (DECAY - 1) / DECAY;
 
 	if (data->expected_us > 0 && measured_us < MAX_INTERESTING)
 		new_factor += RESOLUTION * measured_us / data->expected_us;
@@ -434,11 +398,9 @@ static void menu_update(struct cpuidle_driver *drv, struct cpuidle_device *dev)
 
 	/*
 	 * We don't want 0 as factor; we always want at least
-	 * a tiny bit of estimated time. Fortunately, due to rounding,
-	 * new_factor will stay nonzero regardless of measured_us values
-	 * and the compiler can eliminate this test as long as DECAY > 1.
+	 * a tiny bit of estimated time.
 	 */
-	if (DECAY == 1 && unlikely(new_factor == 0))
+	if (new_factor == 0)
 		new_factor = 1;
 
 	data->correction_factor[data->bucket] = new_factor;
@@ -451,11 +413,9 @@ static void menu_update(struct cpuidle_driver *drv, struct cpuidle_device *dev)
 
 /**
  * menu_enable_device - scans a CPU's states and does setup
- * @drv: cpuidle driver
  * @dev: the CPU
  */
-static int menu_enable_device(struct cpuidle_driver *drv,
-				struct cpuidle_device *dev)
+static int menu_enable_device(struct cpuidle_device *dev)
 {
 	struct menu_device *data = &per_cpu(menu_devices, dev->cpu);
 
@@ -481,4 +441,14 @@ static int __init init_menu(void)
 	return cpuidle_register_governor(&menu_governor);
 }
 
-postcore_initcall(init_menu);
+/**
+ * exit_menu - exits the governor
+ */
+static void __exit exit_menu(void)
+{
+	cpuidle_unregister_governor(&menu_governor);
+}
+
+MODULE_LICENSE("GPL");
+module_init(init_menu);
+module_exit(exit_menu);
