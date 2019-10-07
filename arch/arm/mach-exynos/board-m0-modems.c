@@ -31,6 +31,8 @@
 #include <linux/platform_data/modem.h>
 #include <asm/system_info.h>
 
+#include <asm/system_info.h>
+
 #include <mach/sec_modem.h>
 
 extern int s3c_gpio_slp_cfgpin(unsigned int pin, unsigned int config);
