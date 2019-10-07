@@ -44,7 +44,6 @@
 #include <linux/module.h>
 #include <linux/io.h>
 #include <linux/atomic.h>
-#include <linux/cpu.h>
 
 #include <asm/fncpy.h>
 #include <asm/system_misc.h>
@@ -581,7 +580,8 @@ static void omap_pm_init_debugfs(void)
 static int omap_pm_prepare(void)
 {
 	/* We cannot sleep in idle until we have resumed */
-	cpu_idle_poll_ctrl(true);
+	disable_hlt();
+
 	return 0;
 }
 
@@ -617,7 +617,7 @@ static int omap_pm_enter(suspend_state_t state)
 
 static void omap_pm_finish(void)
 {
-	cpu_idle_poll_ctrl(false);
+	enable_hlt();
 }
 
 
