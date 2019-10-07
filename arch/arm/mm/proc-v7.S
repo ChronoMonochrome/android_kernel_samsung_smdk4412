@@ -90,7 +90,7 @@ ENDPROC(cpu_v7_dcache_clean_area)
 /* Suspend/resume support: derived from arch/arm/mach-s5pv210/sleep.S */
 .globl	cpu_v7_suspend_size
 .equ	cpu_v7_suspend_size, 4 * 9
-#ifdef CONFIG_ARM_CPU_SUSPEND
+#ifdef CONFIG_PM_SLEEP
 ENTRY(cpu_v7_do_suspend)
 	stmfd	sp!, {r4 - r11, lr}
 	mrc	p15, 0, r4, c13, c0, 0	@ FCSE/PID
@@ -503,8 +503,6 @@ __v7_ca9mp_proc_info:
 	.long	0xff0ffff0
 	__v7_proc __v7_ca9mp_setup
 	.size	__v7_ca9mp_proc_info, . - __v7_ca9mp_proc_info
-
-#endif	/* CONFIG_ARM_LPAE */
 
 	/*
 	 * Marvell PJ4B processor.
