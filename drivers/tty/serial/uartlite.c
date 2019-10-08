@@ -216,7 +216,8 @@ static int ulite_startup(struct uart_port *port)
 {
 	int ret;
 
-	ret = request_irq(port->irq, ulite_isr, IRQF_SHARED, "uartlite", port);
+	ret = request_irq(port->irq, ulite_isr,
+			  IRQF_SHARED | IRQF_SAMPLE_RANDOM, "uartlite", port);
 	if (ret)
 		return ret;
 

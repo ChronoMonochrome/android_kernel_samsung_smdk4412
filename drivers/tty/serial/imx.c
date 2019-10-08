@@ -47,7 +47,6 @@
 #include <linux/slab.h>
 #include <linux/of.h>
 #include <linux/of_device.h>
-#include <linux/pinctrl/consumer.h>
 
 #include <asm/io.h>
 #include <asm/irq.h>
@@ -132,7 +131,6 @@
 #define  UCR4_OREN  	 (1<<1)  /* Receiver overrun interrupt enable */
 #define  UCR4_DREN  	 (1<<0)  /* Recv data ready interrupt enable */
 #define  UFCR_RXTL_SHF   0       /* Receiver trigger level shift */
-#define  UFCR_DCEDTE	 (1<<6)  /* DCE/DTE mode select */
 #define  UFCR_RFDIV      (7<<7)  /* Reference freq divider mask */
 #define  UFCR_RFDIV_REG(x)	(((x) < 7 ? 6 - (x) : 6) << 7)
 #define  UFCR_TXTL_SHF   10      /* Transmitter trigger level shift */
@@ -170,6 +168,7 @@
 #define SERIAL_IMX_MAJOR        207
 #define MINOR_START	        16
 #define DEV_NAME		"ttymxc"
+#define MAX_INTERNAL_IRQ	MXC_INTERNAL_IRQS
 
 /*
  * This determines how often we check the modem status signals
@@ -205,8 +204,7 @@ struct imx_port {
 	unsigned int		irda_inv_rx:1;
 	unsigned int		irda_inv_tx:1;
 	unsigned short		trcv_delay; /* transceiver delay */
-	struct clk		*clk_ipg;
-	struct clk		*clk_per;
+	struct clk		*clk;
 	struct imx_uart_data	*devdata;
 };
 
@@ -668,11 +666,22 @@ static void imx_break_ctl(struct uart_port *port, int break_state)
 static int imx_setup_ufcr(struct imx_port *sport, unsigned int mode)
 {
 	unsigned int val;
+	unsigned int ufcr_rfdiv;
 
-	/* set receiver / transmitter trigger level */
-	val = readl(sport->port.membase + UFCR) & (UFCR_RFDIV | UFCR_DCEDTE);
-	val |= TXTL << UFCR_TXTL_SHF | RXTL;
+	/* set receiver / transmitter trigger level.
+	 * RFDIV is set such way to satisfy requested uartclk value
+	 */
+	val = TXTL << 10 | RXTL;
+	ufcr_rfdiv = (clk_get_rate(sport->clk) + sport->port.uartclk / 2)
+			/ sport->port.uartclk;
+
+	if(!ufcr_rfdiv)
+		ufcr_rfdiv = 1;
+
+	val |= UFCR_RFDIV_REG(ufcr_rfdiv);
+
 	writel(val, sport->port.membase + UFCR);
+
 	return 0;
 }
 
@@ -730,7 +739,10 @@ static int imx_startup(struct uart_port *port)
 
 		/* do not use RTS IRQ on IrDA */
 		if (!USE_IRDA(sport)) {
-			retval = request_irq(sport->rtsirq, imx_rtsint, 0,
+			retval = request_irq(sport->rtsirq, imx_rtsint,
+				     (sport->rtsirq < MAX_INTERNAL_IRQ) ? 0 :
+				       IRQF_TRIGGER_FALLING |
+				       IRQF_TRIGGER_RISING,
 					DRIVER_NAME, sport);
 			if (retval)
 				goto error_out3;
@@ -1283,7 +1295,7 @@ imx_console_get_options(struct imx_port *sport, int *baud,
 		else
 			ucfr_rfdiv = 6 - ucfr_rfdiv;
 
-		uartclk = clk_get_rate(sport->clk_per);
+		uartclk = clk_get_rate(sport->clk);
 		uartclk /= ucfr_rfdiv;
 
 		{	/*
@@ -1462,7 +1474,6 @@ static int serial_imx_probe(struct platform_device *pdev)
 	void __iomem *base;
 	int ret = 0;
 	struct resource *res;
-	struct pinctrl *pinctrl;
 
 	sport = kzalloc(sizeof(*sport), GFP_KERNEL);
 	if (!sport)
@@ -1502,28 +1513,14 @@ static int serial_imx_probe(struct platform_device *pdev)
 	sport->timer.function = imx_timeout;
 	sport->timer.data     = (unsigned long)sport;
 
-	pinctrl = devm_pinctrl_get_select_default(&pdev->dev);
-	if (IS_ERR(pinctrl)) {
-		ret = PTR_ERR(pinctrl);
+	sport->clk = clk_get(&pdev->dev, "uart");
+	if (IS_ERR(sport->clk)) {
+		ret = PTR_ERR(sport->clk);
 		goto unmap;
 	}
+	clk_prepare_enable(sport->clk);
 
-	sport->clk_ipg = devm_clk_get(&pdev->dev, "ipg");
-	if (IS_ERR(sport->clk_ipg)) {
-		ret = PTR_ERR(sport->clk_ipg);
-		goto unmap;
-	}
-
-	sport->clk_per = devm_clk_get(&pdev->dev, "per");
-	if (IS_ERR(sport->clk_per)) {
-		ret = PTR_ERR(sport->clk_per);
-		goto unmap;
-	}
-
-	clk_prepare_enable(sport->clk_per);
-	clk_prepare_enable(sport->clk_ipg);
-
-	sport->port.uartclk = clk_get_rate(sport->clk_per);
+	sport->port.uartclk = clk_get_rate(sport->clk);
 
 	imx_ports[sport->port.line] = sport;
 
@@ -1544,8 +1541,8 @@ deinit:
 	if (pdata && pdata->exit)
 		pdata->exit(pdev);
 clkput:
-	clk_disable_unprepare(sport->clk_per);
-	clk_disable_unprepare(sport->clk_ipg);
+	clk_disable_unprepare(sport->clk);
+	clk_put(sport->clk);
 unmap:
 	iounmap(sport->port.membase);
 free:
@@ -1563,10 +1560,11 @@ static int serial_imx_remove(struct platform_device *pdev)
 
 	platform_set_drvdata(pdev, NULL);
 
-	uart_remove_one_port(&imx_reg, &sport->port);
-
-	clk_disable_unprepare(sport->clk_per);
-	clk_disable_unprepare(sport->clk_ipg);
+	if (sport) {
+		uart_remove_one_port(&imx_reg, &sport->port);
+		clk_disable_unprepare(sport->clk);
+		clk_put(sport->clk);
+	}
 
 	if (pdata && pdata->exit)
 		pdata->exit(pdev);

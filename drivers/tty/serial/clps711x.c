@@ -40,6 +40,7 @@
 
 #include <mach/hardware.h>
 #include <asm/irq.h>
+#include <asm/hardware/clps7111.h>
 
 #define UART_NR		2
 

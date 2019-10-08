@@ -32,8 +32,6 @@
 #include <linux/clk.h>
 #include <linux/delay.h>
 #include <linux/io.h>
-#include <linux/pinctrl/consumer.h>
-#include <linux/of_device.h>
 
 #include <asm/cacheflush.h>
 
@@ -73,7 +71,6 @@
 #define AUART_CTRL0_CLKGATE			(1 << 30)
 
 #define AUART_CTRL2_CTSEN			(1 << 15)
-#define AUART_CTRL2_RTSEN			(1 << 14)
 #define AUART_CTRL2_RTS				(1 << 11)
 #define AUART_CTRL2_RXE				(1 << 9)
 #define AUART_CTRL2_TXE				(1 << 8)
@@ -260,12 +257,9 @@ static void mxs_auart_set_mctrl(struct uart_port *u, unsigned mctrl)
 
 	u32 ctrl = readl(u->membase + AUART_CTRL2);
 
-	ctrl &= ~AUART_CTRL2_RTSEN;
-	if (mctrl & TIOCM_RTS) {
-		if (u->state->port.flags & ASYNC_CTS_FLOW)
-			ctrl |= AUART_CTRL2_RTSEN;
-	}
-
+	ctrl &= ~AUART_CTRL2_RTS;
+	if (mctrl & TIOCM_RTS)
+		ctrl |= AUART_CTRL2_RTS;
 	s->ctrl = mctrl;
 	writel(ctrl, u->membase + AUART_CTRL2);
 }
@@ -363,9 +357,9 @@ static void mxs_auart_settermios(struct uart_port *u,
 
 	/* figure out the hardware flow control settings */
 	if (cflag & CRTSCTS)
-		ctrl2 |= AUART_CTRL2_CTSEN | AUART_CTRL2_RTSEN;
+		ctrl2 |= AUART_CTRL2_CTSEN;
 	else
-		ctrl2 &= ~(AUART_CTRL2_CTSEN | AUART_CTRL2_RTSEN);
+		ctrl2 &= ~AUART_CTRL2_CTSEN;
 
 	/* set baud rate */
 	baud = uart_get_baud_rate(u, termios, old, 0, u->uartclk);
@@ -381,11 +375,18 @@ static void mxs_auart_settermios(struct uart_port *u,
 
 static irqreturn_t mxs_auart_irq_handle(int irq, void *context)
 {
-	u32 istatus, istat;
+	u32 istat;
 	struct mxs_auart_port *s = context;
 	u32 stat = readl(s->port.membase + AUART_STAT);
 
-	istatus = istat = readl(s->port.membase + AUART_INTR);
+	istat = readl(s->port.membase + AUART_INTR);
+
+	/* ack irq */
+	writel(istat & (AUART_INTR_RTIS
+		| AUART_INTR_TXIS
+		| AUART_INTR_RXIS
+		| AUART_INTR_CTSMIS),
+			s->port.membase + AUART_INTR_CLR);
 
 	if (istat & AUART_INTR_CTSMIS) {
 		uart_handle_cts_change(&s->port, stat & AUART_STAT_CTS);
@@ -403,12 +404,6 @@ static irqreturn_t mxs_auart_irq_handle(int irq, void *context)
 		mxs_auart_tx_chars(s);
 		istat &= ~AUART_INTR_TXIS;
 	}
-
-	writel(istatus & (AUART_INTR_RTIS
-		| AUART_INTR_TXIS
-		| AUART_INTR_RXIS
-		| AUART_INTR_CTSMIS),
-			s->port.membase + AUART_INTR_CLR);
 
 	return IRQ_HANDLED;
 }
@@ -549,7 +544,7 @@ auart_console_write(struct console *co, const char *str, unsigned int count)
 	struct mxs_auart_port *s;
 	struct uart_port *port;
 	unsigned int old_ctrl0, old_ctrl2;
-	unsigned int to = 1000;
+	unsigned int to = 20000;
 
 	if (co->index >	MXS_AUART_PORTS || co->index < 0)
 		return;
@@ -570,18 +565,23 @@ auart_console_write(struct console *co, const char *str, unsigned int count)
 
 	uart_console_write(port, str, count, mxs_auart_console_putchar);
 
-	/*
-	 * Finally, wait for transmitter to become empty
-	 * and restore the TCR
-	 */
+	/* Finally, wait for transmitter to become empty ... */
 	while (readl(port->membase + AUART_STAT) & AUART_STAT_BUSY) {
+		udelay(1);
 		if (!to--)
 			break;
-		udelay(1);
 	}
 
-	writel(old_ctrl0, port->membase + AUART_CTRL0);
-	writel(old_ctrl2, port->membase + AUART_CTRL2);
+	/*
+	 * ... and restore the TCR if we waited long enough for the transmitter
+	 * to be idle. This might keep the transmitter enabled although it is
+	 * unused, but that is better than to disable it while it is still
+	 * transmitting.
+	 */
+	if (!(readl(port->membase + AUART_STAT) & AUART_STAT_BUSY)) {
+		writel(old_ctrl0, port->membase + AUART_CTRL0);
+		writel(old_ctrl2, port->membase + AUART_CTRL2);
+	}
 
 	clk_disable(s->clk);
 }
@@ -680,54 +680,17 @@ static struct uart_driver auart_driver = {
 #endif
 };
 
-/*
- * This function returns 1 if pdev isn't a device instatiated by dt, 0 if it
- * could successfully get all information from dt or a negative errno.
- */
-static int serial_mxs_probe_dt(struct mxs_auart_port *s,
-		struct platform_device *pdev)
-{
-	struct device_node *np = pdev->dev.of_node;
-	int ret;
-
-	if (!np)
-		/* no device tree device */
-		return 1;
-
-	ret = of_alias_get_id(np, "serial");
-	if (ret < 0) {
-		dev_err(&pdev->dev, "failed to get alias id: %d\n", ret);
-		return ret;
-	}
-	s->port.line = ret;
-
-	return 0;
-}
-
 static int __devinit mxs_auart_probe(struct platform_device *pdev)
 {
 	struct mxs_auart_port *s;
 	u32 version;
 	int ret = 0;
 	struct resource *r;
-	struct pinctrl *pinctrl;
 
 	s = kzalloc(sizeof(struct mxs_auart_port), GFP_KERNEL);
 	if (!s) {
 		ret = -ENOMEM;
 		goto out;
-	}
-
-	ret = serial_mxs_probe_dt(s, pdev);
-	if (ret > 0)
-		s->port.line = pdev->id < 0 ? 0 : pdev->id;
-	else if (ret < 0)
-		goto out_free;
-
-	pinctrl = devm_pinctrl_get_select_default(&pdev->dev);
-	if (IS_ERR(pinctrl)) {
-		ret = PTR_ERR(pinctrl);
-		goto out_free;
 	}
 
 	s->clk = clk_get(&pdev->dev, NULL);
@@ -746,6 +709,7 @@ static int __devinit mxs_auart_probe(struct platform_device *pdev)
 	s->port.membase = ioremap(r->start, resource_size(r));
 	s->port.ops = &mxs_auart_ops;
 	s->port.iotype = UPIO_MEM;
+	s->port.line = pdev->id < 0 ? 0 : pdev->id;
 	s->port.fifosize = 16;
 	s->port.uartclk = clk_get_rate(s->clk);
 	s->port.type = PORT_IMX;
@@ -762,7 +726,7 @@ static int __devinit mxs_auart_probe(struct platform_device *pdev)
 
 	platform_set_drvdata(pdev, s);
 
-	auart_port[s->port.line] = s;
+	auart_port[pdev->id] = s;
 
 	mxs_auart_reset(&s->port);
 
@@ -803,19 +767,12 @@ static int __devexit mxs_auart_remove(struct platform_device *pdev)
 	return 0;
 }
 
-static struct of_device_id mxs_auart_dt_ids[] = {
-	{ .compatible = "fsl,imx23-auart", },
-	{ /* sentinel */ }
-};
-MODULE_DEVICE_TABLE(of, mxs_auart_dt_ids);
-
 static struct platform_driver mxs_auart_driver = {
 	.probe = mxs_auart_probe,
 	.remove = __devexit_p(mxs_auart_remove),
 	.driver = {
 		.name = "mxs-auart",
 		.owner = THIS_MODULE,
-		.of_match_table = mxs_auart_dt_ids,
 	},
 };
 
@@ -848,4 +805,3 @@ module_init(mxs_auart_init);
 module_exit(mxs_auart_exit);
 MODULE_LICENSE("GPL");
 MODULE_DESCRIPTION("Freescale MXS application uart driver");
-MODULE_ALIAS("platform:mxs-auart");

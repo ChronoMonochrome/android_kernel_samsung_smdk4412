@@ -25,7 +25,6 @@
 
 #include <linux/module.h>
 #include <linux/errno.h>
-#include <linux/sh_dma.h>
 #include <linux/timer.h>
 #include <linux/interrupt.h>
 #include <linux/tty.h>
@@ -1053,16 +1052,8 @@ static int sci_request_irq(struct sci_port *port)
 		if (SCIx_IRQ_IS_MUXED(port)) {
 			i = SCIx_MUX_IRQ;
 			irq = up->irq;
-		} else {
+		} else
 			irq = port->cfg->irqs[i];
-
-			/*
-			 * Certain port types won't support all of the
-			 * available interrupt sources.
-			 */
-			if (unlikely(!irq))
-				continue;
-		}
 
 		desc = sci_irq_desc + i;
 		port->irqstr[j] = kasprintf(GFP_KERNEL, "%s:%s",
@@ -1103,15 +1094,6 @@ static void sci_free_irq(struct sci_port *port)
 	 * IRQ first.
 	 */
 	for (i = 0; i < SCIx_NR_IRQS; i++) {
-		unsigned int irq = port->cfg->irqs[i];
-
-		/*
-		 * Certain port types won't support all of the available
-		 * interrupt sources.
-		 */
-		if (unlikely(!irq))
-			continue;
-
 		free_irq(port->cfg->irqs[i], port);
 		kfree(port->irqstr[i]);
 
@@ -1411,8 +1393,8 @@ static void work_fn_rx(struct work_struct *work)
 		/* Handle incomplete DMA receive */
 		struct tty_struct *tty = port->state->port.tty;
 		struct dma_chan *chan = s->chan_rx;
-		struct shdma_desc *sh_desc = container_of(desc,
-					struct shdma_desc, async_tx);
+		struct sh_desc *sh_desc = container_of(desc, struct sh_desc,
+						       async_tx);
 		unsigned long flags;
 		int count;
 
@@ -1582,32 +1564,10 @@ static void sci_enable_ms(struct uart_port *port)
 
 static void sci_break_ctl(struct uart_port *port, int break_state)
 {
-	struct sci_port *s = to_sci_port(port);
-	struct plat_sci_reg *reg = sci_regmap[s->cfg->regtype] + SCSPTR;
-	unsigned short scscr, scsptr;
-
-	/* check wheter the port has SCSPTR */
-	if (!reg->size) {
-		/*
-		 * Not supported by hardware. Most parts couple break and rx
-		 * interrupts together, with break detection always enabled.
-		 */
-		return;
-	}
-
-	scsptr = serial_port_in(port, SCSPTR);
-	scscr = serial_port_in(port, SCSCR);
-
-	if (break_state == -1) {
-		scsptr = (scsptr | SCSPTR_SPB2IO) & ~SCSPTR_SPB2DT;
-		scscr &= ~SCSCR_TE;
-	} else {
-		scsptr = (scsptr | SCSPTR_SPB2DT) & ~SCSPTR_SPB2IO;
-		scscr |= SCSCR_TE;
-	}
-
-	serial_port_out(port, SCSPTR, scsptr);
-	serial_port_out(port, SCSCR, scscr);
+	/*
+	 * Not supported by hardware. Most parts couple break and rx
+	 * interrupts together, with break detection always enabled.
+	 */
 }
 
 #ifdef CONFIG_SERIAL_SH_SCI_DMA
@@ -1616,9 +1576,9 @@ static bool filter(struct dma_chan *chan, void *slave)
 	struct sh_dmae_slave *param = slave;
 
 	dev_dbg(chan->device->dev, "%s: slave ID %d\n", __func__,
-		param->shdma_slave.slave_id);
+		param->slave_id);
 
-	chan->private = &param->shdma_slave;
+	chan->private = param;
 	return true;
 }
 
@@ -1657,7 +1617,7 @@ static void sci_request_dma(struct uart_port *port)
 	param = &s->param_tx;
 
 	/* Slave ID, e.g., SHDMA_SLAVE_SCIF0_TX */
-	param->shdma_slave.slave_id = s->cfg->dma_slave_tx;
+	param->slave_id = s->cfg->dma_slave_tx;
 
 	s->cookie_tx = -EINVAL;
 	chan = dma_request_channel(mask, filter, param);
@@ -1685,7 +1645,7 @@ static void sci_request_dma(struct uart_port *port)
 	param = &s->param_rx;
 
 	/* Slave ID, e.g., SHDMA_SLAVE_SCIF0_RX */
-	param->shdma_slave.slave_id = s->cfg->dma_slave_rx;
+	param->slave_id = s->cfg->dma_slave_rx;
 
 	chan = dma_request_channel(mask, filter, param);
 	dev_dbg(port->dev, "%s: RX: got channel %p\n", __func__, chan);
@@ -2180,16 +2140,6 @@ static int __devinit sci_init_single(struct platform_device *dev,
 	return 0;
 }
 
-static void sci_cleanup_single(struct sci_port *port)
-{
-	sci_free_gpios(port);
-
-	clk_put(port->iclk);
-	clk_put(port->fclk);
-
-	pm_runtime_disable(port->port.dev);
-}
-
 #ifdef CONFIG_SERIAL_SH_SCI_CONSOLE
 static void serial_console_putchar(struct uart_port *port, int ch)
 {
@@ -2371,10 +2321,14 @@ static int sci_remove(struct platform_device *dev)
 	cpufreq_unregister_notifier(&port->freq_transition,
 				    CPUFREQ_TRANSITION_NOTIFIER);
 
+	sci_free_gpios(port);
+
 	uart_remove_one_port(&sci_uart_driver, &port->port);
 
-	sci_cleanup_single(port);
+	clk_put(port->iclk);
+	clk_put(port->fclk);
 
+	pm_runtime_disable(&dev->dev);
 	return 0;
 }
 
@@ -2392,20 +2346,14 @@ static int __devinit sci_probe_single(struct platform_device *dev,
 			   index+1, SCI_NPORTS);
 		dev_notice(&dev->dev, "Consider bumping "
 			   "CONFIG_SERIAL_SH_SCI_NR_UARTS!\n");
-		return -EINVAL;
+		return 0;
 	}
 
 	ret = sci_init_single(dev, sciport, index, p);
 	if (ret)
 		return ret;
 
-	ret = uart_add_one_port(&sci_uart_driver, &sciport->port);
-	if (ret) {
-		sci_cleanup_single(sciport);
-		return ret;
-	}
-
-	return 0;
+	return uart_add_one_port(&sci_uart_driver, &sciport->port);
 }
 
 static int __devinit sci_probe(struct platform_device *dev)
@@ -2426,22 +2374,24 @@ static int __devinit sci_probe(struct platform_device *dev)
 
 	ret = sci_probe_single(dev, dev->id, p, sp);
 	if (ret)
-		return ret;
+		goto err_unreg;
 
 	sp->freq_transition.notifier_call = sci_notifier;
 
 	ret = cpufreq_register_notifier(&sp->freq_transition,
 					CPUFREQ_TRANSITION_NOTIFIER);
-	if (unlikely(ret < 0)) {
-		sci_cleanup_single(sp);
-		return ret;
-	}
+	if (unlikely(ret < 0))
+		goto err_unreg;
 
 #ifdef CONFIG_SH_STANDARD_BIOS
 	sh_bios_gdb_detach();
 #endif
 
 	return 0;
+
+err_unreg:
+	sci_remove(dev);
+	return ret;
 }
 
 static int sci_suspend(struct device *dev)
