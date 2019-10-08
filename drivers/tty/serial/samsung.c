@@ -1476,18 +1476,18 @@ int s3c24xx_serial_probe(struct platform_device *dev,
 	struct s3c24xx_uart_port *ourport;
 	int ret;
 
-	dbg("s3c24xx_serial_probe(%p, %p) %d\n", dev, info, probe_index);
+	pr_err("%s: s3c24xx_serial_probe(%p, %p) %d\n", __func__, dev, info, probe_index);
 
 	ourport = &s3c24xx_serial_ports[probe_index];
 	probe_index++;
 
-	dbg("%s: initialising port %p...\n", __func__, ourport);
+	pr_err("%s: initialising port %p...\n", __func__, ourport);
 
 	ret = s3c24xx_serial_init_port(ourport, info, dev);
 	if (ret < 0)
 		goto probe_err;
 
-	dbg("%s: adding port\n", __func__);
+	pr_err("%s: adding port\n", __func__);
 	uart_add_one_port(&s3c24xx_uart_drv, &ourport->port);
 	platform_set_drvdata(dev, &ourport->port);
 
@@ -1503,7 +1503,7 @@ int s3c24xx_serial_probe(struct platform_device *dev,
 #endif
 	ret = s3c24xx_serial_cpufreq_register(ourport);
 	if (ret < 0)
-		dev_err(&dev->dev, "failed to add cpufreq notifier\n");
+		pr_err("%s: failed to add cpufreq notifier\n", __func__);
 
 	return 0;
 
