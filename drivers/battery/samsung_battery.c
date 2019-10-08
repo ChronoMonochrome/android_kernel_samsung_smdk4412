@@ -2345,7 +2345,7 @@ gpio_bat_det_finish:
 	if (info->pdata->ctia_spec == true)
 		alarm_init(&info->event_alarm,
 				ANDROID_ALARM_ELAPSED_REALTIME_WAKEUP,
-				battery_event_alarm);*/
+				battery_event_alarm);
 
 	/* update battery init status */
 	schedule_work(&info->monitor_work);
