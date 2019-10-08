@@ -178,13 +178,17 @@ void arch_pick_mmap_layout(struct mm_struct *mm)
 	    !(current->personality & ADDR_NO_RANDOMIZE))
 		random_factor = (get_random_int() % (1 << 8)) << PAGE_SHIFT;
 
+#ifndef CONFIG_MIDAS_COMMON
 	if (mmap_is_legacy()) {
+#endif
 		mm->mmap_base = TASK_UNMAPPED_BASE + random_factor;
 		mm->get_unmapped_area = arch_get_unmapped_area;
+#ifndef CONFIG_MIDAS_COMMON
 	} else {
 		mm->mmap_base = mmap_base(random_factor);
 		mm->get_unmapped_area = arch_get_unmapped_area_topdown;
 	}
+#endif
 }
 
 /*
