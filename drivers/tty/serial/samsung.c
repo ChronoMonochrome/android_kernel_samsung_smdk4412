@@ -1284,18 +1284,6 @@ static int s3c24xx_serial_init_port(struct s3c24xx_uart_port *ourport,
 		ourport->tx_irq = ret;
 
 	ourport->clk	= clk_get(&platdev->dev, "uart");
-	if (IS_ERR(ourport->clk)) {
-		pr_err("%s: Controller clock not found\n",
-				dev_name(&platdev->dev));
-		return PTR_ERR(ourport->clk);
-	}
-
-	ret = clk_prepare_enable(ourport->clk);
-	if (ret) {
-		pr_err("uart: clock failed to prepare+enable: %d\n", ret);
-		clk_put(ourport->clk);
-		return ret;
-	}
 
 	dbg("port: map=%08x, mem=%08x, irq=%d (%d,%d), clock=%ld\n",
 	    port->mapbase, port->membase, port->irq,
@@ -1303,7 +1291,6 @@ static int s3c24xx_serial_init_port(struct s3c24xx_uart_port *ourport,
 
 	/* reset the fifos (and setup the uart) */
 	s3c24xx_serial_resetport(port, cfg);
-	clk_disable_unprepare(ourport->clk);
 	return 0;
 }
 
@@ -1476,18 +1463,18 @@ int s3c24xx_serial_probe(struct platform_device *dev,
 	struct s3c24xx_uart_port *ourport;
 	int ret;
 
-	dbg("s3c24xx_serial_probe(%p, %p) %d\n", dev, info, probe_index);
+	pr_err("%s: s3c24xx_serial_probe(%p, %p) %d\n", __func__, dev, info, probe_index);
 
 	ourport = &s3c24xx_serial_ports[probe_index];
 	probe_index++;
 
-	dbg("%s: initialising port %p...\n", __func__, ourport);
+	pr_err("%s: initialising port %p...\n", __func__, ourport);
 
 	ret = s3c24xx_serial_init_port(ourport, info, dev);
 	if (ret < 0)
 		goto probe_err;
 
-	dbg("%s: adding port\n", __func__);
+	pr_err("%s: adding port\n", __func__);
 	uart_add_one_port(&s3c24xx_uart_drv, &ourport->port);
 	platform_set_drvdata(dev, &ourport->port);
 
@@ -1503,7 +1490,7 @@ int s3c24xx_serial_probe(struct platform_device *dev,
 #endif
 	ret = s3c24xx_serial_cpufreq_register(ourport);
 	if (ret < 0)
-		dev_err(&dev->dev, "failed to add cpufreq notifier\n");
+		pr_err("%s: failed to add cpufreq notifier\n", __func__);
 
 	return 0;
 
