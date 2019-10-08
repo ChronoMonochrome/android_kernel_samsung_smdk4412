@@ -56,7 +56,7 @@
 				(S5P_VA_SYSRAM + 0x20) : S5P_INFORM6)
 #endif
 
-#include <asm/hardware/gic.h>
+#include <linux/irqchip/arm-gic.h>
 #include <plat/map-base.h>
 #include <plat/map-s5p.h>
 
@@ -984,11 +984,13 @@ static int exynos4_cpuidle_notifier_event(struct notifier_block *this,
 	case PM_SUSPEND_PREPARE:
 	case PM_HIBERNATION_PREPARE:
 	case PM_RESTORE_PREPARE:
+		disable_hlt();
 		pr_debug("PM_SUSPEND_PREPARE for CPUIDLE\n");
 		return NOTIFY_OK;
 	case PM_POST_HIBERNATION:
 	case PM_POST_RESTORE:
 	case PM_POST_SUSPEND:
+		enable_hlt();
 		pr_debug("PM_POST_SUSPEND for CPUIDLE\n");
 		return NOTIFY_OK;
 	}
