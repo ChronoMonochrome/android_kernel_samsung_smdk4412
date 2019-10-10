@@ -295,7 +295,7 @@ struct wl_conf {
 	struct ieee80211_channel channel;
 };
 
-typedef s32(*EVENT_HANDLER) (struct bcm_cfg80211 *cfg, bcm_struct_cfgdev *cfgdev,
+typedef s32(*EVENT_HANDLER) (struct bcm_cfg80211 *cfg, struct wireless_dev *cfgdev,
                             const wl_event_msg_t *e, void *data);
 
 /* bss inform structure for cfg80211 interface */
@@ -842,7 +842,7 @@ wl_get_netinfo_by_netdev(struct bcm_cfg80211 *cfg, struct net_device *ndev)
 #define discover_cfgdev(cfgdev, cfg) (cfgdev->iftype == NL80211_IFTYPE_P2P_DEVICE)
 #else
 #define ndev_to_cfgdev(ndev)	(ndev)
-#define discover_cfgdev(cfgdev, cfg) (cfgdev == cfg->p2p_net)
+#define discover_cfgdev(cfgdev, cfg) (cfgdev->netdev == cfg->p2p_net)
 #endif /* WL_CFG80211_P2P_DEV_IF */
 
 #if defined(WL_CFG80211_P2P_DEV_IF)
@@ -850,7 +850,7 @@ wl_get_netinfo_by_netdev(struct bcm_cfg80211 *cfg, struct net_device *ndev)
 	(cfg->scan_request->wdev == cfg->p2p_wdev)) ? true : false)
 #elif defined(WL_ENABLE_P2P_IF)
 #define scan_req_match(cfg)	(((cfg) && (cfg->scan_request) && \
-	(cfg->scan_request->dev == cfg->p2p_net)) ? true : false)
+	(cfg->scan_request->wdev->netdev == cfg->p2p_net)) ? true : false)
 #else
 #define scan_req_match(cfg)	(((cfg) && p2p_is_on(cfg) && p2p_scan(cfg)) ? \
 	true : false)
@@ -910,7 +910,7 @@ extern struct net_device* wl_cfg80211_allocate_if(struct bcm_cfg80211 *cfg, int 
 	uint8 *mac, uint8 bssidx);
 extern int wl_cfg80211_register_if(struct bcm_cfg80211 *cfg, int ifidx, struct net_device* ndev);
 extern int wl_cfg80211_remove_if(struct bcm_cfg80211 *cfg, int ifidx, struct net_device* ndev);
-extern int wl_cfg80211_scan_stop(bcm_struct_cfgdev *cfgdev);
+extern int wl_cfg80211_scan_stop(struct wireless_dev *cfgdev);
 extern bool wl_cfg80211_is_vsdb_mode(void);
 extern void* wl_cfg80211_get_dhdp(void);
 extern bool wl_cfg80211_is_p2p_active(void);
