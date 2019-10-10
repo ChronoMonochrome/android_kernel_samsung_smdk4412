@@ -306,7 +306,7 @@ wl_cfgp2p_find_type(struct bcm_cfg80211 *cfg, s32 bssidx, s32 *type);
 
 
 extern s32
-wl_cfgp2p_listen_complete(struct bcm_cfg80211 *cfg, bcm_struct_cfgdev *cfgdev,
+wl_cfgp2p_listen_complete(struct bcm_cfg80211 *cfg, struct wireless_dev *cfgdev,
 	const wl_event_msg_t *e, void *data);
 extern s32
 wl_cfgp2p_discover_listen(struct bcm_cfg80211 *cfg, s32 channel, u32 duration_ms);
@@ -315,7 +315,7 @@ extern s32
 wl_cfgp2p_discover_enable_search(struct bcm_cfg80211 *cfg, u8 enable);
 
 extern s32
-wl_cfgp2p_action_tx_complete(struct bcm_cfg80211 *cfg, bcm_struct_cfgdev *cfgdev,
+wl_cfgp2p_action_tx_complete(struct bcm_cfg80211 *cfg, struct wireless_dev *cfgdev,
 	const wl_event_msg_t *e, void *data);
 
 extern s32
