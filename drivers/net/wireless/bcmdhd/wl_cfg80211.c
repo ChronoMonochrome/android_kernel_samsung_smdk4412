@@ -158,8 +158,8 @@ u32 wl_dbg_level = WL_DBG_ERR;
 #define CH_MIN_2G_CHANNEL 1
 
 /* This is to override regulatory domains defined in cfg80211 module (reg.c)
- * By default world regulatory domain defined in reg.c puts the flags NL80211_RRF_PASSIVE_SCAN
- * and NL80211_RRF_NO_IBSS for 5GHz channels (for 36..48 and 149..165).
+ * By default world regulatory domain defined in reg.c puts the flags NL80211_RRF_NO_IR
+ * and NL80211_RRF_NO_IR for 5GHz channels (for 36..48 and 149..165).
  * With respect to these flags, wpa_supplicant doesn't start p2p operations on 5GHz channels.
  * All the chnages in world regulatory domain are to be done here.
  */
@@ -1921,7 +1921,7 @@ static void wl_scan_prep(struct wl_scan_params *params, struct cfg80211_scan_req
 			/* SKIP DFS channels for Secondary interface */
 			if ((cfg->escan_info.ndev != bcmcfg_to_prmry_ndev(cfg)) &&
 				(request->channels[i]->flags &
-				(IEEE80211_CHAN_RADAR | IEEE80211_CHAN_PASSIVE_SCAN)))
+				(IEEE80211_CHAN_RADAR | IEEE80211_CHAN_NO_IR)))
 				continue;
 
 			if (request->channels[i]->band == IEEE80211_BAND_2GHZ) {
@@ -2187,7 +2187,7 @@ wl_run_escan(struct bcm_cfg80211 *cfg, struct net_device *ndev,
 					/* ignore DFS channels */
 					if (request->channels[i]->flags &
 						(IEEE80211_CHAN_RADAR
-						| IEEE80211_CHAN_PASSIVE_SCAN))
+						| IEEE80211_CHAN_NO_IR))
 						continue;
 #ifdef CUSTOMER_HW4
 					if (channel >= 52 && channel <= 140) {
@@ -5026,7 +5026,7 @@ wl_cfg80211_afx_handler(struct work_struct *work)
 	if (afx_instance != NULL && cfg->afx_hdl->is_active) {
 		if (cfg->afx_hdl->is_listen && cfg->afx_hdl->my_listen_chan) {
 			ret = wl_cfgp2p_discover_listen(cfg, cfg->afx_hdl->my_listen_chan,
-				(100 * (1 + (RANDOM32() % 3)))); /* 100ms ~ 300ms */
+				(100 * (1 + (prandom_u32() % 3)))); /* 100ms ~ 300ms */
 		} else {
 			ret = wl_cfgp2p_act_frm_search(cfg, cfg->afx_hdl->dev,
 				cfg->afx_hdl->bssidx, cfg->afx_hdl->peer_listen_chan,
@@ -5567,9 +5567,8 @@ exit:
 #define MAX_NUM_OF_ASSOCIATED_DEV       64
 static s32
 wl_cfg80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *cfgdev,
-	struct ieee80211_channel *channel, bool offchan,
-	unsigned int wait, const u8* buf, size_t len, bool no_cck,
-	bool dont_wait_for_ack, u64 *cookie)
+	struct cfg80211_mgmt_tx_params *params,
+	u64 *cookie)
 {
 	wl_action_frame_t *action_frame;
 	wl_af_params_t *af_params;
@@ -5582,6 +5581,10 @@ wl_cfg80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *cfgdev,
 	u32 id;
 	bool ack = false;
 	s8 eabuf[ETHER_ADDR_STR_LEN];
+
+	struct ieee80211_channel *channel = params->chan;
+	const u8 *buf = params->buf;
+	size_t len = params->len;
 
 	WL_DBG(("Enter \n"));
 
@@ -7388,7 +7391,7 @@ static s32 wl_setup_wiphy(struct wireless_dev *wdev, struct device *sdiofunc_dev
 #endif /* CONFIG_PM && WL_CFG80211_P2P_DEV_IF */
 
 	WL_DBG(("Registering custom regulatory)\n"));
-	wdev->wiphy->flags |= WIPHY_FLAG_CUSTOM_REGULATORY;
+	wdev->wiphy->regulatory_flags |= REGULATORY_CUSTOM_REG;
 	wiphy_apply_custom_regulatory(wdev->wiphy, &brcm_regdom);
 
 #if (LINUX_VERSION_CODE > KERNEL_VERSION(3, 13, 0)) || defined(WL_VENDOR_EXT_SUPPORT)
@@ -7574,11 +7577,7 @@ static s32 wl_inform_single_bss(struct bcm_cfg80211 *cfg, struct wl_bss_info *bi
 		return -EINVAL;
 	}
 
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 9, 0))
 	cfg80211_put_bss(wiphy, cbss);
-#else
-	cfg80211_put_bss(cbss);
-#endif /* (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 9, 0) */
 	kfree(notif_bss_info);
 	return err;
 }
@@ -8252,11 +8251,7 @@ static s32 wl_update_bss_info(struct bcm_cfg80211 *cfg, struct net_device *ndev)
 		ie = (u8 *)bss->ies->data;
 		ie_len = bss->ies->len;
 		beacon_interval = bss->beacon_interval;
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 9, 0))
 		cfg80211_put_bss(wiphy, bss);
-#else
-		cfg80211_put_bss(bss);
-#endif /* (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 9, 0) */
 	}
 
 	tim = bcm_parse_tlvs(ie, ie_len, WLAN_EID_TIM);
@@ -8931,11 +8926,7 @@ wl_notify_rx_mgmt_frame(struct bcm_cfg80211 *cfg, struct wireless_dev *cfgdev,
 		}
 	}
 
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 4, 0)) || defined(WL_COMPAT_WIRELESS)
-	cfg80211_rx_mgmt(cfgdev, freq, 0, mgmt_frame, mgmt_frame_len, GFP_ATOMIC);
-#else
-	cfg80211_rx_mgmt(cfgdev, freq, mgmt_frame, mgmt_frame_len, GFP_ATOMIC);
-#endif /* LINUX_VERSION >= VERSION(3, 4, 0) || WL_COMPAT_WIRELESS */
+	cfg80211_rx_mgmt(cfgdev, freq, 0, mgmt_frame, mgmt_frame_len, 0, GFP_ATOMIC);
 
 	WL_DBG(("mgmt_frame_len (%d) , e->datalen (%d), channel (%d), freq (%d)\n",
 		mgmt_frame_len, ntoh32(e->datalen), channel, freq));
@@ -9323,7 +9314,6 @@ wl_cfg80211_netdev_notifier_call(struct notifier_block * nb,
 	struct net_device *dev = ndev;
 	struct wireless_dev *wdev = dev->ieee80211_ptr;
 	struct bcm_cfg80211 *cfg = g_bcm_cfg;
-	int refcnt = 0;
 
 	WL_DBG(("Enter \n"));
 
@@ -9332,37 +9322,7 @@ wl_cfg80211_netdev_notifier_call(struct notifier_block * nb,
 
 	switch (state) {
 		case NETDEV_DOWN:
-		{
-			int max_wait_timeout = 5;
-			int max_wait_count = 100;
-			unsigned long limit = jiffies + max_wait_timeout * HZ;
-			while (work_pending(&wdev->cleanup_work)) {
-				if (refcnt%5 == 0) {
-					WL_ERR(("[NETDEV_DOWN] wait for "
-						"complete of cleanup_work"
-						" (%d th)\n", refcnt));
-				}
-				if (!time_before(jiffies, limit)) {
-					WL_ERR(("[NETDEV_DOWN] cleanup_work"
-						" of CFG80211 is not"
-						" completed in %d sec\n",
-						max_wait_timeout));
-					break;
-				}
-				if (refcnt >= max_wait_count) {
-					WL_ERR(("[NETDEV_DOWN] cleanup_work"
-						" of CFG80211 is not"
-						" completed in %d loop\n",
-						max_wait_count));
-					break;
-				}
-				set_current_state(TASK_INTERRUPTIBLE);
-				schedule_timeout(100);
-				set_current_state(TASK_RUNNING);
-				refcnt++;
-			}
 			break;
-		}
 
 		case NETDEV_UNREGISTER:
 			/* after calling list_del_rcu(&wdev->list) */
@@ -10781,10 +10741,10 @@ static int wl_construct_reginfo(struct bcm_cfg80211 *cfg, s32 bw_cap)
 						if (channel & WL_CHAN_RADAR)
 							band_chan_arr[index].flags |=
 								(IEEE80211_CHAN_RADAR |
-								IEEE80211_CHAN_NO_IBSS);
+								IEEE80211_CHAN_NO_IR);
 						if (channel & WL_CHAN_PASSIVE)
 							band_chan_arr[index].flags |=
-								IEEE80211_CHAN_PASSIVE_SCAN;
+								IEEE80211_CHAN_NO_IR;
 					} else if (err == BCME_UNSUPPORTED) {
 						dfs_radar_disabled = TRUE;
 						WL_ERR(("does not support per_chan_info\n"));

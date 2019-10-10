@@ -33,6 +33,7 @@
 #include <linux/kernel.h>
 #include <linux/slab.h>
 #include <linux/skbuff.h>
+#include <linux/sched/rt.h>
 #include <linux/netdevice.h>
 #include <linux/inetdevice.h>
 #include <linux/rtnetlink.h>
