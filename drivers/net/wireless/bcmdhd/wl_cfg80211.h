@@ -570,7 +570,6 @@ struct bcm_cfg80211 {
 	struct rfkill *rfkill;
 	bool rf_blocked;
 	struct ieee80211_channel remain_on_chan;
-	enum nl80211_channel_type remain_on_chan_type;
 	u64 send_action_id;
 	u64 last_roc_id;
 	wait_queue_head_t netif_change_event;

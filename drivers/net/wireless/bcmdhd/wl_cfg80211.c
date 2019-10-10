@@ -323,21 +323,11 @@ static int wl_cfg80211_connect(struct wiphy *wiphy, struct net_device *dev,
 	struct cfg80211_connect_params *sme);
 static s32 wl_cfg80211_disconnect(struct wiphy *wiphy, struct net_device *dev,
 	u16 reason_code);
-#if defined(WL_CFG80211_P2P_DEV_IF)
 static s32
 wl_cfg80211_set_tx_power(struct wiphy *wiphy, struct wireless_dev *wdev,
 	enum nl80211_tx_power_setting type, s32 mbm);
-#else
-static s32
-wl_cfg80211_set_tx_power(struct wiphy *wiphy,
-	enum nl80211_tx_power_setting type, s32 dbm);
-#endif /* WL_CFG80211_P2P_DEV_IF */
-#if defined(WL_CFG80211_P2P_DEV_IF)
 static s32 wl_cfg80211_get_tx_power(struct wiphy *wiphy,
 	struct wireless_dev *wdev, s32 *dbm);
-#else
-static s32 wl_cfg80211_get_tx_power(struct wiphy *wiphy, s32 *dbm);
-#endif /* WL_CFG80211_P2P_DEV_IF */
 static s32 wl_cfg80211_config_default_key(struct wiphy *wiphy,
 	struct net_device *dev,
 	u8 key_idx, bool unicast, bool multicast);
@@ -1284,11 +1274,7 @@ wl_cfg80211_add_monitor_if(char *name)
 
 static struct wireless_dev *
 wl_cfg80211_add_virtual_iface(struct wiphy *wiphy,
-#if defined(WL_CFG80211_P2P_DEV_IF)
 	const char *name,
-#else
-	char *name,
-#endif /* WL_CFG80211_P2P_DEV_IF */
 	enum nl80211_iftype type, u32 *flags,
 	struct vif_params *params)
 {
@@ -2821,11 +2807,7 @@ wl_cfg80211_join_ibss(struct wiphy *wiphy, struct net_device *dev,
 		WL_ERR(("Invalid parameter\n"));
 		return -EINVAL;
 	}
-#if defined(WL_CFG80211_P2P_DEV_IF)
 	chan = params->chandef.chan;
-#else
-	chan = params->channel;
-#endif /* WL_CFG80211_P2P_DEV_IF */
 	if (chan)
 		cfg->channel = ieee80211_frequency_to_channel(chan->center_freq);
 	if (wl_get_drv_status(cfg, CONNECTED, dev)) {
@@ -3976,26 +3958,15 @@ wl_cfg80211_disconnect(struct wiphy *wiphy, struct net_device *dev,
 	return err;
 }
 
-#if defined(WL_CFG80211_P2P_DEV_IF)
 static s32
 wl_cfg80211_set_tx_power(struct wiphy *wiphy, struct wireless_dev *wdev,
 	enum nl80211_tx_power_setting type, s32 mbm)
-#else
-static s32
-wl_cfg80211_set_tx_power(struct wiphy *wiphy,
-	enum nl80211_tx_power_setting type, s32 dbm)
-#endif /* WL_CFG80211_P2P_DEV_IF */
 {
 
 	struct bcm_cfg80211 *cfg = wiphy_priv(wiphy);
 	struct net_device *ndev = bcmcfg_to_prmry_ndev(cfg);
 	s32 err = 0;
-#if defined(WL_CFG80211_P2P_DEV_IF)
 	s32 dbm = MBM_TO_DBM(mbm);
-#elif (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 3, 0)) || \
-	defined(WL_COMPAT_WIRELESS) || defined(WL_SUPPORT_BACKPORTED_KPATCHES)
-	dbm = MBM_TO_DBM(dbm);
-#endif /* WL_CFG80211_P2P_DEV_IF */
 
 	RETURN_EIO_IF_NOT_UP(cfg);
 	switch (type) {
@@ -4026,12 +3997,8 @@ wl_cfg80211_set_tx_power(struct wiphy *wiphy,
 	return err;
 }
 
-#if defined(WL_CFG80211_P2P_DEV_IF)
 static s32 wl_cfg80211_get_tx_power(struct wiphy *wiphy,
 	struct wireless_dev *wdev, s32 *dbm)
-#else
-static s32 wl_cfg80211_get_tx_power(struct wiphy *wiphy, s32 *dbm)
-#endif /* WL_CFG80211_P2P_DEV_IF */
 {
 	struct bcm_cfg80211 *cfg = wiphy_priv(wiphy);
 	struct net_device *ndev = bcmcfg_to_prmry_ndev(cfg);
@@ -4915,17 +4882,9 @@ wl_cfg80211_scan_alloc_params(int channel, int nprobes, int *out_params_size)
 	return params;
 }
 
-#if defined(WL_CFG80211_P2P_DEV_IF)
 static s32
 wl_cfg80211_remain_on_channel(struct wiphy *wiphy, struct wireless_dev *cfgdev,
 	struct ieee80211_channel *channel, unsigned int duration, u64 *cookie)
-#else
-static s32
-wl_cfg80211_remain_on_channel(struct wiphy *wiphy, struct wireless_dev *cfgdev,
-	struct ieee80211_channel * channel,
-	enum nl80211_channel_type channel_type,
-	unsigned int duration, u64 *cookie)
-#endif /* WL_CFG80211_P2P_DEV_IF */
 {
 	s32 target_channel;
 	u32 id;
@@ -4954,9 +4913,6 @@ wl_cfg80211_remain_on_channel(struct wiphy *wiphy, struct wireless_dev *cfgdev,
 
 	target_channel = ieee80211_frequency_to_channel(channel->center_freq);
 	memcpy(&cfg->remain_on_chan, channel, sizeof(struct ieee80211_channel));
-#if defined(WL_ENABLE_P2P_IF)
-	cfg->remain_on_chan_type = channel_type;
-#endif /* WL_ENABLE_P2P_IF */
 	id = ++cfg->last_roc_id;
 	if (id == 0)
 		id = ++cfg->last_roc_id;
@@ -5035,13 +4991,8 @@ wl_cfg80211_remain_on_channel(struct wiphy *wiphy, struct wireless_dev *cfgdev,
 exit:
 	if (err == BCME_OK) {
 		WL_INFO(("Success\n"));
-#if defined(WL_CFG80211_P2P_DEV_IF)
 		cfg80211_ready_on_channel(cfgdev, *cookie, channel,
 			duration, GFP_KERNEL);
-#else
-		cfg80211_ready_on_channel(cfgdev, *cookie, channel,
-			channel_type, duration, GFP_KERNEL);
-#endif /* WL_CFG80211_P2P_DEV_IF */
 	} else {
 		WL_ERR(("Fail to Set (err=%d cookie:%llu)\n", err, *cookie));
 	}
@@ -5614,27 +5565,11 @@ exit:
 }
 
 #define MAX_NUM_OF_ASSOCIATED_DEV       64
-#if defined(WL_CFG80211_P2P_DEV_IF)
 static s32
 wl_cfg80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *cfgdev,
 	struct ieee80211_channel *channel, bool offchan,
 	unsigned int wait, const u8* buf, size_t len, bool no_cck,
 	bool dont_wait_for_ack, u64 *cookie)
-#else
-static s32
-wl_cfg80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *cfgdev,
-	struct ieee80211_channel *channel, bool offchan,
-	enum nl80211_channel_type channel_type,
-	bool channel_type_valid, unsigned int wait,
-	const u8* buf, size_t len,
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 2, 0)) || defined(WL_COMPAT_WIRELESS)
-	bool no_cck,
-#endif
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 3, 0)) || defined(WL_COMPAT_WIRELESS)
-	bool dont_wait_for_ack,
-#endif
-	u64 *cookie)
-#endif /* WL_CFG80211_P2P_DEV_IF */
 {
 	wl_action_frame_t *action_frame;
 	wl_af_params_t *af_params;
@@ -8314,13 +8249,8 @@ static s32 wl_update_bss_info(struct bcm_cfg80211 *cfg, struct net_device *ndev)
 		cur_channel = ieee80211_get_channel(wiphy, freq);
 		bss->channel = cur_channel;
 #endif /* ROAM_CHANNEL_CACHE */
-#if defined(WL_CFG80211_P2P_DEV_IF)
 		ie = (u8 *)bss->ies->data;
 		ie_len = bss->ies->len;
-#else
-		ie = bss->information_elements;
-		ie_len = bss->len_information_elements;
-#endif /* WL_CFG80211_P2P_DEV_IF */
 		beacon_interval = bss->beacon_interval;
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 9, 0))
 		cfg80211_put_bss(wiphy, bss);
