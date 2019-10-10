@@ -1632,13 +1632,8 @@ wl_cfgp2p_listen_complete(struct bcm_cfg80211 *cfg, struct wireless_dev *cfgdev,
 			wl_clr_drv_status(cfg, FAKE_REMAINING_ON_CHANNEL, ndev);
 #endif /* WL_CFG80211_VSDB_PRIORITIZE_SCAN_REQUEST */
 			if (ndev && (ndev->ieee80211_ptr != NULL)) {
-#if defined(WL_CFG80211_P2P_DEV_IF)
 				cfg80211_remain_on_channel_expired(cfgdev, cfg->last_roc_id,
 					&cfg->remain_on_chan, GFP_KERNEL);
-#else
-				cfg80211_remain_on_channel_expired(cfgdev, cfg->last_roc_id,
-					&cfg->remain_on_chan, cfg->remain_on_chan_type, GFP_KERNEL);
-#endif /* WL_CFG80211_P2P_DEV_IF */
 			}
 		}
 		if (wl_add_remove_eventmsg(bcmcfg_to_prmry_ndev(cfg),
@@ -1692,13 +1687,8 @@ wl_cfgp2p_cancel_listen(struct bcm_cfg80211 *cfg, struct net_device *ndev,
 		del_timer_sync(&cfg->p2p->listen_timer);
 		if (notify)
 			if (ndev && ndev->ieee80211_ptr) {
-#if defined(WL_CFG80211_P2P_DEV_IF)
 				cfg80211_remain_on_channel_expired(wdev, cfg->last_roc_id,
 					&cfg->remain_on_chan, GFP_KERNEL);
-#else
-				cfg80211_remain_on_channel_expired(wdev, cfg->last_roc_id,
-					&cfg->remain_on_chan, cfg->remain_on_chan_type, GFP_KERNEL);
-#endif /* WL_CFG80211_P2P_DEV_IF */
 			}
 	}
 	return 0;
