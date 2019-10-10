@@ -41,6 +41,8 @@
 #endif
 #endif
 
+#include <asm/system_info.h>
+
 /* MAX77693 Registers(defined @max77693-private.h) */
 
 /* MAX77693_CHG_REG_CHG_INT */

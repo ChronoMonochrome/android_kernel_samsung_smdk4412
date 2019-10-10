@@ -14,6 +14,8 @@
 #include <linux/regulator/machine.h>
 #include <linux/init.h>
 
+#include <asm/system_info.h>
+
 #include <plat/devs.h>
 #include <plat/csis.h>
 #include <plat/pd.h>
