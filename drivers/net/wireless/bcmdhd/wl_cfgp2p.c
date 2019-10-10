@@ -1583,7 +1583,7 @@ exit:
  * Callback function for WLC_E_P2P_DISC_LISTEN_COMPLETE
  */
 s32
-wl_cfgp2p_listen_complete(struct bcm_cfg80211 *cfg, bcm_struct_cfgdev *cfgdev,
+wl_cfgp2p_listen_complete(struct bcm_cfg80211 *cfg, struct wireless_dev *cfgdev,
 	const wl_event_msg_t *e, void *data)
 {
 	s32 ret = BCME_OK;
@@ -1594,7 +1594,7 @@ wl_cfgp2p_listen_complete(struct bcm_cfg80211 *cfg, bcm_struct_cfgdev *cfgdev,
 
 	CFGP2P_DBG((" Enter\n"));
 
-	ndev = cfgdev_to_wlc_ndev(cfgdev, cfg);
+	ndev = cfgdev_to_wlc_ndev(cfgdev->netdev, cfg);
 
 	if (wl_get_p2p_status(cfg, LISTEN_EXPIRED) == 0) {
 		wl_set_p2p_status(cfg, LISTEN_EXPIRED);
@@ -1696,7 +1696,7 @@ wl_cfgp2p_cancel_listen(struct bcm_cfg80211 *cfg, struct net_device *ndev,
 				cfg80211_remain_on_channel_expired(wdev, cfg->last_roc_id,
 					&cfg->remain_on_chan, GFP_KERNEL);
 #else
-				cfg80211_remain_on_channel_expired(ndev, cfg->last_roc_id,
+				cfg80211_remain_on_channel_expired(wdev, cfg->last_roc_id,
 					&cfg->remain_on_chan, cfg->remain_on_chan_type, GFP_KERNEL);
 #endif /* WL_CFG80211_P2P_DEV_IF */
 			}
@@ -1802,7 +1802,7 @@ wl_cfgp2p_discover_enable_search(struct bcm_cfg80211 *cfg, u8 enable)
  * Callback function for WLC_E_ACTION_FRAME_COMPLETE, WLC_E_ACTION_FRAME_OFF_CHAN_COMPLETE
  */
 s32
-wl_cfgp2p_action_tx_complete(struct bcm_cfg80211 *cfg, bcm_struct_cfgdev *cfgdev,
+wl_cfgp2p_action_tx_complete(struct bcm_cfg80211 *cfg, struct wireless_dev *cfgdev,
             const wl_event_msg_t *e, void *data)
 {
 	s32 ret = BCME_OK;
@@ -1811,7 +1811,7 @@ wl_cfgp2p_action_tx_complete(struct bcm_cfg80211 *cfg, bcm_struct_cfgdev *cfgdev
 	struct net_device *ndev = NULL;
 	CFGP2P_DBG((" Enter\n"));
 
-	ndev = cfgdev_to_wlc_ndev(cfgdev, cfg);
+	ndev = cfgdev_to_wlc_ndev(cfgdev->netdev, cfg);
 
 	if (wl_get_drv_status_all(cfg, SENDING_ACT_FRM)) {
 		if (event_type == WLC_E_ACTION_FRAME_COMPLETE) {
@@ -2569,7 +2569,7 @@ static int wl_cfgp2p_if_stop(struct net_device *net)
 	if (!wdev)
 		return -EINVAL;
 
-	wl_cfg80211_scan_stop(net);
+	wl_cfg80211_scan_stop(wdev);
 
 #if !defined(WL_IFACE_COMB_NUM_CHANNELS)
 	wdev->wiphy->interface_modes = (wdev->wiphy->interface_modes)
