@@ -194,14 +194,6 @@ enum exynos4212_gpio_number {
 				 EXYNOS4212_GPIO_END : EXYNOS4210_GPIO_END)
 #define EXYNOS4_GPIO_END	EXYNOS4XXX_GPIO_END
 
-/* define the number of gpios we need to the one after the GPZ() range */
-#ifdef ARCH_NR_GPIOS
-#undef ARCH_NR_GPIOS
-#endif
-
-#define ARCH_NR_GPIOS		(EXYNOS4XXX_GPIO_END +			\
-				CONFIG_SAMSUNG_GPIO_EXTRA)
-
 #include <asm-generic/gpio.h>
 #if defined(CONFIG_MACH_MIDAS) || defined(CONFIG_MACH_SLP_MIDAS) \
 				|| defined(CONFIG_MACH_SLP_PQ) \
