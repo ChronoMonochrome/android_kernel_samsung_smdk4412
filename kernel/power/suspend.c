@@ -26,12 +26,17 @@
 #include <linux/suspend.h>
 #include <linux/syscore_ops.h>
 #include <linux/ftrace.h>
+#include <linux/rtc.h>
 #include <trace/events/power.h>
 #include <linux/compiler.h>
 
 #include "power.h"
 
-static const char *pm_labels[] = { "mem", "standby", "freeze", };
+static const char *pm_labels[] = {
+#ifdef CONFIG_EARLYSUSPEND
+"on",
+#endif
+ "mem", "standby", "freeze", NULL };
 const char *pm_states[PM_SUSPEND_MAX];
 
 static const struct platform_suspend_ops *suspend_ops;
