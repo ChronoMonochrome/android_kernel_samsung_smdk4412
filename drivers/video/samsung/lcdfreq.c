@@ -282,7 +282,7 @@ static ssize_t level_store(struct device *dev,
 	unsigned int value;
 	int ret;
 
-	ret = strict_strtoul(buf, 0, (unsigned long *)&value);
+	ret = kstrtoul(buf, 0, (unsigned long *)&value);
 
 	dev_info(dev, "\t%s :: value=%d\n", __func__, value);
 
