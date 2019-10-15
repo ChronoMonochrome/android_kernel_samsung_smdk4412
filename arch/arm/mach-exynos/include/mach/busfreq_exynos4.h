@@ -14,6 +14,7 @@
 #define __ASM_ARCH_BUSFREQ_H __FILE__
 
 #include <linux/notifier.h>
+#include <linux/sysfs.h>
 #include <linux/earlysuspend.h>
 
 #include <mach/ppmu.h>
