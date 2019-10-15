@@ -24,4 +24,6 @@ extern void exynos_cpu_die(unsigned int cpu);
 extern void __init exynos_timer_init(void);
 void exynos_cpufreq_init(void);
 
+extern void set_gps_uart_op(int onoff);
+int check_gps_uart_op(void);
 #endif /* __ARCH_ARM_MACH_EXYNOS_COMMON_H */
