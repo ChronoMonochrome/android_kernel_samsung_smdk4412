@@ -15,6 +15,10 @@ enum {
 	PM_QOS_CPU_DMA_LATENCY,
 	PM_QOS_NETWORK_LATENCY,
 	PM_QOS_NETWORK_THROUGHPUT,
+	PM_QOS_BUS_DMA_THROUGHPUT,
+	PM_QOS_DISPLAY_FREQUENCY,
+	PM_QOS_BUS_QOS,
+	PM_QOS_DVFS_RESPONSE_LATENCY,
 
 	/* insert new class ID */
 	PM_QOS_NUM_CLASSES,
@@ -36,6 +40,10 @@ enum pm_qos_flags_status {
 #define PM_QOS_LATENCY_TOLERANCE_DEFAULT_VALUE	0
 #define PM_QOS_LATENCY_TOLERANCE_NO_CONSTRAINT	(-1)
 #define PM_QOS_LATENCY_ANY			((s32)(~(__u32)0 >> 1))
+#define PM_QOS_BUS_DMA_THROUGHPUT_DEFAULT_VALUE 0
+#define PM_QOS_DISPLAY_FREQUENCY_DEFAULT_VALUE	0
+#define PM_QOS_DVFS_RESPONSE_LAT_DEFAULT_VALUE	(2000 * USEC_PER_SEC)
+#define PM_QOS_DEV_LAT_DEFAULT_VALUE		0
 
 #define PM_QOS_FLAG_NO_POWER_OFF	(1 << 0)
 #define PM_QOS_FLAG_REMOTE_WAKEUP	(1 << 1)
@@ -152,6 +160,33 @@ int dev_pm_qos_add_ancestor_request(struct device *dev,
 				    struct dev_pm_qos_request *req,
 				    enum dev_pm_qos_req_type type, s32 value);
 #else
+static inline int pm_qos_update_target(struct pm_qos_constraints *c,
+				       struct plist_node *node,
+				       enum pm_qos_req_action action,
+				       int value)
+			{ return 0; }
+static inline void pm_qos_add_request(struct pm_qos_request *req,
+				      int pm_qos_class, s32 value)
+			{ return; }
+static inline void pm_qos_update_request(struct pm_qos_request *req,
+					 s32 new_value)
+			{ return; }
+static inline void pm_qos_remove_request(struct pm_qos_request *req)
+			{ return; }
+
+static inline int pm_qos_request(int pm_qos_class)
+			{ return 0; }
+static inline int pm_qos_add_notifier(int pm_qos_class,
+				      struct notifier_block *notifier)
+			{ return 0; }
+static inline int pm_qos_remove_notifier(int pm_qos_class,
+					 struct notifier_block *notifier)
+			{ return 0; }
+static inline int pm_qos_request_active(struct pm_qos_request *req)
+			{ return 0; }
+static inline s32 pm_qos_read_value(struct pm_qos_constraints *c)
+			{ return 0; }
+
 static inline enum pm_qos_flags_status __dev_pm_qos_flags(struct device *dev,
 							  s32 mask)
 			{ return PM_QOS_FLAGS_UNDEFINED; }
