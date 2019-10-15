@@ -15,15 +15,13 @@
  */
 
 #include <linux/kernel.h>
-#include <linux/export.h>
 #include <linux/file.h>
 #include <linux/fs.h>
 #include <linux/miscdevice.h>
 #include <linux/module.h>
+#include <linux/sw_sync.h>
 #include <linux/syscalls.h>
 #include <linux/uaccess.h>
-
-#include "sw_sync.h"
 
 static int sw_sync_cmp(u32 a, u32 b)
 {
@@ -44,13 +42,12 @@ struct sync_pt *sw_sync_pt_create(struct sw_sync_timeline *obj, u32 value)
 
 	return (struct sync_pt *)pt;
 }
-EXPORT_SYMBOL(sw_sync_pt_create);
 
 static struct sync_pt *sw_sync_pt_dup(struct sync_pt *sync_pt)
 {
 	struct sw_sync_pt *pt = (struct sw_sync_pt *) sync_pt;
 	struct sw_sync_timeline *obj =
-		(struct sw_sync_timeline *)sync_pt_parent(sync_pt);
+		(struct sw_sync_timeline *)sync_pt->parent;
 
 	return (struct sync_pt *) sw_sync_pt_create(obj, pt->value);
 }
@@ -59,7 +56,7 @@ static int sw_sync_pt_has_signaled(struct sync_pt *sync_pt)
 {
 	struct sw_sync_pt *pt = (struct sw_sync_pt *)sync_pt;
 	struct sw_sync_timeline *obj =
-		(struct sw_sync_timeline *)sync_pt_parent(sync_pt);
+		(struct sw_sync_timeline *)sync_pt->parent;
 
 	return sw_sync_cmp(obj->value, pt->value) >= 0;
 }
@@ -70,6 +67,23 @@ static int sw_sync_pt_compare(struct sync_pt *a, struct sync_pt *b)
 	struct sw_sync_pt *pt_b = (struct sw_sync_pt *)b;
 
 	return sw_sync_cmp(pt_a->value, pt_b->value);
+}
+
+static void sw_sync_print_obj(struct seq_file *s,
+			      struct sync_timeline *sync_timeline)
+{
+	struct sw_sync_timeline *obj = (struct sw_sync_timeline *)sync_timeline;
+
+	seq_printf(s, "%d", obj->value);
+}
+
+static void sw_sync_print_pt(struct seq_file *s, struct sync_pt *sync_pt)
+{
+	struct sw_sync_pt *pt = (struct sw_sync_pt *)sync_pt;
+	struct sw_sync_timeline *obj =
+		(struct sw_sync_timeline *)sync_pt->parent;
+
+	seq_printf(s, "%d / %d", pt->value, obj->value);
 }
 
 static int sw_sync_fill_driver_data(struct sync_pt *sync_pt,
@@ -85,29 +99,14 @@ static int sw_sync_fill_driver_data(struct sync_pt *sync_pt,
 	return sizeof(pt->value);
 }
 
-static void sw_sync_timeline_value_str(struct sync_timeline *sync_timeline,
-				       char *str, int size)
-{
-	struct sw_sync_timeline *timeline =
-		(struct sw_sync_timeline *)sync_timeline;
-	snprintf(str, size, "%d", timeline->value);
-}
-
-static void sw_sync_pt_value_str(struct sync_pt *sync_pt,
-				       char *str, int size)
-{
-	struct sw_sync_pt *pt = (struct sw_sync_pt *)sync_pt;
-	snprintf(str, size, "%d", pt->value);
-}
-
-static struct sync_timeline_ops sw_sync_timeline_ops = {
+struct sync_timeline_ops sw_sync_timeline_ops = {
 	.driver_name = "sw_sync",
 	.dup = sw_sync_pt_dup,
 	.has_signaled = sw_sync_pt_has_signaled,
 	.compare = sw_sync_pt_compare,
+	.print_obj = sw_sync_print_obj,
+	.print_pt = sw_sync_print_pt,
 	.fill_driver_data = sw_sync_fill_driver_data,
-	.timeline_value_str = sw_sync_timeline_value_str,
-	.pt_value_str = sw_sync_pt_value_str,
 };
 
 
@@ -120,7 +119,6 @@ struct sw_sync_timeline *sw_sync_timeline_create(const char *name)
 
 	return obj;
 }
-EXPORT_SYMBOL(sw_sync_timeline_create);
 
 void sw_sync_timeline_inc(struct sw_sync_timeline *obj, u32 inc)
 {
@@ -128,7 +126,7 @@ void sw_sync_timeline_inc(struct sw_sync_timeline *obj, u32 inc)
 
 	sync_timeline_signal(&obj->obj);
 }
-EXPORT_SYMBOL(sw_sync_timeline_inc);
+
 
 #ifdef CONFIG_SW_SYNC_USER
 /* *WARNING*
@@ -137,7 +135,7 @@ EXPORT_SYMBOL(sw_sync_timeline_inc);
  */
 
 /* opening sw_sync create a new sync obj */
-static int sw_sync_open(struct inode *inode, struct file *file)
+int sw_sync_open(struct inode *inode, struct file *file)
 {
 	struct sw_sync_timeline *obj;
 	char task_comm[TASK_COMM_LEN];
@@ -153,29 +151,23 @@ static int sw_sync_open(struct inode *inode, struct file *file)
 	return 0;
 }
 
-static int sw_sync_release(struct inode *inode, struct file *file)
+int sw_sync_release(struct inode *inode, struct file *file)
 {
 	struct sw_sync_timeline *obj = file->private_data;
 	sync_timeline_destroy(&obj->obj);
 	return 0;
 }
 
-static long sw_sync_ioctl_create_fence(struct sw_sync_timeline *obj,
-				       unsigned long arg)
+long sw_sync_ioctl_create_fence(struct sw_sync_timeline *obj, unsigned long arg)
 {
-	int fd = get_unused_fd_flags(O_CLOEXEC);
+	int fd = get_unused_fd();
 	int err;
 	struct sync_pt *pt;
 	struct sync_fence *fence;
 	struct sw_sync_create_fence_data data;
 
-	if (fd < 0)
-		return fd;
-
-	if (copy_from_user(&data, (void __user *)arg, sizeof(data))) {
-		err = -EFAULT;
-		goto err;
-	}
+	if (copy_from_user(&data, (void __user *)arg, sizeof(data)))
+		return -EFAULT;
 
 	pt = sw_sync_pt_create(obj, data.value);
 	if (pt == NULL) {
@@ -207,7 +199,7 @@ err:
 	return err;
 }
 
-static long sw_sync_ioctl_inc(struct sw_sync_timeline *obj, unsigned long arg)
+long sw_sync_ioctl_inc(struct sw_sync_timeline *obj, unsigned long arg)
 {
 	u32 value;
 
@@ -219,8 +211,7 @@ static long sw_sync_ioctl_inc(struct sw_sync_timeline *obj, unsigned long arg)
 	return 0;
 }
 
-static long sw_sync_ioctl(struct file *file, unsigned int cmd,
-			  unsigned long arg)
+long sw_sync_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 {
 	struct sw_sync_timeline *obj = file->private_data;
 
@@ -241,7 +232,6 @@ static const struct file_operations sw_sync_fops = {
 	.open = sw_sync_open,
 	.release = sw_sync_release,
 	.unlocked_ioctl = sw_sync_ioctl,
-	.compat_ioctl = sw_sync_ioctl,
 };
 
 static struct miscdevice sw_sync_dev = {
@@ -250,12 +240,12 @@ static struct miscdevice sw_sync_dev = {
 	.fops	= &sw_sync_fops,
 };
 
-static int __init sw_sync_device_init(void)
+int __init sw_sync_device_init(void)
 {
 	return misc_register(&sw_sync_dev);
 }
 
-static void __exit sw_sync_device_remove(void)
+void __exit sw_sync_device_remove(void)
 {
 	misc_deregister(&sw_sync_dev);
 }
