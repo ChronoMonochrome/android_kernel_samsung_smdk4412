@@ -7821,6 +7821,7 @@ static s32
 wl_notify_connect_status_ibss(struct bcm_cfg80211 *cfg, struct net_device *ndev,
 	const wl_event_msg_t *e, void *data)
 {
+	struct ieee80211_channel *chan;
 	s32 err = 0;
 	u32 event = ntoh32(e->event_type);
 	u16 flags = ntoh16(e->flags);
@@ -7835,6 +7836,8 @@ wl_notify_connect_status_ibss(struct bcm_cfg80211 *cfg, struct net_device *ndev,
 	}
 	if (event == WLC_E_JOIN || event == WLC_E_START ||
 		(event == WLC_E_LINK && (flags == WLC_EVENT_MSG_LINK))) {
+		chan = ieee80211_get_channel(cfg->wdev->wiphy, cfg->channel);
+
 		if (wl_get_drv_status(cfg, CONNECTED, ndev)) {
 			/* ROAM or Redundant */
 			u8 *cur_bssid = wl_read_prof(cfg, ndev, WL_PROF_BSSID);
@@ -7848,7 +7851,7 @@ wl_notify_connect_status_ibss(struct bcm_cfg80211 *cfg, struct net_device *ndev,
 			wl_get_assoc_ies(cfg, ndev);
 			wl_update_prof(cfg, ndev, NULL, (void *)&e->addr, WL_PROF_BSSID);
 			wl_update_bss_info(cfg, ndev);
-			cfg80211_ibss_joined(ndev, (s8 *)&e->addr, GFP_KERNEL);
+			cfg80211_ibss_joined(ndev, (s8 *)&e->addr, chan, GFP_KERNEL);
 		}
 		else {
 			/* New connection */
@@ -7857,7 +7860,7 @@ wl_notify_connect_status_ibss(struct bcm_cfg80211 *cfg, struct net_device *ndev,
 			wl_get_assoc_ies(cfg, ndev);
 			wl_update_prof(cfg, ndev, NULL, (void *)&e->addr, WL_PROF_BSSID);
 			wl_update_bss_info(cfg, ndev);
-			cfg80211_ibss_joined(ndev, (s8 *)&e->addr, GFP_KERNEL);
+			cfg80211_ibss_joined(ndev, (s8 *)&e->addr, chan, GFP_KERNEL);
 			wl_set_drv_status(cfg, CONNECTED, ndev);
 			active = true;
 			wl_update_prof(cfg, ndev, NULL, (void *)&active, WL_PROF_ACT);
