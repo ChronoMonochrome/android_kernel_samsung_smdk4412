@@ -192,12 +192,6 @@ enum wl_cfgp2p_status {
 	} while (0);
 
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 8, 0))
-#define WL_CFG80211_P2P_DEV_IF
-
-#ifdef WL_ENABLE_P2P_IF
-#undef WL_ENABLE_P2P_IF
-#endif
-
 #ifdef WL_SUPPORT_BACKPORTED_KPATCHES
 #undef WL_SUPPORT_BACKPORTED_KPATCHES
 #endif
@@ -208,12 +202,6 @@ enum wl_cfgp2p_status {
 #undef WL_NEWCFG_PRIVCMD_SUPPORT
 #endif
 #endif /* WL_CFG80211_P2P_DEV_IF */
-
-#if defined(WL_ENABLE_P2P_IF) && (defined(WL_CFG80211_P2P_DEV_IF) || \
-	(LINUX_VERSION_CODE >= KERNEL_VERSION(3, 8, 0)))
-#error Disable 'WL_ENABLE_P2P_IF', if 'WL_CFG80211_P2P_DEV_IF' is enabled \
-	or kernel version is 3.8.0 or above
-#endif /* WL_ENABLE_P2P_IF && (WL_CFG80211_P2P_DEV_IF || (LINUX_VERSION >= VERSION(3, 8, 0))) */
 
 #if !defined(WLP2P) && (defined(WL_ENABLE_P2P_IF) || defined(WL_CFG80211_P2P_DEV_IF))
 #error WLP2P not defined
