@@ -380,10 +380,8 @@ static ssize_t state_store(struct kobject *kobj, struct kobj_attribute *attr,
 	state = decode_state(buf, n);
 	if (state < PM_SUSPEND_MAX) {
 #ifdef CONFIG_EARLYSUSPEND
-		if (state == PM_SUSPEND_ON || valid_state(state)) {
-			error = 0;
-			request_suspend_state(state);
-		}
+		error = 0;
+		request_suspend_state(state);
 #else
 		error = pm_suspend(state);
 #endif
