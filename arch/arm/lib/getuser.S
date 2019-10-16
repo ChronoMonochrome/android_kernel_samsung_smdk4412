@@ -66,7 +66,7 @@ ENTRY(__get_user_4)
 	mov	pc, lr
 ENDPROC(__get_user_4)
 
-ENTRY(__get_user_bad)
+__get_user_bad:
 	mov	r2, #0
 	mov	r0, #-EFAULT
 	mov	pc, lr
