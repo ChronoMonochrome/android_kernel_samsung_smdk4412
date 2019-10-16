@@ -385,10 +385,17 @@ static void l2x0_enable(void __iomem *base, u32 aux, unsigned num_lock)
 
 static void l2x0_resume(void)
 {
-	void __iomem *base = l2x0_base;
+	if (!(readl_relaxed(l2x0_base + L2X0_CTRL) & L2X0_CTRL_EN)) {
+		/* restore aux ctrl and enable l2 */
+		l2x0_unlock(readl_relaxed(l2x0_base + L2X0_CACHE_ID));
 
-	if (!(readl_relaxed(base + L2X0_CTRL) & L2X0_CTRL_EN))
-		l2x0_enable(base, l2x0_saved_regs.aux_ctrl, 0);
+		writel_relaxed(l2x0_saved_regs.aux_ctrl, l2x0_base +
+			L2X0_AUX_CTRL);
+
+		l2x0_inv_all();
+
+		writel_relaxed(L2X0_CTRL_EN, l2x0_base + L2X0_CTRL);
+	}
 }
 
 static const struct l2c_init_data l2x0_init_fns __initconst = {
@@ -431,9 +438,10 @@ static const struct l2c_init_data l2x0_init_fns __initconst = {
  *	Affects: store buffer
  *	store buffer is not automatically drained.
  */
-static void __init l2c310_save(void __iomem *base)
+static void __init pl310_save(void __iomem *base)
 {
-	unsigned revision;
+	u32 l2x0_revision = readl_relaxed(base + L2X0_CACHE_ID) &
+		L2X0_CACHE_ID_RTL_MASK;
 
 	l2x0_saved_regs.tag_latency = readl_relaxed(base +
 		L2X0_TAG_LATENCY_CTRL);
@@ -444,49 +452,49 @@ static void __init l2c310_save(void __iomem *base)
 	l2x0_saved_regs.filter_start = readl_relaxed(base +
 		L2X0_ADDR_FILTER_START);
 
-	revision = readl_relaxed(base + L2X0_CACHE_ID) &
-			L2X0_CACHE_ID_RTL_MASK;
-
-	/* From r2p0, there is Prefetch offset/control register */
-	if (revision >= L310_CACHE_ID_RTL_R2P0)
+	if (l2x0_revision >= L310_CACHE_ID_RTL_R2P0) {
+		/*
+		 * From r2p0, there is Prefetch offset/control register
+		 */
 		l2x0_saved_regs.prefetch_ctrl = readl_relaxed(base +
-							L2X0_PREFETCH_CTRL);
-
-	/* From r3p0, there is Power control register */
-	if (revision >= L310_CACHE_ID_RTL_R3P0)
-		l2x0_saved_regs.pwr_ctrl = readl_relaxed(base +
-							L2X0_POWER_CTRL);
+			L2X0_PREFETCH_CTRL);
+		/*
+		 * From r3p0, there is Power control register
+		 */
+		if (l2x0_revision >= L310_CACHE_ID_RTL_R3P0)
+			l2x0_saved_regs.pwr_ctrl = readl_relaxed(base +
+				L2X0_POWER_CTRL);
+	}
 }
 
-static void l2c310_resume(void)
+static void pl310_resume(void)
 {
-	void __iomem *base = l2x0_base;
+	u32 l2x0_revision;
 
-	if (!(readl_relaxed(base + L2X0_CTRL) & L2X0_CTRL_EN)) {
-		unsigned revision;
-
+	if (!(readl_relaxed(l2x0_base + L2X0_CTRL) & L2X0_CTRL_EN)) {
 		/* restore pl310 setup */
 		writel_relaxed(l2x0_saved_regs.tag_latency,
-			       base + L2X0_TAG_LATENCY_CTRL);
+			l2x0_base + L2X0_TAG_LATENCY_CTRL);
 		writel_relaxed(l2x0_saved_regs.data_latency,
-			       base + L2X0_DATA_LATENCY_CTRL);
+			l2x0_base + L2X0_DATA_LATENCY_CTRL);
 		writel_relaxed(l2x0_saved_regs.filter_end,
-			       base + L2X0_ADDR_FILTER_END);
+			l2x0_base + L2X0_ADDR_FILTER_END);
 		writel_relaxed(l2x0_saved_regs.filter_start,
-			       base + L2X0_ADDR_FILTER_START);
+			l2x0_base + L2X0_ADDR_FILTER_START);
 
-		revision = readl_relaxed(base + L2X0_CACHE_ID) &
-				L2X0_CACHE_ID_RTL_MASK;
+		l2x0_revision = readl_relaxed(l2x0_base + L2X0_CACHE_ID) &
+			L2X0_CACHE_ID_RTL_MASK;
 
-		if (revision >= L310_CACHE_ID_RTL_R2P0)
+		if (l2x0_revision >= L310_CACHE_ID_RTL_R2P0) {
 			writel_relaxed(l2x0_saved_regs.prefetch_ctrl,
-				       base + L2X0_PREFETCH_CTRL);
-		if (revision >= L310_CACHE_ID_RTL_R3P0)
-			writel_relaxed(l2x0_saved_regs.pwr_ctrl,
-				       base + L2X0_POWER_CTRL);
-
-		l2c_enable(base, l2x0_saved_regs.aux_ctrl, 8);
+				l2x0_base + L2X0_PREFETCH_CTRL);
+			if (l2x0_revision >= L310_CACHE_ID_RTL_R3P0)
+				writel_relaxed(l2x0_saved_regs.pwr_ctrl,
+					l2x0_base + L2X0_POWER_CTRL);
+		}
 	}
+
+	l2x0_resume();
 }
 
 static void __init l2c310_fixup(void __iomem *base, u32 cache_id,
@@ -522,7 +530,7 @@ static const struct l2c_init_data l2c310_init_fns __initconst = {
 	.num_lock = 8,
 	.enable = l2c_enable,
 	.fixup = l2c310_fixup,
-	.save = l2c310_save,
+	.save = pl310_save,
 	.outer_cache = {
 		.inv_range = l2x0_inv_range,
 		.clean_range = l2x0_clean_range,
@@ -530,7 +538,7 @@ static const struct l2c_init_data l2c310_init_fns __initconst = {
 		.flush_all = l2x0_flush_all,
 		.disable = l2x0_disable,
 		.sync = l2x0_cache_sync,
-		.resume = l2c310_resume,
+		.resume = pl310_resume,
 	},
 };
 
@@ -736,7 +744,7 @@ static const struct l2c_init_data of_pl310_data __initconst = {
 	.of_parse = pl310_of_parse,
 	.enable = l2c_enable,
 	.fixup = l2c310_fixup,
-	.save  = l2c310_save,
+	.save  = pl310_save,
 	.outer_cache = {
 		.inv_range   = l2x0_inv_range,
 		.clean_range = l2x0_clean_range,
@@ -744,7 +752,7 @@ static const struct l2c_init_data of_pl310_data __initconst = {
 		.flush_all   = l2x0_flush_all,
 		.disable     = l2x0_disable,
 		.sync        = l2x0_cache_sync,
-		.resume      = l2c310_resume,
+		.resume      = pl310_resume,
 	},
 };
 
@@ -854,11 +862,10 @@ static void aurora_save(void __iomem *base)
 
 static void aurora_resume(void)
 {
-	void __iomem *base = l2x0_base;
-
-	if (!(readl(base + L2X0_CTRL) & L2X0_CTRL_EN)) {
-		writel_relaxed(l2x0_saved_regs.aux_ctrl, base + L2X0_AUX_CTRL);
-		writel_relaxed(l2x0_saved_regs.ctrl, base + L2X0_CTRL);
+	if (!(readl(l2x0_base + L2X0_CTRL) & L2X0_CTRL_EN)) {
+		writel_relaxed(l2x0_saved_regs.aux_ctrl,
+				l2x0_base + L2X0_AUX_CTRL);
+		writel_relaxed(l2x0_saved_regs.ctrl, l2x0_base + L2X0_CTRL);
 	}
 }
 
@@ -1082,7 +1089,7 @@ static const struct l2c_init_data of_bcm_l2x0_data __initconst = {
 	.of_parse = pl310_of_parse,
 	.enable = l2c_enable,
 	.fixup = l2c310_fixup,
-	.save  = l2c310_save,
+	.save  = pl310_save,
 	.outer_cache = {
 		.inv_range   = bcm_inv_range,
 		.clean_range = bcm_clean_range,
@@ -1090,7 +1097,7 @@ static const struct l2c_init_data of_bcm_l2x0_data __initconst = {
 		.flush_all   = l2x0_flush_all,
 		.disable     = l2x0_disable,
 		.sync        = l2x0_cache_sync,
-		.resume      = l2c310_resume,
+		.resume      = pl310_resume,
 	},
 };
 
@@ -1104,16 +1111,14 @@ static void __init tauros3_save(void __iomem *base)
 
 static void tauros3_resume(void)
 {
-	void __iomem *base = l2x0_base;
-
-	if (!(readl_relaxed(base + L2X0_CTRL) & L2X0_CTRL_EN)) {
+	if (!(readl_relaxed(l2x0_base + L2X0_CTRL) & L2X0_CTRL_EN)) {
 		writel_relaxed(l2x0_saved_regs.aux2_ctrl,
-			       base + TAUROS3_AUX2_CTRL);
+			       l2x0_base + TAUROS3_AUX2_CTRL);
 		writel_relaxed(l2x0_saved_regs.prefetch_ctrl,
-			       base + L2X0_PREFETCH_CTRL);
-
-		l2c_enable(base, l2x0_saved_regs.aux_ctrl, 8);
+			       l2x0_base + L2X0_PREFETCH_CTRL);
 	}
+
+	l2x0_resume();
 }
 
 static const struct l2c_init_data of_tauros3_data __initconst = {
