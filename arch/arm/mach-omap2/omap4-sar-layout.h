@@ -26,7 +26,7 @@
 #define L2X0_SAVE_OFFSET0			0xff0
 #define L2X0_SAVE_OFFSET1			0xff4
 #define L2X0_AUXCTRL_OFFSET			0xff8
-#define L310_PREFETCH_CTRL_OFFSET		0xffc
+#define L2X0_PREFETCH_CTRL_OFFSET		0xffc
 
 /* CPUx Wakeup Non-Secure Physical Address offsets in SAR_BANK3 */
 #define CPU0_WAKEUP_NS_PA_ADDR_OFFSET		0xa04
