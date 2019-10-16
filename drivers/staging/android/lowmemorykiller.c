@@ -41,44 +41,22 @@
 #include <linux/rcupdate.h>
 #include <linux/profile.h>
 #include <linux/notifier.h>
-#include <linux/earlysuspend.h>
 
 static uint32_t lowmem_debug_level = 1;
-static uint32_t lowmem_auto_oom = 1;
 static short lowmem_adj[6] = {
 	0,
 	1,
 	6,
 	12,
-	13,
-	15,
 };
-static int lowmem_adj_size = 6;
+static int lowmem_adj_size = 4;
 static int lowmem_minfree[6] = {
 	3 * 512,	/* 6MB */
 	2 * 1024,	/* 8MB */
 	4 * 1024,	/* 16MB */
 	16 * 1024,	/* 64MB */
-	20 * 1024,	/* 80MB */
-	28 * 1024,	/* 112MB */
 };
-static int lowmem_minfree_screen_off[6] = {
-	3 * 512,	/* 6MB */
-	2 * 1024,	/* 8MB */
-	4 * 1024,	/* 16MB */
-	16 * 1024,	/* 64MB */
-	20 * 1024,	/* 80MB */
-	28 * 1024,	/* 112MB */
-};
-static int lowmem_minfree_screen_on[6] = {
-	3 * 512,	/* 6MB */
-	2 * 1024,	/* 8MB */
-	4 * 1024,	/* 16MB */
-	16 * 1024,	/* 64MB */
-	20 * 1024,	/* 80MB */
-	28 * 1024,	/* 112MB */
-};
-static int lowmem_minfree_size = 6;
+static int lowmem_minfree_size = 4;
 
 static unsigned long lowmem_deathpending_timeout;
 
@@ -87,32 +65,6 @@ static unsigned long lowmem_deathpending_timeout;
 		if (lowmem_debug_level >= (level))	\
 			pr_info(x);			\
 	} while (0)
-
-static bool avoid_to_kill(uid_t uid)
-{
-	/* uid info
-	 * uid == 0 > root
-	 * uid == 1001 > radio
-	 * uid == 1002 > bluetooth
-	 * uid == 1010 > wifi
-	 * uid == 1014 > dhcp
-	 */
-	if (uid == 0 || uid == 1001 || uid == 1002 || uid == 1010 ||
-				uid == 1014) {
-		return 1;
-	}
-	return 0;
-}
-
-static bool protected_apps(char *comm)
-{
-	if (strcmp(comm, "d.process.acore") == 0 ||
-			strcmp(comm, "ndroid.systemui") == 0 ||
-			strcmp(comm, "ndroid.contacts") == 0) {
-		return 1;
-	}
-	return 0;
-}
 
 static unsigned long lowmem_count(struct shrinker *s,
 				  struct shrink_control *sc)
@@ -127,34 +79,25 @@ static unsigned long lowmem_scan(struct shrinker *s, struct shrink_control *sc)
 {
 	struct task_struct *tsk;
 	struct task_struct *selected = NULL;
-	const struct cred *cred = current_cred(), *pcred; 
-	unsigned int uid = 0;
 	unsigned long rem = 0;
 	int tasksize;
 	int i;
 	short min_score_adj = OOM_SCORE_ADJ_MAX + 1;
-	int minfree = 0;
 	int selected_tasksize = 0;
 	short selected_oom_score_adj;
 	int array_size = ARRAY_SIZE(lowmem_adj);
-#ifndef CONFIG_DMA_CMA
-/*	int other_free = global_page_state(NR_FREE_PAGES) -
-					totalreserve_pages; WILL SOD IF USED! */
-	int other_free = global_page_state(NR_FREE_PAGES);
-#else
-	int other_free = global_page_state(NR_FREE_PAGES) -
-					global_page_state(NR_FREE_CMA_PAGES);
-#endif
+	int other_free = global_page_state(NR_FREE_PAGES) - totalreserve_pages;
 	int other_file = global_page_state(NR_FILE_PAGES) -
-						global_page_state(NR_SHMEM);
+						global_page_state(NR_SHMEM) -
+						total_swapcache_pages();
 
 	if (lowmem_adj_size < array_size)
 		array_size = lowmem_adj_size;
 	if (lowmem_minfree_size < array_size)
 		array_size = lowmem_minfree_size;
 	for (i = 0; i < array_size; i++) {
-		minfree = lowmem_minfree[i];
-		if (other_free < minfree && other_file < minfree) {
+		if (other_free < lowmem_minfree[i] &&
+		    other_file < lowmem_minfree[i]) {
 			min_score_adj = lowmem_adj[i];
 			break;
 		}
@@ -169,6 +112,7 @@ static unsigned long lowmem_scan(struct shrinker *s, struct shrink_control *sc)
 			     sc->nr_to_scan, sc->gfp_mask);
 		return 0;
 	}
+
 	selected_oom_score_adj = min_score_adj;
 
 	rcu_read_lock();
@@ -205,43 +149,19 @@ static unsigned long lowmem_scan(struct shrinker *s, struct shrink_control *sc)
 			    tasksize <= selected_tasksize)
 				continue;
 		}
-		pcred = __task_cred(p);
-		uid = pcred->uid.val;
-
-		if (avoid_to_kill(uid) || protected_apps(p->comm)) {
-			if (tasksize * (long)(PAGE_SIZE / 1024) >= 80000) {
-				selected = p;
-				selected_tasksize = tasksize;
-				selected_oom_score_adj = oom_score_adj;
-			lowmem_print(2, "select '%s' (%d), adj %hd, size %ldkB, to kill\n",
-					p->comm, p->pid, oom_score_adj, tasksize * (long)(PAGE_SIZE / 1024));
-			} else
-				lowmem_print(2, "selected skipped %s' (%d), adj %hd, size %ldkB, not kill\n",
-					p->comm, p->pid, oom_score_adj, tasksize * (long)(PAGE_SIZE / 1024));
-		} else {
-			selected = p;
-			selected_tasksize = tasksize;
-			selected_oom_score_adj = oom_score_adj;
-			lowmem_print(2, "select %s' (%d), adj %hd, size %ldkB, to kill\n",
-				p->comm, p->pid, oom_score_adj, tasksize * (long)(PAGE_SIZE / 1024));
-		}
+		selected = p;
+		selected_tasksize = tasksize;
+		selected_oom_score_adj = oom_score_adj;
+		lowmem_print(2, "select %d (%s), adj %hd, size %d, to kill\n",
+			     p->pid, p->comm, oom_score_adj, tasksize);
 	}
 	if (selected) {
-		lowmem_print(1, "Killing '%s' (%d), adj %hd,\n" \
-				"   to free %ldkB on behalf of '%s' (%d) because\n" \
-				"   cache %ldkB is below limit %ldkB for oom_score_adj %hd\n" \
-				"   Free memory is %ldkB above reserved\n",
-			     selected->comm, selected->pid,
-			     selected_oom_score_adj,
-			     selected_tasksize * (long)(PAGE_SIZE / 1024),
-			     current->comm, current->pid,
-			     other_file * (long)(PAGE_SIZE / 1024),
-			     minfree * (long)(PAGE_SIZE / 1024),
-			     min_score_adj,
-			     other_free * (long)(PAGE_SIZE / 1024));
+		lowmem_print(1, "send sigkill to %d (%s), adj %hd, size %d\n",
+			     selected->pid, selected->comm,
+			     selected_oom_score_adj, selected_tasksize);
 		lowmem_deathpending_timeout = jiffies + HZ;
-		do_send_sig_info(SIGKILL, SEND_SIG_FORCED, selected, true);
 		set_tsk_thread_flag(selected, TIF_MEMDIE);
+		send_sig(SIGKILL, selected, 0);
 		rem += selected_tasksize;
 	}
 
@@ -257,29 +177,9 @@ static struct shrinker lowmem_shrinker = {
 	.seeks = DEFAULT_SEEKS * 16
 };
 
-static void low_mem_early_suspend(struct early_suspend *handler)
-{
-	if (lowmem_auto_oom) {
-		memcpy(lowmem_minfree_screen_on, lowmem_minfree, sizeof(lowmem_minfree));
-		memcpy(lowmem_minfree, lowmem_minfree_screen_off, sizeof(lowmem_minfree_screen_off));
-	}
-}
-
-static void low_mem_late_resume(struct early_suspend *handler)
-{
-	if (lowmem_auto_oom)
-		memcpy(lowmem_minfree, lowmem_minfree_screen_on, sizeof(lowmem_minfree_screen_on));
-}
-
-static struct early_suspend low_mem_suspend = {
-	.suspend = low_mem_early_suspend,
-	.resume = low_mem_late_resume,
-};
-
 static int __init lowmem_init(void)
 {
 	register_shrinker(&lowmem_shrinker);
-	register_early_suspend(&low_mem_suspend);
 	return 0;
 }
 
@@ -288,100 +188,12 @@ static void __exit lowmem_exit(void)
 	unregister_shrinker(&lowmem_shrinker);
 }
 
-#ifdef CONFIG_ANDROID_LOW_MEMORY_KILLER_AUTODETECT_OOM_ADJ_VALUES
-static short lowmem_oom_adj_to_oom_score_adj(short oom_adj)
-{
-	if (oom_adj == OOM_ADJUST_MAX)
-		return OOM_SCORE_ADJ_MAX;
-	else
-		return (oom_adj * OOM_SCORE_ADJ_MAX) / -OOM_DISABLE;
-}
-
-static void lowmem_autodetect_oom_adj_values(void)
-{
-	int i;
-	short oom_adj;
-	short oom_score_adj;
-	int array_size = ARRAY_SIZE(lowmem_adj);
-
-	if (lowmem_adj_size < array_size)
-		array_size = lowmem_adj_size;
-
-	if (array_size <= 0)
-		return;
-
-	oom_adj = lowmem_adj[array_size - 1];
-	if (oom_adj > OOM_ADJUST_MAX)
-		return;
-
-	oom_score_adj = lowmem_oom_adj_to_oom_score_adj(oom_adj);
-	if (oom_score_adj <= OOM_ADJUST_MAX)
-		return;
-
-	lowmem_print(1, "lowmem_shrink: convert oom_adj to oom_score_adj:\n");
-	for (i = 0; i < array_size; i++) {
-		oom_adj = lowmem_adj[i];
-		oom_score_adj = lowmem_oom_adj_to_oom_score_adj(oom_adj);
-		lowmem_adj[i] = oom_score_adj;
-		lowmem_print(1, "oom_adj %d => oom_score_adj %d\n",
-			     oom_adj, oom_score_adj);
-	}
-}
-
-static int lowmem_adj_array_set(const char *val, const struct kernel_param *kp)
-{
-	int ret;
-
-	ret = param_array_ops.set(val, kp);
-
-	/* HACK: Autodetect oom_adj values in lowmem_adj array */
-	lowmem_autodetect_oom_adj_values();
-
-	return ret;
-}
-
-static int lowmem_adj_array_get(char *buffer, const struct kernel_param *kp)
-{
-	return param_array_ops.get(buffer, kp);
-}
-
-static void lowmem_adj_array_free(void *arg)
-{
-	param_array_ops.free(arg);
-}
-
-static struct kernel_param_ops lowmem_adj_array_ops = {
-	.set = lowmem_adj_array_set,
-	.get = lowmem_adj_array_get,
-	.free = lowmem_adj_array_free,
-};
-
-static const struct kparam_array __param_arr_adj = {
-	.max = ARRAY_SIZE(lowmem_adj),
-	.num = &lowmem_adj_size,
-	.ops = &param_ops_short,
-	.elemsize = sizeof(lowmem_adj[0]),
-	.elem = lowmem_adj,
-};
-#endif
-
 module_param_named(cost, lowmem_shrinker.seeks, int, S_IRUGO | S_IWUSR);
-#ifdef CONFIG_ANDROID_LOW_MEMORY_KILLER_AUTODETECT_OOM_ADJ_VALUES
-__module_param_call(MODULE_PARAM_PREFIX, adj,
-		    &lowmem_adj_array_ops,
-		    .arr = &__param_arr_adj,
-		    S_IRUGO | S_IWUSR, 0664);
-__MODULE_PARM_TYPE(adj, "array of short");
-#else
 module_param_array_named(adj, lowmem_adj, short, &lowmem_adj_size,
 			 S_IRUGO | S_IWUSR);
-#endif
 module_param_array_named(minfree, lowmem_minfree, uint, &lowmem_minfree_size,
 			 S_IRUGO | S_IWUSR);
-module_param_array_named(minfree_screen_off, lowmem_minfree_screen_off, uint, &lowmem_minfree_size,
-			 S_IRUGO | S_IWUSR);
 module_param_named(debug_level, lowmem_debug_level, uint, S_IRUGO | S_IWUSR);
-module_param_named(auto_oom, lowmem_auto_oom, uint, S_IRUGO | S_IWUSR);
 
 module_init(lowmem_init);
 module_exit(lowmem_exit);
