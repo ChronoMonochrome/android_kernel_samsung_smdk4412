@@ -547,16 +547,16 @@ static int __init exynos4_l2x0_cache_init(void)
 #ifdef CONFIG_ARM_TRUSTZONE
 	exynos_smc(SMC_CMD_L2X0SETUP1, tag_latency, data_latency, prefetch);
 	exynos_smc(SMC_CMD_L2X0SETUP2,
-		   L310_DYNAMIC_CLK_GATING_EN | L310_STNDBY_MODE_EN,
+		   L2X0_DYNAMIC_CLK_GATING_EN | L2X0_STNDBY_MODE_EN,
 		   aux_val, aux_mask);
 	exynos_smc(SMC_CMD_L2X0INVALL, 0, 0, 0);
 	exynos_smc(SMC_CMD_L2X0CTRL, 1, 0, 0);
 #else
-	__raw_writel(tag_latency, S5P_VA_L2CC + L310_TAG_LATENCY_CTRL);
-	__raw_writel(data_latency, S5P_VA_L2CC + L310_DATA_LATENCY_CTRL);
-	__raw_writel(prefetch, S5P_VA_L2CC + L310_PREFETCH_CTRL);
-	__raw_writel(L310_DYNAMIC_CLK_GATING_EN | L310_STNDBY_MODE_EN,
-		     S5P_VA_L2CC + L310_POWER_CTRL);
+	__raw_writel(tag_latency, S5P_VA_L2CC + L2X0_TAG_LATENCY_CTRL);
+	__raw_writel(data_latency, S5P_VA_L2CC + L2X0_DATA_LATENCY_CTRL);
+	__raw_writel(prefetch, S5P_VA_L2CC + L2X0_PREFETCH_CTRL);
+	__raw_writel(L2X0_DYNAMIC_CLK_GATING_EN | L2X0_STNDBY_MODE_EN,
+		     S5P_VA_L2CC + L2X0_POWER_CTRL);
 #endif
 
 	l2x0_init(S5P_VA_L2CC, aux_val, aux_mask);
