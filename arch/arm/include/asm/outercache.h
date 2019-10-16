@@ -103,7 +103,11 @@ static inline void outer_clean_all(void)
  * cache is pushed out to lower levels of system memory.  The note and
  * conditions above concerning outer_flush_all() applies here.
  */
-extern void outer_disable(void);
+static inline void outer_disable(void)
+{
+	if (outer_cache.disable)
+		outer_cache.disable();
+}
 
 /**
  * outer_resume - restore the cache configuration and re-enable outer cache
