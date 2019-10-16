@@ -217,15 +217,15 @@ ENTRY(exynos4_idle_resume)
 #else
 	ldr	r0, =EXYNOS4_PA_L2CC
 
-	str	r5, [r0, #L310_TAG_LATENCY_CTRL]
-	str	r6, [r0, #L310_DATA_LATENCY_CTRL]
-	str	r7, [r0, #L310_PREFETCH_CTRL]
+	str	r5, [r0, #L2X0_TAG_LATENCY_CTRL]
+	str	r6, [r0, #L2X0_DATA_LATENCY_CTRL]
+	str	r7, [r0, #L2X0_PREFETCH_CTRL]
 
 	/*
 	 * Set Power ctrl register for L2X0
 	 */
 	mov	r1, #0x3
-	str	r1, [r0, #L310_POWER_CTRL]
+	str	r1, [r0, #L2X0_POWER_CTRL]
 
 	ldr	r1, [r0, #L2X0_AUX_CTRL]
 	ldr	r2, =0x7C470001

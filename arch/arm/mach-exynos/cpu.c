@@ -257,19 +257,19 @@ core_initcall(exynos4_core_init);
 static int __init exynos4_l2x0_cache_init(void)
 {
 	/* TAG, Data Latency Control: 2cycle */
-	__raw_writel(0x110, S5P_VA_L2CC + L310_TAG_LATENCY_CTRL);
+	__raw_writel(0x110, S5P_VA_L2CC + L2X0_TAG_LATENCY_CTRL);
 
 	if (soc_is_exynos4210())
-		__raw_writel(0x110, S5P_VA_L2CC + L310_DATA_LATENCY_CTRL);
+		__raw_writel(0x110, S5P_VA_L2CC + L2X0_DATA_LATENCY_CTRL);
 	else if (soc_is_exynos4212() || soc_is_exynos4412())
-		__raw_writel(0x120, S5P_VA_L2CC + L310_DATA_LATENCY_CTRL);
+		__raw_writel(0x120, S5P_VA_L2CC + L2X0_DATA_LATENCY_CTRL);
 
 	/* L2X0 Prefetch Control */
-	__raw_writel(0x30000007, S5P_VA_L2CC + L310_PREFETCH_CTRL);
+	__raw_writel(0x30000007, S5P_VA_L2CC + L2X0_PREFETCH_CTRL);
 
 	/* L2X0 Power Control */
-	__raw_writel(L310_DYNAMIC_CLK_GATING_EN | L310_STNDBY_MODE_EN,
-		     S5P_VA_L2CC + L310_POWER_CTRL);
+	__raw_writel(L2X0_DYNAMIC_CLK_GATING_EN | L2X0_STNDBY_MODE_EN,
+		     S5P_VA_L2CC + L2X0_POWER_CTRL);
 
 	l2x0_init(S5P_VA_L2CC, 0x7C470001, 0xC200ffff);
 
