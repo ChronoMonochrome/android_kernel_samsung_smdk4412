@@ -301,7 +301,7 @@ skip_ns_smp_enable:
 	bne     set_gp_por
 	ldr     r0, =OMAP4_PPA_L2_POR_INDEX
 	ldr     r1, =OMAP44XX_SAR_RAM_BASE
-	ldr     r4, [r1, #L310_PREFETCH_CTRL_OFFSET]
+	ldr     r4, [r1, #L2X0_PREFETCH_CTRL_OFFSET]
 	adr     r3, ppa_por_params
 	str     r4, [r3, #0x04]
 	mov	r1, #0x0			@ Process ID
@@ -312,7 +312,7 @@ skip_ns_smp_enable:
 	b	set_aux_ctrl
 set_gp_por:
 	ldr     r1, =OMAP44XX_SAR_RAM_BASE
-	ldr     r0, [r1, #L310_PREFETCH_CTRL_OFFSET]
+	ldr     r0, [r1, #L2X0_PREFETCH_CTRL_OFFSET]
 	ldr	r12, =OMAP4_MON_L2X0_PREFETCH_INDEX	@ Setup L2 PREFETCH
 	DO_SMC
 set_aux_ctrl:
