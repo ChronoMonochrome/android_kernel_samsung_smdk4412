@@ -284,15 +284,26 @@ static const char * const fw_path[] = {
 module_param_string(path, fw_path_para, sizeof(fw_path_para), 0644);
 MODULE_PARM_DESC(path, "customized firmware image search path with a higher priority than default path");
 
+/* Don't inline this: 'struct kstat' is biggish */
+static noinline_for_stack int fw_file_size(struct file *file)
+{
+	struct kstat st;
+	if (vfs_getattr(&file->f_path, &st))
+		return -1;
+	if (!S_ISREG(st.mode))
+		return -1;
+	if (st.size != (int)st.size)
+		return -1;
+	return st.size;
+}
+
 static int fw_read_file_contents(struct file *file, struct firmware_buf *fw_buf)
 {
 	int size;
 	char *buf;
 	int rc;
 
-	if (!S_ISREG(file_inode(file)->i_mode))
-		return -EINVAL;
-	size = i_size_read(file_inode(file));
+	size = fw_file_size(file);
 	if (size <= 0)
 		return -EINVAL;
 	buf = vmalloc(size);
