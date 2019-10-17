@@ -376,7 +376,7 @@ static _mali_osk_errcode_t writereg(u32 where, u32 what, const char *comment, st
 	MALI_SUCCESS;
 }
 
-static _mali_osk_errcode_t dump_page(mali_io_address page, u32 phys_addr, struct dump_info * info)
+static _mali_osk_errcode_t mali_dump_page(mali_io_address page, u32 phys_addr, struct dump_info * info)
 {
 	if (NULL != info)
 	{
@@ -414,7 +414,7 @@ static _mali_osk_errcode_t dump_mmu_page_table(struct mali_page_directory *paged
 		int i;
 
 		MALI_CHECK_NO_ERROR(
-			dump_page(pagedir->page_directory_mapped, pagedir->page_directory, info)
+			mali_dump_page(pagedir->page_directory_mapped, pagedir->page_directory, info)
 			);
 
 		for (i = 0; i < 1024; i++)
@@ -422,7 +422,7 @@ static _mali_osk_errcode_t dump_mmu_page_table(struct mali_page_directory *paged
 			if (NULL != pagedir->page_entries_mapped[i])
 			{
 				MALI_CHECK_NO_ERROR(
-				    dump_page(pagedir->page_entries_mapped[i],
+				    mali_dump_page(pagedir->page_entries_mapped[i],
 				        _mali_osk_mem_ioread32(pagedir->page_directory_mapped,
 				        i * sizeof(u32)) & ~MALI_MMU_FLAGS_MASK, info)
 				);
