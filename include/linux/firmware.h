@@ -68,7 +68,7 @@ static inline void release_firmware(const struct firmware *fw)
 
 #endif
 
-#ifdef CONFIG_FW_LOADER_USER_HELPER_FALLBACK
+#ifdef CONFIG_FW_LOADER_USER_HELPER
 int request_firmware_direct(const struct firmware **fw, const char *name,
 			    struct device *device);
 #else
