@@ -101,7 +101,7 @@ __rb_insert(struct rb_node *node, struct rb_root *root,
 				 *      / \          / \
 				 *     p   u  -->   P   U
 				 *    /            /
-				 *   n            n
+				 *   n            N
 				 *
 				 * However, since g's parent might be red, and
 				 * 4) does not allow this, we need to recurse

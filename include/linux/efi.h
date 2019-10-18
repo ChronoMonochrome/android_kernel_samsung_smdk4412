@@ -1156,9 +1156,6 @@ int efivars_sysfs_init(void);
 #ifdef CONFIG_EFI_RUNTIME_MAP
 int efi_runtime_map_init(struct kobject *);
 void efi_runtime_map_setup(void *, int, u32);
-int efi_get_runtime_map_size(void);
-int efi_get_runtime_map_desc_size(void);
-int efi_runtime_map_copy(void *buf, size_t bufsz);
 #else
 static inline int efi_runtime_map_init(struct kobject *kobj)
 {
@@ -1167,22 +1164,6 @@ static inline int efi_runtime_map_init(struct kobject *kobj)
 
 static inline void
 efi_runtime_map_setup(void *map, int nr_entries, u32 desc_size) {}
-
-static inline int efi_get_runtime_map_size(void)
-{
-	return 0;
-}
-
-static inline int efi_get_runtime_map_desc_size(void)
-{
-	return 0;
-}
-
-static inline int efi_runtime_map_copy(void *buf, size_t bufsz)
-{
-	return 0;
-}
-
 #endif
 
 /* prototypes shared between arch specific and generic stub code */

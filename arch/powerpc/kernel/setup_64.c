@@ -149,13 +149,13 @@ static void check_smt_enabled(void)
 		else if (!strcmp(smt_enabled_cmdline, "off"))
 			smt_enabled_at_boot = 0;
 		else {
-			int smt;
+			long smt;
 			int rc;
 
-			rc = kstrtoint(smt_enabled_cmdline, 10, &smt);
+			rc = strict_strtol(smt_enabled_cmdline, 10, &smt);
 			if (!rc)
 				smt_enabled_at_boot =
-					min(threads_per_core, smt);
+					min(threads_per_core, (int)smt);
 		}
 	} else {
 		dn = of_find_node_by_path("/options");

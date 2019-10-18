@@ -2,7 +2,6 @@ TARGETS = breakpoints
 TARGETS += cpu-hotplug
 TARGETS += efivarfs
 TARGETS += kcmp
-TARGETS += memfd
 TARGETS += memory-hotplug
 TARGETS += mqueue
 TARGETS += net

@@ -53,7 +53,6 @@ static int rtc_suspend(struct device *dev)
 	struct rtc_device	*rtc = to_rtc_device(dev);
 	struct rtc_time		tm;
 	struct timespec		delta, delta_delta;
-	int err;
 
 	if (has_persistent_clock())
 		return 0;
@@ -62,12 +61,7 @@ static int rtc_suspend(struct device *dev)
 		return 0;
 
 	/* snapshot the current RTC and system time at suspend*/
-	err = rtc_read_time(rtc, &tm);
-	if (err < 0) {
-		pr_debug("%s:  fail to read rtc time\n", dev_name(&rtc->dev));
-		return 0;
-	}
-
+	rtc_read_time(rtc, &tm);
 	getnstimeofday(&old_system);
 	rtc_tm_to_time(&tm, &old_rtc.tv_sec);
 
@@ -100,7 +94,6 @@ static int rtc_resume(struct device *dev)
 	struct rtc_time		tm;
 	struct timespec		new_system, new_rtc;
 	struct timespec		sleep_time;
-	int err;
 
 	if (has_persistent_clock())
 		return 0;
@@ -111,12 +104,7 @@ static int rtc_resume(struct device *dev)
 
 	/* snapshot the current rtc and system time at resume */
 	getnstimeofday(&new_system);
-	err = rtc_read_time(rtc, &tm);
-	if (err < 0) {
-		pr_debug("%s:  fail to read rtc time\n", dev_name(&rtc->dev));
-		return 0;
-	}
-
+	rtc_read_time(rtc, &tm);
 	if (rtc_valid_tm(&tm) != 0) {
 		pr_debug("%s:  bogus resume time\n", dev_name(&rtc->dev));
 		return 0;

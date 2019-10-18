@@ -9,7 +9,7 @@
 #include <linux/stat.h>
 #include <linux/buffer_head.h>
 #include <linux/slab.h>
-#include <linux/uaccess.h>
+#include <asm/uaccess.h>
 
 extern const struct reiserfs_key MIN_KEY;
 

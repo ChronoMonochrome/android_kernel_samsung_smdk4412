@@ -30,6 +30,8 @@ MODULE_LICENSE("GPL");
 #define dprintf(x...)
 #endif
 
+void dump_imap(const char *prefix, struct super_block *s);
+
 struct inode *bfs_iget(struct super_block *sb, unsigned long ino)
 {
 	struct bfs_inode *di;
@@ -192,7 +194,7 @@ static void bfs_evict_inode(struct inode *inode)
 			info->si_freeb += bi->i_eblock + 1 - bi->i_sblock;
 		info->si_freei++;
 		clear_bit(ino, info->si_imap);
-		bfs_dump_imap("delete_inode", s);
+		dump_imap("delete_inode", s);
         }
 
 	/*
@@ -295,7 +297,7 @@ static const struct super_operations bfs_sops = {
 	.statfs		= bfs_statfs,
 };
 
-void bfs_dump_imap(const char *prefix, struct super_block *s)
+void dump_imap(const char *prefix, struct super_block *s)
 {
 #ifdef DEBUG
 	int i;
@@ -441,7 +443,7 @@ static int bfs_fill_super(struct super_block *s, void *data, int silent)
 	}
 	brelse(bh);
 	brelse(sbh);
-	bfs_dump_imap("read_super", s);
+	dump_imap("read_super", s);
 	return 0;
 
 out3:

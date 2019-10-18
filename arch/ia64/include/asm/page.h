@@ -231,6 +231,4 @@ get_order (unsigned long size)
 #define PERCPU_ADDR		(-PERCPU_PAGE_SIZE)
 #define LOAD_OFFSET		(KERNEL_START - KERNEL_TR_PAGE_SIZE)
 
-#define __HAVE_ARCH_GATE_AREA	1
-
 #endif /* _ASM_IA64_PAGE_H */

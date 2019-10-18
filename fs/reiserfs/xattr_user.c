@@ -4,7 +4,7 @@
 #include <linux/pagemap.h>
 #include <linux/xattr.h>
 #include "xattr.h"
-#include <linux/uaccess.h>
+#include <asm/uaccess.h>
 
 static int
 user_get(struct dentry *dentry, const char *name, void *buffer, size_t size,

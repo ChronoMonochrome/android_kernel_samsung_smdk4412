@@ -21,7 +21,9 @@
 #include <linux/vfs.h>
 #include <linux/slab.h>
 #include <linux/pid_namespace.h>
-#include <linux/uaccess.h>
+
+#include <asm/uaccess.h>
+
 #include <linux/fs.h>
 #include <linux/vmalloc.h>
 

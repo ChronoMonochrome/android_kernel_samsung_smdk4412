@@ -400,10 +400,10 @@ out:
 static ssize_t dlpar_cpu_probe(const char *buf, size_t count)
 {
 	struct device_node *dn, *parent;
-	u32 drc_index;
+	unsigned long drc_index;
 	int rc;
 
-	rc = kstrtou32(buf, 0, &drc_index);
+	rc = strict_strtoul(buf, 0, &drc_index);
 	if (rc)
 		return -EINVAL;
 
