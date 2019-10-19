@@ -737,7 +737,8 @@ CONFIG_CMA_BEST_FIT=y
 CONFIG_FORCE_MAX_ZONEORDER=12
 CONFIG_ALIGNMENT_TRAP=y
 # CONFIG_UACCESS_WITH_MEMCPY is not set
-# CONFIG_SECCOMP is not set
+CONFIG_SECCOMP=y
+CONFIG_SECCOMP_FILTER=y
 # CONFIG_CC_STACKPROTECTOR is not set
 # CONFIG_DEPRECATED_PARAM_STRUCT is not set
 CONFIG_ARM_FLUSH_CONSOLE_ON_RESTART=y
@@ -749,8 +750,7 @@ CONFIG_ARM_FLUSH_CONSOLE_ON_RESTART=y
 # CONFIG_USE_OF is not set
 CONFIG_ZBOOT_ROM_TEXT=0
 CONFIG_ZBOOT_ROM_BSS=0
-CONFIG_CMDLINE="console=ttySAC2,115200 consoleblank=0 nmi_watchdog=nopanic console=tty0 net.ifnames=0 console=ttygs0,115200n8 androidboot.hardware=smdk4x12 androidboot.selinux=permissive"
-#CONFIG_CMDLINE="console=ttySAC2,115200 consoleblank=0 androidboot.hardware=smdk4x12 sys.selinux=disabled"
+CONFIG_CMDLINE="console=ttySAC2,115200 consoleblank=0 androidboot.hardware=smdk4x12 androidboot.selinux=permissive"
 # CONFIG_CMDLINE_FROM_BOOTLOADER is not set
 CONFIG_CMDLINE_EXTEND=y
 # CONFIG_CMDLINE_FORCE is not set
