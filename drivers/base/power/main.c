@@ -31,9 +31,6 @@
 #include <linux/timer.h>
 #include <trace/events/power.h>
 #include <linux/cpuidle.h>
-#include <linux/timer.h>
-#include <linux/wakeup_reason.h>
-
 #include "../base.h"
 #include "power.h"
 
@@ -968,7 +965,6 @@ callback:
 static int dpm_suspend_noirq(pm_message_t state)
 {
 	ktime_t starttime = ktime_get();
-	char suspend_abort[MAX_SUSPEND_ABORT_LEN];
 	int error = 0;
 
 	cpuidle_pause();
@@ -996,9 +992,6 @@ static int dpm_suspend_noirq(pm_message_t state)
 		put_device(dev);
 
 		if (pm_wakeup_pending()) {
-			pm_get_active_wakeup_sources(suspend_abort,
-				MAX_SUSPEND_ABORT_LEN);
-			log_suspend_abort_reason(suspend_abort);
 			error = -EBUSY;
 			break;
 		}
@@ -1057,7 +1050,6 @@ static int device_suspend_late(struct device *dev, pm_message_t state)
 static int dpm_suspend_late(pm_message_t state)
 {
 	ktime_t starttime = ktime_get();
-	char suspend_abort[MAX_SUSPEND_ABORT_LEN];
 	int error = 0;
 
 	mutex_lock(&dpm_list_mtx);
@@ -1083,9 +1075,6 @@ static int dpm_suspend_late(pm_message_t state)
 		put_device(dev);
 
 		if (pm_wakeup_pending()) {
-			pm_get_active_wakeup_sources(suspend_abort,
-				MAX_SUSPEND_ABORT_LEN);
-			log_suspend_abort_reason(suspend_abort);
 			error = -EBUSY;
 			break;
 		}
@@ -1155,8 +1144,6 @@ static int __device_suspend(struct device *dev, pm_message_t state, bool async)
 	int error = 0;
 	struct timer_list timer;
 	struct dpm_drv_wd_data data;
-	DECLARE_DPM_WATCHDOG_ON_STACK(wd);
-	char suspend_abort[MAX_SUSPEND_ABORT_LEN];
 
 	dpm_wait_for_children(dev, async);
 
@@ -1181,23 +1168,12 @@ static int __device_suspend(struct device *dev, pm_message_t state, bool async)
 		pm_wakeup_event(dev, 0);
 
 	if (pm_wakeup_pending()) {
-		pm_get_active_wakeup_sources(suspend_abort,
-			MAX_SUSPEND_ABORT_LEN);
-		log_suspend_abort_reason(suspend_abort);
 		async_error = -EBUSY;
 		goto Complete;
 	}
 
 	if (dev->power.syscore)
 		goto Complete;
-	
-	data.dev = dev;
-	data.tsk = get_current();
-	init_timer_on_stack(&timer);
-	timer.expires = jiffies + HZ * 12;
-	timer.function = dpm_drv_timeout;
-	timer.data = (unsigned long)&data;
-	add_timer(&timer);
 
 	device_lock(dev);
 
@@ -1255,9 +1231,6 @@ static int __device_suspend(struct device *dev, pm_message_t state, bool async)
 	}
 
 	device_unlock(dev);
-
-	del_timer_sync(&timer);
-	destroy_timer_on_stack(&timer);
 
  Complete:
 	del_timer_sync(&timer);
