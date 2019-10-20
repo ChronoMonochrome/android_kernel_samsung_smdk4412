@@ -78,6 +78,12 @@
 #define ELVSS_MODE0_MIN_VOLTAGE	62
 #define ELVSS_MODE1_MIN_VOLTAGE	52
 
+#ifdef SMART_DIMMING_DEBUG
+#define smtd_dbg(format, arg...)	printk(format, ##arg)
+#else
+#define smtd_dbg(format, arg...)
+#endif
+
 struct str_elvss {
 	u8 reference;
 	u8 limit;
@@ -88,6 +94,7 @@ struct lcd_info {
 	unsigned int			bl;
 	unsigned int			auto_brightness;
 	unsigned int			acl_enable;
+	unsigned int			siop_enable;
 	unsigned int			current_acl;
 	unsigned int			current_bl;
 	unsigned int			current_elvss;
@@ -128,6 +135,8 @@ struct lcd_info {
 	struct dsim_global		*dsim;
 };
 
+struct lcd_info *lcd_ptr;
+
 #ifdef CONFIG_AID_DIMMING
 static const unsigned int candela_table[GAMMA_MAX] = {
 	 20,  30,  40,  50,  60,  70,  80,  90, 100,
@@ -137,13 +146,7 @@ static const unsigned int candela_table[GAMMA_MAX] = {
 	190, 200, 210, 220, 230, 240, 250, MAX_GAMMA-1
 };
 
-static unsigned int aid_candela_table[GAMMA_MAX] = {
-	base_20to100, base_20to100, base_20to100, base_20to100, base_20to100, base_20to100, base_20to100, base_20to100, base_20to100,
-	AOR40_BASE_102, AOR40_BASE_104, AOR40_BASE_106, AOR40_BASE_108,
-	AOR40_BASE_110, AOR40_BASE_120, AOR40_BASE_130, AOR40_BASE_140, AOR40_BASE_150, AOR40_BASE_160, AOR40_BASE_170, AOR40_BASE_180,
-	AOR40_BASE_182, AOR40_BASE_184, AOR40_BASE_186, AOR40_BASE_188,
-	190, 200, 210, 220, 230, 240, 250, MAX_GAMMA-1
-};
+static unsigned int aid_candela_table[GAMMA_MAX];
 
 static unsigned int elvss_offset_table[ELVSS_STATUS_MAX] = {
 	ELVSS_OFFSET_110,
@@ -288,6 +291,8 @@ static int get_backlight_level_from_brightness(int brightness)
 	/* brightness setting from platform is from 0 to 255
 	 * But in this driver, brightness is only supported from 0 to 24 */
 
+if(brightness_config == 0)
+{
 	switch (brightness) {
 	case 0 ... 29:
 		backlightlevel = GAMMA_20CD;
@@ -392,6 +397,114 @@ static int get_backlight_level_from_brightness(int brightness)
 		backlightlevel = DEFAULT_GAMMA_LEVEL;
 		break;
 	}
+}
+else
+{
+	switch (brightness) {
+	case 0 ... 19:
+		backlightlevel = GAMMA_20CD;
+		break;
+	case 20 ... 29:
+		backlightlevel = GAMMA_30CD;
+		break;
+	case 30 ... 39:
+		backlightlevel = GAMMA_40CD;
+		break;
+	case 40 ... 49:
+		backlightlevel = GAMMA_50CD;
+		break;
+	case 50 ... 59:
+		backlightlevel = GAMMA_60CD;
+		break;
+	case 60 ... 69:
+		backlightlevel = GAMMA_70CD;
+		break;
+	case 70 ... 79:
+		backlightlevel = GAMMA_80CD;
+		break;
+	case 80 ... 89:
+		backlightlevel = GAMMA_90CD;
+		break;
+	case 90 ... 99:
+		backlightlevel = GAMMA_100CD;
+		break;
+	case 100 ... 109:
+		backlightlevel = GAMMA_102CD;
+		break;
+	case 110 ... 119:
+		backlightlevel = GAMMA_104CD;
+		break;
+	case 120 ... 129:
+		backlightlevel = GAMMA_106CD;
+		break;
+	case 130 ... 139:
+		backlightlevel = GAMMA_108CD;
+		break;
+	case 140 ... 145:
+		backlightlevel = GAMMA_110CD;
+		break;
+	case 146 ... 151:
+		backlightlevel = GAMMA_120CD;
+		break;
+	case 152 ... 157:
+		backlightlevel = GAMMA_130CD;
+		break;
+	case 158 ... 163:
+		backlightlevel = GAMMA_140CD;
+		break;
+	case 164 ... 170:
+		backlightlevel = GAMMA_150CD;
+		break;
+	case 171 ... 176:
+		backlightlevel = GAMMA_160CD;
+		break;
+	case 177 ... 182:
+		backlightlevel = GAMMA_170CD;
+		break;
+	case 183 ... 189:
+		backlightlevel = GAMMA_180CD;
+		break;
+	case 190 ... 195:
+		backlightlevel = GAMMA_182CD;
+		break;
+	case 196 ... 202:
+		backlightlevel = GAMMA_184CD;
+		break;
+	case 203 ... 209:
+		backlightlevel = GAMMA_186CD;
+		break;
+	case 210 ... 215:
+		backlightlevel = GAMMA_188CD;
+		break;
+	case 216 ... 221:
+		backlightlevel = GAMMA_190CD;
+		break;
+	case 222 ... 227:
+		backlightlevel = GAMMA_200CD;
+		break;
+	case 228 ... 233:
+		backlightlevel = GAMMA_210CD;
+		break;
+	case 234 ... 239:
+		backlightlevel = GAMMA_220CD;
+		break;
+	case 240 ... 245:
+		backlightlevel = GAMMA_230CD;
+		break;
+	case 246 ... 251:
+		backlightlevel = GAMMA_240CD;
+		break;
+	case 252 ... 254:
+		backlightlevel = GAMMA_250CD;
+		break;
+	case 255:
+		backlightlevel = GAMMA_300CD;
+		break;
+	default:
+		backlightlevel = DEFAULT_GAMMA_LEVEL;
+		break;
+	}
+}
 	return backlightlevel;
 }
 
@@ -492,7 +605,7 @@ static int s6e8ax0_set_acl(struct lcd_info *lcd, u8 force)
 
 	enable = !!level;
 
-	//if (force || lcd->acl_enable != enable) {
+	/* if (force || lcd->acl_enable != enable) { */
 		dev_dbg(&lcd->ld->dev, "acl turn %s\n", enable ? "on" : "off");
 		if (enable)
 			ret = s6e8ax0_write(lcd, SEQ_ACL_ON, ARRAY_SIZE(SEQ_ACL_ON));
@@ -500,13 +613,13 @@ static int s6e8ax0_set_acl(struct lcd_info *lcd, u8 force)
 			ret = s6e8ax0_write(lcd, SEQ_ACL_OFF, ARRAY_SIZE(SEQ_ACL_OFF));
 			goto exit;
 		}
-	//}
+	/* }
 
-	//if (force || lcd->current_acl != level) {
+	if (force || lcd->current_acl != level) { */
 		ret = s6e8ax0_write(lcd, ACL_CUTOFF_TABLE[level], ACL_PARAM_SIZE);
 		lcd->current_acl = level;
 		dev_dbg(&lcd->ld->dev, "current_acl = %d\n", lcd->current_acl);
-	//}
+	/* } */
 
 	if (ret)
 		ret = -EPERM;
@@ -532,12 +645,16 @@ static int s6e8ax0_set_acl(struct lcd_info *lcd, u8 force)
 		break;
 	}
 
+	if (lcd->siop_enable)
+		goto acl_update;
+
 	if (!lcd->acl_enable)
 		level = ACL_STATUS_0P;
 
+acl_update:
 	enable = !!level;
 
-	//if (force || lcd->acl_enable != enable) {
+	/* if (force || lcd->acl_enable != enable) { */
 		dev_dbg(&lcd->ld->dev, "acl turn %s\n", enable ? "on" : "off");
 		if (enable)
 			ret = s6e8ax0_write(lcd, SEQ_ACL_ON, ARRAY_SIZE(SEQ_ACL_ON));
@@ -545,13 +662,13 @@ static int s6e8ax0_set_acl(struct lcd_info *lcd, u8 force)
 			ret = s6e8ax0_write(lcd, SEQ_ACL_OFF, ARRAY_SIZE(SEQ_ACL_OFF));
 			goto exit;
 		}
-	//}
+	/* }
 
-	//if (force || lcd->current_acl != level) {
+	if (force || lcd->current_acl != level) { */
 		ret = s6e8ax0_write(lcd, ACL_CUTOFF_TABLE[level], ACL_PARAM_SIZE);
 		lcd->current_acl = level;
 		dev_dbg(&lcd->ld->dev, "current_acl = %d\n", lcd->current_acl);
-	//}
+	/* } */
 
 	if (ret)
 		ret = -EPERM;
@@ -712,10 +829,7 @@ static u8 get_elvss_value(struct lcd_info *lcd, u8 elvss_level)
 
 static int init_elvss_table(struct lcd_info *lcd)
 {
-	int i, ret = 0;
-#ifdef SMART_DIMMING_DEBUG
-	int j;
-#endif
+	int i, j, ret = 0;
 
 	lcd->elvss_table = kzalloc(ELVSS_STATUS_MAX * sizeof(u8 *), GFP_KERNEL);
 
@@ -737,13 +851,11 @@ static int init_elvss_table(struct lcd_info *lcd)
 		lcd->elvss_table[i][2] = get_elvss_value(lcd, i);
 	}
 
-#ifdef SMART_DIMMING_DEBUG
 	for (i = 0; i < ELVSS_STATUS_MAX; i++) {
 		for (j = 0; j < ELVSS_PARAM_SIZE; j++)
-			printk("0x%02x, ", lcd->elvss_table[i][j]);
-		printk("\n");
+			smtd_dbg("0x%02x, ", lcd->elvss_table[i][j]);
+		smtd_dbg("\n");
 	}
-#endif
 
 	return 0;
 
@@ -760,7 +872,7 @@ err_alloc_elvss_table:
 #ifdef CONFIG_AID_DIMMING
 static int init_gamma_table(struct lcd_info *lcd)
 {
-	int i, ret = 0;
+	int i, j, ret = 0;
 
 	lcd->gamma_table = kzalloc(GAMMA_MAX * sizeof(u8 *), GFP_KERNEL);
 	if (IS_ERR_OR_NULL(lcd->gamma_table)) {
@@ -791,13 +903,12 @@ static int init_gamma_table(struct lcd_info *lcd)
 			calc_gamma_table(&lcd->smart, aid_candela_table[i], &lcd->gamma_table[i][2], G_215);
 	}
 
-#ifdef SMART_DIMMING_DEBUG
 	for (i = 0; i < GAMMA_MAX; i++) {
 		for (j = 0; j < GAMMA_PARAM_SIZE; j++)
-			printk("%d, ", lcd->gamma_table[i][j]);
-		printk("\n");
+			smtd_dbg("%d, ", lcd->gamma_table[i][j]);
+		smtd_dbg("\n");
 	}
-#endif
+
 	return 0;
 
 err_alloc_gamma:
@@ -810,6 +921,12 @@ err_alloc_gamma_table:
 	return ret;
 }
 
+static int destroy_gamma_table(struct lcd_info *lcd)
+{
+	kfree(lcd->gamma_table);
+	return 0;
+}
+
 static int init_aid_dimming_table(struct lcd_info *lcd)
 {
 	unsigned int i, j;
@@ -820,25 +937,27 @@ static int init_aid_dimming_table(struct lcd_info *lcd)
 	}
 
 	for (i = 0; i < GAMMA_MAX; i++) {
+#if defined(CONFIG_LCD_REVERSE)
+		memcpy(lcd->f8[i], SEQ_REVERSE_PANEL_CONDITION_SET_500MBPS, AID_PARAM_SIZE);
+#else
 		memcpy(lcd->f8[i], SEQ_PANEL_CONDITION_SET_500MBPS, AID_PARAM_SIZE);
+#endif
 		lcd->f8[i][0x12] = aid_command_table[i][0];
 		lcd->f8[i][0x01] = aid_command_table[i][1];
 	}
 
-
-#ifdef SMART_DIMMING_DEBUG
 	for (i = 0; i < GAMMA_MAX; i++) {
 		for (j = 0; j < GAMMA_PARAM_SIZE; j++)
-			printk("%d, ", lcd->gamma_table[i][j]);
-		printk("\n");
+			smtd_dbg("%d, ", lcd->gamma_table[i][j]);
+		smtd_dbg("\n");
 	}
-#endif
+
 	return 0;
 }
 #else
 static int init_gamma_table(struct lcd_info *lcd)
 {
-	int i, ret = 0;
+	int i, j, ret = 0;
 
 	lcd->gamma_table = kzalloc(GAMMA_MAX * sizeof(u8 *), GFP_KERNEL);
 	if (IS_ERR_OR_NULL(lcd->gamma_table)) {
@@ -859,13 +978,12 @@ static int init_gamma_table(struct lcd_info *lcd)
 		calc_gamma_table(&lcd->smart, candela_table[i]-1, lcd->gamma_table[i]+2);
 	}
 
-#ifdef SMART_DIMMING_DEBUG
 	for (i = 0; i < GAMMA_MAX; i++) {
 		for (j = 0; j < GAMMA_PARAM_SIZE; j++)
-			printk("0x%02x, ", lcd->gamma_table[i][j]);
-		printk("\n");
+			smtd_dbg("0x%02x, ", lcd->gamma_table[i][j]);
+		smtd_dbg("\n");
 	}
-#endif
+
 	return 0;
 
 err_alloc_gamma:
@@ -938,8 +1056,13 @@ static int s6e8ax0_ldi_init(struct lcd_info *lcd)
 
 	/* 4.8" HD for M0/C1*/
 	if (lcd->id[1] == 0x20 || lcd->id[1] == 0x40 || lcd->id[1] == 0x60) {
+#if defined(CONFIG_LCD_REVERSE)
+		s6e8ax0_write(lcd, SEQ_REVERSE_PANEL_CONDITION_SET_500MBPS,\
+			ARRAY_SIZE(SEQ_REVERSE_PANEL_CONDITION_SET_500MBPS));
+#else
 		s6e8ax0_write(lcd, SEQ_PANEL_CONDITION_SET_500MBPS,\
 			ARRAY_SIZE(SEQ_PANEL_CONDITION_SET_500MBPS));
+#endif
 		s6e8ax0_write(lcd, SEQ_DISPLAY_CONDITION_SET, ARRAY_SIZE(SEQ_DISPLAY_CONDITION_SET));
 		s6e8ax0_gamma_ctl(lcd);
 		s6e8ax0_write(lcd, SEQ_ETC_SOURCE_CONTROL, ARRAY_SIZE(SEQ_ETC_SOURCE_CONTROL));
@@ -1070,10 +1193,9 @@ static int s6e8ax0_get_power(struct lcd_device *ld)
 
 static int s6e8ax0_check_fb(struct lcd_device *ld, struct fb_info *fb)
 {
-	struct s3cfb_window *win = fb->par;
 	struct lcd_info *lcd = lcd_get_data(ld);
 
-	//dev_info(&lcd->ld->dev, "%s, fb%d\n", __func__, win->id);
+	//dev_info(&lcd->ld->dev, "%s, fb%d\n", __func__, fb->node);
 
 	return 0;
 }
@@ -1159,6 +1281,43 @@ static ssize_t power_reduce_store(struct device *dev,
 
 static DEVICE_ATTR(power_reduce, 0664, power_reduce_show, power_reduce_store);
 
+static ssize_t siop_enable_show(struct device *dev,
+	struct device_attribute *attr, char *buf)
+{
+	struct lcd_info *lcd = dev_get_drvdata(dev);
+	char temp[3];
+
+	sprintf(temp, "%d\n", lcd->siop_enable);
+	strcpy(buf, temp);
+
+	return strlen(buf);
+}
+
+static ssize_t siop_enable_store(struct device *dev,
+	struct device_attribute *attr, const char *buf, size_t size)
+{
+	struct lcd_info *lcd = dev_get_drvdata(dev);
+	int value;
+	int rc;
+
+	rc = strict_strtoul(buf, (unsigned int)0, (unsigned long *)&value);
+	if (rc < 0)
+		return rc;
+	else {
+		if (lcd->siop_enable != value) {
+			dev_info(dev, "%s - %d, %d\n", __func__, lcd->siop_enable, value);
+			mutex_lock(&lcd->bl_lock);
+			lcd->siop_enable = value;
+			mutex_unlock(&lcd->bl_lock);
+			if (lcd->ldi_enable)
+				update_brightness(lcd, 1);
+		}
+	}
+	return size;
+}
+
+static DEVICE_ATTR(siop_enable, 0664, siop_enable_show, siop_enable_store);
+
 static ssize_t lcd_type_show(struct device *dev,
 	struct device_attribute *attr, char *buf)
 {
@@ -1233,19 +1392,175 @@ static ssize_t auto_brightness_store(struct device *dev,
 
 static DEVICE_ATTR(auto_brightness, 0644, auto_brightness_show, auto_brightness_store);
 
+static ssize_t brightness_config_show(struct device *dev,
+	struct device_attribute *attr, char *buf)
+{
+	char temp[3];
+
+	snprintf(temp, 3, "%u\n", brightness_config);
+	strcpy(buf, temp);
+
+	return strlen(buf);
+}
+
+static ssize_t brightness_config_store(struct device *dev,
+	struct device_attribute *attr, const char *buf, size_t size)
+{
+	int value;
+	int rc;
+
+	rc = strict_strtoul(buf, (unsigned int)0, (unsigned long *)&value);
+	if (rc < 0 || rc > 1)
+		return -EINVAL;
+	else {
+			brightness_config = value;
+		}
+
+	if(brightness_config == 1)
+	{
+		aid_108nit_F8_18th = 0x04;
+		aid_106nit_F8_18th = 0x1B;
+		aid_104nit_F8_18th = 0x32;
+		aid_102nit_F8_18th = 0x49;
+		aid_100nit_F8_18th = 0x5E;
+		aid_90nit_F8_18th = 0x73;
+		aid_80nit_F8_18th = 0x88;
+		aid_70nit_F8_18th = 0x90;
+		aid_60nit_F8_18th = 0x97;
+		aid_50nit_F8_18th = 0x9B;
+		aid_40nit_F8_18th = 0x9E;
+		aid_30nit_F8_18th = 0xA0;
+		aid_20nit_F8_18th = 0xA1;
+		AOR40_BASE_108 = 110;
+		AOR40_BASE_106 = 110;
+		AOR40_BASE_104 = 110;
+		AOR40_BASE_102 = 110;
+	}
+
+	if(brightness_config == 0)
+	{
+		aid_108nit_F8_18th = 0x38;
+		aid_106nit_F8_18th = 0x2F;
+		aid_104nit_F8_18th = 0x25;
+		aid_102nit_F8_18th = 0x1C;
+		aid_100nit_F8_18th = 0x12;
+		aid_90nit_F8_18th = 0x22;
+		aid_80nit_F8_18th = 0x32;
+		aid_70nit_F8_18th = 0x41;
+		aid_60nit_F8_18th = 0x50;
+		aid_50nit_F8_18th = 0x5E;
+		aid_40nit_F8_18th = 0x6C;
+		aid_30nit_F8_18th = 0x7A;
+		aid_20nit_F8_18th = 0x88;
+		AOR40_BASE_108 = 156;
+		AOR40_BASE_106 = 143;
+		AOR40_BASE_104 = 130;
+		AOR40_BASE_102 = 120;
+	}
+
+	aid_command_20[0] = aid_20nit_F8_18th;
+	aid_command_20[1] = aid_100nit_20nit_F8_1st;
+
+	aid_command_30[0] = aid_30nit_F8_18th;
+	aid_command_30[1] = aid_100nit_20nit_F8_1st;
+
+	aid_command_40[0] = aid_40nit_F8_18th;
+	aid_command_40[1] = aid_100nit_20nit_F8_1st;
+
+	aid_command_50[0] = aid_50nit_F8_18th;
+	aid_command_50[1] = aid_100nit_20nit_F8_1st;
+
+	aid_command_60[0] = aid_60nit_F8_18th;
+	aid_command_60[1] = aid_100nit_20nit_F8_1st;
+
+	aid_command_70[0] = aid_70nit_F8_18th,
+	aid_command_70[1] = aid_100nit_20nit_F8_1st;
+
+	aid_command_80[0] = aid_80nit_F8_18th;
+	aid_command_80[1] = aid_100nit_20nit_F8_1st;
+
+	aid_command_90[0] = aid_90nit_F8_18th;
+	aid_command_90[1] = aid_100nit_20nit_F8_1st;
+
+	aid_command_100[0] = aid_100nit_F8_18th;
+	aid_command_100[1] = aid_100nit_20nit_F8_1st;
+
+	aid_command_102[0] = aid_102nit_F8_18th;
+	aid_command_102[1] = aid_100nit_20nit_F8_1st;
+
+	aid_command_104[0] = aid_104nit_F8_18th;
+	aid_command_104[1] = aid_100nit_20nit_F8_1st;
+
+	aid_command_106[0] = aid_106nit_F8_18th;
+	aid_command_106[1] = aid_100nit_20nit_F8_1st;
+
+	aid_command_108[0] = aid_108nit_F8_18th;
+	aid_command_108[1] = aid_100nit_20nit_F8_1st;
+
+	aid_candela_table[0] = base_20to100;
+	aid_candela_table[1] = base_20to100;
+	aid_candela_table[2] = base_20to100;
+	aid_candela_table[3] = base_20to100; 
+	aid_candela_table[4] = base_20to100;
+	aid_candela_table[5] = base_20to100;
+	aid_candela_table[6] = base_20to100;
+	aid_candela_table[7] = base_20to100;
+	aid_candela_table[8] = base_20to100;
+	aid_candela_table[9] = AOR40_BASE_102;
+	aid_candela_table[10] = AOR40_BASE_104;
+	aid_candela_table[11] = AOR40_BASE_106;
+	aid_candela_table[12] = AOR40_BASE_108;
+	aid_candela_table[13] = AOR40_BASE_110;
+	aid_candela_table[14] = AOR40_BASE_120;
+	aid_candela_table[15] = AOR40_BASE_130;
+	aid_candela_table[16] = AOR40_BASE_140;
+	aid_candela_table[17] = AOR40_BASE_150;
+	aid_candela_table[18] = AOR40_BASE_160;
+	aid_candela_table[19] = AOR40_BASE_170;
+	aid_candela_table[20] = AOR40_BASE_180;
+	aid_candela_table[21] = AOR40_BASE_182;
+	aid_candela_table[22] = AOR40_BASE_184;
+	aid_candela_table[23] = AOR40_BASE_186;
+	aid_candela_table[24] = AOR40_BASE_188;
+	aid_candela_table[25] = 190;
+	aid_candela_table[26] = 200;
+	aid_candela_table[27] = 210;
+	aid_candela_table[28] = 220;
+	aid_candela_table[29] = 230;
+	aid_candela_table[30] = 240;
+	aid_candela_table[31] = 250;
+	aid_candela_table[32] = MAX_GAMMA-1;
+
+	mutex_lock(&lcd_ptr->bl_lock);
+	destroy_gamma_table(lcd_ptr);
+	init_gamma_table(lcd_ptr);
+	init_aid_dimming_table(lcd_ptr);
+	mutex_unlock(&lcd_ptr->bl_lock);
+	update_brightness(lcd_ptr, 1);
+	return size;
+}
+
+static DEVICE_ATTR(brightness_config, 0666, brightness_config_show, brightness_config_store);
+
 #ifdef CONFIG_HAS_EARLYSUSPEND
 struct lcd_info *g_lcd;
+
+int s6e8ax0_suspended;
+int s6e8ax0_fix_fence;
 
 void s6e8ax0_early_suspend(void)
 {
 	struct lcd_info *lcd = g_lcd;
+	int err = 0;
 
 	set_dsim_lcd_enabled(0);
 
 	dev_info(&lcd->ld->dev, "+%s\n", __func__);
 #if defined(GPIO_OLED_DET)
 	disable_irq(lcd->irq);
-	gpio_request(GPIO_OLED_DET, "OLED_DET");
+	err = gpio_request(GPIO_OLED_DET, "OLED_DET");
+	if (err)
+		pr_err("fail to request gpio OLED_DET: %d\n", err);
 	s3c_gpio_cfgpin(GPIO_OLED_DET, S3C_GPIO_OUTPUT);
 	s3c_gpio_setpull(GPIO_OLED_DET, S3C_GPIO_PULL_NONE);
 	gpio_direction_output(GPIO_OLED_DET, GPIO_LEVEL_LOW);
@@ -1253,6 +1568,8 @@ void s6e8ax0_early_suspend(void)
 #endif
 	s6e8ax0_power(lcd, FB_BLANK_POWERDOWN);
 	dev_info(&lcd->ld->dev, "-%s\n", __func__);
+	s6e8ax0_suspended = 1;
+	s6e8ax0_fix_fence = 1;
 
 	return ;
 }
@@ -1260,6 +1577,7 @@ void s6e8ax0_early_suspend(void)
 void s6e8ax0_late_resume(void)
 {
 	struct lcd_info *lcd = g_lcd;
+	s6e8ax0_suspended = 0;
 
 	dev_info(&lcd->ld->dev, "+%s\n", __func__);
 	s6e8ax0_power(lcd, FB_BLANK_UNBLANK);
@@ -1280,7 +1598,7 @@ static void s6e8ax0_read_id(struct lcd_info *lcd, u8 *buf)
 {
 	int ret = 0;
 
-	ret = s6e8ax0_read(lcd, LDI_ID_REG, LDI_ID_LEN, buf, 3);
+	ret = s6e8ax0_read(lcd, LDI_ID_REG, LDI_ID_LEN, buf, 2);
 	if (!ret) {
 		lcd->connected = 0;
 		dev_info(&lcd->ld->dev, "panel is not connected well\n");
@@ -1292,7 +1610,7 @@ static int s6e8ax0_read_mtp(struct lcd_info *lcd, u8 *mtp_data)
 {
 	int ret;
 
-	ret = s6e8ax0_read(lcd, LDI_MTP_ADDR, LDI_MTP_LENGTH, mtp_data, 0);
+	ret = s6e8ax0_read(lcd, LDI_MTP_ADDR, LDI_MTP_LENGTH, mtp_data, 1);
 
 	return ret;
 }
@@ -1370,6 +1688,7 @@ static int s6e8ax0_probe(struct device *dev)
 		ret = -ENOMEM;
 		goto err_alloc;
 	}
+	lcd_ptr = lcd;
 
 	g_lcd = lcd;
 
@@ -1395,6 +1714,7 @@ static int s6e8ax0_probe(struct device *dev)
 	lcd->current_bl = lcd->bl;
 
 	lcd->acl_enable = 0;
+	lcd->siop_enable = 0;
 	lcd->current_acl = 0;
 
 	lcd->power = FB_BLANK_UNBLANK;
@@ -1403,6 +1723,10 @@ static int s6e8ax0_probe(struct device *dev)
 	lcd->auto_brightness = 0;
 
 	ret = device_create_file(&lcd->ld->dev, &dev_attr_power_reduce);
+	if (ret < 0)
+		dev_err(&lcd->ld->dev, "failed to add sysfs entries, %d\n", __LINE__);
+
+	ret = device_create_file(&lcd->ld->dev, &dev_attr_siop_enable);
 	if (ret < 0)
 		dev_err(&lcd->ld->dev, "failed to add sysfs entries, %d\n", __LINE__);
 
@@ -1419,6 +1743,10 @@ static int s6e8ax0_probe(struct device *dev)
 		dev_err(&lcd->ld->dev, "failed to add sysfs entries, %d\n", __LINE__);
 
 	ret = device_create_file(&lcd->bd->dev, &dev_attr_auto_brightness);
+	if (ret < 0)
+		dev_err(&lcd->ld->dev, "failed to add sysfs entries, %d\n", __LINE__);
+
+	ret = device_create_file(&lcd->bd->dev, &dev_attr_brightness_config);
 	if (ret < 0)
 		dev_err(&lcd->ld->dev, "failed to add sysfs entries, %d\n", __LINE__);
 
@@ -1535,6 +1863,80 @@ static struct mipi_lcd_driver s6e8ax0_mipi_driver = {
 
 static int s6e8ax0_init(void)
 {
+
+	aid_command_20[0] = aid_20nit_F8_18th;
+	aid_command_20[1] = aid_100nit_20nit_F8_1st;
+
+	aid_command_30[0] = aid_30nit_F8_18th;
+	aid_command_30[1] = aid_100nit_20nit_F8_1st;
+
+	aid_command_40[0] = aid_40nit_F8_18th;
+	aid_command_40[1] = aid_100nit_20nit_F8_1st;
+
+	aid_command_50[0] = aid_50nit_F8_18th;
+	aid_command_50[1] = aid_100nit_20nit_F8_1st;
+
+	aid_command_60[0] = aid_60nit_F8_18th;
+	aid_command_60[1] = aid_100nit_20nit_F8_1st;
+
+	aid_command_70[0] = aid_70nit_F8_18th,
+	aid_command_70[1] = aid_100nit_20nit_F8_1st;
+
+	aid_command_80[0] = aid_80nit_F8_18th;
+	aid_command_80[1] = aid_100nit_20nit_F8_1st;
+
+	aid_command_90[0] = aid_90nit_F8_18th;
+	aid_command_90[1] = aid_100nit_20nit_F8_1st;
+
+	aid_command_100[0] = aid_100nit_F8_18th;
+	aid_command_100[1] = aid_100nit_20nit_F8_1st;
+
+	aid_command_102[0] = aid_102nit_F8_18th;
+	aid_command_102[1] = aid_100nit_20nit_F8_1st;
+
+	aid_command_104[0] = aid_104nit_F8_18th;
+	aid_command_104[1] = aid_100nit_20nit_F8_1st;
+
+	aid_command_106[0] = aid_106nit_F8_18th;
+	aid_command_106[1] = aid_100nit_20nit_F8_1st;
+
+	aid_command_108[0] = aid_108nit_F8_18th;
+	aid_command_108[1] = aid_100nit_20nit_F8_1st;
+
+	aid_candela_table[0] = base_20to100;
+	aid_candela_table[1] = base_20to100;
+	aid_candela_table[2] = base_20to100;
+	aid_candela_table[3] = base_20to100; 
+	aid_candela_table[4] = base_20to100;
+	aid_candela_table[5] = base_20to100;
+	aid_candela_table[6] = base_20to100;
+	aid_candela_table[7] = base_20to100;
+	aid_candela_table[8] = base_20to100;
+	aid_candela_table[9] = AOR40_BASE_102;
+	aid_candela_table[10] = AOR40_BASE_104;
+	aid_candela_table[11] = AOR40_BASE_106;
+	aid_candela_table[12] = AOR40_BASE_108;
+	aid_candela_table[13] = AOR40_BASE_110;
+	aid_candela_table[14] = AOR40_BASE_120;
+	aid_candela_table[15] = AOR40_BASE_130;
+	aid_candela_table[16] = AOR40_BASE_140;
+	aid_candela_table[17] = AOR40_BASE_150;
+	aid_candela_table[18] = AOR40_BASE_160;
+	aid_candela_table[19] = AOR40_BASE_170;
+	aid_candela_table[20] = AOR40_BASE_180;
+	aid_candela_table[21] = AOR40_BASE_182;
+	aid_candela_table[22] = AOR40_BASE_184;
+	aid_candela_table[23] = AOR40_BASE_186;
+	aid_candela_table[24] = AOR40_BASE_188;
+	aid_candela_table[25] = 190;
+	aid_candela_table[26] = 200;
+	aid_candela_table[27] = 210;
+	aid_candela_table[28] = 220;
+	aid_candela_table[29] = 230;
+	aid_candela_table[30] = 240;
+	aid_candela_table[31] = 250;
+	aid_candela_table[32] = MAX_GAMMA-1;
+
 	return s5p_dsim_register_lcd_driver(&s6e8ax0_mipi_driver);
 }
 

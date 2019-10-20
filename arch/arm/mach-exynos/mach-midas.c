@@ -2173,7 +2173,6 @@ static struct platform_device *midas_devices[] __initdata = {
 #ifdef CONFIG_FB_S5P_MDNIE
 	&mdnie_device,
 #endif
-
 #ifdef CONFIG_HAVE_PWM
 	&s3c_device_timer[0],
 	&s3c_device_timer[1],
@@ -2609,14 +2608,30 @@ static void __init exynos4_reserve_mem(void)
 		{
 			.name = "fimc1",
 			.size = CONFIG_VIDEO_SAMSUNG_MEMSIZE_FIMC1 * SZ_1K,
-#if defined(CONFIG_MACH_GC1)
-			.start = 0x5ec00000,
+#if defined(CONFIG_MACH_GC1) || defined(CONFIG_MACH_GC2PD)
+			.start = 0x5e800000,
+#elif defined(CONFIG_MACH_GD2)
+			.start = 0x5d700000,
+#elif defined(CONFIG_MACH_WATCH)
 #else
 			.start = 0x65c00000,
 #endif
 		},
 #endif
 #endif
+
+#if (CONFIG_VIDEO_SAMSUNG_MEMSIZE_FIMC3 > 0)
+#ifndef CONFIG_USE_FIMC_CMA
+		{
+			.name = "fimc3",
+			.size = CONFIG_VIDEO_SAMSUNG_MEMSIZE_FIMC3 * SZ_1K,
+#if defined(CONFIG_MACH_GD2)
+			.start = 0x60500000,
+#endif
+		},
+#endif
+#endif
+
 #ifdef CONFIG_VIDEO_SAMSUNG_MEMSIZE_MFC1
 		{
 			.name = "mfc1",
@@ -2624,8 +2639,10 @@ static void __init exynos4_reserve_mem(void)
 			{
 				.alignment = 1 << 26,
 			},
-#if defined(CONFIG_MACH_GC1)
+#if defined(CONFIG_MACH_GC1) || defined(CONFIG_MACH_GC2PD)
 			.start = 0x5e000000,
+#elif defined(CONFIG_MACH_GD2)
+			.start = 0x5B000000,
 #else
 			.start = 0x64000000,
 #endif
@@ -2635,8 +2652,13 @@ static void __init exynos4_reserve_mem(void)
 		{
 			.name = "mfc-normal",
 			.size = CONFIG_VIDEO_SAMSUNG_MEMSIZE_MFC_NORMAL * SZ_1K,
-#if defined(CONFIG_MACH_GC1)
+#if defined(CONFIG_MACH_GC1) || defined(CONFIG_MACH_GC2PD)
 			.start = 0x5e000000,
+#elif defined(CONFIG_MACH_GD2)
+			.start = 0x5B000000,
+#elif defined(CONFIG_MACH_ZEST)
+			.start = 0x60800000,
+#elif defined(CONFIG_MACH_WATCH)
 #else
 			.start = 0x64000000,
 #endif
@@ -2646,31 +2668,91 @@ static void __init exynos4_reserve_mem(void)
 			.size = 0
 		},
 	};
+
 #ifdef CONFIG_EXYNOS_CONTENT_PATH_PROTECTION
 	static struct cma_region regions_secure[] = {
-#ifndef CONFIG_DMA_CMA
+#if !defined(CONFIG_DMA_CMA)
 #ifdef CONFIG_ION_EXYNOS_CONTIGHEAP_SIZE
 		{
 			.name	= "ion",
 			.size	= CONFIG_ION_EXYNOS_CONTIGHEAP_SIZE * SZ_1K,
-		},
+#if defined(CONFIG_MACH_GD2)
+			.start	= 0x53200000,
 #endif
+		},
+#endif // ION
 #ifdef CONFIG_VIDEO_SAMSUNG_MEMSIZE_MFC_SECURE
 		{
 			.name = "mfc-secure",
 			.size = CONFIG_VIDEO_SAMSUNG_MEMSIZE_MFC_SECURE * SZ_1K,
-		},
+#if defined(CONFIG_MACH_GD2)
+			.start = 0x50100000,
 #endif
+		},
+#endif // MFC_SECURE
 		{
 			.name = "sectbl",
 			.size = SZ_1M,
 		},
-#else
-#if defined(CONFIG_USE_MFC_CMA) && defined(CONFIG_MACH_M0)
+#else /*defined(CONFIG_DMA_CMA)*/
+#if defined(CONFIG_USE_MFC_CMA)
+#if defined(CONFIG_MACH_M0) || defined(CONFIG_MACH_ZEST) || defined(CONFIG_MACH_WATCH)
 #ifdef CONFIG_ION_EXYNOS_CONTIGHEAP_SIZE
 		{
 			.name = "ion",
 			.size = CONFIG_ION_EXYNOS_CONTIGHEAP_SIZE * SZ_1K,
+#if defined(CONFIG_MACH_ZEST)
+			.start = 0x5B200000,
+#else
+			.start = 0x5F200000,
+#endif
+		},
+#endif // ION
+#ifdef CONFIG_VIDEO_SAMSUNG_MEMSIZE_MFC_SECURE
+		{
+			.name = "mfc-secure",
+			.size = CONFIG_VIDEO_SAMSUNG_MEMSIZE_MFC_SECURE * SZ_1K,
+#if defined(CONFIG_MACH_ZEST)
+			.start = 0x58100000,
+#else
+			.start = 0x5C100000,
+#endif
+		},
+#endif // MEMSIZE_MFC_SECURE
+		{
+			.name = "sectbl",
+			.size = SZ_1M,
+#if defined(CONFIG_MACH_ZEST)
+			.start = 0x58000000,
+#else
+			.start = 0x5C000000,
+#endif
+		},
+#elif defined(CONFIG_MACH_GC1) || defined(CONFIG_MACH_GC2PD) // M0 || ZEST || WATCH
+#ifdef CONFIG_ION_EXYNOS_CONTIGHEAP_SIZE
+		{
+			.name = "ion",
+			.size = CONFIG_ION_EXYNOS_CONTIGHEAP_SIZE * SZ_1K,
+			.start = 0x53300000,
+		},
+#endif // ION
+#ifdef CONFIG_VIDEO_SAMSUNG_MEMSIZE_MFC_SECURE
+		{
+			.name = "mfc-secure",
+			.size = CONFIG_VIDEO_SAMSUNG_MEMSIZE_MFC_SECURE * SZ_1K,
+			.start = 0x50200000,
+		},
+#endif // MFC_SECURE
+		{
+			.name = "sectbl",
+			.size = SZ_1M,
+			.start = 0x50000000,
+		},
+#else // M0 || ZEST || WATCH
+#ifdef CONFIG_ION_EXYNOS_CONTIGHEAP_SIZE
+		{
+			.name   = "ion",
+			.size   = CONFIG_ION_EXYNOS_CONTIGHEAP_SIZE * SZ_1K,
 			.start = 0x5F200000,
 		},
 #endif
@@ -2678,6 +2760,7 @@ static void __init exynos4_reserve_mem(void)
 		{
 			.name = "mfc-secure",
 			.size = CONFIG_VIDEO_SAMSUNG_MEMSIZE_MFC_SECURE * SZ_1K,
+			// mfc-secure must be below mfc-normal
 			.start = 0x5C100000,
 		},
 #endif
@@ -2686,7 +2769,8 @@ static void __init exynos4_reserve_mem(void)
 			.size = SZ_1M,
 			.start = 0x5C000000,
 		},
-#else
+#endif // M0 || ZEST || WATCH
+#else // MFC_CMA
 #ifdef CONFIG_ION_EXYNOS_CONTIGHEAP_SIZE
 		{
 			.name   = "ion",
@@ -2751,7 +2835,27 @@ static void __init exynos4_reserve_mem(void)
 
 	s5p_cma_region_reserve(regions, regions_secure, 0, map);
 
-	if (!(fbmem_start && fbmem_size))
+	pr_err("[CMA] %s: regions\n", __func__);
+	for (i = 0; i < ARRAY_SIZE(regions); i++) {
+		if (regions[i].size == 0)
+			break;
+		pr_err("[CMA] %s: regions[%d] 0x%08X + 0x%07X (%s)\n",
+			__func__, i, regions[i].start, regions[i].size,
+			regions[i].name);
+	}
+
+#ifdef CONFIG_EXYNOS_CONTENT_PATH_PROTECTION
+	pr_err("[CMA] %s: regions_secure\n", __func__);
+	for (i = 0; i < ARRAY_SIZE(regions_secure); i++) {
+		if (regions_secure[i].size == 0)
+			break;
+		pr_err("[CMA] %s: regions_secure[%d] 0x%08X + 0x%07X (%s)\n",
+			__func__, i, regions_secure[i].start,
+			regions_secure[i].size, regions_secure[i].name);
+	}
+#endif
+
+	if (!fbmem_start || !fbmem_size)
 		return;
 
 	for (i = 0; i < ARRAY_SIZE(regions); i++) {
