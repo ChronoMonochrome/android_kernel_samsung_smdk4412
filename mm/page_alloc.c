@@ -214,7 +214,6 @@ static char * const zone_names[MAX_NR_ZONES] = {
 int min_free_kbytes = 1024;
 int min_free_order_shift = 1;
 int user_min_free_kbytes = -1;
-int min_free_order_shift = 1;
 
 /*
  * Extra memory for the system to try freeing. Used to temporarily
