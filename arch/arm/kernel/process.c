@@ -34,6 +34,7 @@
 #include <linux/console.h>
 #include <linux/leds.h>
 #include <linux/reboot.h>
+#include <linux/console.h>
 
 #include <asm/cacheflush.h>
 #include <asm/idmap.h>
@@ -187,6 +188,7 @@ void arch_cpu_idle_prepare(void)
 
 void arch_cpu_idle_enter(void)
 {
+	idle_notifier_call_chain(IDLE_START);
 	ledtrig_cpu(CPU_LED_IDLE_START);
 #ifdef CONFIG_PL310_ERRATA_769419
 	wmb();
@@ -196,6 +198,7 @@ void arch_cpu_idle_enter(void)
 void arch_cpu_idle_exit(void)
 {
 	ledtrig_cpu(CPU_LED_IDLE_END);
+	idle_notifier_call_chain(IDLE_END);
 }
 
 #ifdef CONFIG_HOTPLUG_CPU
@@ -225,6 +228,16 @@ void arch_cpu_idle(void)
  */
 void machine_shutdown(void)
 {
+#ifdef CONFIG_SMP
+	/*
+	 * Disable preemption so we're guaranteed to
+	 * run to power off or reboot and prevent
+	 * the possibility of switching to another
+	 * thread that might wind up blocking on
+	 * one of the stopped CPUs.
+	 */
+	preempt_disable();
+#endif
 	disable_nonboot_cpus();
 }
 

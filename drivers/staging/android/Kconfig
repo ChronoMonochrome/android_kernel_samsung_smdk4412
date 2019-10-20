@@ -13,6 +13,14 @@ config ANDROID_BINDER_IPC
 	depends on MMU
 	default n
 
+config ANDROID_BINDER_IPC_32BIT
+	bool "Use old 32-bit binder api"
+        default y
+	depends on !64BIT
+	---help---
+	  Enable to support an old 32-bit Android user-space. Breaks the new
+	  Android user-space.
+
 config ANDROID_LOGGER
 	tristate "Android log driver"
 	default n
@@ -108,6 +116,10 @@ config ANDROID_INTF_ALARM_DEV
 	  Provides non-wakeup and rtc backed wakeup alarms based on rtc or
 	  elapsed realtime, and a non-wakeup alarm on the monotonic clock.
 	  Also exports the alarm interface to user-space.
+
+#source "drivers/staging/android/ion/Kconfig"
+
+source "drivers/staging/android/fiq_debugger/Kconfig"
 
 endif # if ANDROID
 

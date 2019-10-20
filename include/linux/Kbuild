@@ -6,3 +6,6 @@ header-y += usb/
 
 header-y += videodev2_exynos_camera.h
 header-y += videodev2_exynos_media.h
+header-y += if_pppolac.h
+header-y += if_pppopns.h
+
