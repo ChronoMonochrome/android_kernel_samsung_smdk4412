@@ -1996,12 +1996,6 @@ int shmem_add_seals(struct file *file, unsigned int seals)
 		goto unlock;
 	}
 
-	if ((seals & F_SEAL_WRITE) && !(info->seals & F_SEAL_WRITE)) {
-		error = shmem_wait_for_pins(file->f_mapping);
-		if (error)
-			goto unlock;
-	}
-
 	info->seals |= seals;
 	error = 0;
 
