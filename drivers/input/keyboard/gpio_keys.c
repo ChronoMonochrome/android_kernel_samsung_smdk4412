@@ -33,8 +33,6 @@
 #include <linux/wakelock.h>
 #endif
 
-#include <linux/earlysuspend.h>
-
 extern struct class *sec_class;
 
 struct gpio_button_data {
@@ -662,16 +660,11 @@ static void gpio_keys_report_event(struct gpio_button_data *bdata)
 		}
 
 #endif
+		input_event(input, type, button->code, !!state);
+		input_sync(input);
+
 		if (button->code == KEY_POWER)
 			printk(KERN_DEBUG"[keys]PWR %d\n", !!state);
-
-		if((button->code == KEY_POWER) && (!!state == 1) && (get_suspend_state() > 0))
-			request_suspend_state(0);
-		else
-		{
-			input_event(input, type, button->code, !!state);
-			input_sync(input);
-		}
 	}
 }
 
