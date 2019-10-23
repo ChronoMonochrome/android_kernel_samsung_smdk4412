@@ -33,7 +33,6 @@
 #include <linux/wakelock.h>
 #endif
 
-#include <linux/suspend.h>
 #include <linux/earlysuspend.h>
 
 extern struct class *sec_class;
@@ -496,11 +495,6 @@ static inline int64_t get_time_inms(void) {
 	return tinms;
 }
 
-#ifdef CONFIG_INPUT_WAKE_ON_POWER
-extern suspend_state_t get_suspend_state(void);
-void request_suspend_state(suspend_state_t state);
-#endif
-
 static void gpio_keys_report_event(struct gpio_button_data *bdata)
 {
 	static int64_t homekey_lasttime = 0;
@@ -671,17 +665,13 @@ static void gpio_keys_report_event(struct gpio_button_data *bdata)
 		if (button->code == KEY_POWER)
 			printk(KERN_DEBUG"[keys]PWR %d\n", !!state);
 
-#ifdef CONFIG_INPUT_WAKE_ON_POWER
 		if((button->code == KEY_POWER) && (!!state == 1) && (get_suspend_state() > 0))
 			request_suspend_state(0);
 		else
 		{
-#endif
 			input_event(input, type, button->code, !!state);
 			input_sync(input);
-#ifdef CONFIG_INPUT_WAKE_ON_POWER
 		}
-#endif
 	}
 }
 
