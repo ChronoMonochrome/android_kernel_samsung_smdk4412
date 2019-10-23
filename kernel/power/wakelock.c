@@ -82,22 +82,20 @@ int get_expired_time(struct wake_lock *lock, ktime_t *expire_time)
 {
 	struct timespec ts;
 	struct timespec kt;
+	struct timespec tomono;
 	struct timespec delta;
 	struct timespec sleep;
-
 	long timeout;
 
 	if (!(lock->flags & WAKE_LOCK_AUTO_EXPIRE))
 		return 0;
-
-	kt = ktime_to_timespec(ktime_get_boottime());
-
+	get_xtime_and_monotonic_and_sleep_offset(&kt, &tomono, &sleep);
 	timeout = lock->expires - jiffies;
 	if (timeout > 0)
 		return 0;
 	jiffies_to_timespec(-timeout, &delta);
-	set_normalized_timespec(&ts, kt.tv_sec - delta.tv_sec,
-				kt.tv_nsec - delta.tv_nsec);
+	set_normalized_timespec(&ts, kt.tv_sec + tomono.tv_sec - delta.tv_sec,
+				kt.tv_nsec + tomono.tv_nsec - delta.tv_nsec);
 	*expire_time = timespec_to_ktime(ts);
 	return 1;
 }
