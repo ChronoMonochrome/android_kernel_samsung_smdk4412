@@ -214,18 +214,6 @@ void request_suspend_state(suspend_state_t new_state)
 	spin_unlock_irqrestore(&state_lock, irqflags);
 }
 
-static int set_goto_suspend(const char *val, struct kernel_param *kp)
-{
-	if (sysfs_streq(val, "0"))
-		request_suspend_state(0);
-	else
-		request_suspend_state(3);
-
-	return 0;
-}
-
-module_param_call(goto_suspend, set_goto_suspend, param_get_int, &state, 0644);
-
 suspend_state_t get_suspend_state(void)
 {
 	return requested_suspend_state;
