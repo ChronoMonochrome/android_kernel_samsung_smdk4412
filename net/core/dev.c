@@ -2719,25 +2719,22 @@ struct sk_buff *validate_xmit_skb_list(struct sk_buff *skb, struct net_device *d
 {
 	struct sk_buff *next, *head = NULL, *tail;
 
-	for (; skb != NULL; skb = next) {
+	while (skb) {
 		next = skb->next;
 		skb->next = NULL;
-
-		/* in case skb wont be segmented, point to itself */
-		skb->prev = skb;
-
 		skb = validate_xmit_skb(skb, dev);
-		if (!skb)
-			continue;
+		if (skb) {
+			struct sk_buff *end = skb;
 
-		if (!head)
-			head = skb;
-		else
-			tail->next = skb;
-		/* If skb was segmented, skb->prev points to
-		 * the last segment. If not, it still contains skb.
-		 */
-		tail = skb->prev;
+			while (end->next)
+				end = end->next;
+			if (!head)
+				head = skb;
+			else
+				tail->next = skb;
+			tail = end;
+		}
+		skb = next;
 	}
 	return head;
 }
