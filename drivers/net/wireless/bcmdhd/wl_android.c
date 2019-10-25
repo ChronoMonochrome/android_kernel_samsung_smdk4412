@@ -464,6 +464,7 @@ static int wl_android_set_suspendmode(struct net_device *dev, char *command, int
 {
 	int ret = 0;
 
+#if !defined(CONFIG_HAS_EARLYSUSPEND) || !defined(DHD_USE_EARLYSUSPEND)
 	int suspend_flag;
 
 	suspend_flag = *(command + strlen(CMD_SETSUSPENDMODE) + 1) - '0';
@@ -474,6 +475,7 @@ static int wl_android_set_suspendmode(struct net_device *dev, char *command, int
 		DHD_INFO(("%s: Suspend Mode %d\n", __FUNCTION__, suspend_flag));
 	else
 		DHD_ERROR(("%s: failed %d\n", __FUNCTION__, ret));
+#endif
 
 	return ret;
 }

@@ -72,6 +72,9 @@ DHDCFLAGS += -DCUSTOM_PNO_EVENT_LOCK_xTIME=10
 # For Passing all multicast packets to host when not in suspend mode.
 DHDCFLAGS += -DPASS_ALL_MCAST_PKTS
 
+# Early suspend
+DHDCFLAGS += -DDHD_USE_EARLYSUSPEND
+
 # WiFi turn off delay
 DHDCFLAGS += -DWIFI_TURNOFF_DELAY=100
 
