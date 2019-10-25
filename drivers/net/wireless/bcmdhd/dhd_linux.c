@@ -233,17 +233,6 @@ extern wl_iw_extra_params_t  g_wl_iw_params;
 
 #if defined(CUSTOMER_HW4) && defined(CONFIG_PARTIALSUSPEND_SLP)
 #include <linux/partialsuspend_slp.h>
-#define CONFIG_HAS_EARLYSUSPEND
-#define DHD_USE_EARLYSUSPEND
-#define register_early_suspend		register_pre_suspend
-#define unregister_early_suspend	unregister_pre_suspend
-#define early_suspend				pre_suspend
-#define EARLY_SUSPEND_LEVEL_BLANK_SCREEN		50
-#else
-#if defined(CONFIG_FB) && defined(DHD_USE_EARLYSUSPEND)
-#include <linux/fb.h>
-#include <linux/notifier.h>
-#endif /* defined(CONFIG_FB) && defined(DHD_USE_EARLYSUSPEND) */
 #endif /* CUSTOMER_HW4 && CONFIG_PARTIALSUSPEND_SLP */
 
 extern int dhd_get_suspend_bcn_li_dtim(dhd_pub_t *dhd);
@@ -419,11 +408,6 @@ typedef struct dhd_info {
 	wait_queue_head_t ctrl_wait;
 	atomic_t pend_8021x_cnt;
 	dhd_attach_states_t dhd_state;
-
-#if defined(CONFIG_FB) && defined(DHD_USE_EARLYSUSPEND)
-	struct notifier_block fb_notif;
-	bool fb_suspended;
-#endif /* CONFIG_FB && DHD_USE_EARLYSUSPEND */
 
 #ifdef ARP_OFFLOAD_SUPPORT
 	u32 pend_ipaddr;
@@ -1108,57 +1092,6 @@ static int dhd_suspend_resume_helper(struct dhd_info *dhd, int val, int force)
 	DHD_OS_WAKE_UNLOCK(dhdp);
 	return ret;
 }
-
-#if defined(CONFIG_FB) && defined(DHD_USE_EARLYSUSPEND)
-static void dhd_fb_suspend(struct dhd_info *dhd)
-{
-	if (dhd->fb_suspended)
-		return;
-
-	DHD_TRACE_HW4(("%s: enter\n", __FUNCTION__));
-
-	if (dhd)
-		dhd_suspend_resume_helper(dhd, 1, 0);
-	dhd->fb_suspended = true;
-}
-
-static void dhd_fb_resume(struct dhd_info *dhd)
-{
-	if (!dhd->fb_suspended)
-		return;
-
-	DHD_TRACE_HW4(("%s: enter\n", __FUNCTION__));
-
-	if (dhd)
-		dhd_suspend_resume_helper(dhd, 0, 0);
-	dhd->fb_suspended = false;
-}
-static int fb_notifier_callback(struct notifier_block *self,
-				unsigned long event, void *data)
-{
-	struct fb_event *evdata = data;
-	int *blank;
-	struct dhd_info *info = container_of(self, struct dhd_info, fb_notif);
-	if (evdata && evdata->data && info) {
-		if (event == FB_EVENT_BLANK) {
-			blank = evdata->data;
-			switch (*blank) {
-				case FB_BLANK_UNBLANK:
-				case FB_BLANK_NORMAL:
-				case FB_BLANK_VSYNC_SUSPEND:
-				case FB_BLANK_HSYNC_SUSPEND:
-					dhd_fb_resume(info);
-					break;
-				default:
-				case FB_BLANK_POWERDOWN:
-					dhd_fb_suspend(info);
-					break;
-			}
-		}
-	}
-	return 0;
-}
-#endif /* CONFIG_FB && DHD_USE_EARLYSUSPEND */
 
 /*
  * Generalized timeout mechanism.  Uses spin sleep with exponential back-off until
@@ -3972,13 +3905,6 @@ dhd_attach(osl_t *osh, struct dhd_bus *bus, uint bus_hdrlen)
 	}
 #endif /* CONFIG_PM_SLEEP */
 
-#if defined(CONFIG_FB) && defined(DHD_USE_EARLYSUSPEND)
-	dhd->fb_suspended = false;
-	dhd->fb_notif.notifier_call = fb_notifier_callback;
-	fb_register_client(&dhd->fb_notif);
-	dhd_state |= DHD_ATTACH_STATE_EARLYSUSPEND_DONE;
-#endif /* CONFIG_FB && DHD_USE_EARLYSUSPEND */
-
 #ifdef ARP_OFFLOAD_SUPPORT
 	dhd->pend_ipaddr = 0;
 	if (!dhd_inetaddr_notifier_registered) {
@@ -5699,12 +5625,6 @@ void dhd_detach(dhd_pub_t *dhdp)
 		unregister_inet6addr_notifier(&dhd_inet6addr_notifier);
 	}
 
-#if defined(CONFIG_FB) && defined(DHD_USE_EARLYSUSPEND)
-	if (dhd->dhd_state & DHD_ATTACH_STATE_EARLYSUSPEND_DONE) {
-		fb_unregister_client(&dhd->fb_notif);
-	}
-#endif /* CONFIG_FB && DHD_USE_EARLYSUSPEND */
-
 #if defined(WL_WIRELESS_EXT)
 	if (dhd->dhd_state & DHD_ATTACH_STATE_WL_ATTACH) {
 		/* Detatch and unlink in the iw */
@@ -6485,11 +6405,7 @@ int net_os_set_suspend(struct net_device *dev, int val, int force)
 	dhd_info_t *dhd = *(dhd_info_t **)netdev_priv(dev);
 
 	if (dhd) {
-#if defined(CONFIG_HAS_EARLYSUSPEND) && defined(DHD_USE_EARLYSUSPEND)
-		ret = dhd_set_suspend(val, &dhd->pub);
-#else
 		ret = dhd_suspend_resume_helper(dhd, val, force);
-#endif
 #ifdef WL_CFG80211
 		wl_cfg80211_update_power_mode(dev);
 #endif
