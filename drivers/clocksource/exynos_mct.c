@@ -575,10 +575,12 @@ out_irq:
 
 void __init exynos4_timer_init(void)
 {
+#if 0
 	if (soc_is_exynos5440()) {
 		arch_timer_of_register();
 		return;
 	}
+#endif
 
 	if (soc_is_exynos4210()) {
 		mct_irqs[MCT_G0_IRQ] = EXYNOS4_IRQ_MCT_G0;
