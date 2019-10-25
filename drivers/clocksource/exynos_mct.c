@@ -20,17 +20,14 @@
 #include <linux/platform_device.h>
 #include <linux/delay.h>
 #include <linux/percpu.h>
+#include <linux/of.h>
+#include <linux/of_irq.h>
+#include <linux/of_address.h>
 #include <linux/clocksource.h>
 #include <linux/sched_clock.h>
-#include <linux/of.h>
-
-#include <asm/arch_timer.h>
-
-#include <plat/cpu.h>
 
 #include <mach/map.h>
-#include <mach/irqs.h>
-#include <asm/mach/time.h>
+#include <plat/cpu.h>
 
 #define EXYNOS4_MCTREG(x)		(x)
 #define EXYNOS4_MCT_G_CNT_L		EXYNOS4_MCTREG(0x100)
@@ -76,6 +73,10 @@ enum {
 	MCT_L1_IRQ,
 	MCT_L2_IRQ,
 	MCT_L3_IRQ,
+	MCT_L4_IRQ,
+	MCT_L5_IRQ,
+	MCT_L6_IRQ,
+	MCT_L7_IRQ,
 	MCT_NR_IRQS,
 };
 
@@ -448,7 +449,7 @@ static irqreturn_t exynos4_mct_tick_isr(int irq, void *dev_id)
 	return IRQ_HANDLED;
 }
 
-static int __cpuinit exynos4_local_timer_setup(struct clock_event_device *evt)
+static int exynos4_local_timer_setup(struct clock_event_device *evt)
 {
 	struct mct_clock_event_device *mevt;
 	unsigned int cpu = smp_processor_id();
@@ -456,7 +457,7 @@ static int __cpuinit exynos4_local_timer_setup(struct clock_event_device *evt)
 	mevt = container_of(evt, struct mct_clock_event_device, evt);
 
 	mevt->base = EXYNOS4_MCT_L_BASE(cpu);
-	sprintf(mevt->name, "mct_tick%d", cpu);
+	snprintf(mevt->name, sizeof(mevt->name), "mct_tick%d", cpu);
 
 	evt->name = mevt->name;
 	evt->cpumask = cpumask_of(cpu);
@@ -483,7 +484,7 @@ static int __cpuinit exynos4_local_timer_setup(struct clock_event_device *evt)
 	return 0;
 }
 
-static void __cpuinit exynos4_local_timer_stop(struct clock_event_device *evt)
+static void exynos4_local_timer_stop(struct clock_event_device *evt)
 {
 	evt->set_mode(CLOCK_EVT_MODE_UNUSED, evt);
 	if (mct_int_type == MCT_INT_SPI) {
@@ -494,7 +495,7 @@ static void __cpuinit exynos4_local_timer_stop(struct clock_event_device *evt)
 	}
 }
 
-static int __cpuinit exynos4_mct_cpu_notify(struct notifier_block *self,
+static int exynos4_mct_cpu_notify(struct notifier_block *self,
 					   unsigned long action, void *hcpu)
 {
 	struct mct_clock_event_device *mevt;
@@ -602,3 +603,43 @@ void __init exynos4_timer_init(void)
 	exynos4_clocksource_init();
 	exynos4_clockevent_init();
 }
+
+static void __init mct_init_dt(struct device_node *np, unsigned int int_type)
+{
+	u32 nr_irqs, i;
+
+	mct_int_type = int_type;
+
+	/* This driver uses only one global timer interrupt */
+	mct_irqs[MCT_G0_IRQ] = irq_of_parse_and_map(np, MCT_G0_IRQ);
+
+	/*
+	 * Find out the number of local irqs specified. The local
+	 * timer irqs are specified after the four global timer
+	 * irqs are specified.
+	 */
+#ifdef CONFIG_OF
+	nr_irqs = of_irq_count(np);
+#else
+	nr_irqs = 0;
+#endif
+	for (i = MCT_L0_IRQ; i < nr_irqs; i++)
+		mct_irqs[i] = irq_of_parse_and_map(np, i);
+
+	exynos4_timer_resources();
+	exynos4_clocksource_init();
+	exynos4_clockevent_init();
+}
+
+
+static void __init mct_init_spi(struct device_node *np)
+{
+	return mct_init_dt(np, MCT_INT_SPI);
+}
+
+static void __init mct_init_ppi(struct device_node *np)
+{
+	return mct_init_dt(np, MCT_INT_PPI);
+}
+CLOCKSOURCE_OF_DECLARE(exynos4210, "samsung,exynos4210-mct", mct_init_spi);
+CLOCKSOURCE_OF_DECLARE(exynos4412, "samsung,exynos4412-mct", mct_init_ppi);
