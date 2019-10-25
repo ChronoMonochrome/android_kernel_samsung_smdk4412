@@ -21,7 +21,7 @@ void combiner_init(void __iomem *combiner_base, struct device_node *np);
 extern void combiner_cascade_irq(unsigned int combiner_nr, unsigned int irq);
 
 extern void exynos_cpu_die(unsigned int cpu);
-extern void __init exynos_timer_init(void);
+extern void __init exynos4_timer_init(void);
 void exynos_cpufreq_init(void);
 
 extern void set_gps_uart_op(int onoff);
