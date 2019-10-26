@@ -113,35 +113,6 @@ static void __cpuinit exynos_secondary_init(unsigned int cpu)
 	spin_unlock(&boot_lock);
 }
 
-static int exynos_power_up_cpu(unsigned int cpu)
-{
-	unsigned int timeout;
-	unsigned int val;
-	void __iomem *power_base = cpu_boot_info[cpu].power_base;
-
-	val = __raw_readl(power_base);
-	if (!exynos_cpu_power_state(cpu)) {
-		exynos_cpu_power_up(cpu);
-		timeout = 10;
-
-		/* wait max 10 ms until cpu1 is on */
-		while (exynos_cpu_power_state(cpu) != S5P_CORE_LOCAL_PWR_EN) {
-			if (timeout-- == 0)
-				break;
-
-			mdelay(1);
-		}
-
-		if (timeout == 0) {
-			printk(KERN_ERR "cpu1 power enable failed");
-			spin_unlock(&boot_lock);
-			return -ETIMEDOUT;
-		}
-	}
-
-	return 0;
-}
-
 static int __cpuinit exynos_boot_secondary(unsigned int cpu, struct task_struct *idle)
 {
 	unsigned long timeout;
@@ -161,12 +132,6 @@ static int __cpuinit exynos_boot_secondary(unsigned int cpu, struct task_struct 
 	tmp_wtcon = __raw_readl(S3C2410_WTCON);
 #endif
 
-	ret = exynos_power_up_cpu(cpu);
-	if (ret) {
-		spin_unlock(&boot_lock);
-		return ret;
-	}
-
 	/*
 	 * The secondary processor is waiting to be released from
 	 * the holding pen - release it, then wait for it to flag
@@ -176,6 +141,25 @@ static int __cpuinit exynos_boot_secondary(unsigned int cpu, struct task_struct 
 	 * "cpu" is Linux's internal ID.
 	 */
 	write_pen_release(phys_cpu);
+
+	if (!exynos_cpu_power_state(cpu)) {
+		exynos_cpu_power_up(cpu);
+		timeout = 10;
+
+		/* wait max 10 ms until cpu1 is on */
+		while (exynos_cpu_power_state(cpu) != S5P_CORE_LOCAL_PWR_EN) {
+			if (timeout-- == 0)
+				break;
+
+			mdelay(1);
+		}
+
+		if (timeout == 0) {
+			printk(KERN_ERR "cpu1 power enable failed");
+			spin_unlock(&boot_lock);
+			return -ETIMEDOUT;
+		}
+	}
 
 	/*
 	 * Send the secondary CPU a soft interrupt, thereby causing
