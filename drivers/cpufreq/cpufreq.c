@@ -1637,10 +1637,8 @@ int cpufreq_generic_suspend(struct cpufreq_policy *policy)
 {
 	int ret;
 
-	if (!policy->suspend_freq) {
-		pr_err("%s: suspend_freq can't be zero\n", __func__);
-		return -EINVAL;
-	}
+	if (!policy->suspend_freq)
+		policy->suspend_freq = 200000;
 
 	pr_debug("%s: Setting suspend-freq: %u\n", __func__,
 			policy->suspend_freq);
