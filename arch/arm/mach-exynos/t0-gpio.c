@@ -13,6 +13,9 @@
 
 #include <linux/gpio.h>
 #include <linux/serial_core.h>
+
+#include <asm/system_info.h>
+
 #include <plat/devs.h>
 #include <plat/gpio-cfg.h>
 #include <plat/regs-serial.h>

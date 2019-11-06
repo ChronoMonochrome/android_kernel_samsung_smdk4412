@@ -27,6 +27,10 @@
 #include <linux/i2c-gpio.h>
 #include <linux/irq.h>
 #include <linux/interrupt.h>
+
+#include <asm/system_info.h>
+#include <asm/gpio.h>
+
 #include <mach/irqs.h>
 #include <mach/pmu.h>
 #include <plat/iic.h>
