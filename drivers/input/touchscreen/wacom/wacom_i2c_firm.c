@@ -19,6 +19,8 @@
 #include <linux/kernel.h>
 #include <linux/wacom_i2c.h>
 
+#include <asm/system_info.h>
+
 unsigned char *Binary;
 bool ums_binary;
 

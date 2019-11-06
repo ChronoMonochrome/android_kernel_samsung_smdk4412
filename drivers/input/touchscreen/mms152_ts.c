@@ -1040,9 +1040,9 @@ static irqreturn_t mms_ts_interrupt(int irq, void *dev_id)
 			input_report_abs(info->input_dev,
 				ABS_MT_TOUCH_MINOR, tmp[7]);
 			input_report_abs(info->input_dev,
-				ABS_MT_ANGLE, angle);
+				ABS_MT_TOOL_X, angle);
 			input_report_abs(info->input_dev,
-				ABS_MT_PALM, palm);
+				ABS_MT_TOOL_Y, palm);
 #ifdef CONFIG_SAMSUNG_PRODUCT_SHIP
 			if (info->finger_state[id] == 0) {
 				info->finger_state[id] = 1;
@@ -4098,9 +4098,9 @@ static int mms_ts_probe(struct i2c_client *client,
 	if (info->panel == 'M') {
 		input_set_abs_params(input_dev, ABS_MT_WIDTH_MAJOR,
 					0, MAX_WIDTH, 0, 0);
-		input_set_abs_params(input_dev, ABS_MT_ANGLE,
+		input_set_abs_params(input_dev, ABS_MT_TOOL_X,
 					MIN_ANGLE, MAX_ANGLE, 0, 0);
-		input_set_abs_params(input_dev, ABS_MT_PALM,
+		input_set_abs_params(input_dev, ABS_MT_TOOL_Y,
 					0, 1, 0, 0);
 	} else {
 		input_set_abs_params(input_dev, ABS_MT_PRESSURE,

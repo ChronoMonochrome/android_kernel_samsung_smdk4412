@@ -25,6 +25,9 @@
 #include <linux/notifier.h>
 #include <linux/uaccess.h>
 #include <linux/firmware.h>
+
+#include <asm/system_info.h>
+
 #include "wacom_i2c_func.h"
 #ifdef CONFIG_EPEN_WACOM_G9PL
 #include "w9002_flash.h"

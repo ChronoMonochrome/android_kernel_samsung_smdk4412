@@ -20,6 +20,8 @@
 #include <linux/notifier.h>
 #endif
 
+#define KEY_PEN_PDCT		0x230 /* E-PEN PDCT flag*/
+
 #define NAMEBUF 12
 #define WACNAME "WAC_I2C_EMR"
 #define WACFLASH "WAC_I2C_FLASH"
