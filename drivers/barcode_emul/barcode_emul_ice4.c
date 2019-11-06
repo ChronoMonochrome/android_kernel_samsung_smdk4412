@@ -40,6 +40,8 @@
 #include <linux/gpio.h>
 #include <linux/uaccess.h>
 #include <linux/fs.h>
+
+#include <mach/gpio.h>
 #include "barcode_emul_ice4.h"
 
 #if defined(TEST_DEBUG)
