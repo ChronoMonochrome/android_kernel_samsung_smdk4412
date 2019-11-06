@@ -25,6 +25,9 @@
 #define FLASH_SWITCH_REMOVED_REVISION	0x05
 #endif
 
+#include <mach/gpio.h>
+#include <asm/system_info.h>
+
 struct max77693_led_data {
 	struct led_classdev led;
 	struct max77693_dev *max77693;
@@ -268,8 +271,7 @@ static ssize_t max77693_flash(struct device *dev,
 	return ret;
 }
 
-static DEVICE_ATTR(rear_flash, S_IWUSR|S_IWGRP|S_IROTH,
-	NULL, max77693_flash);
+static DEVICE_ATTR(rear_flash, S_IWUSR|S_IWGRP, NULL, max77693_flash);
 
 static int max77693_led_probe(struct platform_device *pdev)
 {
