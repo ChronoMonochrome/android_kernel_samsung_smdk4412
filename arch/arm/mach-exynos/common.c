@@ -875,16 +875,3 @@ int __init exynos_init_irq_eint(void)
 }
 
 arch_initcall(exynos_init_irq_eint);
-
-static int gps_is_running;
-
-void set_gps_uart_op(int onoff)
-{
-        pr_info("%s: %s\n", __func__, onoff ? "on" : "off");
-        gps_is_running = onoff;
-}
-
-int check_gps_uart_op(void)
-{
-        return gps_is_running;
-}
