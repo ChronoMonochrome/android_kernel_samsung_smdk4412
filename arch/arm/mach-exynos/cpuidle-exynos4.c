@@ -950,18 +950,15 @@ static int exynos4_enter_lowpower(struct cpuidle_device *dev,
 	int ret;
 
 	/* This mode only can be entered when only Core0 is online */
-	if (num_online_cpus() != 1) {
-		BUG_ON(!dev->safe_state);
-		new_state = dev->safe_state;
-	}
-	dev->last_state = new_state;
+	if (num_online_cpus() != 1)
+		new_index = drv->safe_state_index;
 
 	if (!soc_is_exynos4210()) {
 		tmp = S5P_USE_STANDBY_WFI0 | S5P_USE_STANDBY_WFE0;
 		__raw_writel(tmp, S5P_CENTRAL_SEQ_OPTION);
 	}
 
-	if (new_state == &dev->states[0])
+	if (new_index == 0)
 		return exynos4_enter_idle(dev, drv, new_index);
 
 	enter_mode = exynos4_check_entermode();
@@ -1092,6 +1089,9 @@ static int __init exynos4_init_cpuidle(void)
 	/* Setup cpuidle driver */
 	drv->state_count = (sizeof(exynos4_cpuidle_set) /
 				sizeof(struct cpuidle_state));
+
+	drv->safe_state_index = 0;
+
 	max_cpuidle_state = drv->state_count;
 	for (i = 0; i < max_cpuidle_state; i++) {
 		memcpy(&drv->states[i], &exynos4_cpuidle_set[i],
@@ -1108,13 +1108,6 @@ static int __init exynos4_init_cpuidle(void)
 	for_each_online_cpu(cpu_id) {
 		device = &per_cpu(exynos4_cpuidle_device, cpu_id);
 		device->cpu = cpu_id;
-
-		if (cpu_id == 0)
-			device->state_count = ARRAY_SIZE(exynos4_cpuidle_set);
-		else
-			device->state_count = 1;	/* Support IDLE only */
-
-		device->safe_state = &device->states[0];
 
 		ret = cpuidle_register_device(device);
 		if (ret) {
