@@ -1714,3 +1714,7 @@ config EXYNOS_REBOOT_RECOVERY
 	help
 	  Always reboot to recovery. Useful for kernel crash debugging.
 	  Say N if unsure.
+
+config PHYS_OFFSET
+	hex "Physical address of main memory"
+	default 0x40000000
