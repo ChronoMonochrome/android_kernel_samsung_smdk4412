@@ -25,7 +25,7 @@
 #include <plat/clock.h>
 #include <plat/cpu.h>
 
-#define CPUFREQ_LEVEL_END	(L14 + 1)
+#define CPUFREQ_LEVEL_END	(L15 + 1)
 
 #undef PRINT_DIV_VAL
 
@@ -48,20 +48,21 @@ struct cpufreq_clkdiv {
 static unsigned int exynos4x12_volt_table[CPUFREQ_LEVEL_END];
 
 static struct cpufreq_frequency_table exynos4x12_freq_table[] = {
-	{CPUFREQ_BOOST_FREQ, L0, 1600*1000},
-	{0, L1, 1400*1000},
-	{0, L2, 1300*1000},
-	{0, L3, 1200*1000},
-	{0, L4, 1100*1000},
-	{0, L5, 1000*1000},
-	{0, L6, 900*1000},
-	{0, L7, 800*1000},
-	{0, L8, 700*1000},
-	{0, L9, 600*1000},
-	{0, L10, 500*1000},
-	{0, L11, 400*1000},
-	{0, L12, 300*1000},
-	{0, L13, 200*1000},
+	{CPUFREQ_BOOST_FREQ, L0, 1600*1000}, // unused
+	{0, L1, 1600*1000},
+	{0, L2, 1400*1000},
+	{0, L3, 1300*1000},
+	{0, L4, 1200*1000},
+	{0, L5, 1100*1000},
+	{0, L6, 1000*1000},
+	{0, L7, 900*1000},
+	{0, L8, 800*1000},
+	{0, L9, 700*1000},
+	{0, L10, 600*1000},
+	{0, L11, 500*1000},
+	{0, L12, 400*1000},
+	{0, L13, 300*1000},
+	{0, L14, 200*1000},
 	{0, 0, CPUFREQ_TABLE_END},
 };
 
@@ -73,6 +74,8 @@ static unsigned int clkdiv_cpu0_4212[CPUFREQ_LEVEL_END][8] = {
 	 * { DIVCORE, DIVCOREM0, DIVCOREM1, DIVPERIPH,
 	 *		DIVATB, DIVPCLK_DBG, DIVAPLL, DIVCORE2 }
 	 */
+	/* ARM L0: 1600Mhz - unused */
+	{ 0, 6, 7, 0, 6, 1, 2, 0 },
 	/* ARM L0: 1600Mhz */
 	{ 0, 6, 7, 0, 6, 1, 2, 0 },
 
@@ -125,6 +128,8 @@ static unsigned int clkdiv_cpu0_4412[CPUFREQ_LEVEL_END][8] = {
 	 * { DIVCORE, DIVCOREM0, DIVCOREM1, DIVPERIPH,
 	 *		DIVATB, DIVPCLK_DBG, DIVAPLL, DIVCORE2 }
 	 */
+	/* ARM L0: 1600Mhz - unused */
+	{ 0, 3, 7, 0, 6, 1, 7, 0 },
 	/* ARM L0: 1600Mhz */
 	{ 0, 3, 7, 0, 6, 1, 7, 0 },
 
@@ -172,6 +177,8 @@ static unsigned int clkdiv_cpu1_4212[CPUFREQ_LEVEL_END][2] = {
 	/* Clock divider value for following
 	 * { DIVCOPY, DIVHPM }
 	 */
+	/* ARM L0: 1600MHz - unused */
+	{ 6, 0 },
 	/* ARM L0: 1600MHz */
 	{ 6, 0 },
 
@@ -222,6 +229,9 @@ static unsigned int clkdiv_cpu1_4412[CPUFREQ_LEVEL_END][3] = {
 	/* Clock divider value for following
 	 * { DIVCOPY, DIVHPM, DIVCORES }
 	 */
+	/* ARM L0: 1600MHz - unused */
+	{ 6, 0, 7 },
+
 	/* ARM L0: 1600MHz */
 	{ 6, 0, 7 },
 
@@ -266,6 +276,9 @@ static unsigned int clkdiv_cpu1_4412[CPUFREQ_LEVEL_END][3] = {
 };
 
 static unsigned int exynos4x12_apll_pms_table[CPUFREQ_LEVEL_END] = {
+	/* APLL FOUT L0: 1600MHz - unused */
+	((200<<16)|(3<<8)|(0x0)),
+
 	/* APLL FOUT L0: 1600MHz */
 	((200<<16)|(3<<8)|(0x0)),
 
@@ -318,6 +331,7 @@ static unsigned int exynos4x12_apll_pms_table[CPUFREQ_LEVEL_END] = {
 
 static const unsigned int asv_voltage_4212[CPUFREQ_LEVEL_END][13] = {
 	/*   ASV0,    ASV1,    ASV2,    ASV3,	 ASV4,	  ASV5,	   ASV6,    ASV7,    ASV8,    ASV9,   ASV10,   ASV11    ASV12 */
+	{ 1300000, 1287500, 1287500, 1275000, 1287500, 1275000,	1262500, 1237500, 1225000, 1212500, 1200000, 1187500, 1175000 }, /* L0 - unused */
 	{ 1300000, 1287500, 1287500, 1275000, 1287500, 1275000,	1262500, 1237500, 1225000, 1212500, 1200000, 1187500, 1175000 }, /* L0 */
 	{ 1262500, 1250000, 1237500, 1225000, 1237500, 1225000,	1212500, 1187500, 1175000, 1162500, 1150000, 1137500, 1125000 }, /* L1 */
 	{ 1212500, 1200000, 1187500, 1175000, 1187500, 1175000,	1162500, 1137500, 1125000, 1112500, 1100000, 1087500, 1075000 }, /* L2 */
@@ -344,6 +358,7 @@ static const unsigned int asv_voltage_s[CPUFREQ_LEVEL_END] = {
 static const unsigned int asv_voltage_step_12_5[CPUFREQ_LEVEL_END][12] = {
 	/*   ASV0,    ASV1,    ASV2,    ASV3,	 ASV4,	  ASV5,	   ASV6,    ASV7,    ASV8,    ASV9,   ASV10,   ASV11 */
 	{ 1400000, 1400000, 1400000, 1400000, 1387500, 1387500, 1375000, 1362500, 1350000, 1337500, 1325000, 1312500 },
+	{ 1400000, 1400000, 1400000, 1400000, 1387500, 1387500, 1375000, 1362500, 1350000, 1337500, 1325000, 1312500 },
 	{ 1325000, 1312500, 1300000, 1287500, 1300000, 1287500,	1275000, 1250000, 1250000, 1237500, 1225000, 1212500 },
 	{ 1300000, 1275000, 1237500, 1237500, 1250000, 1250000,	1237500, 1212500, 1200000, 1200000, 1187500, 1175000 },
 	{ 1225000, 1212500, 1200000, 1187500, 1200000, 1187500,	1175000, 1150000, 1137500, 1125000, 1125000, 1112500 },
@@ -363,6 +378,7 @@ static const unsigned int asv_voltage_step_12_5[CPUFREQ_LEVEL_END][12] = {
 static const unsigned int asv_voltage_step_12_5[CPUFREQ_LEVEL_END][12] = {
 	/*   ASV0,    ASV1,    ASV2,    ASV3,	 ASV4,	  ASV5,	   ASV6,    ASV7,    ASV8,    ASV9,   ASV10,   ASV11 */
 	{ 1400000, 1400000, 1400000, 1400000, 1387500, 1387500, 1375000, 1362500, 1350000, 1337500, 1325000, 1312500 },
+	{ 1400000, 1400000, 1400000, 1400000, 1387500, 1387500, 1375000, 1362500, 1350000, 1337500, 1325000, 1312500 },
 	{ 1325000, 1312500, 1300000, 1287500, 1300000, 1287500,	1275000, 1250000, 1250000, 1237500, 1225000, 1212500 },
 	{ 1300000, 1275000, 1237500, 1237500, 1250000, 1250000,	1237500, 1212500, 1200000, 1200000, 1187500, 1175000 },
 	{ 1225000, 1212500, 1200000, 1187500, 1200000, 1187500,	1175000, 1150000, 1137500, 1125000, 1125000, 1112500 },
@@ -381,6 +397,7 @@ static const unsigned int asv_voltage_step_12_5[CPUFREQ_LEVEL_END][12] = {
 /* 20120927 DVFS table for pega prime */
 static const unsigned int asv_voltage_step_12_5_rev2[CPUFREQ_LEVEL_END][13] = {
 	/*   ASV0,    ASV1,    ASV2,    ASV3,	 ASV4,	  ASV5,	   ASV6,    ASV7,    ASV8,    ASV9,   ASV10,   ASV11    ASV12 */
+	{ 1312500, 1262500, 1262500, 1262500, 1250000, 1237500,	1225000, 1212500, 1200000, 1187500, 1162500, 1150000, 1137500 },	/* L0 - unused */
 	{ 1312500, 1262500, 1262500, 1262500, 1250000, 1237500,	1225000, 1212500, 1200000, 1187500, 1162500, 1150000, 1137500 },	/* L0 */
 	{ 1275000, 1225000, 1225000, 1225000, 1212500, 1200000, 1187500, 1175000, 1162500, 1150000, 1125000, 1112500, 1100000 },	/* L1 */
 	{ 1225000, 1175000, 1175000, 1175000, 1162500, 1150000, 1137500, 1125000, 1112500, 1100000, 1075000, 1062500, 1050000 },	/* L2 */
@@ -399,6 +416,7 @@ static const unsigned int asv_voltage_step_12_5_rev2[CPUFREQ_LEVEL_END][13] = {
 
 static const unsigned int asv_voltage_step_1ghz[CPUFREQ_LEVEL_END][12] = {
 	/*   ASV0,    ASV1,    ASV2,    ASV3,	 ASV4,	  ASV5,	   ASV6,    ASV7,    ASV8,    ASV9,   ASV10,   ASV11 */
+	{	0,       0,	  0,	   0,	    0,	     0,	      0,       0,       0,       0,	  0,       0 },	/* L0 - Not used */
 	{	0,       0,	  0,	   0,	    0,	     0,	      0,       0,       0,       0,	  0,       0 },	/* L0 - Not used */
 	{	0,       0,	  0,	   0,	    0,	     0,	      0,       0,       0,       0,	  0,       0 },	/* L1 - Not used */
 	{	0,       0,	  0,	   0,	    0,	     0,	      0,       0,       0,       0,	  0,       0 },	/* L2 - Not used */
