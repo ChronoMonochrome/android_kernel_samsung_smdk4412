@@ -970,6 +970,12 @@ void arm_dma_unmap_sg(struct device *dev, struct scatterlist *sg, int nents,
 		ops->unmap_page(dev, sg_dma_address(s), sg_dma_len(s), dir, attrs);
 }
 
+extern int __dmabounce_sync_for_cpu(struct device *dev, dma_addr_t addr,
+	 size_t sz, enum dma_data_direction dir);
+
+extern int __dmabounce_sync_for_device(struct device *dev, dma_addr_t addr,
+	 size_t sz, enum dma_data_direction dir);
+
 /**
  * arm_dma_sync_sg_for_cpu
  * @dev: valid struct device pointer, or NULL for ISA and EISA-like devices
@@ -980,17 +986,22 @@ void arm_dma_unmap_sg(struct device *dev, struct scatterlist *sg, int nents,
 void arm_dma_sync_sg_for_cpu(struct device *dev, struct scatterlist *sg,
 			int nents, enum dma_data_direction dir)
 {
-	struct dma_map_ops *ops = get_dma_ops(dev);
 	struct scatterlist *s;
 	int i;
 
-	for_each_sg(sg, s, nents, i)
-		ops->sync_single_for_cpu(dev, sg_dma_address(s), s->length,
-					 dir);
+	for_each_sg(sg, s, nents, i) {
+		if (!__dmabounce_sync_for_cpu(dev, sg_dma_address(s),
+					    sg_dma_len(s), dir))
+			continue;
+
+		__dma_page_dev_to_cpu(sg_page(s), s->offset,
+				      s->length, dir);
+	}
 }
 
+
 /**
- * arm_dma_sync_sg_for_device
+ * dma_sync_sg_for_device
  * @dev: valid struct device pointer, or NULL for ISA and EISA-like devices
  * @sg: list of buffers
  * @nents: number of buffers to map (returned from dma_map_sg)
@@ -999,13 +1010,17 @@ void arm_dma_sync_sg_for_cpu(struct device *dev, struct scatterlist *sg,
 void arm_dma_sync_sg_for_device(struct device *dev, struct scatterlist *sg,
 			int nents, enum dma_data_direction dir)
 {
-	struct dma_map_ops *ops = get_dma_ops(dev);
 	struct scatterlist *s;
 	int i;
 
-	for_each_sg(sg, s, nents, i)
-		ops->sync_single_for_device(dev, sg_dma_address(s), s->length,
-					    dir);
+	for_each_sg(sg, s, nents, i) {
+		if (!__dmabounce_sync_for_device(dev, sg_dma_address(s),
+					sg_dma_len(s), dir))
+			continue;
+
+		__dma_page_cpu_to_dev(sg_page(s), s->offset,
+				      s->length, dir);
+	}
 }
 
 /*
