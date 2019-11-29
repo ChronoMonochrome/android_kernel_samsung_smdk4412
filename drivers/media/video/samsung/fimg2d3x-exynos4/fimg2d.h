@@ -11,9 +11,8 @@
 #ifndef __SEC_FIMG2D_H_
 #define __SEC_FIMG2D_H_
 
-#ifdef CONFIG_FB
-#include <linux/fb.h>
-#include <linux/notifier.h>
+#ifdef CONFIG_HAS_EARLYSUSPEND
+#include <linux/earlysuspend.h>
 #endif
 
 #include <linux/wait.h>
@@ -295,9 +294,8 @@ struct g2d_global {
 	struct g2d_reserved_mem	reserved_mem;		/* for reserved memory */
 	atomic_t		is_mmu_faulted;
 	unsigned int		faulted_addr;
-#ifdef CONFIG_FB
-	struct notifier_block fb_notif;
-	bool fb_suspended;
+#ifdef CONFIG_HAS_EARLYSUSPEND
+	struct early_suspend	early_suspend;
 #endif	
 	int                     irq_handled;
 };
@@ -379,11 +377,9 @@ u32 g2d_check_pagetable(void * vaddr, unsigned int size, unsigned long pgd);
 void g2d_pagetable_clean(const void *start_addr, unsigned long size, unsigned long pgd);
 int g2d_check_need_dst_cache_clean(g2d_params * params);
 
-#ifdef CONFIG_FB
-void g2d_fb_suspend();
-void g2d_fb_resume();
-static int fb_notifier_callback(struct notifier_block *self,
-				unsigned long event, void *data);
+#ifdef CONFIG_HAS_EARLYSUSPEND
+void g2d_early_suspend(struct early_suspend *h);
+void g2d_late_resume(struct early_suspend *h);
 #endif
 
 /* fimg2d_core */
