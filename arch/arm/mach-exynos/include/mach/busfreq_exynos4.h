@@ -15,11 +15,7 @@
 
 #include <linux/notifier.h>
 #include <linux/sysfs.h>
-
-#ifdef CONFIG_FB
-#include <linux/notifier.h>
-#include <linux/fb.h>
-#endif
+#include <linux/earlysuspend.h>
 
 #include <mach/ppmu.h>
 
@@ -74,8 +70,7 @@ struct busfreq_data {
 	struct notifier_block exynos_request_notifier;
 	struct notifier_block exynos_cpufreq_notifier;
 	struct notifier_block exynos_busqos_notifier;
-	struct notifier_block busfreq_fb_notif_handler;
-	bool fb_suspended;
+	struct early_suspend busfreq_early_suspend_handler;
 	struct attribute_group busfreq_attr_group;
 	int (*init)	(struct device *dev, struct busfreq_data *data);
 	struct dev_pm_opp *(*monitor)(struct busfreq_data *data);
