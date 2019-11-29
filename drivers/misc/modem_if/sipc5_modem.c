@@ -202,27 +202,27 @@ static int attach_devices(struct io_device *iod, enum modem_link tx_link)
 
 	switch (iod->format) {
 	case IPC_FMT:
-		wakeup_source_init(&iod->wakelock, iod->name);
+		wake_lock_init(&iod->wakelock, WAKE_LOCK_SUSPEND, iod->name);
 		iod->waketime = FMT_WAKE_TIME;
 		break;
 
 	case IPC_RAW:
-		wakeup_source_init(&iod->wakelock, iod->name);
+		wake_lock_init(&iod->wakelock, WAKE_LOCK_SUSPEND, iod->name);
 		iod->waketime = RAW_WAKE_TIME;
 		break;
 
 	case IPC_RFS:
-		wakeup_source_init(&iod->wakelock, iod->name);
+		wake_lock_init(&iod->wakelock, WAKE_LOCK_SUSPEND, iod->name);
 		iod->waketime = RAW_WAKE_TIME;
 		break;
 
 	case IPC_MULTI_RAW:
-		wakeup_source_init(&iod->wakelock, iod->name);
+		wake_lock_init(&iod->wakelock, WAKE_LOCK_SUSPEND, iod->name);
 		iod->waketime = RAW_WAKE_TIME;
 		break;
 
 	case IPC_BOOT:
-		wakeup_source_init(&iod->wakelock, iod->name);
+		wake_lock_init(&iod->wakelock, WAKE_LOCK_SUSPEND, iod->name);
 		iod->waketime = RAW_WAKE_TIME;
 		break;
 
