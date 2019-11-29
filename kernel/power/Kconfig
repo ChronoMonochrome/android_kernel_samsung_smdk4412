@@ -1,11 +1,3 @@
-config HAS_WAKELOCK
-	bool
-	default y
-
-config HAS_EARLYSUSPEND
-	bool
-	default y
-
 config SUSPEND
 	bool "Suspend to RAM and standby"
 	depends on ARCH_SUSPEND_POSSIBLE
