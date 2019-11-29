@@ -1168,11 +1168,15 @@ static int mdnie_probe(struct platform_device *pdev)
 	platform_set_drvdata(pdev, mdnie);
 	dev_set_drvdata(mdnie->dev, mdnie);
 
-#ifdef CONFIG_FB
-	mdnie->fb_suspended = false;
-	mdnie->fb_notif.notifier_call = fb_notifier_callback;
-	fb_register_client(&mdnie->fb_notif);
+#ifdef CONFIG_HAS_EARLYSUSPEND
+#if defined(CONFIG_FB_MDNIE_PWM)
+	mdnie->early_suspend.suspend = mdnie_early_suspend;
 #endif
+	mdnie->early_suspend.resume = mdnie_late_resume;
+	mdnie->early_suspend.level = EARLY_SUSPEND_LEVEL_DISABLE_FB - 1;
+	register_early_suspend(&mdnie->early_suspend);
+#endif
+
 
 #if defined(CONFIG_FB_MDNIE_PWM)
 	dev_info(mdnie->dev, "lcdtype: %d\n", pdata->display_type);
@@ -1252,7 +1256,7 @@ static struct platform_driver mdnie_driver = {
 	},
 	.probe		= mdnie_probe,
 	.remove		= mdnie_remove,
-#ifndef CONFIG_FB
+#ifndef CONFIG_HAS_EARLYSUSPEND
 	.suspend	= mdnie_suspend,
 	.resume		= mdnie_resume,
 #endif
