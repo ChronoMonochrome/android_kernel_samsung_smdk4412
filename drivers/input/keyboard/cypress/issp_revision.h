@@ -60,5 +60,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <linux/gpio.h>
 #include <linux/miscdevice.h>
 #include <asm/uaccess.h>
+#include <linux/earlysuspend.h>
 #include <asm/io.h>
 //end of file ISSP_Revision.h
