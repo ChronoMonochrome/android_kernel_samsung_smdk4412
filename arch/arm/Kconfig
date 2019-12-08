@@ -874,7 +874,7 @@ config ARCH_EXYNOS
 	select PM_OPP if PM
 	#select SPARSE_IRQ
 	select USE_OF
-	select DMA_BOUNCE
+	select DMABOUNCE
 	help
 	  Samsung EXYNOS series based systems
 
