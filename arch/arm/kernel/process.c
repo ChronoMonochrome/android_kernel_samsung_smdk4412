@@ -30,15 +30,12 @@
 #include <linux/uaccess.h>
 #include <linux/random.h>
 #include <linux/hw_breakpoint.h>
+#include <linux/console.h>
 #include <linux/cpuidle.h>
-#include <linux/console.h>
 #include <linux/leds.h>
-#include <linux/reboot.h>
-#include <linux/console.h>
 
 #include <asm/cacheflush.h>
 #include <asm/idmap.h>
-#include <asm/leds.h>
 #include <asm/processor.h>
 #include <asm/thread_notify.h>
 #include <asm/stacktrace.h>
@@ -62,6 +59,8 @@ static const char *isa_modes[] = {
   "ARM" , "Thumb" , "Jazelle", "ThumbEE"
 };
 
+static volatile int hlt_counter;
+
 #ifdef CONFIG_SMP
 void arch_trigger_all_cpu_backtrace(void)
 {
@@ -73,8 +72,6 @@ void arch_trigger_all_cpu_backtrace(void)
 	dump_stack();
 }
 #endif
-
-static volatile int hlt_counter;
 
 void disable_hlt(void)
 {
@@ -171,6 +168,10 @@ void soft_restart(unsigned long addr)
 {
 	u64 *stack = soft_restart_stack + ARRAY_SIZE(soft_restart_stack);
 
+	/* Flush the console to make sure all the relevant messages make it
+	* out to the console drivers */
+        arm_machine_flush_console();
+
 	/* Disable interrupts first */
 	local_irq_disable();
 	local_fiq_disable();
@@ -186,7 +187,7 @@ void soft_restart(unsigned long addr)
 	BUG();
 }
 
-static void null_restart(enum reboot_mode reboot_mode, const char *cmd)
+static void null_restart(char mode, const char *cmd)
 {
 }
 
@@ -196,7 +197,7 @@ static void null_restart(enum reboot_mode reboot_mode, const char *cmd)
 void (*pm_power_off)(void);
 EXPORT_SYMBOL(pm_power_off);
 
-void (*arm_pm_restart)(enum reboot_mode reboot_mode, const char *cmd) = null_restart;
+void (*arm_pm_restart)(char str, const char *cmd) = null_restart;
 EXPORT_SYMBOL_GPL(arm_pm_restart);
 
 static void do_nothing(void *unused)
@@ -249,9 +250,9 @@ void cpu_idle(void)
 
 	/* endless idle loop with no priority at all */
 	while (1) {
+		idle_notifier_call_chain(IDLE_START);
 		tick_nohz_idle_enter();
 		rcu_idle_enter();
-		leds_event(led_idle_start);
 		while (!need_resched()) {
 #ifdef CONFIG_HOTPLUG_CPU
 			if (cpu_is_offline(smp_processor_id()))
@@ -282,9 +283,9 @@ void cpu_idle(void)
 			} else
 				local_irq_enable();
 		}
-		leds_event(led_idle_end);
 		rcu_idle_exit();
 		tick_nohz_idle_exit();
+		idle_notifier_call_chain(IDLE_END);
 		schedule_preempt_disabled();
 	}
 }
@@ -320,7 +321,6 @@ void machine_shutdown(void)
  */
 void machine_halt(void)
 {
-	local_irq_disable();
 	smp_send_stop();
 
 	local_irq_disable();
@@ -335,7 +335,6 @@ void machine_halt(void)
  */
 void machine_power_off(void)
 {
-	local_irq_disable();
 	smp_send_stop();
 
 	if (pm_power_off)
@@ -355,12 +354,7 @@ void machine_power_off(void)
  */
 void machine_restart(char *cmd)
 {
-	local_irq_disable();
 	smp_send_stop();
-
-	/* Flush the console to make sure all the relevant messages make it
-	 * out to the console drivers */
-	arm_machine_flush_console();
 
 	arm_pm_restart(reboot_mode, cmd);
 
@@ -603,6 +597,7 @@ EXPORT_SYMBOL(dump_fpu);
 
 unsigned long get_wchan(struct task_struct *p)
 {
+/*
 	struct stackframe frame;
 	unsigned long stack_page;
 	int count = 0;
@@ -611,7 +606,8 @@ unsigned long get_wchan(struct task_struct *p)
 
 	frame.fp = thread_saved_fp(p);
 	frame.sp = thread_saved_sp(p);
-	frame.lr = 0;			/* recovered from the stack */
+	// recovered from the stack 
+	frame.lr = 0;
 	frame.pc = thread_saved_pc(p);
 	stack_page = (unsigned long)task_stack_page(p);
 	do {
@@ -622,6 +618,7 @@ unsigned long get_wchan(struct task_struct *p)
 		if (!in_sched_functions(frame.pc))
 			return frame.pc;
 	} while (count ++ < 16);
+*/
 	return 0;
 }
 
@@ -632,7 +629,6 @@ unsigned long arch_randomize_brk(struct mm_struct *mm)
 }
 
 #ifdef CONFIG_MMU
-#ifdef CONFIG_KUSER_HELPERS
 /*
  * The vectors page is always readable from user space for the
  * atomic helpers. Insert it into the gate_vma so that it is visible
@@ -665,14 +661,10 @@ int in_gate_area_no_mm(unsigned long addr)
 {
 	return in_gate_area(NULL, addr);
 }
-#define is_gate_vma(vma)	((vma) == &gate_vma)
-#else
-#define is_gate_vma(vma)	0
-#endif
 
 const char *arch_vma_name(struct vm_area_struct *vma)
 {
-	return is_gate_vma(vma) ? "[vectors]" :
+	return (vma == &gate_vma) ? "[vectors]" :
 		(vma->vm_mm && vma->vm_start == vma->vm_mm->context.sigpage) ?
 		 "[sigpage]" : NULL;
 }
