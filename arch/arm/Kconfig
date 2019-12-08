@@ -193,6 +193,9 @@ config ARCH_HAS_CPUFREQ
 config ARCH_HAS_BANDGAP
 	bool
 
+config ARCH_HAS_CPU_IDLE_WAIT
+       def_bool y
+
 config GENERIC_HWEIGHT
 	bool
 	default y
