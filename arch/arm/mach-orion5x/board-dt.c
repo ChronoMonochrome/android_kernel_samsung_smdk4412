@@ -14,7 +14,6 @@
 #include <linux/init.h>
 #include <linux/of.h>
 #include <linux/of_platform.h>
-#include <linux/cpu.h>
 #include <asm/system_misc.h>
 #include <asm/mach/arch.h>
 #include <mach/orion5x.h>
@@ -53,7 +52,7 @@ static void __init orion5x_dt_init(void)
 	 */
 	if (dev == MV88F5281_DEV_ID && rev == MV88F5281_REV_D0) {
 		printk(KERN_INFO "Orion: Applying 5281 D0 WFI workaround.\n");
-		cpu_idle_poll_ctrl(true);
+		disable_hlt();
 	}
 
 	if (of_machine_is_compatible("lacie,ethernet-disk-mini-v2"))
