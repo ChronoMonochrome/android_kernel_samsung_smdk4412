@@ -265,7 +265,7 @@ static void kmemleak_disable(void);
  * Print a warning and dump the stack trace.
  */
 #define kmemleak_warn(x...)	do {		\
-	pr_warning(x);				\
+	pr_err(x);				\
 	dump_stack();				\
 	atomic_set(&kmemleak_warning, 1);	\
 } while (0)
@@ -521,7 +521,7 @@ static struct kmemleak_object *create_object(unsigned long ptr, size_t size,
 
 	object = kmem_cache_alloc(object_cache, gfp_kmemleak_mask(gfp));
 	if (!object) {
-		pr_warning("Cannot allocate a kmemleak_object structure\n");
+		pr_err("Cannot allocate a kmemleak_object structure\n");
 		kmemleak_disable();
 		return NULL;
 	}
@@ -748,7 +748,7 @@ static void add_scan_area(unsigned long ptr, size_t size, gfp_t gfp)
 
 	area = kmem_cache_alloc(scan_area_cache, gfp_kmemleak_mask(gfp));
 	if (!area) {
-		pr_warning("Cannot allocate a scan area\n");
+		pr_err("Cannot allocate a scan area\n");
 		goto out;
 	}
 
@@ -1383,7 +1383,7 @@ static void kmemleak_scan(void)
 	rcu_read_unlock();
 
 	if (new_leaks)
-		pr_info("%d new suspected memory leaks (see "
+		pr_err("%d new suspected memory leaks (see "
 			"/sys/kernel/debug/kmemleak)\n", new_leaks);
 
 }
@@ -1396,7 +1396,7 @@ static int kmemleak_scan_thread(void *arg)
 {
 	static int first_run = 1;
 
-	pr_info("Automatic memory scanning thread started\n");
+	pr_err("Automatic memory scanning thread started\n");
 	set_user_nice(current, 10);
 
 	/*
@@ -1419,7 +1419,7 @@ static int kmemleak_scan_thread(void *arg)
 			timeout = schedule_timeout_interruptible(timeout);
 	}
 
-	pr_info("Automatic memory scanning thread ended\n");
+	pr_err("Automatic memory scanning thread ended\n");
 
 	return 0;
 }
@@ -1434,7 +1434,7 @@ static void start_scan_thread(void)
 		return;
 	scan_thread = kthread_run(kmemleak_scan_thread, NULL, "kmemleak");
 	if (IS_ERR(scan_thread)) {
-		pr_warning("Failed to create the scan thread\n");
+		pr_err("Failed to create the scan thread\n");
 		scan_thread = NULL;
 	}
 }
@@ -1560,7 +1560,7 @@ static int dump_str_object_info(const char *str)
 		return -EINVAL;
 	object = find_and_get_object(addr, 0);
 	if (!object) {
-		pr_info("Unknown object at 0x%08lx\n", addr);
+		pr_err("Unknown object at 0x%08lx\n", addr);
 		return -EINVAL;
 	}
 
@@ -1718,7 +1718,7 @@ static void kmemleak_disable(void)
 	if (atomic_read(&kmemleak_initialized))
 		schedule_work(&cleanup_work);
 
-	pr_info("Kernel memory leak detector disabled\n");
+	pr_err("Kernel memory leak detector disabled\n");
 }
 
 /*
@@ -1772,7 +1772,7 @@ void __init kmemleak_init(void)
 	scan_area_cache = KMEM_CACHE(kmemleak_scan_area, SLAB_NOLEAKTRACE);
 
 	if (crt_early_log >= ARRAY_SIZE(early_log))
-		pr_warning("Early log buffer exceeded (%d), please increase "
+		pr_err("Early log buffer exceeded (%d), please increase "
 			   "DEBUG_KMEMLEAK_EARLY_LOG_SIZE\n", crt_early_log);
 
 	/* the kernel is still in UP mode, so disabling the IRQs is enough */
@@ -1850,18 +1850,20 @@ static int __init kmemleak_late_init(void)
 		 * two clean-up threads but serialized by scan_mutex.
 		 */
 		schedule_work(&cleanup_work);
+		pr_err("Some error occurred and kmemleak was disabled\n");
+
 		return -ENOMEM;
 	}
 
 	dentry = debugfs_create_file("kmemleak", S_IRUGO, NULL, NULL,
 				     &kmemleak_fops);
 	if (!dentry)
-		pr_warning("Failed to create the debugfs kmemleak file\n");
+		pr_err("Failed to create the debugfs kmemleak file\n");
 	mutex_lock(&scan_mutex);
 	start_scan_thread();
 	mutex_unlock(&scan_mutex);
 
-	pr_info("Kernel memory leak detector initialized\n");
+	pr_err("Kernel memory leak detector initialized\n");
 
 	return 0;
 }
