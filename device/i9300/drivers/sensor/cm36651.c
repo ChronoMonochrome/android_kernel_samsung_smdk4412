@@ -120,7 +120,7 @@ static u8 ps_reg_setting[PS_REG_NUM][2] = {
  /* driver data */
 struct cm36651_data {
 	struct i2c_client *i2c_client;
-	struct wake_lock prx_wake_lock;
+	struct wakeup_source prx_wake_lock;
 	struct input_dev *proximity_input_dev;
 	struct input_dev *light_input_dev;
 	struct cm36651_platform_data *pdata;
@@ -749,7 +749,7 @@ irqreturn_t cm36651_irq_thread_fn(int irq, void *data)
 	/* 0 is close, 1 is far */
 	input_report_abs(cm36651->proximity_input_dev, ABS_DISTANCE, val);
 	input_sync(cm36651->proximity_input_dev);
-	wake_lock_timeout(&cm36651->prx_wake_lock, 3 * HZ);
+	__pm_wakeup_event(&cm36651->prx_wake_lock, 3 * HZ);
 #ifdef CONFIG_SLP
 	pm_wakeup_event(cm36651->proximity_dev, 0);
 #endif
@@ -969,7 +969,7 @@ static int cm36651_i2c_probe(struct i2c_client *client,
 	mutex_init(&cm36651->read_lock);
 
 	/* wake lock init for proximity sensor */
-	wake_lock_init(&cm36651->prx_wake_lock, WAKE_LOCK_SUSPEND,
+	wakeup_source_init(&cm36651->prx_wake_lock,
 		       "prx_wake_lock");
 	if (cm36651->pdata->cm36651_led_on) {
 		cm36651->pdata->cm36651_led_on(true);
@@ -1238,7 +1238,7 @@ err_sysfs_create_group_proximity:
 err_input_register_device_proximity:
 err_input_allocate_device_proximity:
 err_setup_reg:
-	wake_lock_destroy(&cm36651->prx_wake_lock);
+	wakeup_source_trash(&cm36651->prx_wake_lock);
 	mutex_destroy(&cm36651->read_lock);
 	mutex_destroy(&cm36651->power_lock);
 	kfree(cm36651);
@@ -1305,7 +1305,7 @@ static int cm36651_i2c_remove(struct i2c_client *client)
 	/* lock destroy */
 	mutex_destroy(&cm36651->read_lock);
 	mutex_destroy(&cm36651->power_lock);
-	wake_lock_destroy(&cm36651->prx_wake_lock);
+	wakeup_source_trash(&cm36651->prx_wake_lock);
 
 	kfree(cm36651);
 
