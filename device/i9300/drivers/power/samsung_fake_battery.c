@@ -30,7 +30,7 @@
 
 #define FAKE_BAT_LEVEL	80
 
-static struct wake_lock vbus_wake_lock;
+static struct wakeup_source vbus_wake_lock;
 
 /* Prototypes */
 static ssize_t samsung_fake_bat_show_property(struct device *dev,
@@ -389,9 +389,9 @@ static int samsung_cable_status_update(int status)
 	source = samsung_fake_bat_info.bat_info.charging_source;
 
 	if (source == CHARGER_USB || source == CHARGER_AC)
-		wake_lock(&vbus_wake_lock);
+		__pm_stay_awake(&vbus_wake_lock);
 	else
-		wake_lock_timeout(&vbus_wake_lock, HZ / 2);
+		__pm_wakeup_event(&vbus_wake_lock, HZ / 2);
 
 	/* if the power source changes, all power supplies may change state */
 	power_supply_changed(&samsung_power_supplies[CHARGER_BATTERY]);
@@ -528,7 +528,7 @@ static struct platform_driver samsung_fake_bat_driver = {
 
 static int __init samsung_fake_bat_init(void)
 {
-	wake_lock_init(&vbus_wake_lock, WAKE_LOCK_SUSPEND, "vbus_present");
+	wakeup_source_init(&vbus_wake_lock, "vbus_present");
 
 	return platform_driver_register(&samsung_fake_bat_driver);
 }
