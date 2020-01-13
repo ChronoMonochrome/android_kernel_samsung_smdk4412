@@ -119,7 +119,7 @@ struct lsm330dlc_accel_data {
 #ifdef USES_MOVEMENT_RECOGNITION
 	int movement_recog_flag;
 	unsigned char interrupt_state;
-	struct wake_lock reactive_wake_lock;
+	struct wakeup_source reactive_wake_lock;
 #endif
 	ktime_t poll_delay;
 #ifdef USES_INPUT_DEV
@@ -993,7 +993,7 @@ static irqreturn_t lsm330dlc_accel_interrupt_thread(int irq\
 #endif
 
 	data->interrupt_state = 1;
-	wake_lock_timeout(&data->reactive_wake_lock, msecs_to_jiffies(2000));
+	__pm_wakeup_event(&data->reactive_wake_lock, msecs_to_jiffies(2000));
 	accel_dbgmsg("irq is handled\n");
 
 	return IRQ_HANDLED;
@@ -1149,7 +1149,7 @@ probe_retry:
 #ifdef USES_MOVEMENT_RECOGNITION
 	data->movement_recog_flag = OFF;
 	/* wake lock init for accelerometer sensor */
-	wake_lock_init(&data->reactive_wake_lock, WAKE_LOCK_SUSPEND,
+	wakeup_source_init(&data->reactive_wake_lock,
 		       "reactive_wake_lock");
 	err = i2c_smbus_write_byte_data(data->client, INT1_THS
 		, DEFAULT_THRESHOLD);
@@ -1309,7 +1309,7 @@ err_acc_device_create:
 #ifdef USES_MOVEMENT_RECOGNITION
 	free_irq(data->client->irq, data);
 err_request_irq:
-	wake_lock_destroy(&data->reactive_wake_lock);
+	wakeup_source_trash(&data->reactive_wake_lock);
 #endif
 #ifdef USES_INPUT_DEV
 	sysfs_remove_group(&data->input_dev->dev.kobj,
@@ -1368,7 +1368,7 @@ static int lsm330dlc_accel_remove(struct i2c_client *client)
 #ifdef USES_MOVEMENT_RECOGNITION
 	device_init_wakeup(&data->client->dev, 0);
 	free_irq(data->client->irq, data);
-	wake_lock_destroy(&data->reactive_wake_lock);
+	wakeup_source_trash(&data->reactive_wake_lock);
 #endif
 #ifdef USES_INPUT_DEV
 	destroy_workqueue(data->work_queue);
