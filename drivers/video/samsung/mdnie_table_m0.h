@@ -1253,68 +1253,143 @@ static unsigned short tune_auto_camera[] = {
 	END_SEQ, 0x0000
 };
 
-struct mdnie_tuning_info tuning_table[CABC_MAX][MODE_MAX][SCENARIO_MAX] = {
+struct mdnie_tuning_info tuning_table[CABC_MAX][MODE_MAX][OUTDOOR_MAX][SCENARIO_MAX] = {
 	{
 		{
-			{"dynamic_ui",		tune_dynamic_ui},
-			{"dynamic_video",	tune_dynamic_video},
-			{"dynamic_video",	tune_dynamic_video},
-			{"dynamic_video",	tune_dynamic_video},
-			{"camera",		tune_camera},
-			{"dynamic_ui",		tune_dynamic_ui},
-			{"dynamic_gallery",	tune_dynamic_gallery},
-			{"dynamic_vt",		tune_dynamic_vt},
-			{"dynamic_browser",	tune_dynamic_browser},
-			{"dynamic_ebook",	tune_dynamic_ebook},
-			{"email",		tune_dynamic_ui}
+			{
+				{"dynamic_ui",		tune_dynamic_ui},
+				{"dynamic_video",	tune_dynamic_video},
+				{"dynamic_video",	tune_dynamic_video},
+				{"dynamic_video",	tune_dynamic_video},
+				{"camera",		tune_camera},
+				{"dynamic_ui",		tune_dynamic_ui},
+				{"dynamic_gallery",	tune_dynamic_gallery},
+				{"dynamic_vt",		tune_dynamic_vt},
+				{"dynamic_browser",	tune_dynamic_browser},
+				{"dynamic_ebook",	tune_dynamic_ebook},
+				{"email",		tune_dynamic_ui}
+			}, {
+				/* OUTDOOR */
+				{"dynamic_ui",		tune_dynamic_ui},
+				{"dynamic_video",	tune_dynamic_video},
+				{"dynamic_video",	tune_dynamic_video},
+				{"dynamic_video",	tune_dynamic_video},
+				{"camera",		tune_camera},
+				{"dynamic_ui",		tune_dynamic_ui},
+				{"dynamic_gallery",	tune_dynamic_gallery},
+				{"dynamic_vt",		tune_dynamic_vt},
+				{"dynamic_browser",	tune_dynamic_browser},
+				{"dynamic_ebook",	tune_dynamic_ebook},
+				{"email",		tune_dynamic_ui}
+			}
 		}, {
-			{"standard_ui",		tune_standard_ui},
-			{"standard_video",	tune_standard_video},
-			{"standard_video",	tune_standard_video},
-			{"standard_video",	tune_standard_video},
-			{"camera",		tune_camera},
-			{"standard_ui",		tune_standard_ui},
-			{"standard_gallery",	tune_standard_gallery},
-			{"standard_vt",		tune_standard_vt},
-			{"standard_browser",	tune_standard_browser},
-			{"standard_ebook",	tune_standard_ebook},
-			{"email",		tune_standard_ui}
+			{
+				{"standard_ui",		tune_standard_ui},
+				{"standard_video",	tune_standard_video},
+				{"standard_video",	tune_standard_video},
+				{"standard_video",	tune_standard_video},
+				{"camera",		tune_camera},
+				{"standard_ui",		tune_standard_ui},
+				{"standard_gallery",	tune_standard_gallery},
+				{"standard_vt",		tune_standard_vt},
+				{"standard_browser",	tune_standard_browser},
+				{"standard_ebook",	tune_standard_ebook},
+				{"email",		tune_standard_ui}
+			}, {
+				/* OUTDOOR */
+				{"standard_ui",		tune_standard_ui},
+				{"standard_video",	tune_standard_video},
+				{"standard_video",	tune_standard_video},
+				{"standard_video",	tune_standard_video},
+				{"camera",		tune_camera},
+				{"standard_ui",		tune_standard_ui},
+				{"standard_gallery",	tune_standard_gallery},
+				{"standard_vt",		tune_standard_vt},
+				{"standard_browser",	tune_standard_browser},
+				{"standard_ebook",	tune_standard_ebook},
+				{"email",		tune_standard_ui}
+			}
 		}, {
-			{"natural_ui",		tune_natural_ui},
-			{"natural_video",	tune_natural_video},
-			{"natural_video",	tune_natural_video},
-			{"natural_video",	tune_natural_video},
-			{"camera",		tune_camera},
-			{"natural_ui",		tune_natural_ui},
-			{"natural_gallery",	tune_natural_gallery},
-			{"natural_vt",		tune_natural_vt},
-			{"natural_browser",	tune_natural_browser},
-			{"natural_ebook",	tune_natural_ebook},
-			{"email",		tune_natural_ui}
+			{
+				{"natural_ui",		tune_natural_ui},
+				{"natural_video",	tune_natural_video},
+				{"natural_video",	tune_natural_video},
+				{"natural_video",	tune_natural_video},
+				{"camera",		tune_camera},
+				{"natural_ui",		tune_natural_ui},
+				{"natural_gallery",	tune_natural_gallery},
+				{"natural_vt",		tune_natural_vt},
+				{"natural_browser",	tune_natural_browser},
+				{"natural_ebook",	tune_natural_ebook},
+				{"email",		tune_natural_ui}
+			}, {
+				/* OUTDOOR */
+				{"natural_ui",		tune_natural_ui},
+				{"natural_video",	tune_natural_video},
+				{"natural_video",	tune_natural_video},
+				{"natural_video",	tune_natural_video},
+				{"camera",		tune_camera},
+				{"natural_ui",		tune_natural_ui},
+				{"natural_gallery",	tune_natural_gallery},
+				{"natural_vt",		tune_natural_vt},
+				{"natural_browser",	tune_natural_browser},
+				{"natural_ebook",	tune_natural_ebook},
+				{"email",		tune_natural_ui}
+			}
 		}, {
-			{"movie_ui",		tune_movie_ui},
-			{"movie_video",		tune_movie_video},
-			{"movie_video",		tune_movie_video},
-			{"movie_video",		tune_movie_video},
-			{"camera",		tune_camera},
-			{"movie_ui",		tune_movie_ui},
-			{"movie_gallery",	tune_movie_gallery},
-			{"movie_vt",		tune_movie_vt},
-			{"movie_browser",	tune_movie_browser},
-			{"movie_ebook",		tune_movie_ebook},
-			{"email",		tune_movie_ui}
+			{
+				{"movie_ui",		tune_movie_ui},
+				{"movie_video",		tune_movie_video},
+				{"movie_video",		tune_movie_video},
+				{"movie_video",		tune_movie_video},
+				{"camera",		tune_camera},
+				{"movie_ui",		tune_movie_ui},
+				{"movie_gallery",	tune_movie_gallery},
+				{"movie_vt",		tune_movie_vt},
+				{"movie_browser",	tune_movie_browser},
+				{"movie_ebook",		tune_movie_ebook},
+				{"email",		tune_movie_ui}
+			}, {
+				/* OUTDOOR */
+				{"movie_ui",		tune_movie_ui},
+				{"movie_video",		tune_movie_video},
+				{"movie_video",		tune_movie_video},
+				{"movie_video",		tune_movie_video},
+				{"camera",		tune_camera},
+				{"movie_ui",		tune_movie_ui},
+				{"movie_gallery",	tune_movie_gallery},
+				{"movie_vt",		tune_movie_vt},
+				{"movie_browser",	tune_movie_browser},
+				{"movie_ebook",		tune_movie_ebook},
+				{"email",		tune_movie_ui}
+			}
 		}, {
-			{"auto_ui",		tune_auto_ui},
-			{"auto_video",		tune_auto_video},
-			{"auto_video",		tune_auto_video},
-			{"auto_video",		tune_auto_video},
-			{"auto_camera",		tune_auto_camera},
-			{"auto_ui",		tune_auto_ui},
-			{"auto_gallery",	tune_auto_gallery},
-			{"auto_vt",		tune_auto_vt},
-			{"auto_browser",	tune_auto_browser},
-			{"auto_ebook",		tune_auto_ebook},
-			{"email",		tune_auto_ui}
+			{
+				{"auto_ui",		tune_auto_ui},
+				{"auto_video",		tune_auto_video},
+				{"auto_video",		tune_auto_video},
+				{"auto_video",		tune_auto_video},
+				{"auto_camera",		tune_auto_camera},
+				{"auto_ui",		tune_auto_ui},
+				{"auto_gallery",	tune_auto_gallery},
+				{"auto_vt",		tune_auto_vt},
+				{"auto_browser",	tune_auto_browser},
+				{"auto_ebook",		tune_auto_ebook},
+				{"email",		tune_auto_ui}
+			}, {
+				/* OUTDOOR */
+				{"auto_ui",		tune_auto_ui},
+				{"auto_video",		tune_auto_video},
+				{"auto_video",		tune_auto_video},
+				{"auto_video",		tune_auto_video},
+				{"auto_camera",		tune_auto_camera},
+				{"auto_ui",		tune_auto_ui},
+				{"auto_gallery",	tune_auto_gallery},
+				{"auto_vt",		tune_auto_vt},
+				{"auto_browser",	tune_auto_browser},
+				{"auto_ebook",		tune_auto_ebook},
+				{"email",		tune_auto_ui}
+			}
 		}
 	}
 };
