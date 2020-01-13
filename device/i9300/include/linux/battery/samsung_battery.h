@@ -77,9 +77,9 @@ struct battery_info {
 	struct mutex err_lock;
 
 	/* wakelock */
-	struct wake_lock charge_wake_lock;
-	struct wake_lock monitor_wake_lock;
-	struct wake_lock emer_wake_lock;
+	struct wakeup_source charge_wake_lock;
+	struct wakeup_source monitor_wake_lock;
+	struct wakeup_source emer_wake_lock;
 
 	/* is_suspended */
 	bool	is_suspended;
@@ -183,7 +183,7 @@ struct battery_info {
 	unsigned int prev_battery_health;
 	unsigned int prev_charge_virt_state;
 	unsigned int prev_battery_soc;
-	struct wake_lock update_wake_lock;
+	struct wakeup_source update_wake_lock;
 #endif
 #if defined(CONFIG_MACH_KONA)
 	unsigned int is_comp_3;
