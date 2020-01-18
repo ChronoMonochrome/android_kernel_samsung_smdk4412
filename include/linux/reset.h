@@ -3,7 +3,7 @@
 #define _LINUX_RESET_H_
 
 #include <linux/types.h>
-
+#include <linux/errno.h>
 struct device;
 struct device_node;
 struct reset_control;
