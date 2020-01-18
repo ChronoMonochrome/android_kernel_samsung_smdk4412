@@ -17,6 +17,7 @@
 #include <linux/mfd/max8997.h>
 #include <linux/mfd/max8997-private.h>
 #include <linux/platform_device.h>
+#include <linux/regmap.h>
 
 #define MAX8997_LED_FLASH_SHIFT			3
 #define MAX8997_LED_FLASH_CUR_MASK		0xf8
@@ -52,7 +53,6 @@ static void max8997_led_set_mode(struct max8997_led *led,
 			enum max8997_led_mode mode)
 {
 	int ret;
-	struct i2c_client *client = led->iodev->i2c;
 	u8 mask = 0, val;
 
 	switch (mode) {
@@ -88,8 +88,8 @@ static void max8997_led_set_mode(struct max8997_led *led,
 	}
 
 	if (mask) {
-		ret = max8997_update_reg(client, MAX8997_REG_LEN_CNTL, val,
-					 mask);
+		ret = regmap_update_bits(led->iodev->regmap,
+					MAX8997_REG_LEN_CNTL, mask, val);
 		if (ret)
 			dev_err(led->iodev->dev,
 				"failed to update register(%d)\n", ret);
@@ -101,7 +101,6 @@ static void max8997_led_set_mode(struct max8997_led *led,
 static void max8997_led_enable(struct max8997_led *led, bool enable)
 {
 	int ret;
-	struct i2c_client *client = led->iodev->i2c;
 	u8 val = 0, mask = MAX8997_LED_BOOST_ENABLE_MASK;
 
 	if (led->enabled == enable)
@@ -109,7 +108,8 @@ static void max8997_led_enable(struct max8997_led *led, bool enable)
 
 	val = enable ? MAX8997_LED_BOOST_ENABLE_MASK : 0;
 
-	ret = max8997_update_reg(client, MAX8997_REG_BOOST_CNTL, val, mask);
+	ret = regmap_update_bits(led->iodev->regmap,
+				MAX8997_REG_BOOST_CNTL, mask, val);
 	if (ret)
 		dev_err(led->iodev->dev,
 			"failed to update register(%d)\n", ret);
@@ -121,7 +121,6 @@ static void max8997_led_set_current(struct max8997_led *led,
 				enum led_brightness value)
 {
 	int ret;
-	struct i2c_client *client = led->iodev->i2c;
 	u8 val = 0, mask = 0, reg = 0;
 
 	switch (led->led_mode) {
@@ -142,7 +141,7 @@ static void max8997_led_set_current(struct max8997_led *led,
 	}
 
 	if (mask) {
-		ret = max8997_update_reg(client, reg, val, mask);
+		ret = regmap_update_bits(led->iodev->regmap, reg, mask, val);
 		if (ret)
 			dev_err(led->iodev->dev,
 				"failed to update register(%d)\n", ret);

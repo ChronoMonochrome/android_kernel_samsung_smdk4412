@@ -31,6 +31,7 @@
 #include <linux/mfd/max8997-private.h>
 #include <linux/mfd/max8997.h>
 #include <linux/regulator/consumer.h>
+#include <linux/regmap.h>
 
 /* Haptic configuration 2 register */
 #define MAX8997_MOTOR_TYPE_SHIFT	7
@@ -45,7 +46,7 @@
 
 struct max8997_haptic {
 	struct device *dev;
-	struct i2c_client *client;
+	struct max8997_dev *max8997;
 	struct input_dev *input_dev;
 	struct regulator *regulator;
 
@@ -86,19 +87,19 @@ static int max8997_haptic_set_duty_cycle(struct max8997_haptic *chip)
 		}
 		switch (chip->internal_mode_pattern) {
 		case 0:
-			max8997_write_reg(chip->client,
+			regmap_write(chip->max8997->regmap_haptic,
 				MAX8997_HAPTIC_REG_SIGPWMDC1, duty_index);
 			break;
 		case 1:
-			max8997_write_reg(chip->client,
+			regmap_write(chip->max8997->regmap_haptic,
 				MAX8997_HAPTIC_REG_SIGPWMDC2, duty_index);
 			break;
 		case 2:
-			max8997_write_reg(chip->client,
+			regmap_write(chip->max8997->regmap_haptic,
 				MAX8997_HAPTIC_REG_SIGPWMDC3, duty_index);
 			break;
 		case 3:
-			max8997_write_reg(chip->client,
+			regmap_write(chip->max8997->regmap_haptic,
 				MAX8997_HAPTIC_REG_SIGPWMDC4, duty_index);
 			break;
 		default:
@@ -115,50 +116,51 @@ static void max8997_haptic_configure(struct max8997_haptic *chip)
 	value = chip->type << MAX8997_MOTOR_TYPE_SHIFT |
 		chip->enabled << MAX8997_ENABLE_SHIFT |
 		chip->mode << MAX8997_MODE_SHIFT | chip->pwm_divisor;
-	max8997_write_reg(chip->client, MAX8997_HAPTIC_REG_CONF2, value);
+	regmap_write(chip->max8997->regmap_haptic,
+		MAX8997_HAPTIC_REG_CONF2, value);
 
 	if (chip->mode == MAX8997_INTERNAL_MODE && chip->enabled) {
 		value = chip->internal_mode_pattern << MAX8997_CYCLE_SHIFT |
 			chip->internal_mode_pattern << MAX8997_SIG_PERIOD_SHIFT |
 			chip->internal_mode_pattern << MAX8997_SIG_DUTY_SHIFT |
 			chip->internal_mode_pattern << MAX8997_PWM_DUTY_SHIFT;
-		max8997_write_reg(chip->client,
+		regmap_write(chip->max8997->regmap_haptic,
 			MAX8997_HAPTIC_REG_DRVCONF, value);
 
 		switch (chip->internal_mode_pattern) {
 		case 0:
 			value = chip->pattern_cycle << 4;
-			max8997_write_reg(chip->client,
+			regmap_write(chip->max8997->regmap_haptic,
 				MAX8997_HAPTIC_REG_CYCLECONF1, value);
 			value = chip->pattern_signal_period;
-			max8997_write_reg(chip->client,
+			regmap_write(chip->max8997->regmap_haptic,
 				MAX8997_HAPTIC_REG_SIGCONF1, value);
 			break;
 
 		case 1:
 			value = chip->pattern_cycle;
-			max8997_write_reg(chip->client,
+			regmap_write(chip->max8997->regmap_haptic,
 				MAX8997_HAPTIC_REG_CYCLECONF1, value);
 			value = chip->pattern_signal_period;
-			max8997_write_reg(chip->client,
+			regmap_write(chip->max8997->regmap_haptic,
 				MAX8997_HAPTIC_REG_SIGCONF2, value);
 			break;
 
 		case 2:
 			value = chip->pattern_cycle << 4;
-			max8997_write_reg(chip->client,
+			regmap_write(chip->max8997->regmap_haptic,
 				MAX8997_HAPTIC_REG_CYCLECONF2, value);
 			value = chip->pattern_signal_period;
-			max8997_write_reg(chip->client,
+			regmap_write(chip->max8997->regmap_haptic,
 				MAX8997_HAPTIC_REG_SIGCONF3, value);
 			break;
 
 		case 3:
 			value = chip->pattern_cycle;
-			max8997_write_reg(chip->client,
+			regmap_write(chip->max8997->regmap_haptic,
 				MAX8997_HAPTIC_REG_CYCLECONF2, value);
 			value = chip->pattern_signal_period;
-			max8997_write_reg(chip->client,
+			regmap_write(chip->max8997->regmap_haptic,
 				MAX8997_HAPTIC_REG_SIGCONF4, value);
 			break;
 
@@ -279,7 +281,7 @@ static int max8997_haptic_probe(struct platform_device *pdev)
 	INIT_WORK(&chip->work, max8997_haptic_play_effect_work);
 	mutex_init(&chip->mutex);
 
-	chip->client = iodev->haptic;
+	chip->max8997 = iodev;
 	chip->dev = &pdev->dev;
 	chip->input_dev = input_dev;
 	chip->pwm_period = haptic_pdata->pwm_period;

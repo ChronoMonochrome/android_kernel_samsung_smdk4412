@@ -19,6 +19,7 @@
 #include <linux/mfd/max8997.h>
 #include <linux/mfd/max8997-private.h>
 #include <linux/regulator/of_regulator.h>
+#include <linux/regmap.h>
 
 struct max8997_data {
 	struct device *dev;
@@ -36,7 +37,7 @@ struct max8997_data {
 	int buck125_gpioindex;
 	bool ignore_gpiodvs_side_effect;
 
-	u8 saved_states[MAX8997_REG_MAX];
+	unsigned int saved_states[MAX8997_REG_MAX];
 };
 
 static const unsigned int safeoutvolt[] = {
@@ -242,15 +243,14 @@ static int max8997_get_enable_register(struct regulator_dev *rdev,
 static int max8997_reg_is_enabled(struct regulator_dev *rdev)
 {
 	struct max8997_data *max8997 = rdev_get_drvdata(rdev);
-	struct i2c_client *i2c = max8997->iodev->i2c;
 	int ret, reg, mask, pattern;
-	u8 val;
+	unsigned int val;
 
 	ret = max8997_get_enable_register(rdev, &reg, &mask, &pattern);
 	if (ret)
 		return ret;
 
-	ret = max8997_read_reg(i2c, reg, &val);
+	ret = regmap_read(max8997->iodev->regmap, reg, &val);
 	if (ret)
 		return ret;
 
@@ -260,27 +260,25 @@ static int max8997_reg_is_enabled(struct regulator_dev *rdev)
 static int max8997_reg_enable(struct regulator_dev *rdev)
 {
 	struct max8997_data *max8997 = rdev_get_drvdata(rdev);
-	struct i2c_client *i2c = max8997->iodev->i2c;
 	int ret, reg, mask, pattern;
 
 	ret = max8997_get_enable_register(rdev, &reg, &mask, &pattern);
 	if (ret)
 		return ret;
 
-	return max8997_update_reg(i2c, reg, pattern, mask);
+	return regmap_update_bits(max8997->iodev->regmap, reg, mask, pattern);
 }
 
 static int max8997_reg_disable(struct regulator_dev *rdev)
 {
 	struct max8997_data *max8997 = rdev_get_drvdata(rdev);
-	struct i2c_client *i2c = max8997->iodev->i2c;
 	int ret, reg, mask, pattern;
 
 	ret = max8997_get_enable_register(rdev, &reg, &mask, &pattern);
 	if (ret)
 		return ret;
 
-	return max8997_update_reg(i2c, reg, ~pattern, mask);
+	return regmap_update_bits(max8997->iodev->regmap, reg, mask, ~pattern);
 }
 
 static int max8997_get_voltage_register(struct regulator_dev *rdev,
@@ -352,15 +350,14 @@ static int max8997_get_voltage_register(struct regulator_dev *rdev,
 static int max8997_get_voltage_sel(struct regulator_dev *rdev)
 {
 	struct max8997_data *max8997 = rdev_get_drvdata(rdev);
-	struct i2c_client *i2c = max8997->iodev->i2c;
 	int reg, shift, mask, ret;
-	u8 val;
+	unsigned int val;
 
 	ret = max8997_get_voltage_register(rdev, &reg, &shift, &mask);
 	if (ret)
 		return ret;
 
-	ret = max8997_read_reg(i2c, reg, &val);
+	ret = regmap_read(max8997->iodev->regmap, reg, &val);
 	if (ret)
 		return ret;
 
@@ -397,7 +394,6 @@ static int max8997_set_voltage_charger_cv(struct regulator_dev *rdev,
 		int min_uV, int max_uV, unsigned *selector)
 {
 	struct max8997_data *max8997 = rdev_get_drvdata(rdev);
-	struct i2c_client *i2c = max8997->iodev->i2c;
 	int rid = rdev_get_id(rdev);
 	int lb, ub;
 	int reg, shift = 0, mask, ret = 0;
@@ -436,7 +432,8 @@ static int max8997_set_voltage_charger_cv(struct regulator_dev *rdev,
 
 	*selector = val;
 
-	ret = max8997_update_reg(i2c, reg, val << shift, mask);
+	ret = regmap_update_bits(max8997->iodev->regmap,
+				reg, mask, val << shift);
 
 	return ret;
 }
@@ -449,7 +446,6 @@ static int max8997_set_voltage_ldobuck(struct regulator_dev *rdev,
 		int min_uV, int max_uV, unsigned *selector)
 {
 	struct max8997_data *max8997 = rdev_get_drvdata(rdev);
-	struct i2c_client *i2c = max8997->iodev->i2c;
 	const struct voltage_map_desc *desc;
 	int rid = rdev_get_id(rdev);
 	int i, reg, shift, mask, ret;
@@ -481,7 +477,8 @@ static int max8997_set_voltage_ldobuck(struct regulator_dev *rdev,
 	if (ret)
 		return ret;
 
-	ret = max8997_update_reg(i2c, reg, i << shift, mask << shift);
+	ret = regmap_update_bits(max8997->iodev->regmap,
+				reg, mask << shift, i << shift);
 	*selector = i;
 
 	return ret;
@@ -691,7 +688,6 @@ static int max8997_set_voltage_safeout_sel(struct regulator_dev *rdev,
 					   unsigned selector)
 {
 	struct max8997_data *max8997 = rdev_get_drvdata(rdev);
-	struct i2c_client *i2c = max8997->iodev->i2c;
 	int rid = rdev_get_id(rdev);
 	int reg, shift = 0, mask, ret;
 
@@ -702,13 +698,13 @@ static int max8997_set_voltage_safeout_sel(struct regulator_dev *rdev,
 	if (ret)
 		return ret;
 
-	return max8997_update_reg(i2c, reg, selector << shift, mask << shift);
+	return regmap_update_bits(max8997->iodev->regmap,
+				reg, mask << shift, selector << shift);
 }
 
 static int max8997_reg_disable_suspend(struct regulator_dev *rdev)
 {
 	struct max8997_data *max8997 = rdev_get_drvdata(rdev);
-	struct i2c_client *i2c = max8997->iodev->i2c;
 	int ret, reg, mask, pattern;
 	int rid = rdev_get_id(rdev);
 
@@ -716,20 +712,22 @@ static int max8997_reg_disable_suspend(struct regulator_dev *rdev)
 	if (ret)
 		return ret;
 
-	max8997_read_reg(i2c, reg, &max8997->saved_states[rid]);
+	regmap_read(max8997->iodev->regmap,
+			reg, &max8997->saved_states[rid]);
 
 	if (rid == MAX8997_LDO1 ||
 			rid == MAX8997_LDO10 ||
 			rid == MAX8997_LDO21) {
 		dev_dbg(&rdev->dev, "Conditional Power-Off for %s\n",
 				rdev->desc->name);
-		return max8997_update_reg(i2c, reg, 0x40, mask);
+		return regmap_update_bits(max8997->iodev->regmap,
+				reg, mask, 0x40);
 	}
 
 	dev_dbg(&rdev->dev, "Full Power-Off for %s (%xh -> %xh)\n",
 			rdev->desc->name, max8997->saved_states[rid] & mask,
 			(~pattern) & mask);
-	return max8997_update_reg(i2c, reg, ~pattern, mask);
+	return regmap_update_bits(max8997->iodev->regmap, reg, mask, ~pattern);
 }
 
 static struct regulator_ops max8997_ldo_ops = {
@@ -1014,7 +1012,6 @@ static int max8997_pmic_probe(struct platform_device *pdev)
 	struct regulator_config config = { };
 	struct regulator_dev *rdev;
 	struct max8997_data *max8997;
-	struct i2c_client *i2c;
 	int i, ret, nr_dvs;
 	u8 max_buck1 = 0, max_buck2 = 0, max_buck5 = 0;
 
@@ -1038,7 +1035,6 @@ static int max8997_pmic_probe(struct platform_device *pdev)
 	max8997->iodev = iodev;
 	max8997->num_regulators = pdata->num_regulators;
 	platform_set_drvdata(pdev, max8997);
-	i2c = max8997->iodev->i2c;
 
 	max8997->buck125_gpioindex = pdata->buck125_default_idx;
 	max8997->buck1_gpiodvs = pdata->buck1_gpiodvs;
@@ -1088,25 +1084,25 @@ static int max8997_pmic_probe(struct platform_device *pdev)
 
 	/* For the safety, set max voltage before setting up */
 	for (i = 0; i < 8; i++) {
-		max8997_update_reg(i2c, MAX8997_REG_BUCK1DVS1 + i,
-				max_buck1, 0x3f);
-		max8997_update_reg(i2c, MAX8997_REG_BUCK2DVS1 + i,
-				max_buck2, 0x3f);
-		max8997_update_reg(i2c, MAX8997_REG_BUCK5DVS1 + i,
-				max_buck5, 0x3f);
+		regmap_update_bits(max8997->iodev->regmap,
+				MAX8997_REG_BUCK1DVS1 + i, 0x3f, max_buck1);
+		regmap_update_bits(max8997->iodev->regmap,
+				MAX8997_REG_BUCK2DVS1 + i, 0x3f, max_buck2);
+		regmap_update_bits(max8997->iodev->regmap,
+				MAX8997_REG_BUCK5DVS1 + i, 0x3f, max_buck5);
 	}
 
 	/* Initialize all the DVS related BUCK registers */
 	for (i = 0; i < nr_dvs; i++) {
-		max8997_update_reg(i2c, MAX8997_REG_BUCK1DVS1 + i,
-				max8997->buck1_vol[i],
-				0x3f);
-		max8997_update_reg(i2c, MAX8997_REG_BUCK2DVS1 + i,
-				max8997->buck2_vol[i],
-				0x3f);
-		max8997_update_reg(i2c, MAX8997_REG_BUCK5DVS1 + i,
-				max8997->buck5_vol[i],
-				0x3f);
+		regmap_update_bits(max8997->iodev->regmap,
+				MAX8997_REG_BUCK1DVS1 + i,
+				0x3f, max8997->buck1_vol[i]);
+		regmap_update_bits(max8997->iodev->regmap,
+				MAX8997_REG_BUCK2DVS1 + i,
+				0x3f, max8997->buck2_vol[i]);
+		regmap_update_bits(max8997->iodev->regmap,
+				MAX8997_REG_BUCK5DVS1 + i,
+				0x3f, max8997->buck5_vol[i]);
 	}
 
 	/*
@@ -1150,16 +1146,17 @@ static int max8997_pmic_probe(struct platform_device *pdev)
 	}
 
 	/* DVS-GPIO disabled */
-	max8997_update_reg(i2c, MAX8997_REG_BUCK1CTRL, (pdata->buck1_gpiodvs) ?
-			(1 << 1) : (0 << 1), 1 << 1);
-	max8997_update_reg(i2c, MAX8997_REG_BUCK2CTRL, (pdata->buck2_gpiodvs) ?
-			(1 << 1) : (0 << 1), 1 << 1);
-	max8997_update_reg(i2c, MAX8997_REG_BUCK5CTRL, (pdata->buck5_gpiodvs) ?
-			(1 << 1) : (0 << 1), 1 << 1);
+	regmap_update_bits(max8997->iodev->regmap, MAX8997_REG_BUCK1CTRL,
+			1 << 1, (pdata->buck1_gpiodvs) ? (1 << 1) : (0 << 1));
+	regmap_update_bits(max8997->iodev->regmap, MAX8997_REG_BUCK2CTRL,
+			1 << 1, (pdata->buck2_gpiodvs) ? (1 << 1) : (0 << 1));
+	regmap_update_bits(max8997->iodev->regmap, MAX8997_REG_BUCK5CTRL,
+			1 << 1, (pdata->buck5_gpiodvs) ? (1 << 1) : (0 << 1));
 
 	/* Misc Settings */
 	max8997->ramp_delay = 10; /* set 10mV/us, which is the default */
-	max8997_write_reg(i2c, MAX8997_REG_BUCKRAMP, (0xf << 4) | 0x9);
+	regmap_write(max8997->iodev->regmap,
+			MAX8997_REG_BUCKRAMP, (0xf << 4) | 0x9);
 
 	for (i = 0; i < pdata->num_regulators; i++) {
 		const struct voltage_map_desc *desc;

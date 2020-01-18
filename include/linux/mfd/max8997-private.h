@@ -296,6 +296,8 @@ enum max8997_rtc_reg {
 	MAX8997_RTC_ALARM2_MONTH	= 0x22,
 	MAX8997_RTC_ALARM2_YEAR		= 0x23,
 	MAX8997_RTC_ALARM2_DAY_OF_MONTH	= 0x24,
+
+	MAX8997_RTC_REG_END		= 0x25,
 };
 
 enum max8997_irq_source {
@@ -317,6 +319,48 @@ enum max8997_irq_source {
 
 	MAX8997_IRQ_GROUP_NR,
 };
+
+#define PMIC_INT1_PWRONR_MASK		(0x1 << 0)
+#define PMIC_INT1_PWRONF_MASK		(0x1 << 1)
+#define PMIC_INT1_PWRON1SEC_MASK	(0x1 << 3)
+#define PMIC_INT1_JIGONR_MASK		(0x1 << 4)
+#define PMIC_INT1_JIGONF_MASK		(0x1 << 5)
+#define PMIC_INT1_LOWBAT2_MASK		(0x1 << 6)
+#define PMIC_INT1_LOWBAT1_MASK		(0x1 << 7)
+
+#define PMIC_INT2_JIGR_MASK		(0x1 << 0)
+#define PMIC_INT2_JIGF_MASK		(0x1 << 1)
+#define PMIC_INT2_MR_MASK		(0x1 << 2)
+#define PMIC_INT2_DVS1OK_MASK		(0x1 << 3)
+#define PMIC_INT2_DVS2OK_MASK		(0x1 << 4)
+#define PMIC_INT2_DVS3OK_MASK		(0x1 << 5)
+#define PMIC_INT2_DVS4OK_MASK		(0x1 << 6)
+
+#define PMIC_INT3_CHGINS_MASK		(0x1 << 0)
+#define PMIC_INT3_CHGRM_MASK		(0x1 << 1)
+#define PMIC_INT3_DCINOVP_MASK		(0x1 << 2)
+#define PMIC_INT3_TOPOFFR_MASK		(0x1 << 3)
+#define PMIC_INT3_CHGRSTF_MASK		(0x1 << 5)
+#define PMIC_INT3_MBCHGTMEXPD_MASK	(0x1 << 7)
+
+#define PMIC_INT4_RTC60S_MASK		(0x1 << 0)
+#define PMIC_INT4_RTCA1_MASK		(0x1 << 1)
+#define PMIC_INT4_RTCA2_MASK		(0x1 << 2)
+#define PMIC_INT4_SMPL_INT_MASK		(0x1 << 3)
+#define PMIC_INT4_RTC1S_MASK		(0x1 << 4)
+#define PMIC_INT4_WTSR_MASK		(0x1 << 5)
+
+#define MUIC_INT1_ADC_MASK		(0x1 << 0)
+#define MUIC_INT1_ADCLOW_MASK		(0x1 << 1)
+#define MUIC_INT1_ADCERROR_MASK		(0x1 << 2)
+
+#define MUIC_INT2_CHGTYP_MASK		(0x1 << 0)
+#define MUIC_INT2_CHGDETRUN_MASK	(0x1 << 1)
+#define MUIC_INT2_DCDTMR_MASK		(0x1 << 2)
+#define MUIC_INT2_DBCHG_MASK		(0x1 << 3)
+#define MUIC_INT2_VBVOLT_MASK		(0x1 << 4)
+
+#define MUIC_INT3_OVP_MASK		(0x1 << 2)
 
 enum max8997_irq {
 	MAX8997_PMICIRQ_PWRONR,
@@ -349,19 +393,23 @@ enum max8997_irq {
 	MAX8997_PMICIRQ_RTC1S,
 	MAX8997_PMICIRQ_WTSR,
 
-	MAX8997_MUICIRQ_ADCError,
-	MAX8997_MUICIRQ_ADCLow,
-	MAX8997_MUICIRQ_ADC,
+	MAX8997_PMICIRQ_NR,
+};
 
-	MAX8997_MUICIRQ_VBVolt,
-	MAX8997_MUICIRQ_DBChg,
-	MAX8997_MUICIRQ_DCDTmr,
-	MAX8997_MUICIRQ_ChgDetRun,
-	MAX8997_MUICIRQ_ChgTyp,
+enum max8997_irq_muic {
+	MAX8997_MUICIRQ_ADC,
+	MAX8997_MUICIRQ_ADCLOW,
+	MAX8997_MUICIRQ_ADCERROR,
+
+	MAX8997_MUICIRQ_CHGTYP,
+	MAX8997_MUICIRQ_CHGDETRUN,
+	MAX8997_MUICIRQ_DCDTMR,
+	MAX8997_MUICIRQ_DBCHG,
+	MAX8997_MUICIRQ_VBVOLT,
 
 	MAX8997_MUICIRQ_OVP,
 
-	MAX8997_IRQ_NR,
+	MAX8997_MUCIRQ_NR,
 };
 
 #define MAX8997_NUM_GPIO	12
@@ -377,15 +425,21 @@ struct max8997_dev {
 	unsigned long type;
 	struct platform_device *battery; /* battery control (not fuel gauge) */
 
+	struct regmap *regmap;
+	struct regmap *regmap_rtc;
+	struct regmap *regmap_haptic;
+	struct regmap *regmap_muic;
+
+	struct regmap_irq_chip_data *irq_data;
+	struct regmap_irq_chip_data *irq_data_muic;
 	int irq;
 	int ono;
-	struct irq_domain *irq_domain;
 	struct mutex irqlock;
 	int irq_masks_cur[MAX8997_IRQ_GROUP_NR];
 	int irq_masks_cache[MAX8997_IRQ_GROUP_NR];
 
 	/* For hibernation */
-	u8 reg_dump[MAX8997_REG_PMIC_END + MAX8997_MUIC_REG_END +
+	unsigned int reg_dump[MAX8997_REG_PMIC_END + MAX8997_MUIC_REG_END +
 		MAX8997_HAPTIC_REG_END];
 
 	bool gpio_status[MAX8997_NUM_GPIO];
@@ -399,14 +453,6 @@ enum max8997_types {
 extern int max8997_irq_init(struct max8997_dev *max8997);
 extern void max8997_irq_exit(struct max8997_dev *max8997);
 extern int max8997_irq_resume(struct max8997_dev *max8997);
-
-extern int max8997_read_reg(struct i2c_client *i2c, u8 reg, u8 *dest);
-extern int max8997_bulk_read(struct i2c_client *i2c, u8 reg, int count,
-				u8 *buf);
-extern int max8997_write_reg(struct i2c_client *i2c, u8 reg, u8 value);
-extern int max8997_bulk_write(struct i2c_client *i2c, u8 reg, int count,
-				u8 *buf);
-extern int max8997_update_reg(struct i2c_client *i2c, u8 reg, u8 val, u8 mask);
 
 #define MAX8997_GPIO_INT_BOTH	(0x3 << 4)
 #define MAX8997_GPIO_INT_RISE	(0x2 << 4)

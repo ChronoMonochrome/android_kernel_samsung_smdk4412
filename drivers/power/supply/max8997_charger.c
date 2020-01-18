@@ -6,17 +6,26 @@
 //  MyungJoo Ham <myungjoo.ham@samsung.com>
 
 #include <linux/err.h>
-#include <linux/module.h>
 #include <linux/slab.h>
-#include <linux/platform_device.h>
-#include <linux/power_supply.h>
+#include <linux/rtc.h>
+#include <linux/delay.h>
+#include <linux/mutex.h>
+#include <linux/module.h>
 #include <linux/mfd/max8997.h>
+#include <linux/power_supply.h>
+#include <linux/platform_device.h>
 #include <linux/mfd/max8997-private.h>
+#include <linux/irqdomain.h>
+#include <linux/regmap.h>
+
+
 
 struct charger_data {
 	struct device *dev;
 	struct max8997_dev *iodev;
 	struct power_supply *battery;
+        struct mutex            lock;
+        int virq;
 };
 
 static enum power_supply_property max8997_battery_props[] = {
@@ -31,14 +40,14 @@ static int max8997_battery_get_property(struct power_supply *psy,
 		union power_supply_propval *val)
 {
 	struct charger_data *charger = power_supply_get_drvdata(psy);
-	struct i2c_client *i2c = charger->iodev->i2c;
 	int ret;
-	u8 reg;
+	unsigned int reg;
 
 	switch (psp) {
 	case POWER_SUPPLY_PROP_STATUS:
 		val->intval = 0;
-		ret = max8997_read_reg(i2c, MAX8997_REG_STATUS4, &reg);
+		ret = regmap_read(charger->iodev->regmap,
+				MAX8997_REG_STATUS4, &reg);
 		if (ret)
 			return ret;
 		if ((reg & (1 << 0)) == 0x1)
@@ -47,7 +56,8 @@ static int max8997_battery_get_property(struct power_supply *psy,
 		break;
 	case POWER_SUPPLY_PROP_PRESENT:
 		val->intval = 0;
-		ret = max8997_read_reg(i2c, MAX8997_REG_STATUS4, &reg);
+		ret = regmap_read(charger->iodev->regmap,
+				MAX8997_REG_STATUS4, &reg);
 		if (ret)
 			return ret;
 		if ((reg & (1 << 2)) == 0x0)
@@ -56,7 +66,8 @@ static int max8997_battery_get_property(struct power_supply *psy,
 		break;
 	case POWER_SUPPLY_PROP_ONLINE:
 		val->intval = 0;
-		ret = max8997_read_reg(i2c, MAX8997_REG_STATUS4, &reg);
+		ret = regmap_read(charger->iodev->regmap,
+				MAX8997_REG_STATUS4, &reg);
 		if (ret)
 			return ret;
 		/* DCINOK */
@@ -79,72 +90,42 @@ static const struct power_supply_desc max8997_battery_desc = {
 	.num_properties	= ARRAY_SIZE(max8997_battery_props),
 };
 
+static irqreturn_t max8997_chgins_irq(int irq, void *data)
+{
+        struct charger_data *info = data;
+
+        dev_info(info->dev, "%s:irq(%d)\n", __func__, irq);
+
+        //rtc_update_irq(info->rtc_dev, 1, RTC_IRQF | RTC_AF);
+
+        return IRQ_HANDLED;
+}
+
+
 static int max8997_battery_probe(struct platform_device *pdev)
 {
-	int ret = 0;
+        struct max8997_dev *max8997 = dev_get_drvdata(pdev->dev.parent);
+	int ret,virq;
 	struct charger_data *charger;
-	struct max8997_dev *iodev = dev_get_drvdata(pdev->dev.parent);
-	struct max8997_platform_data *pdata = dev_get_platdata(iodev->dev);
 	struct power_supply_config psy_cfg = {};
 
-	if (!pdata)
-		return -EINVAL;
-
-	if (pdata->eoc_mA) {
-		int val = (pdata->eoc_mA - 50) / 10;
-		if (val < 0)
-			val = 0;
-		if (val > 0xf)
-			val = 0xf;
-
-		ret = max8997_update_reg(iodev->i2c,
-				MAX8997_REG_MBCCTRL5, val, 0xf);
-		if (ret < 0) {
-			dev_err(&pdev->dev, "Cannot use i2c bus.\n");
-			return ret;
-		}
-	}
-
-	switch (pdata->timeout) {
-	case 5:
-		ret = max8997_update_reg(iodev->i2c, MAX8997_REG_MBCCTRL1,
-				0x2 << 4, 0x7 << 4);
-		break;
-	case 6:
-		ret = max8997_update_reg(iodev->i2c, MAX8997_REG_MBCCTRL1,
-				0x3 << 4, 0x7 << 4);
-		break;
-	case 7:
-		ret = max8997_update_reg(iodev->i2c, MAX8997_REG_MBCCTRL1,
-				0x4 << 4, 0x7 << 4);
-		break;
-	case 0:
-		ret = max8997_update_reg(iodev->i2c, MAX8997_REG_MBCCTRL1,
-				0x7 << 4, 0x7 << 4);
-		break;
-	default:
-		dev_err(&pdev->dev, "incorrect timeout value (%d)\n",
-				pdata->timeout);
-		return -EINVAL;
-	}
-	if (ret < 0) {
-		dev_err(&pdev->dev, "Cannot use i2c bus.\n");
-		return ret;
-	}
-
-	charger = devm_kzalloc(&pdev->dev, sizeof(*charger), GFP_KERNEL);
-	if (!charger)
+	charger = devm_kzalloc(&pdev->dev, sizeof( struct charger_data), GFP_KERNEL);
+	if (!charger) {
+		dev_err(&pdev->dev, "cahrger null.\n");
 		return -ENOMEM;
+	}
 
 	platform_set_drvdata(pdev, charger);
 
 
+        mutex_init(&charger->lock);
+
 	charger->dev = &pdev->dev;
-	charger->iodev = iodev;
+	charger->iodev = max8997;
 
 	psy_cfg.drv_data = charger;
 
-	charger->battery = devm_power_supply_register(&pdev->dev,
+	charger->battery = power_supply_register(&pdev->dev,
 						 &max8997_battery_desc,
 						 &psy_cfg);
 	if (IS_ERR(charger->battery)) {
@@ -152,6 +133,71 @@ static int max8997_battery_probe(struct platform_device *pdev)
 		return PTR_ERR(charger->battery);
 	}
 
+
+        virq = regmap_irq_get_virq(max8997->irq_data, MAX8997_PMICIRQ_CHGINS);
+        if (virq <= 0) {
+                dev_err(&pdev->dev, "Failed to create mapping alarm IRQ\n");
+                ret = -ENXIO;
+                goto err_out;
+        }
+        charger->virq = virq;
+
+        ret = devm_request_threaded_irq(&pdev->dev, virq, NULL,
+                                max8997_chgins_irq, 0,
+                                "max8997-CHGINS", charger);
+        if (ret < 0)
+                dev_err(&pdev->dev, "Failed to request alarm IRQ: %d: %d\n",
+                        charger->virq, ret);
+
+
+        virq = regmap_irq_get_virq(max8997->irq_data, MAX8997_PMICIRQ_CHGRM);
+        if (virq <= 0) {
+                dev_err(&pdev->dev, "Failed to create mapping alarm IRQ\n");
+                ret = -ENXIO;
+                goto err_out;
+        }
+        charger->virq = virq;
+
+        ret = devm_request_threaded_irq(&pdev->dev, virq, NULL,
+                                max8997_chgins_irq, 0,
+                                "max8997-CHGRM", charger);
+        if (ret < 0)
+                dev_err(&pdev->dev, "Failed to request alarm IRQ: %d: %d\n",
+                        charger->virq, ret);
+
+        virq = regmap_irq_get_virq(max8997->irq_data, MAX8997_PMICIRQ_TOPOFFR);
+        if (virq <= 0) {
+                dev_err(&pdev->dev, "Failed to create mapping alarm IRQ\n");
+                ret = -ENXIO;
+                goto err_out;
+        }
+        charger->virq = virq;
+
+        ret = devm_request_threaded_irq(&pdev->dev, virq, NULL,
+                                max8997_chgins_irq, 0,
+                                "max8997-TOPOFFR", charger);
+        if (ret < 0)
+                dev_err(&pdev->dev, "Failed to request alarm IRQ: %d: %d\n",
+                        charger->virq, ret);
+
+        virq = regmap_irq_get_virq(max8997->irq_data, MAX8997_PMICIRQ_DCINOVP);
+        if (virq <= 0) {
+                dev_err(&pdev->dev, "Failed to create mapping alarm IRQ\n");
+                ret = -ENXIO;
+                goto err_out;
+        }
+        charger->virq = virq;
+
+        ret = devm_request_threaded_irq(&pdev->dev, virq, NULL,
+                                max8997_chgins_irq, 0,
+                                "max8997-DCINOVP", charger);
+        if (ret < 0)
+                dev_err(&pdev->dev, "Failed to request alarm IRQ: %d: %d\n",
+                        charger->virq, ret);
+
+
+
+err_out:
 	return 0;
 }
 
@@ -169,17 +215,8 @@ static struct platform_driver max8997_battery_driver = {
 	.id_table = max8997_battery_id,
 };
 
-static int __init max8997_battery_init(void)
-{
-	return platform_driver_register(&max8997_battery_driver);
-}
-subsys_initcall(max8997_battery_init);
 
-static void __exit max8997_battery_cleanup(void)
-{
-	platform_driver_unregister(&max8997_battery_driver);
-}
-module_exit(max8997_battery_cleanup);
+module_platform_driver(max8997_battery_driver);
 
 MODULE_DESCRIPTION("MAXIM 8997/8966 battery control driver");
 MODULE_AUTHOR("MyungJoo Ham <myungjoo.ham@samsung.com>");

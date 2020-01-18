@@ -16,6 +16,7 @@
 #include <linux/platform_device.h>
 #include <linux/mfd/max8997-private.h>
 #include <linux/irqdomain.h>
+#include <linux/regmap.h>
 
 /* Module parameter for WTSR function control */
 static int wtsr_en = 1;
@@ -64,7 +65,6 @@ enum {
 struct max8997_rtc_info {
 	struct device		*dev;
 	struct max8997_dev	*max8997;
-	struct i2c_client	*rtc;
 	struct rtc_device	*rtc_dev;
 	struct mutex		lock;
 	int virq;
@@ -114,8 +114,8 @@ static inline int max8997_rtc_set_update_reg(struct max8997_rtc_info *info)
 {
 	int ret;
 
-	ret = max8997_write_reg(info->rtc, MAX8997_RTC_UPDATE1,
-						RTC_UDR_MASK);
+	ret = regmap_write(info->max8997->regmap_rtc,
+				MAX8997_RTC_UPDATE1, RTC_UDR_MASK);
 	if (ret < 0)
 		dev_err(info->dev, "%s: fail to write update reg(%d)\n",
 				__func__, ret);
@@ -136,7 +136,8 @@ static int max8997_rtc_read_time(struct device *dev, struct rtc_time *tm)
 	int ret;
 
 	mutex_lock(&info->lock);
-	ret = max8997_bulk_read(info->rtc, MAX8997_RTC_SEC, RTC_NR_TIME, data);
+	ret = regmap_bulk_read(info->max8997->regmap_rtc,
+				MAX8997_RTC_SEC, data, RTC_NR_TIME);
 	mutex_unlock(&info->lock);
 
 	if (ret < 0) {
@@ -162,7 +163,8 @@ static int max8997_rtc_set_time(struct device *dev, struct rtc_time *tm)
 
 	mutex_lock(&info->lock);
 
-	ret = max8997_bulk_write(info->rtc, MAX8997_RTC_SEC, RTC_NR_TIME, data);
+	ret = regmap_bulk_write(info->max8997->regmap_rtc,
+				MAX8997_RTC_SEC, data, RTC_NR_TIME);
 	if (ret < 0) {
 		dev_err(info->dev, "%s: fail to write time reg(%d)\n", __func__,
 				ret);
@@ -179,13 +181,13 @@ static int max8997_rtc_read_alarm(struct device *dev, struct rtc_wkalrm *alrm)
 {
 	struct max8997_rtc_info *info = dev_get_drvdata(dev);
 	u8 data[RTC_NR_TIME];
-	u8 val;
+	unsigned int val;
 	int i, ret;
 
 	mutex_lock(&info->lock);
 
-	ret = max8997_bulk_read(info->rtc, MAX8997_RTC_ALARM1_SEC, RTC_NR_TIME,
-			data);
+	ret = regmap_bulk_read(info->max8997->regmap_rtc,
+				MAX8997_RTC_ALARM1_SEC, data, RTC_NR_TIME);
 	if (ret < 0) {
 		dev_err(info->dev, "%s:%d fail to read alarm reg(%d)\n",
 				__func__, __LINE__, ret);
@@ -203,7 +205,8 @@ static int max8997_rtc_read_alarm(struct device *dev, struct rtc_wkalrm *alrm)
 	}
 
 	alrm->pending = 0;
-	ret = max8997_read_reg(info->max8997->i2c, MAX8997_REG_STATUS1, &val);
+	ret = regmap_read(info->max8997->regmap_rtc,
+			       MAX8997_REG_STATUS1, &val);
 	if (ret < 0) {
 		dev_err(info->dev, "%s:%d fail to read status1 reg(%d)\n",
 				__func__, __LINE__, ret);
@@ -226,8 +229,8 @@ static int max8997_rtc_stop_alarm(struct max8997_rtc_info *info)
 	if (!mutex_is_locked(&info->lock))
 		dev_warn(info->dev, "%s: should have mutex locked\n", __func__);
 
-	ret = max8997_bulk_read(info->rtc, MAX8997_RTC_ALARM1_SEC, RTC_NR_TIME,
-				data);
+	ret = regmap_bulk_read(info->max8997->regmap_rtc,
+				MAX8997_RTC_ALARM1_SEC, data, RTC_NR_TIME);
 	if (ret < 0) {
 		dev_err(info->dev, "%s: fail to read alarm reg(%d)\n",
 				__func__, ret);
@@ -237,8 +240,8 @@ static int max8997_rtc_stop_alarm(struct max8997_rtc_info *info)
 	for (i = 0; i < RTC_NR_TIME; i++)
 		data[i] &= ~ALARM_ENABLE_MASK;
 
-	ret = max8997_bulk_write(info->rtc, MAX8997_RTC_ALARM1_SEC, RTC_NR_TIME,
-				 data);
+	ret = regmap_bulk_write(info->max8997->regmap_rtc,
+				 MAX8997_RTC_ALARM1_SEC, data, RTC_NR_TIME);
 	if (ret < 0) {
 		dev_err(info->dev, "%s: fail to write alarm reg(%d)\n",
 				__func__, ret);
@@ -258,8 +261,8 @@ static int max8997_rtc_start_alarm(struct max8997_rtc_info *info)
 	if (!mutex_is_locked(&info->lock))
 		dev_warn(info->dev, "%s: should have mutex locked\n", __func__);
 
-	ret = max8997_bulk_read(info->rtc, MAX8997_RTC_ALARM1_SEC, RTC_NR_TIME,
-				data);
+	ret = regmap_bulk_read(info->max8997->regmap_rtc,
+				MAX8997_RTC_ALARM1_SEC, data, RTC_NR_TIME);
 	if (ret < 0) {
 		dev_err(info->dev, "%s: fail to read alarm reg(%d)\n",
 				__func__, ret);
@@ -277,8 +280,8 @@ static int max8997_rtc_start_alarm(struct max8997_rtc_info *info)
 	if (data[RTC_DATE] & 0x1f)
 		data[RTC_DATE] |= (1 << ALARM_ENABLE_SHIFT);
 
-	ret = max8997_bulk_write(info->rtc, MAX8997_RTC_ALARM1_SEC, RTC_NR_TIME,
-				 data);
+	ret = regmap_bulk_write(info->max8997->regmap_rtc,
+				 MAX8997_RTC_ALARM1_SEC, data, RTC_NR_TIME);
 	if (ret < 0) {
 		dev_err(info->dev, "%s: fail to write alarm reg(%d)\n",
 				__func__, ret);
@@ -309,8 +312,8 @@ static int max8997_rtc_set_alarm(struct device *dev, struct rtc_wkalrm *alrm)
 	if (ret < 0)
 		goto out;
 
-	ret = max8997_bulk_write(info->rtc, MAX8997_RTC_ALARM1_SEC, RTC_NR_TIME,
-				data);
+	ret = regmap_bulk_write(info->max8997->regmap_rtc,
+				 MAX8997_RTC_ALARM1_SEC, data, RTC_NR_TIME);
 	if (ret < 0) {
 		dev_err(info->dev, "%s: fail to write alarm reg(%d)\n",
 				__func__, ret);
@@ -381,7 +384,8 @@ static void max8997_rtc_enable_wtsr(struct max8997_rtc_info *info, bool enable)
 	dev_info(info->dev, "%s: %s WTSR\n", __func__,
 			enable ? "enable" : "disable");
 
-	ret = max8997_update_reg(info->rtc, MAX8997_RTC_WTSR_SMPL, val, mask);
+	ret = regmap_update_bits(info->max8997->regmap_rtc,
+				 MAX8997_RTC_WTSR_SMPL, mask, val);
 	if (ret < 0) {
 		dev_err(info->dev, "%s: fail to update WTSR reg(%d)\n",
 				__func__, ret);
@@ -394,7 +398,7 @@ static void max8997_rtc_enable_wtsr(struct max8997_rtc_info *info, bool enable)
 static void max8997_rtc_enable_smpl(struct max8997_rtc_info *info, bool enable)
 {
 	int ret;
-	u8 val, mask;
+	unsigned int val, mask;
 
 	if (!smpl_en)
 		return;
@@ -409,7 +413,8 @@ static void max8997_rtc_enable_smpl(struct max8997_rtc_info *info, bool enable)
 	dev_info(info->dev, "%s: %s SMPL\n", __func__,
 			enable ? "enable" : "disable");
 
-	ret = max8997_update_reg(info->rtc, MAX8997_RTC_WTSR_SMPL, val, mask);
+	ret = regmap_update_bits(info->max8997->regmap_rtc,
+				 MAX8997_RTC_WTSR_SMPL, mask, val);
 	if (ret < 0) {
 		dev_err(info->dev, "%s: fail to update SMPL reg(%d)\n",
 				__func__, ret);
@@ -419,7 +424,8 @@ static void max8997_rtc_enable_smpl(struct max8997_rtc_info *info, bool enable)
 	max8997_rtc_set_update_reg(info);
 
 	val = 0;
-	max8997_read_reg(info->rtc, MAX8997_RTC_WTSR_SMPL, &val);
+	regmap_read(info->max8997->regmap_rtc,
+			 MAX8997_RTC_WTSR_SMPL, &val);
 	pr_info("WTSR_SMPL(0x%02x)\n", val);
 }
 
@@ -434,7 +440,8 @@ static int max8997_rtc_init_reg(struct max8997_rtc_info *info)
 
 	info->rtc_24hr_mode = 1;
 
-	ret = max8997_bulk_write(info->rtc, MAX8997_RTC_CTRLMASK, 2, data);
+	ret = regmap_bulk_write(info->max8997->regmap_rtc,
+				 MAX8997_RTC_CTRLMASK, data, 2);
 	if (ret < 0) {
 		dev_err(info->dev, "%s: fail to write controlm reg(%d)\n",
 				__func__, ret);
@@ -459,7 +466,6 @@ static int max8997_rtc_probe(struct platform_device *pdev)
 	mutex_init(&info->lock);
 	info->dev = &pdev->dev;
 	info->max8997 = max8997;
-	info->rtc = max8997->rtc;
 
 	platform_set_drvdata(pdev, info);
 
@@ -484,8 +490,8 @@ static int max8997_rtc_probe(struct platform_device *pdev)
 		return ret;
 	}
 
-	virq = irq_create_mapping(max8997->irq_domain, MAX8997_PMICIRQ_RTCA1);
-	if (!virq) {
+	virq = regmap_irq_get_virq(max8997->irq_data, MAX8997_PMICIRQ_RTCA1);
+	if (virq <= 0) {
 		dev_err(&pdev->dev, "Failed to create mapping alarm IRQ\n");
 		ret = -ENXIO;
 		goto err_out;
