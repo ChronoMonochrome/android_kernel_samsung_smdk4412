@@ -40,15 +40,9 @@
 			clock-names = "cpu";
 			clock-latency = <160000>;
 
-			operating-points = <
-				1200000 1250000
-				1000000 1150000
-				800000	1075000
-				500000	975000
-				400000	975000
-				200000	950000
-			>;
-			#cooling-cells = <2>; /* min followed by max */
+                        operating-points-v2 = <&cpu0_opp_table>;
+                        #cooling-cells = <2>; /* min followed by max */
+
 		};
 
 		cpu@901 {
@@ -59,16 +53,49 @@
 			clock-names = "cpu";
 			clock-latency = <160000>;
 
-			operating-points = <
-				1200000 1250000
-				1000000 1150000
-				800000	1075000
-				500000	975000
-				400000	975000
-				200000	950000
-			>;
-			#cooling-cells = <2>; /* min followed by max */
-		};
+                        operating-points-v2 = <&cpu0_opp_table>;
+                        #cooling-cells = <2>; /* min followed by max */
+                };
+
+	};
+
+
+        cpu0_opp_table: opp_table0 {
+                compatible = "operating-points-v2";
+                opp-shared;
+
+                opp-200000000 {
+                        opp-hz = /bits/ 64 <200000000>;
+                        opp-microvolt = <950000>;
+                        clock-latency-ns = <200000>;
+                };
+                opp-400000000 {
+                        opp-hz = /bits/ 64 <400000000>;
+                        opp-microvolt = <975000>;
+                        clock-latency-ns = <200000>;
+                };
+                opp-500000000 {
+                        opp-hz = /bits/ 64 <500000000>;
+                        opp-microvolt = <975000>;
+                        clock-latency-ns = <200000>;
+                };
+                opp-800000000 {
+                        opp-hz = /bits/ 64 <800000000>;
+                        opp-microvolt = <1075000>;
+                        clock-latency-ns = <200000>;
+                };
+                opp-1000000000 {
+                        opp-hz = /bits/ 64 <1000000000>;
+                        opp-microvolt = <1150000>;
+                        clock-latency-ns = <200000>;
+                };
+                opp-1200000000 {
+                        opp-hz = /bits/ 64 <1200000000>;
+                        opp-microvolt = <1250000>;
+                        clock-latency-ns = <200000>;
+                        turbo-mode;
+                };
+
 	};
 
 	soc: soc {
@@ -361,14 +388,45 @@
 
 			opp-100000000 {
 				opp-hz = /bits/ 64 <100000000>;
+                                opp-microvolt = <900000>;
+
 			};
 			opp-160000000 {
 				opp-hz = /bits/ 64 <160000000>;
+                                opp-microvolt = <100000>;
+
 			};
 			opp-200000000 {
 				opp-hz = /bits/ 64 <200000000>;
+                                opp-microvolt = <2200000>;
+
+                                opp-suspend;
+
 			};
 		};
+
+                g3d_opp_table: opp_table7 {
+                        compatible = "operating-points-v2";
+                        opp-shared;
+
+                        opp-160000000 {
+                                opp-hz = /bits/ 64 <160000000>;
+                                opp-microvolt = <875000>;
+                        };
+                        opp-266000000 {
+                                opp-hz = /bits/ 64 <266000000>;
+                                opp-microvolt = <900000>;
+                        };
+                        opp-350000000 {
+                                opp-hz = /bits/ 64 <350000000>;
+                                opp-microvolt = <950000>;
+                        };
+                        opp-440000000 {
+                                opp-hz = /bits/ 64 <440000000>;
+                                opp-microvolt = <1025000>;
+                        };
+                };
+
 	};
 
 	thermal-zones {
@@ -475,6 +533,11 @@
 &sysmmu_rotator {
 	power-domains = <&pd_lcd0>;
 };
+
+&gpu {
+        operating-points-v2 = <&g3d_opp_table>;
+};
+
 
 &tmu {
 	compatible = "samsung,exynos4210-tmu";

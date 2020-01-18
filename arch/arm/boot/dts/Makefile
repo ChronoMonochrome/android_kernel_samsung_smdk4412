@@ -172,6 +172,7 @@ dtb-$(CONFIG_ARCH_EXYNOS4) += \
 	exynos4210-origen.dtb \
 	exynos4210-smdkv310.dtb \
 	exynos4210-trats.dtb \
+        exynos4210-i9100.dtb \
 	exynos4210-universal_c210.dtb \
 	exynos4412-i9300.dtb \
 	exynos4412-i9305.dtb \
