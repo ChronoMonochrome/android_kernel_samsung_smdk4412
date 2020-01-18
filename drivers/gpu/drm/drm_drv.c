@@ -322,6 +322,20 @@ void drm_put_dev(struct drm_device *dev)
 EXPORT_SYMBOL(drm_put_dev);
 
 /**
+ * drm_dev_unref - Drop reference of a DRM device
+ * @dev: device to drop reference of or NULL
+ *
+ * This is a compatibility alias for drm_dev_put() and should not be used by new
+ * code.
+ */
+void drm_dev_unref(struct drm_device *dev)
+{
+        drm_dev_put(dev);
+}
+EXPORT_SYMBOL(drm_dev_unref);
+
+
+/**
  * drm_dev_enter - Enter device critical section
  * @dev: DRM device
  * @idx: Pointer to index that will be passed to the matching drm_dev_exit()

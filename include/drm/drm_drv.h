@@ -471,8 +471,6 @@ struct drm_driver {
 	 * @gem_prime_export:
 	 *
 	 * export GEM -> dmabuf
-	 *
-	 * This defaults to drm_gem_prime_export() if not set.
 	 */
 	struct dma_buf * (*gem_prime_export)(struct drm_device *dev,
 				struct drm_gem_object *obj, int flags);
@@ -480,8 +478,6 @@ struct drm_driver {
 	 * @gem_prime_import:
 	 *
 	 * import dmabuf -> GEM
-	 *
-	 * This defaults to drm_gem_prime_import() if not set.
 	 */
 	struct drm_gem_object * (*gem_prime_import)(struct drm_device *dev,
 				struct dma_buf *dma_buf);
@@ -527,10 +523,8 @@ struct drm_driver {
 	 * @dumb_map_offset:
 	 *
 	 * Allocate an offset in the drm device node's address space to be able to
-	 * memory map a dumb buffer.
-	 *
-	 * The default implementation is drm_gem_create_mmap_offset(). GEM based
-	 * drivers must not overwrite this.
+	 * memory map a dumb buffer. GEM-based drivers must use
+	 * drm_gem_create_mmap_offset() to implement this.
 	 *
 	 * Called by the user via ioctl.
 	 *
@@ -549,9 +543,6 @@ struct drm_driver {
 	 * won't be immediately freed if a framebuffer modeset object still uses it.
 	 *
 	 * Called by the user via ioctl.
-	 *
-	 * The default implementation is drm_gem_dumb_destroy(). GEM based drivers
-	 * must not overwrite this.
 	 *
 	 * Returns:
 	 *
@@ -630,6 +621,7 @@ void drm_dev_unregister(struct drm_device *dev);
 
 void drm_dev_get(struct drm_device *dev);
 void drm_dev_put(struct drm_device *dev);
+void drm_dev_unref(struct drm_device *dev);
 void drm_put_dev(struct drm_device *dev);
 bool drm_dev_enter(struct drm_device *dev, int *idx);
 void drm_dev_exit(int idx);

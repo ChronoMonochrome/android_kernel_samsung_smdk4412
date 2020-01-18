@@ -11,7 +11,7 @@ drm-y       :=	drm_auth.o drm_bufs.o drm_cache.o \
 		drm_sysfs.o drm_hashtab.o drm_mm.o \
 		drm_crtc.o drm_fourcc.o drm_modes.o drm_edid.o \
 		drm_encoder_slave.o \
-		drm_trace_points.o drm_prime.o \
+		drm_trace_points.o drm_global.o drm_prime.o \
 		drm_rect.o drm_vma_manager.o drm_flip_work.o \
 		drm_modeset_lock.o drm_atomic.o drm_bridge.o \
 		drm_framebuffer.o drm_connector.o drm_blend.o \
@@ -109,3 +109,5 @@ obj-$(CONFIG_DRM_TINYDRM) += tinydrm/
 obj-$(CONFIG_DRM_PL111) += pl111/
 obj-$(CONFIG_DRM_TVE200) += tve200/
 obj-$(CONFIG_DRM_XEN) += xen/
+obj-$(CONFIG_DRM_LIMA)  += lima/
+
