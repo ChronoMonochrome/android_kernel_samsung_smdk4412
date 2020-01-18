@@ -105,8 +105,12 @@ struct bcm_device {
 	const char		*name;
 	struct gpio_desc	*device_wakeup;
 	struct gpio_desc	*shutdown;
+        struct gpio_desc        *reset;
+
 	int			(*set_device_wakeup)(struct bcm_device *, bool);
 	int			(*set_shutdown)(struct bcm_device *, bool);
+        int                     (*set_reset)(struct bcm_device *, bool);
+
 #ifdef CONFIG_ACPI
 	acpi_handle		btlp, btpu, btpd;
 	int			gpio_count;
@@ -252,6 +256,15 @@ static int bcm_gpio_set_power(struct bcm_device *dev, bool powered)
 	if (err)
 		goto err_txco_clk_disable;
 
+	msleep(20);
+
+        err = dev->set_reset(dev, powered);
+        if (err)
+                goto err_revert_shutdown;
+
+
+	msleep(50);
+
 	err = dev->set_device_wakeup(dev, powered);
 	if (err)
 		goto err_revert_shutdown;
@@ -270,6 +283,7 @@ static int bcm_gpio_set_power(struct bcm_device *dev, bool powered)
 	return 0;
 
 err_revert_shutdown:
+        dev->set_reset(dev, !powered);
 	dev->set_shutdown(dev, !powered);
 err_txco_clk_disable:
 	if (powered && !dev->res_enabled)
@@ -407,7 +421,7 @@ static int bcm_open(struct hci_uart *hu)
 	struct list_head *p;
 	int err;
 
-	bt_dev_dbg(hu->hdev, "hu %p", hu);
+	bt_dev_info(hu->hdev, "hu %p", hu);
 
 	bcm = kzalloc(sizeof(*bcm), GFP_KERNEL);
 	if (!bcm)
@@ -528,7 +542,7 @@ static int bcm_setup(struct hci_uart *hu)
 	unsigned int speed;
 	int err;
 
-	bt_dev_dbg(hu->hdev, "hu %p", hu);
+	bt_dev_info(hu->hdev, "hu %p", hu);
 
 	hu->hdev->set_diag = bcm_set_diag;
 	hu->hdev->set_bdaddr = btbcm_set_bdaddr;
@@ -930,6 +944,8 @@ static int bcm_apple_get_resources(struct bcm_device *dev)
 
 	dev->set_device_wakeup = bcm_apple_set_device_wakeup;
 	dev->set_shutdown = bcm_apple_set_shutdown;
+        dev->set_reset = bcm_apple_set_reset;
+
 
 	return 0;
 }
@@ -951,6 +967,13 @@ static int bcm_gpio_set_shutdown(struct bcm_device *dev, bool powered)
 	gpiod_set_value_cansleep(dev->shutdown, powered);
 	return 0;
 }
+
+static int bcm_gpio_set_reset(struct bcm_device *dev, bool powered)
+{
+        gpiod_set_value_cansleep(dev->reset, powered);
+        return 0;
+}
+
 
 /* Try a bunch of names for TXCO */
 static struct clk *bcm_get_txco(struct device *dev)
@@ -1014,15 +1037,25 @@ static int bcm_get_resources(struct bcm_device *dev)
 	if (IS_ERR(dev->shutdown))
 		return PTR_ERR(dev->shutdown);
 
+        dev->reset = devm_gpiod_get_optional(dev->dev, "reset",
+                                                GPIOD_OUT_LOW);
+        if (IS_ERR(dev->reset))
+                return PTR_ERR(dev->reset);
+
+
 	dev->set_device_wakeup = bcm_gpio_set_device_wakeup;
 	dev->set_shutdown = bcm_gpio_set_shutdown;
+        dev->set_reset = bcm_gpio_set_reset;
+
 
 	dev->supplies[0].supply = "vbat";
 	dev->supplies[1].supply = "vddio";
 	err = devm_regulator_bulk_get(dev->dev, BCM_NUM_SUPPLIES,
 				      dev->supplies);
-	if (err)
+	if (err) {
+		dev_err(dev->dev, "bcm_hci regulator error!! \n");
 		return err;
+	}
 
 	/* IRQ can be declared in ACPI table as Interrupt or GpioInt */
 	if (dev->irq <= 0) {
@@ -1043,7 +1076,7 @@ static int bcm_get_resources(struct bcm_device *dev)
 		dev->irq = 0;
 	}
 
-	dev_dbg(dev->dev, "BCM irq: %d\n", dev->irq);
+	dev_info(dev->dev, "BCM irq: %d\n", dev->irq);
 	return 0;
 }
 
@@ -1118,6 +1151,7 @@ static int bcm_probe(struct platform_device *pdev)
 {
 	struct bcm_device *dev;
 	int ret;
+
 
 	dev = devm_kzalloc(&pdev->dev, sizeof(*dev), GFP_KERNEL);
 	if (!dev)
@@ -1374,16 +1408,19 @@ static int bcm_serdev_probe(struct serdev_device *serdev)
 	struct bcm_device *bcmdev;
 	int err;
 
+
 	bcmdev = devm_kzalloc(&serdev->dev, sizeof(*bcmdev), GFP_KERNEL);
 	if (!bcmdev)
 		return -ENOMEM;
 
 	bcmdev->dev = &serdev->dev;
+
 #ifdef CONFIG_PM
 	bcmdev->hu = &bcmdev->serdev_hu;
 #endif
 	bcmdev->serdev_hu.serdev = serdev;
 	serdev_device_set_drvdata(serdev, bcmdev);
+
 
 	if (has_acpi_companion(&serdev->dev))
 		err = bcm_acpi_probe(bcmdev);
