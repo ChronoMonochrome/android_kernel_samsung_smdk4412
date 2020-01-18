@@ -55,6 +55,7 @@ struct brcmf_fweh_event_name {
 };
 
 #ifdef DEBUG
+
 #define BRCMF_ENUM_DEF(id, val) \
 	{ val, #id },
 
@@ -149,10 +150,17 @@ static void brcmf_fweh_handle_if_event(struct brcmf_pub *drvr,
 	 * This should be accepted when p2pdev_setup is ongoing. TDLS setup will
 	 * use the same ifevent and should be ignored.
 	 */
-	is_p2pdev = ((ifevent->flags & BRCMF_E_IF_FLAG_NOIF) &&
-		     (ifevent->role == BRCMF_E_IF_ROLE_P2P_CLIENT ||
-		      ((ifevent->role == BRCMF_E_IF_ROLE_STA) &&
-		       (drvr->fweh.p2pdev_setup_ongoing))));
+//	is_p2pdev = ((ifevent->flags & BRCMF_E_IF_FLAG_NOIF) &&
+//		     (ifevent->role == BRCMF_E_IF_ROLE_P2P_CLIENT ||
+//		      ((ifevent->role == BRCMF_E_IF_ROLE_STA) &&
+//		       (drvr->fweh.p2pdev_setup_ongoing))));
+
+        is_p2pdev = ((ifevent->flags & BRCMF_E_IF_FLAG_NOIF) &&
+                     (ifevent->role == BRCMF_E_IF_ROLE_P2P_CLIENT));
+//                      ((ifevent->role == BRCMF_E_IF_ROLE_STA) &&
+                       //(drvr->fweh.p2pdev_setup_ongoing))));
+
+
 	if (!is_p2pdev && (ifevent->flags & BRCMF_E_IF_FLAG_NOIF)) {
 		brcmf_dbg(EVENT, "event can be ignored\n");
 		return;

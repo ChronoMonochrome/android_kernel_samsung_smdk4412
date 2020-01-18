@@ -637,18 +637,32 @@ static struct wireless_dev *brcmf_cfg80211_add_iface(struct wiphy *wiphy,
 	case NL80211_IFTYPE_P2P_CLIENT:
 	case NL80211_IFTYPE_P2P_GO:
 	case NL80211_IFTYPE_P2P_DEVICE:
-		wdev = brcmf_p2p_add_vif(wiphy, name, name_assign_type, type, params);
-		break;
+//		wdev = brcmf_p2p_add_vif(wiphy, name, name_assign_type, type, params);
+		return ERR_PTR(-EINVAL);
+		//break;
 	case NL80211_IFTYPE_UNSPECIFIED:
 	default:
 		return ERR_PTR(-EINVAL);
 	}
 
-	if (IS_ERR(wdev))
-		brcmf_err("add iface %s type %d failed: err=%d\n",
-			  name, type, (int)PTR_ERR(wdev));
-	else
-		brcmf_cfg80211_update_proto_addr_mode(wdev);
+//	if (IS_ERR(wdev))
+//		brcmf_err("add iface %s type %d failed: err=%d\n",
+//			  name, type, (int)PTR_ERR(wdev));
+//	else
+//		brcmf_cfg80211_update_proto_addr_mode(wdev);
+
+	if (IS_ERR(wdev)) {
+		err = PTR_ERR(wdev);
+		if (err != -EBUSY)
+			brcmf_err("add iface %s type %d failed: err=%d\n",
+				  name, type, err);
+		else
+			brcmf_dbg(INFO, "add iface %s type %d failed: err=%d\n",
+				  name, type, err);
+	} else {
+   		brcmf_cfg80211_update_proto_addr_mode(wdev);
+	}
+
 
 	return wdev;
 }
@@ -6095,9 +6109,9 @@ static int brcmf_enable_bw40_2g(struct brcmf_cfg80211_info *cfg)
 		for (i = 0; i < num_chan; i++) {
 			ch.chspec = (u16)le32_to_cpu(list->element[i]);
 			cfg->d11inf.decchspec(&ch);
-			if (WARN_ON(ch.band != BRCMU_CHAN_BAND_2G))
+			if ((ch.band != BRCMU_CHAN_BAND_2G))
 				continue;
-			if (WARN_ON(ch.bw != BRCMU_CHAN_BW_40))
+			if ((ch.bw != BRCMU_CHAN_BW_40))
 				continue;
 			for (j = 0; j < band->n_channels; j++) {
 				if (band->channels[j].hw_value == ch.control_ch_num)
