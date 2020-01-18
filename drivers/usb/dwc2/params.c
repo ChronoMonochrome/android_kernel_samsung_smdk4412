@@ -74,6 +74,8 @@ static void dwc2_set_his_params(struct dwc2_hsotg *hsotg)
 static void dwc2_set_s3c6400_params(struct dwc2_hsotg *hsotg)
 {
 	struct dwc2_core_params *p = &hsotg->params;
+        p->otg_cap = DWC2_CAP_PARAM_NO_HNP_SRP_CAPABLE;
+        p->host_channels = 16;
 
 	p->power_down = 0;
 }

@@ -50,9 +50,15 @@
 
 #include <linux/usb/of.h>
 
+#include <linux/extcon.h>
+
+
 #include "core.h"
 #include "hcd.h"
 #include "debug.h"
+
+#define EXTCON_DEV_NAME                        "max8997-muic"
+
 
 static const char dwc2_driver_name[] = "dwc2";
 
@@ -369,6 +375,7 @@ static bool dwc2_check_core_endianness(struct dwc2_hsotg *hsotg)
 	return true;
 }
 
+
 /**
  * dwc2_driver_probe() - Called when the DWC_otg core is bound to the DWC_otg
  * driver
@@ -386,12 +393,16 @@ static int dwc2_driver_probe(struct platform_device *dev)
 	struct dwc2_hsotg *hsotg;
 	struct resource *res;
 	int retval;
+	int delay_jiffies;
 
 	hsotg = devm_kzalloc(&dev->dev, sizeof(*hsotg), GFP_KERNEL);
 	if (!hsotg)
 		return -ENOMEM;
 
 	hsotg->dev = &dev->dev;
+
+	hsotg->ex_host = 0;
+
 
 	/*
 	 * Use reasonable defaults so platforms don't have to provide these.

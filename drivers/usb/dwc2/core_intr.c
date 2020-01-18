@@ -54,6 +54,111 @@
 #include "core.h"
 #include "hcd.h"
 
+#include <linux/extcon.h>
+
+
+#define EXTCON_DEV_NAME                        "max8997-muic"
+
+
+static void dwc2_handle_test(struct dwc2_hsotg *hsotg)
+{	int gintmsk;
+
+        /* Need to disable SOF interrupt immediately */
+        gintmsk = dwc2_readl(hsotg, GINTMSK);
+        gintmsk &= ~GINTSTS_SOF;
+        dwc2_writel(hsotg, gintmsk, GINTMSK);
+
+        /*
+         * Need to schedule a work, as there are possible DELAY function calls.
+         * Release lock before scheduling workq as it holds spinlock during
+         * scheduling.
+         */
+        if (hsotg->wq_otg) {
+                spin_unlock(&hsotg->lock);
+                queue_work(hsotg->wq_otg, &hsotg->wf_otg);
+                spin_lock(&hsotg->lock);
+        }
+}
+
+
+static int dwc2_i9100_id_notifier(struct notifier_block *nb,
+        unsigned long event, void *ptr)
+{
+        u32 gintsts;
+        unsigned long flags;
+
+        struct dwc2_hsotg *hsotg = container_of(nb, struct dwc2_hsotg, id_nb);
+
+        if (event) {
+                dev_info(hsotg->dev, "ATTACHED USB-HOST\n");
+		hsotg->ex_host = 1;
+		//dwc2_handle_test(hsotg);
+		//usb_gadget_vbus_connect(&hsotg->gadget);
+
+//	        spin_lock_irqsave(&hsotg->lock, flags);
+		dwc2_force_mode(hsotg, true);
+
+        	/* Need to disable SOF interrupt immediately */
+        	gintsts = dwc2_readl(hsotg, GINTSTS);
+        	gintsts &= ~GINTSTS_CONIDSTSCHNG;
+        	dwc2_writel(hsotg, gintsts, GINTSTS);
+
+//	        spin_unlock_irqrestore(&hsotg->lock, flags);
+
+        }
+
+        else {
+		hsotg->ex_host = 0;
+                dev_info(hsotg->dev, "DETACHED??? USB-HOST\n");
+		//usb_gadget_vbus_disconnect(&hsotg->gadget);
+		//dwc2_handle_test(hsotg);
+
+//                spin_lock_irqsave(&hsotg->lock, flags);
+                dwc2_force_mode(hsotg, false);
+
+        	/* Need to disable SOF interrupt immediately */
+        	gintsts = dwc2_readl(hsotg, GINTSTS);
+        	gintsts &= ~GINTSTS_CONIDSTSCHNG;
+        	dwc2_writel(hsotg, gintsts, GINTSTS);
+
+//                spin_unlock_irqrestore(&hsotg->lock, flags);
+
+        }
+
+
+        return NOTIFY_DONE;
+}
+
+
+static int dwc2_i9100_extcon_register(struct dwc2_hsotg *hsotg)
+{
+        int                     ret = 0;
+        struct extcon_dev       *edev;
+
+        edev = extcon_get_extcon_dev(EXTCON_DEV_NAME);
+
+        if ((edev == NULL)) {
+               dev_info(hsotg->dev, "couldn't get extcon device\n");
+               return -EPROBE_DEFER;
+        }
+
+        hsotg->id_nb.notifier_call = dwc2_i9100_id_notifier;
+        ret = extcon_register_notifier(edev, EXTCON_USB_HOST, &hsotg->id_nb);
+        if (ret < 0)
+                dev_err(hsotg->dev, "failed to register notifier for USB-HOST ret = %d\n",ret);
+
+        if (extcon_get_state(edev, EXTCON_USB) == true)
+                dev_info(hsotg->dev, "CURRENT USB DEVICE ATTACHED\n");;
+
+        if (extcon_get_state(edev, EXTCON_USB_HOST) == true)
+                dev_info(hsotg->dev, "CURRENT USB HOST ATTACHED\n");;
+
+        hsotg->edev = edev;
+
+        return ret;
+}
+
+
 static const char *dwc2_op_state_str(struct dwc2_hsotg *hsotg)
 {
 	switch (hsotg->op_state) {
@@ -283,7 +388,7 @@ static void dwc2_handle_conn_id_status_change_intr(struct dwc2_hsotg *hsotg)
 	gintmsk &= ~GINTSTS_SOF;
 	dwc2_writel(hsotg, gintmsk, GINTMSK);
 
-	dev_dbg(hsotg->dev, " ++Connector ID Status Change Interrupt++  (%s)\n",
+	dev_info(hsotg->dev, " ++Connector ID Status Change Interrupt++  (%s)\n",
 		dwc2_is_host_mode(hsotg) ? "Host" : "Device");
 
 	/*
@@ -826,6 +931,10 @@ irqreturn_t dwc2_handle_common_intr(int irq, void *dev)
 			retval = IRQ_HANDLED;
 		}
 	}
+
+	if (hsotg->edev == NULL)
+		dwc2_i9100_extcon_register(hsotg);
+
 
 out:
 	spin_unlock(&hsotg->lock);

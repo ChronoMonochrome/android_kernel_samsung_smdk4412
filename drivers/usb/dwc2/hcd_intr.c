@@ -357,7 +357,7 @@ static void dwc2_port_intr(struct dwc2_hsotg *hsotg)
 	u32 hprt0;
 	u32 hprt0_modify;
 
-	dev_vdbg(hsotg->dev, "--Port Interrupt--\n");
+	dev_dbg(hsotg->dev, "--Port Interrupt--\n");
 
 	hprt0 = dwc2_readl(hsotg, HPRT0);
 	hprt0_modify = hprt0;
@@ -376,7 +376,7 @@ static void dwc2_port_intr(struct dwc2_hsotg *hsotg)
 	if (hprt0 & HPRT0_CONNDET) {
 		dwc2_writel(hsotg, hprt0_modify | HPRT0_CONNDET, HPRT0);
 
-		dev_vdbg(hsotg->dev,
+		dev_dbg(hsotg->dev,
 			 "--Port Interrupt HPRT0=0x%08x Port Connect Detected--\n",
 			 hprt0);
 		dwc2_hcd_connect(hsotg);
@@ -393,7 +393,7 @@ static void dwc2_port_intr(struct dwc2_hsotg *hsotg)
 	 */
 	if (hprt0 & HPRT0_ENACHG) {
 		dwc2_writel(hsotg, hprt0_modify | HPRT0_ENACHG, HPRT0);
-		dev_vdbg(hsotg->dev,
+		dev_dbg(hsotg->dev,
 			 "  --Port Interrupt HPRT0=0x%08x Port Enable Changed (now %d)--\n",
 			 hprt0, !!(hprt0 & HPRT0_ENA));
 		if (hprt0 & HPRT0_ENA) {
@@ -417,7 +417,7 @@ static void dwc2_port_intr(struct dwc2_hsotg *hsotg)
 	if (hprt0 & HPRT0_OVRCURRCHG) {
 		dwc2_writel(hsotg, hprt0_modify | HPRT0_OVRCURRCHG,
 			    HPRT0);
-		dev_vdbg(hsotg->dev,
+		dev_dbg(hsotg->dev,
 			 "  --Port Interrupt HPRT0=0x%08x Port Overcurrent Changed--\n",
 			 hprt0);
 		hsotg->flags.b.port_over_current_change = 1;
