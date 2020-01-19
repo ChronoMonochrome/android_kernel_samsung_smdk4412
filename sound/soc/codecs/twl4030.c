@@ -2301,7 +2301,17 @@ static struct platform_driver twl4030_codec_driver = {
 	},
 };
 
-module_platform_driver(twl4030_codec_driver);
+static int __init twl4030_modinit(void)
+{
+	return platform_driver_register(&twl4030_codec_driver);
+}
+module_init(twl4030_modinit);
+
+static void __exit twl4030_exit(void)
+{
+	platform_driver_unregister(&twl4030_codec_driver);
+}
+module_exit(twl4030_exit);
 
 MODULE_DESCRIPTION("ASoC TWL4030 codec driver");
 MODULE_AUTHOR("Steve Sakoman");

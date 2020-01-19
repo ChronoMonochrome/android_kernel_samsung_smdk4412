@@ -1276,7 +1276,17 @@ static struct platform_driver wm9713_codec_driver = {
 	.remove = __devexit_p(wm9713_remove),
 };
 
-module_platform_driver(wm9713_codec_driver);
+static int __init wm9713_init(void)
+{
+	return platform_driver_register(&wm9713_codec_driver);
+}
+module_init(wm9713_init);
+
+static void __exit wm9713_exit(void)
+{
+	platform_driver_unregister(&wm9713_codec_driver);
+}
+module_exit(wm9713_exit);
 
 MODULE_DESCRIPTION("ASoC WM9713/WM9714 driver");
 MODULE_AUTHOR("Liam Girdwood");
