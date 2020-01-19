@@ -3279,23 +3279,20 @@ static void wm8994_mic_work(struct work_struct *work)
 	struct wm8994_priv *priv = container_of(work,
 						struct wm8994_priv,
 						mic_work.work);
-	struct regmap *regmap = priv->wm8994->regmap;
-	struct device *dev = priv->wm8994->dev;
-	unsigned int reg;
-	int ret;
+	struct snd_soc_codec *codec = priv->codec;
+	int reg;
 	int report;
 
 	pm_runtime_get_sync(dev);
 
-	ret = regmap_read(regmap, WM8994_INTERRUPT_RAW_STATUS_2, &reg);
-	if (ret < 0) {
-		dev_err(dev, "Failed to read microphone status: %d\n",
-			ret);
-		pm_runtime_put(dev);
+	reg = snd_soc_read(codec, WM8994_INTERRUPT_RAW_STATUS_2);
+	if (reg < 0) {
+		dev_err(codec->dev, "Failed to read microphone status: %d\n",
+			reg);
 		return;
 	}
 
-	dev_dbg(dev, "Microphone status: %x\n", reg);
+	dev_dbg(codec->dev, "Microphone status: %x\n", reg);
 
 	report = 0;
 	if (reg & WM8994_MIC1_DET_STS) {
