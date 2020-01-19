@@ -3037,7 +3037,6 @@ static struct snd_soc_dai_driver wm8994_dai[] = {
 			.channels_max = 2,
 			.rates = WM8994_RATES,
 			.formats = WM8994_FORMATS,
-			.sig_bits = 24,
 		},
 		.capture = {
 			.stream_name = "AIF1 Capture",
@@ -3045,7 +3044,6 @@ static struct snd_soc_dai_driver wm8994_dai[] = {
 			.channels_max = 2,
 			.rates = WM8994_RATES,
 			.formats = WM8994_FORMATS,
-			.sig_bits = 24,
 		 },
 		.ops = &wm8994_aif1_dai_ops,
 	},
@@ -3058,7 +3056,6 @@ static struct snd_soc_dai_driver wm8994_dai[] = {
 			.channels_max = 2,
 			.rates = WM8994_RATES,
 			.formats = WM8994_FORMATS,
-			.sig_bits = 24,
 		},
 		.capture = {
 			.stream_name = "AIF2 Capture",
@@ -3066,7 +3063,6 @@ static struct snd_soc_dai_driver wm8994_dai[] = {
 			.channels_max = 2,
 			.rates = WM8994_RATES,
 			.formats = WM8994_FORMATS,
-			.sig_bits = 24,
 		},
 		.probe = wm8994_aif2_probe,
 		.ops = &wm8994_aif2_dai_ops,
@@ -3080,7 +3076,6 @@ static struct snd_soc_dai_driver wm8994_dai[] = {
 			.channels_max = 2,
 			.rates = WM8994_RATES,
 			.formats = WM8994_FORMATS,
-			.sig_bits = 24,
 		},
 		.capture = {
 			.stream_name = "AIF3 Capture",
@@ -3088,7 +3083,6 @@ static struct snd_soc_dai_driver wm8994_dai[] = {
 			.channels_max = 2,
 			.rates = WM8994_RATES,
 			.formats = WM8994_FORMATS,
-			.sig_bits = 24,
 		 },
 		.ops = &wm8994_aif3_dai_ops,
 	}
@@ -3098,7 +3092,22 @@ static struct snd_soc_dai_driver wm8994_dai[] = {
 static int wm8994_codec_suspend(struct snd_soc_codec *codec)
 {
 	struct wm8994_priv *wm8994 = snd_soc_codec_get_drvdata(codec);
+	struct wm8994 *control = codec->control_data;
 	int i, ret;
+
+	switch (control->type) {
+	case WM8994:
+		snd_soc_update_bits(codec, WM8994_MICBIAS, WM8994_MICD_ENA, 0);
+		break;
+	case WM1811:
+		snd_soc_update_bits(codec, WM8994_ANTIPOP_2,
+				    WM1811_JACKDET_MODE_MASK, 0);
+		/* Fall through */
+	case WM8958:
+		snd_soc_update_bits(codec, WM8958_MIC_DETECT_1,
+				    WM8958_MICD_ENA, 0);
+		break;
+	}
 
 	for (i = 0; i < ARRAY_SIZE(wm8994->fll); i++) {
 		memcpy(&wm8994->fll_suspend[i], &wm8994->fll[i],
@@ -3117,14 +3126,17 @@ static int wm8994_codec_suspend(struct snd_soc_codec *codec)
 static int wm8994_codec_resume(struct snd_soc_codec *codec)
 {
 	struct wm8994_priv *wm8994 = snd_soc_codec_get_drvdata(codec);
-	struct wm8994 *control = wm8994->wm8994;
+	struct wm8994 *control = codec->control_data;
 	int i, ret;
 	unsigned int val, mask;
 
 	if (wm8994->revision < 4) {
 		/* force a HW read */
-		ret = regmap_read(control->regmap,
-				  WM8994_POWER_MANAGEMENT_5, &val);
+		val = wm8994_reg_read(codec->control_data,
+				      WM8994_POWER_MANAGEMENT_5);
+		if (val < 0)
+			dev_err(codec->dev, "[%s]Failed to read PM5 ret[%d]\n",
+					__func__, val);
 
 		/* modify the cache only */
 		codec->cache_only = 1;
@@ -3135,6 +3147,13 @@ static int wm8994_codec_resume(struct snd_soc_codec *codec)
 				    mask, val);
 		codec->cache_only = 0;
 	}
+
+	/* Restore the registers */
+	ret = snd_soc_cache_sync(codec);
+	if (ret != 0)
+		dev_err(codec->dev, "Failed to sync cache: %d\n", ret);
+
+	wm8994_set_bias_level(codec, SND_SOC_BIAS_STANDBY);
 
 	for (i = 0; i < ARRAY_SIZE(wm8994->fll); i++) {
 		if (!wm8994->fll_suspend[i].out)
@@ -3842,7 +3861,7 @@ static int wm8994_codec_probe(struct snd_soc_codec *codec)
 			dev_err(codec->dev,
 				"Failed to initialise cache for 0x%x: %d\n",
 				i, ret);
-			goto err;
+			goto err_irq;
 		}
 	}
 
@@ -4309,9 +4328,9 @@ static int wm8994_suspend(struct device *dev)
 
 	/* Drop down to power saving mode when system is suspended */
 	if (wm8994->jackdet && !wm8994->active_refcount)
-		regmap_update_bits(wm8994->wm8994->regmap, WM8994_ANTIPOP_2,
-				   WM1811_JACKDET_MODE_MASK,
-				   wm8994->jackdet_mode);
+		snd_soc_update_bits(wm8994->codec, WM8994_ANTIPOP_2,
+				    WM1811_JACKDET_MODE_MASK,
+				    wm8994->jackdet_mode);
 
 	return 0;
 }
@@ -4320,10 +4339,12 @@ static int wm8994_resume(struct device *dev)
 {
 	struct wm8994_priv *wm8994 = dev_get_drvdata(dev);
 
-	if (wm8994->jackdet && wm8994->jack_cb)
-		regmap_update_bits(wm8994->wm8994->regmap, WM8994_ANTIPOP_2,
-				   WM1811_JACKDET_MODE_MASK,
-				   WM1811_JACKDET_MODE_AUDIO);
+	if (wm8994->jackdet && wm8994->jackdet_mode) {
+		snd_soc_update_bits(wm8994->codec, WM8994_ANTIPOP_2,
+				    WM1811_JACKDET_MODE_MASK,
+				    WM1811_JACKDET_MODE_AUDIO);
+		msleep(2);
+	}
 
 	return 0;
 }
