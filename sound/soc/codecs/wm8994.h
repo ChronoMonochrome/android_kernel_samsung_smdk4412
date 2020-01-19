@@ -158,6 +158,7 @@ struct wm8994_priv {
 	wm1811_mic_id_cb mic_id_cb;
 	void *mic_id_cb_data;
 
+	int revision;
 	struct wm8994_pdata *pdata;
 
 	unsigned int aif1clk_enable:1;
