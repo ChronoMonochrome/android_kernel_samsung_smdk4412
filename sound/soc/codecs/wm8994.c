@@ -3283,8 +3283,6 @@ static void wm8994_mic_work(struct work_struct *work)
 	int reg;
 	int report;
 
-	pm_runtime_get_sync(dev);
-
 	reg = snd_soc_read(codec, WM8994_INTERRUPT_RAW_STATUS_2);
 	if (reg < 0) {
 		dev_err(codec->dev, "Failed to read microphone status: %d\n",
@@ -3331,8 +3329,6 @@ static void wm8994_mic_work(struct work_struct *work)
 
 	snd_soc_jack_report(priv->micdet[1].jack, report,
 			    SND_JACK_HEADSET | SND_JACK_BTN_0);
-
-	pm_runtime_put(dev);
 }
 
 static irqreturn_t wm8994_mic_irq(int irq, void *data)
@@ -3455,15 +3451,12 @@ static irqreturn_t wm1811_jackdet_irq(int irq, void *data)
 	int reg;
 	bool present;
 
-	pm_runtime_get_sync(codec->dev);
-
 	mutex_lock(&wm8994->accdet_lock);
 
 	reg = snd_soc_read(codec, WM1811_JACKDET_CTRL);
 	if (reg < 0) {
 		dev_err(codec->dev, "Failed to read jack status: %d\n", reg);
 		mutex_unlock(&wm8994->accdet_lock);
-		pm_runtime_put(codec->dev);
 		return IRQ_NONE;
 	}
 
@@ -3528,7 +3521,6 @@ static irqreturn_t wm1811_jackdet_irq(int irq, void *data)
 				    SND_JACK_MECHANICAL | SND_JACK_HEADSET |
 				    wm8994->btn_mask);
 
-	pm_runtime_put(codec->dev);
 	return IRQ_HANDLED;
 }
 
@@ -3640,8 +3632,6 @@ static irqreturn_t wm8958_mic_irq(int irq, void *data)
 	if (!(snd_soc_read(codec, WM8958_MIC_DETECT_1) & WM8958_MICD_ENA))
 		return IRQ_HANDLED;
 
-	pm_runtime_get_sync(codec->dev);
-
 	/* We may occasionally read a detection without an impedence
 	 * range being provided - if that happens loop again.
 	 */
@@ -3652,7 +3642,6 @@ static irqreturn_t wm8958_mic_irq(int irq, void *data)
 			dev_err(codec->dev,
 				"Failed to read mic detect status: %d\n",
 				reg);
-			pm_runtime_put(codec->dev);
 			return IRQ_NONE;
 		}
 
@@ -3682,7 +3671,6 @@ static irqreturn_t wm8958_mic_irq(int irq, void *data)
 		dev_warn(codec->dev, "Accessory detection with no callback\n");
 
 out:
-	pm_runtime_put(codec->dev);
 	return IRQ_HANDLED;
 }
 
