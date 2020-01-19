@@ -510,7 +510,6 @@ static int midas_lineout_switch(struct snd_soc_dapm_widget *w,
 	return 0;
 }
 
-/*
 static void midas_micd_set_rate(struct snd_soc_codec *codec)
 {
 	struct wm8994_priv *wm8994 = snd_soc_codec_get_drvdata(codec);
@@ -557,7 +556,6 @@ static void midas_micd_set_rate(struct snd_soc_codec *codec)
 			    WM8958_MICD_BIAS_STARTTIME_MASK |
 			    WM8958_MICD_RATE_MASK, val);
 }
-*/
 
 #ifdef SND_USE_BIAS_LEVEL
 static void midas_start_fll1(struct snd_soc_dai *aif1_dai)
@@ -633,7 +631,204 @@ static int jack_get_adc_data(struct s3c_adc_client *padc)
 
 	return (adc_total - adc_max - adc_min) / (JACK_SAMPLE_SIZE - 2);
 }
+
+static void determine_jack_type(struct wm1811_machine_priv *wm1811)
+{
+	struct jack_zone *zones = wm1811->zones;
+	struct snd_soc_codec *codec = wm1811->codec;
+	int size = wm1811->num_zones;
+	int count[MAX_ZONE_LIMIT] = {0};
+	int adc;
+	int i;
+
+	/* set mic bias to enable adc */
+	while (snd_soc_read(codec, WM1811_JACKDET_CTRL) & WM1811_JACKDET_LVL) {
+		adc = jack_get_adc_data(wm1811->padc);
+
+		pr_info("%s: adc = %d\n", __func__, adc);
+
+		if (adc < 0)
+			break;
+
+		/* determine the type of headset based on the
+		 * adc value.  An adc value can fall in various
+		 * ranges or zones.  Within some ranges, the type
+		 * can be returned immediately.  Within others, the
+		 * value is considered unstable and we need to sample
+		 * a few more types (up to the limit determined by
+		 * the range) before we return the type for that range.
+		 */
+		for (i = 0; i < size; i++) {
+			if (adc <= zones[i].adc_high) {
+				if (++count[i] > zones[i].check_count) {
+					if (recheck_jack == true && i == 4) {
+						pr_info("%s : something wrong connection!\n",
+								__func__);
+
+						recheck_jack = false;
+						return;
+					}
+					jack_set_type(wm1811,
+						zones[i].jack_type);
+					return;
+				}
+				msleep(zones[i].delay_ms);
+				break;
+			}
+		}
+	}
+
+	recheck_jack = false;
+	/* jack removed before detection complete */
+	pr_debug("%s : jack removed before detection complete\n", __func__);
+}
+
+static void jack_set_type(struct wm1811_machine_priv *wm1811, int jack_type)
+{
+	struct wm8994_priv *wm8994 = snd_soc_codec_get_drvdata(wm1811->codec);
+
+	if (jack_type == SEC_HEADSET_4POLE) {
+		dev_info(wm1811->codec->dev, "Detected microphone\n");
+
+		wm8994->mic_detecting = false;
+		wm8994->jack_mic = true;
+
+		midas_micd_set_rate(wm1811->codec);
+
+		snd_soc_jack_report(wm8994->micdet[0].jack, SND_JACK_HEADSET,
+				    SND_JACK_HEADSET);
+
+		snd_soc_update_bits(wm1811->codec, WM8958_MIC_DETECT_1,
+					    WM8958_MICD_ENA, 1);
+	} else {
+		dev_info(wm1811->codec->dev, "Detected headphone\n");
+		wm8994->mic_detecting = false;
+
+		midas_micd_set_rate(wm1811->codec);
+
+		snd_soc_jack_report(wm8994->micdet[0].jack, SND_JACK_HEADPHONE,
+				    SND_JACK_HEADSET);
+
+		/* If we have jackdet that will detect removal */
+		if (wm8994->jackdet) {
+			snd_soc_update_bits(wm1811->codec, WM8958_MIC_DETECT_1,
+					    WM8958_MICD_ENA, 0);
+
+			if (wm8994->active_refcount) {
+				snd_soc_update_bits(wm1811->codec,
+					WM8994_ANTIPOP_2,
+					WM1811_JACKDET_MODE_MASK,
+					WM1811_JACKDET_MODE_AUDIO);
+			}
+
+			if (wm8994->pdata->jd_ext_cap) {
+				mutex_lock(&wm1811->codec->mutex);
+				snd_soc_dapm_disable_pin(&wm1811->codec->dapm,
+							 "MICBIAS2");
+				snd_soc_dapm_sync(&wm1811->codec->dapm);
+				mutex_unlock(&wm1811->codec->mutex);
+			}
+		}
+	}
+}
+
+static void midas_micdet(void *data)
+{
+	struct wm1811_machine_priv *wm1811 = data;
+	struct wm8994_priv *wm8994 = snd_soc_codec_get_drvdata(wm1811->codec);
+
+	struct snd_soc_codec *codec = wm1811->codec;
+
+	pr_info("%s: detected jack\n", __func__);
+	wm8994->mic_detecting = true;
+
+	wake_lock_timeout(&wm1811->jackdet_wake_lock, 5 * HZ);
+
+	snd_soc_update_bits(codec, WM8958_MICBIAS2,
+				WM8958_MICB2_MODE, 0);
+	snd_soc_update_bits(codec, WM8994_POWER_MANAGEMENT_1,
+				WM8994_MICB2_ENA_MASK, WM8994_MICB2_ENA);
+
+	determine_jack_type(wm1811);
+}
 #endif
+
+static void midas_mic_id(void *data, u16 status)
+{
+	struct wm1811_machine_priv *wm1811 = data;
+	struct wm8994_priv *wm8994 = snd_soc_codec_get_drvdata(wm1811->codec);
+
+	pr_err("%s: detected jack: status=%d\n", __func__, status);
+	wake_lock_timeout(&wm1811->jackdet_wake_lock, 5 * HZ);
+
+	/* Either nothing present or just starting detection */
+	if (!(status & WM8958_MICD_STS)) {
+		if (!wm8994->jackdet) {
+			/* If nothing present then clear our statuses */
+			dev_dbg(wm1811->codec->dev, "Detected open circuit\n");
+			wm8994->jack_mic = false;
+			wm8994->mic_detecting = true;
+
+			midas_micd_set_rate(wm1811->codec);
+
+			snd_soc_jack_report(wm8994->micdet[0].jack, 0,
+					    wm8994->btn_mask |
+					     SND_JACK_HEADSET);
+		}
+		/*ToDo*/
+		/*return;*/
+	}
+
+	/* If the measurement is showing a high impedence we've got a
+	 * microphone.
+	 */
+	if (wm8994->mic_detecting && (status & 0x400)) {
+		dev_info(wm1811->codec->dev, "Detected microphone\n");
+
+		wm8994->mic_detecting = false;
+		wm8994->jack_mic = true;
+
+		midas_micd_set_rate(wm1811->codec);
+
+		snd_soc_jack_report(wm8994->micdet[0].jack, SND_JACK_HEADSET,
+				    SND_JACK_HEADSET);
+	}
+
+	if (wm8994->mic_detecting && status & 0x4) {
+		dev_info(wm1811->codec->dev, "Detected headphone\n");
+		wm8994->mic_detecting = false;
+
+		midas_micd_set_rate(wm1811->codec);
+
+		snd_soc_jack_report(wm8994->micdet[0].jack, SND_JACK_HEADPHONE,
+				    SND_JACK_HEADSET);
+
+		/* If we have jackdet that will detect removal */
+		if (wm8994->jackdet) {
+			mutex_lock(&wm8994->accdet_lock);
+
+			snd_soc_update_bits(wm1811->codec, WM8958_MIC_DETECT_1,
+					    WM8958_MICD_ENA, 0);
+
+			if (wm8994->active_refcount) {
+				snd_soc_update_bits(wm1811->codec,
+					WM8994_ANTIPOP_2,
+					WM1811_JACKDET_MODE_MASK,
+					WM1811_JACKDET_MODE_AUDIO);
+			}
+
+			mutex_unlock(&wm8994->accdet_lock);
+
+			if (wm8994->pdata->jd_ext_cap) {
+				mutex_lock(&wm1811->codec->mutex);
+				snd_soc_dapm_disable_pin(&wm1811->codec->dapm,
+							 "MICBIAS2");
+				snd_soc_dapm_sync(&wm1811->codec->dapm);
+				mutex_unlock(&wm1811->codec->mutex);
+			}
+		}
+	}
+}
 
 #ifdef CONFIG_SND_SAMSUNG_I2S_MASTER
 static int set_epll_rate(unsigned long rate)
@@ -1123,6 +1318,147 @@ static struct snd_soc_dai_driver midas_ext_dai[] = {
 	},
 };
 
+#ifndef CONFIG_SEC_DEV_JACK
+static ssize_t earjack_state_show(struct device *dev,
+	struct device_attribute *attr, char *buf)
+{
+	struct snd_soc_codec *codec = dev_get_drvdata(dev);
+	struct wm8994_priv *wm8994 = snd_soc_codec_get_drvdata(codec);
+
+	int report = 0;
+
+	if ((wm8994->micdet[0].jack->status & SND_JACK_HEADPHONE) ||
+		(wm8994->micdet[0].jack->status & SND_JACK_HEADSET)) {
+		report = 1;
+	}
+
+	return sprintf(buf, "%d\n", report);
+}
+
+static ssize_t earjack_state_store(struct device *dev,
+	struct device_attribute *attr, const char *buf, size_t size)
+{
+	pr_info("%s : operate nothing\n", __func__);
+
+	return size;
+}
+
+static ssize_t earjack_key_state_show(struct device *dev,
+	struct device_attribute *attr, char *buf)
+{
+	struct snd_soc_codec *codec = dev_get_drvdata(dev);
+	struct wm8994_priv *wm8994 = snd_soc_codec_get_drvdata(codec);
+
+	int report = 0;
+
+	if (wm8994->micdet[0].jack->status & SND_JACK_BTN_0)
+		report = 1;
+
+	return sprintf(buf, "%d\n", report);
+}
+
+static ssize_t earjack_key_state_store(struct device *dev,
+	struct device_attribute *attr, const char *buf, size_t size)
+{
+	pr_info("%s : operate nothing\n", __func__);
+
+	return size;
+}
+
+static ssize_t earjack_select_jack_show(struct device *dev,
+	struct device_attribute *attr, char *buf)
+{
+	pr_info("%s : operate nothing\n", __func__);
+
+	return 0;
+}
+
+static ssize_t earjack_select_jack_store(struct device *dev,
+	struct device_attribute *attr, const char *buf, size_t size)
+{
+	struct snd_soc_codec *codec = dev_get_drvdata(dev);
+	struct wm8994_priv *wm8994 = snd_soc_codec_get_drvdata(codec);
+
+	wm8994->mic_detecting = false;
+	wm8994->jack_mic = true;
+
+	midas_micd_set_rate(codec);
+
+	if ((!size) || (buf[0] != '1')) {
+		snd_soc_jack_report(wm8994->micdet[0].jack,
+				    0, SND_JACK_HEADSET);
+		dev_info(codec->dev, "Forced remove microphone\n");
+	} else {
+
+		snd_soc_jack_report(wm8994->micdet[0].jack,
+				    SND_JACK_HEADSET, SND_JACK_HEADSET);
+		dev_info(codec->dev, "Forced detect microphone\n");
+	}
+
+	return size;
+}
+
+static ssize_t reselect_jack_show(struct device *dev,
+	struct device_attribute *attr, char *buf)
+{
+	pr_info("%s : operate nothing\n", __func__);
+	return 0;
+}
+
+static ssize_t reselect_jack_store(struct device *dev,
+	struct device_attribute *attr, const char *buf, size_t size)
+{
+	struct snd_soc_codec *codec = dev_get_drvdata(dev);
+	struct wm8994_priv *wm8994 = snd_soc_codec_get_drvdata(codec);
+	int reg = 0;
+
+	reg = snd_soc_read(codec, WM8958_MIC_DETECT_3);
+	if (reg == 0x402) {
+		dev_info(codec->dev, "Detected open circuit\n");
+
+		snd_soc_update_bits(codec, WM8958_MICBIAS2,
+				    WM8958_MICB2_DISCH, WM8958_MICB2_DISCH);
+		/* Enable debounce while removed */
+		snd_soc_update_bits(codec, WM1811_JACKDET_CTRL,
+				    WM1811_JACKDET_DB, WM1811_JACKDET_DB);
+
+		wm8994->mic_detecting = false;
+		wm8994->jack_mic = false;
+		snd_soc_update_bits(codec, WM8958_MIC_DETECT_1,
+				    WM8958_MICD_ENA, 0);
+
+		if (wm8994->active_refcount) {
+			snd_soc_update_bits(codec,
+				WM8994_ANTIPOP_2,
+				WM1811_JACKDET_MODE_MASK,
+				WM1811_JACKDET_MODE_AUDIO);
+		} else {
+			snd_soc_update_bits(codec,
+				WM8994_ANTIPOP_2,
+				WM1811_JACKDET_MODE_MASK,
+				WM1811_JACKDET_MODE_JACK);
+		}
+
+		snd_soc_jack_report(wm8994->micdet[0].jack, 0,
+				    SND_JACK_MECHANICAL | SND_JACK_HEADSET |
+				    wm8994->btn_mask);
+	}
+	return size;
+}
+
+static DEVICE_ATTR(reselect_jack, S_IRUGO | S_IWUSR | S_IWGRP,
+		reselect_jack_show, reselect_jack_store);
+
+static DEVICE_ATTR(select_jack, S_IRUGO | S_IWUSR | S_IWGRP,
+		   earjack_select_jack_show, earjack_select_jack_store);
+
+static DEVICE_ATTR(key_state, S_IRUGO | S_IWUSR | S_IWGRP,
+		   earjack_key_state_show, earjack_key_state_store);
+
+static DEVICE_ATTR(state, S_IRUGO | S_IWUSR | S_IWGRP,
+		   earjack_state_show, earjack_state_store);
+#endif
+
 static int midas_wm1811_init_paiftx(struct snd_soc_pcm_runtime *rtd)
 {
 	struct snd_soc_codec *codec = rtd->codec;
@@ -1201,7 +1537,7 @@ static int midas_wm1811_init_paiftx(struct snd_soc_pcm_runtime *rtd)
 
 	wm1811->codec = codec;
 
-	//midas_micd_set_rate(codec);
+	midas_micd_set_rate(codec);
 
 #ifdef CONFIG_SEC_DEV_JACK
 	/* By default use idle_bias_off, will override for WM8994 */
@@ -1237,7 +1573,7 @@ static int midas_wm1811_init_paiftx(struct snd_soc_pcm_runtime *rtd)
 		dev_info(codec->dev, "wm1811: Rev %c support mic detection\n",
 			'A' + wm8994->revision);
 		ret = wm8958_mic_detect(codec, &wm1811->jack, NULL,
-			NULL);
+					NULL);
 
 		if (ret < 0)
 			dev_err(codec->dev, "Failed start detection: %d\n",
@@ -1260,6 +1596,22 @@ static int midas_wm1811_init_paiftx(struct snd_soc_pcm_runtime *rtd)
 		pr_err("Failed to create class\n");
 
 	jack_dev = device_create(jack_class, NULL, 0, codec, "earjack");
+
+	if (device_create_file(jack_dev, &dev_attr_select_jack) < 0)
+		pr_err("Failed to create device file (%s)!\n",
+			dev_attr_select_jack.attr.name);
+
+	if (device_create_file(jack_dev, &dev_attr_key_state) < 0)
+		pr_err("Failed to create device file (%s)!\n",
+			dev_attr_key_state.attr.name);
+
+	if (device_create_file(jack_dev, &dev_attr_state) < 0)
+		pr_err("Failed to create device file (%s)!\n",
+			dev_attr_state.attr.name);
+
+	if (device_create_file(jack_dev, &dev_attr_reselect_jack) < 0)
+		pr_err("Failed to create device file (%s)!\n",
+			dev_attr_reselect_jack.attr.name);
 
 #endif /* CONFIG_SEC_DEV_JACK */
 
