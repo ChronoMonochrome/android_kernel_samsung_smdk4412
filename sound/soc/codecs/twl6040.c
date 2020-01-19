@@ -1772,7 +1772,17 @@ static struct platform_driver twl6040_codec_driver = {
 	.remove = __devexit_p(twl6040_codec_remove),
 };
 
-module_platform_driver(twl6040_codec_driver);
+static int __init twl6040_codec_init(void)
+{
+	return platform_driver_register(&twl6040_codec_driver);
+}
+module_init(twl6040_codec_init);
+
+static void __exit twl6040_codec_exit(void)
+{
+	platform_driver_unregister(&twl6040_codec_driver);
+}
+module_exit(twl6040_codec_exit);
 
 MODULE_DESCRIPTION("ASoC TWL6040 codec driver");
 MODULE_AUTHOR("Misael Lopez Cruz");

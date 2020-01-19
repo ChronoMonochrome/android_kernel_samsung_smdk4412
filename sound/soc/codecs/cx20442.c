@@ -390,7 +390,17 @@ static struct platform_driver cx20442_platform_driver = {
 	.remove = __exit_p(cx20442_platform_remove),
 };
 
-module_platform_driver(cx20442_platform_driver);
+static int __init cx20442_init(void)
+{
+	return platform_driver_register(&cx20442_platform_driver);
+}
+module_init(cx20442_init);
+
+static void __exit cx20442_exit(void)
+{
+	platform_driver_unregister(&cx20442_platform_driver);
+}
+module_exit(cx20442_exit);
 
 MODULE_DESCRIPTION("ASoC CX20442-11 voice modem codec driver");
 MODULE_AUTHOR("Janusz Krzysztofik");

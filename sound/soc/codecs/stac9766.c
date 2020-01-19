@@ -407,7 +407,17 @@ static struct platform_driver stac9766_codec_driver = {
 	.remove = __devexit_p(stac9766_remove),
 };
 
-module_platform_driver(stac9766_codec_driver);
+static int __init stac9766_init(void)
+{
+	return platform_driver_register(&stac9766_codec_driver);
+}
+module_init(stac9766_init);
+
+static void __exit stac9766_exit(void)
+{
+	platform_driver_unregister(&stac9766_codec_driver);
+}
+module_exit(stac9766_exit);
 
 MODULE_DESCRIPTION("ASoC stac9766 driver");
 MODULE_AUTHOR("Jon Smirl <jonsmirl@gmail.com>");

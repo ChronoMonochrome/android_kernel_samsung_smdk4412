@@ -147,7 +147,17 @@ static struct platform_driver ac97_codec_driver = {
 	.remove = __devexit_p(ac97_remove),
 };
 
-module_platform_driver(ac97_codec_driver);
+static int __init ac97_init(void)
+{
+	return platform_driver_register(&ac97_codec_driver);
+}
+module_init(ac97_init);
+
+static void __exit ac97_exit(void)
+{
+	platform_driver_unregister(&ac97_codec_driver);
+}
+module_exit(ac97_exit);
 
 MODULE_DESCRIPTION("Soc Generic AC97 driver");
 MODULE_AUTHOR("Liam Girdwood");

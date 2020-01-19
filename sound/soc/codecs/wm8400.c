@@ -1477,7 +1477,17 @@ static struct platform_driver wm8400_codec_driver = {
 	.remove = __devexit_p(wm8400_remove),
 };
 
-module_platform_driver(wm8400_codec_driver);
+static __init int wm8400_init(void)
+{
+	return platform_driver_register(&wm8400_codec_driver);
+}
+module_init(wm8400_init);
+
+static __exit void wm8400_exit(void)
+{
+	platform_driver_unregister(&wm8400_codec_driver);
+}
+module_exit(wm8400_exit);
 
 MODULE_DESCRIPTION("ASoC WM8400 driver");
 MODULE_AUTHOR("Mark Brown");
