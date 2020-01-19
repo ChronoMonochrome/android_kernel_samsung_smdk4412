@@ -177,11 +177,6 @@ struct wm8994_pdata {
         unsigned int lineout1fb:1;
         unsigned int lineout2fb:1;
 
-	/* Delay between detecting a jack and starting microphone
-	 * detect (specified in ms)
-	 */
-	int micdet_delay;
-
 	/* IRQ for microphone detection if brought out directly as a
 	 * signal.
 	 */
