@@ -48,6 +48,16 @@ int wm8958_mic_detect(struct snd_soc_codec *codec, struct snd_soc_jack *jack,
 
 int wm8994_vmid_mode(struct snd_soc_codec *codec, enum wm8994_vmid_mode mode);
 
+#define WM8994_CACHE_SIZE 1570
+
+struct wm8994_access_mask {
+	unsigned short readable;   /* Mask of readable bits */
+	unsigned short writable;   /* Mask of writable bits */
+};
+
+extern const struct wm8994_access_mask wm8994_access_masks[WM8994_CACHE_SIZE];
+extern const u16 wm8994_reg_defaults[WM8994_CACHE_SIZE];
+
 int wm8958_aif_ev(struct snd_soc_dapm_widget *w,
 		  struct snd_kcontrol *kcontrol, int event);
 
