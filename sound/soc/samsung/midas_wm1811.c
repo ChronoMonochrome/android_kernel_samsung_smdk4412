@@ -482,8 +482,8 @@ static int midas_lineout_switch(struct snd_soc_dapm_widget *w,
 {
 	struct snd_soc_codec *codec = w->codec;
 
-	dev_dbg(codec->dev, "%s event is %02X", w->name, event);
-
+	pr_err("%s: %s event is %02X", __func__, w->name, event);
+#if 0
 #if defined(CONFIG_SND_USE_MUIC_SWITCH)
 	switch (event) {
 	case SND_SOC_DAPM_POST_PMU:
@@ -505,6 +505,7 @@ static int midas_lineout_switch(struct snd_soc_dapm_widget *w,
 		gpio_set_value(GPIO_LINEOUT_EN, 0);
 		break;
 	}
+#endif
 #endif
 	return 0;
 }
@@ -757,7 +758,7 @@ static void midas_mic_id(void *data, u16 status)
 	struct wm1811_machine_priv *wm1811 = data;
 	struct wm8994_priv *wm8994 = snd_soc_codec_get_drvdata(wm1811->codec);
 
-	pr_info("%s: detected jack\n", __func__);
+	pr_err("%s: detected jack: status=%d\n", __func__, status);
 	wake_lock_timeout(&wm1811->jackdet_wake_lock, 5 * HZ);
 
 	/* Either nothing present or just starting detection */

@@ -1704,6 +1704,13 @@ static int snd_soc_dapm_add_route(struct snd_soc_dapm_context *dapm,
 	if (wsource == NULL || wsink == NULL)
 		return -ENODEV;
 
+	if (wsink->is_supply && !wsource->is_supply) {
+                dev_err(dapm->dev,
+                        "Connecting non-supply widget to supply widget is not supported (%s -> %s)\n",
+                        wsource->name, wsink->name);
+                return -EINVAL;
+        }
+
 	path = kzalloc(sizeof(struct snd_soc_dapm_path), GFP_KERNEL);
 	if (!path)
 		return -ENOMEM;
@@ -1714,6 +1721,9 @@ static int snd_soc_dapm_add_route(struct snd_soc_dapm_context *dapm,
 	INIT_LIST_HEAD(&path->list);
 	INIT_LIST_HEAD(&path->list_source);
 	INIT_LIST_HEAD(&path->list_sink);
+
+	if (wsource->is_supply || wsink->is_supply)
+		path->is_supply = 1;
 
 	/* check for external widgets */
 	if (wsink->id == snd_soc_dapm_input) {
@@ -1888,6 +1898,7 @@ int snd_soc_dapm_new_widgets(struct snd_soc_dapm_context *dapm)
 			w->power_check = dapm_generic_check_power;
 			break;
 		case snd_soc_dapm_supply:
+			w->is_supply = 1;
 			w->power_check = dapm_supply_check_power;
 		case snd_soc_dapm_vmid:
 		case snd_soc_dapm_pre:
