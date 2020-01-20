@@ -95,26 +95,6 @@ const char *aif2_mode_text[] = {
 	"Slave", "Master"
 };
 
-static int kpcs_mode = 2;
-const char *kpcs_mode_text[] = {
-	"Off", "On"
-};
-
-static int input_clamp;
-const char *input_clamp_text[] = {
-	"Off", "On"
-};
-
-static int lineout_mode;
-const char *lineout_mode_text[] = {
-	"Off", "On"
-};
-
-static int aif2_digital_mute;
-const char *switch_mode_text[] = {
-	"Off", "On"
-};
-
 static struct platform_device *midas_snd_device;
 
 static void midas_gpio_init(void)
@@ -144,18 +124,6 @@ static void midas_gpio_init(void)
 	gpio_free(GPIO_SUB_MIC_BIAS_EN);
 #endif
 
-#ifdef CONFIG_SND_USE_THIRD_MIC
-	/* Third Microphone BIAS */
-	err = gpio_request(GPIO_THIRD_MIC_BIAS_EN, "THIRD MIC");
-	if (err) {
-		pr_err(KERN_ERR "THIRD_MIC_BIAS_EN GPIO set error!\n");
-		return;
-	}
-	gpio_direction_output(GPIO_THIRD_MIC_BIAS_EN, 1);
-	gpio_set_value(GPIO_THIRD_MIC_BIAS_EN, 0);
-	gpio_free(GPIO_THIRD_MIC_BIAS_EN);
-#endif
-
 #ifdef CONFIG_FM_RADIO
 	/* FM/Third Mic GPIO */
 	err = gpio_request(GPIO_FM_MIC_SW, "GPL0");
@@ -169,42 +137,8 @@ static void midas_gpio_init(void)
 #endif
 }
 
-static const struct soc_enum lineout_mode_enum[] = {
-	SOC_ENUM_SINGLE_EXT(ARRAY_SIZE(lineout_mode_text), lineout_mode_text),
-};
-
-static int get_lineout_mode(struct snd_kcontrol *kcontrol,
-	struct snd_ctl_elem_value *ucontrol)
-{
-	ucontrol->value.integer.value[0] = lineout_mode;
-	return 0;
-}
-
-static int set_lineout_mode(struct snd_kcontrol *kcontrol,
-	struct snd_ctl_elem_value *ucontrol)
-{
-	struct snd_soc_codec *codec = snd_kcontrol_chip(kcontrol);
-
-	lineout_mode = ucontrol->value.integer.value[0];
-	dev_dbg(codec->dev, "set lineout mode : %s\n",
-		lineout_mode_text[lineout_mode]);
-	return 0;
-
-}
 static const struct soc_enum aif2_mode_enum[] = {
 	SOC_ENUM_SINGLE_EXT(ARRAY_SIZE(aif2_mode_text), aif2_mode_text),
-};
-
-static const struct soc_enum kpcs_mode_enum[] = {
-	SOC_ENUM_SINGLE_EXT(ARRAY_SIZE(kpcs_mode_text), kpcs_mode_text),
-};
-
-static const struct soc_enum input_clamp_enum[] = {
-	SOC_ENUM_SINGLE_EXT(ARRAY_SIZE(input_clamp_text), input_clamp_text),
-};
-
-static const struct soc_enum switch_mode_enum[] = {
-	SOC_ENUM_SINGLE_EXT(ARRAY_SIZE(switch_mode_text), switch_mode_text),
 };
 
 static int get_aif2_mode(struct snd_kcontrol *kcontrol,
@@ -226,85 +160,6 @@ static int set_aif2_mode(struct snd_kcontrol *kcontrol,
 
 	return 0;
 }
-
-static int get_kpcs_mode(struct snd_kcontrol *kcontrol,
-	struct snd_ctl_elem_value *ucontrol)
-{
-	ucontrol->value.integer.value[0] = kpcs_mode;
-	return 0;
-}
-
-static int set_kpcs_mode(struct snd_kcontrol *kcontrol,
-	struct snd_ctl_elem_value *ucontrol)
-{
-
-	kpcs_mode = ucontrol->value.integer.value[0];
-
-	pr_info("set kpcs mode : %d\n", kpcs_mode);
-
-	return 0;
-}
-
-static int get_input_clamp(struct snd_kcontrol *kcontrol,
-	struct snd_ctl_elem_value *ucontrol)
-{
-	ucontrol->value.integer.value[0] = input_clamp;
-	return 0;
-}
-
-static int set_input_clamp(struct snd_kcontrol *kcontrol,
-	struct snd_ctl_elem_value *ucontrol)
-{
-	struct snd_soc_codec *codec = snd_kcontrol_chip(kcontrol);
-
-	input_clamp = ucontrol->value.integer.value[0];
-
-	if (input_clamp) {
-		snd_soc_update_bits(codec, WM8994_INPUT_MIXER_1,
-				WM8994_INPUTS_CLAMP, WM8994_INPUTS_CLAMP);
-		msleep(100);
-	} else {
-		snd_soc_update_bits(codec, WM8994_INPUT_MIXER_1,
-				WM8994_INPUTS_CLAMP, 0);
-	}
-	pr_info("set fm input_clamp : %s\n", input_clamp_text[input_clamp]);
-
-	return 0;
-}
-
-static int get_aif2_mute_status(struct snd_kcontrol *kcontrol,
-	struct snd_ctl_elem_value *ucontrol)
-{
-	ucontrol->value.integer.value[0] = aif2_digital_mute;
-	return 0;
-}
-
-static int set_aif2_mute_status(struct snd_kcontrol *kcontrol,
-	struct snd_ctl_elem_value *ucontrol)
-{
-	struct snd_soc_codec *codec = snd_kcontrol_chip(kcontrol);
-	int reg;
-
-	aif2_digital_mute = ucontrol->value.integer.value[0];
-
-	if (snd_soc_read(codec, WM8994_POWER_MANAGEMENT_6)
-		& WM8994_AIF2_DACDAT_SRC)
-		aif2_digital_mute = 0;
-
-	if (aif2_digital_mute)
-		reg = WM8994_AIF1DAC1_MUTE;
-	else
-		reg = 0;
-
-	snd_soc_update_bits(codec, WM8994_AIF2_DAC_FILTERS_1,
-				WM8994_AIF1DAC1_MUTE, reg);
-
-	pr_info("set aif2_digital_mute : %s\n",
-			switch_mode_text[aif2_digital_mute]);
-
-	return 0;
-}
-
 
 static int midas_ext_micbias(struct snd_soc_dapm_widget *w,
 			     struct snd_kcontrol *kcontrol, int event)
@@ -342,26 +197,6 @@ static int midas_ext_submicbias(struct snd_soc_dapm_widget *w,
 		break;
 	case SND_SOC_DAPM_POST_PMD:
 		gpio_set_value(GPIO_SUB_MIC_BIAS_EN, 0);
-		break;
-	}
-#endif
-	return 0;
-}
-
-static int midas_ext_thirdmicbias(struct snd_soc_dapm_widget *w,
-				struct snd_kcontrol *kcontrol, int event)
-{
-	struct snd_soc_codec *codec = w->codec;
-
-	dev_dbg(codec->dev, "%s event is %02X", w->name, event);
-
-#ifdef CONFIG_SND_USE_THIRD_MIC
-	switch (event) {
-	case SND_SOC_DAPM_PRE_PMU:
-		gpio_set_value(GPIO_THIRD_MIC_BIAS_EN, 1);
-		break;
-	case SND_SOC_DAPM_POST_PMD:
-		gpio_set_value(GPIO_THIRD_MIC_BIAS_EN, 0);
 		break;
 	}
 #endif
@@ -614,24 +449,10 @@ static const struct snd_kcontrol_new midas_controls[] = {
 	SOC_DAPM_PIN_SWITCH("HDMI"),
 	SOC_DAPM_PIN_SWITCH("Main Mic"),
 	SOC_DAPM_PIN_SWITCH("Sub Mic"),
-	SOC_DAPM_PIN_SWITCH("Third Mic"),
 	SOC_DAPM_PIN_SWITCH("Headset Mic"),
 
 	SOC_ENUM_EXT("AIF2 Mode", aif2_mode_enum[0],
 		get_aif2_mode, set_aif2_mode),
-
-	SOC_ENUM_EXT("KPCS Mode", kpcs_mode_enum[0],
-		get_kpcs_mode, set_kpcs_mode),
-
-	SOC_ENUM_EXT("Input Clamp", input_clamp_enum[0],
-		get_input_clamp, set_input_clamp),
-
-	SOC_ENUM_EXT("LineoutSwitch Mode", lineout_mode_enum[0],
-		get_lineout_mode, set_lineout_mode),
-
-	SOC_ENUM_EXT("AIF2 digital mute", switch_mode_enum[0],
-		get_aif2_mute_status, set_aif2_mute_status),
-
 };
 
 const struct snd_soc_dapm_widget midas_dapm_widgets[] = {
@@ -644,10 +465,7 @@ const struct snd_soc_dapm_widget midas_dapm_widgets[] = {
 	SND_SOC_DAPM_MIC("Headset Mic", NULL),
 	SND_SOC_DAPM_MIC("Main Mic", midas_ext_micbias),
 	SND_SOC_DAPM_MIC("Sub Mic", midas_ext_submicbias),
-	SND_SOC_DAPM_MIC("Third Mic", midas_ext_thirdmicbias),
 	SND_SOC_DAPM_LINE("FM In", NULL),
-
-	SND_SOC_DAPM_INPUT("S5P RP"),
 };
 
 const struct snd_soc_dapm_route midas_dapm_routes[] = {
@@ -676,14 +494,8 @@ const struct snd_soc_dapm_route midas_dapm_routes[] = {
 	{ "IN2LP:VXRN", NULL, "MICBIAS2" },
 	{ "MICBIAS2", NULL, "Headset Mic" },
 
-	{ "AIF1DAC1L", NULL, "S5P RP" },
-	{ "AIF1DAC1R", NULL, "S5P RP" },
-
 	{ "IN2RN", NULL, "FM In" },
 	{ "IN2RP:VXRP", NULL, "FM In" },
-
-	{ "IN2RN", NULL, "Third Mic" },
-	{ "IN2RP:VXRP", NULL, "Third Mic" },
 };
 
 static struct snd_soc_dai_driver midas_ext_dai[] = {
@@ -768,10 +580,6 @@ static int midas_wm1811_init_paiftx(struct snd_soc_pcm_runtime *rtd)
 					ret);
 	}
 
-	ret = snd_soc_dapm_disable_pin(&codec->dapm, "S5P RP");
-	if (ret < 0)
-		dev_err(codec->dev, "Failed to disable S5P RP: %d\n", ret);
-
 	snd_soc_dapm_ignore_suspend(&codec->dapm, "RCV");
 	snd_soc_dapm_ignore_suspend(&codec->dapm, "SPK");
 	snd_soc_dapm_ignore_suspend(&codec->dapm, "HP");
@@ -787,7 +595,6 @@ static int midas_wm1811_init_paiftx(struct snd_soc_pcm_runtime *rtd)
 	snd_soc_dapm_ignore_suspend(&codec->dapm, "FM In");
 	snd_soc_dapm_ignore_suspend(&codec->dapm, "LINE");
 	snd_soc_dapm_ignore_suspend(&codec->dapm, "HDMI");
-	snd_soc_dapm_ignore_suspend(&codec->dapm, "Third Mic");
 
 	wm1811->codec = codec;
 
