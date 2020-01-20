@@ -2799,7 +2799,7 @@ static int wm8994_hw_params(struct snd_pcm_substream *substream,
 	struct snd_soc_codec *codec = dai->codec;
 	struct wm8994_priv *wm8994 = snd_soc_codec_get_drvdata(codec);
 	struct wm8994 *control = wm8994->wm8994;
-	struct wm8994_pdata *pdata = &control->pdata;
+        struct wm8994_pdata *pdata = wm8994->pdata;
 	int aif1_reg;
 	int aif2_reg;
 	int bclk_reg;
@@ -3572,7 +3572,7 @@ static void wm1811_micd_stop(struct snd_soc_codec *codec)
 
 	mutex_unlock(&wm8994->accdet_lock);
 
-	if (wm8994->wm8994->pdata.jd_ext_cap)
+	if (wm8994->pdata->jd_ext_cap)
 		snd_soc_dapm_disable_pin(&codec->dapm,
 					 "MICBIAS2");
 }
@@ -4420,8 +4420,10 @@ static struct snd_soc_codec_driver soc_codec_dev_wm8994 = {
 	.read =		wm8994_read,
 	.write =	wm8994_write,
 	.readable_register = wm8994_readable,
+	.volatile_register = wm8994_volatile,
 	.set_bias_level = wm8994_set_bias_level,
 
+	.max_register = WM8994_MAX_REGISTER,
 	.reg_cache_size = WM8994_CACHE_SIZE,
 	.reg_cache_default = wm8994_reg_defaults,
 	.reg_word_size = 2,

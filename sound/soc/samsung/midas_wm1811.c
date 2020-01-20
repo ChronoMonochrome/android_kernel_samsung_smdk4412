@@ -1573,7 +1573,7 @@ static int midas_wm1811_init_paiftx(struct snd_soc_pcm_runtime *rtd)
 		dev_info(codec->dev, "wm1811: Rev %c support mic detection\n",
 			'A' + wm8994->revision);
 		ret = wm8958_mic_detect(codec, &wm1811->jack, NULL,
-					NULL);
+					NULL, NULL, NULL);
 
 		if (ret < 0)
 			dev_err(codec->dev, "Failed start detection: %d\n",
