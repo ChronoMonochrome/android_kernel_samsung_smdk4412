@@ -171,12 +171,6 @@ static struct wm8994_pdata wm1811_pdata = {
 	.gpio_defaults = {
 		[0] = WM8994_GP_FN_IRQ,	  /* GPIO1 IRQ output, CMOS mode */
 		[7] = WM8994_GPN_DIR | WM8994_GP_FN_PIN_SPECIFIC, /* DACDAT3 */
-		[8] = WM8994_CONFIGURE_GPIO |
-		      WM8994_GP_FN_PIN_SPECIFIC, /* ADCDAT3 */
-		[9] = WM8994_CONFIGURE_GPIO |\
-		      WM8994_GP_FN_PIN_SPECIFIC, /* LRCLK3 */
-		[10] = WM8994_CONFIGURE_GPIO |\
-		       WM8994_GP_FN_PIN_SPECIFIC, /* BCLK3 */
 	},
 
 	.irq_base = IRQ_BOARD_CODEC_START,
@@ -199,7 +193,7 @@ static struct wm8994_pdata wm1811_pdata = {
 	.jd_ext_cap = 1,
 
 	/* Regulated mode at highest output voltage */
-	.micbias = {0x2f, 0x27},
+	.micbias = {0x2f, 0x2b},
 
 	.micd_lvl_sel = 0xFF,
 
