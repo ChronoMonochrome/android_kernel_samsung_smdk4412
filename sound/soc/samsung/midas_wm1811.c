@@ -482,8 +482,8 @@ static int midas_lineout_switch(struct snd_soc_dapm_widget *w,
 {
 	struct snd_soc_codec *codec = w->codec;
 
-	dev_dbg(codec->dev, "%s event is %02X", w->name, event);
-
+	pr_err("%s: %s event is %02X", __func__, w->name, event);
+#if 0
 #if defined(CONFIG_SND_USE_MUIC_SWITCH)
 	switch (event) {
 	case SND_SOC_DAPM_POST_PMU:
@@ -505,6 +505,7 @@ static int midas_lineout_switch(struct snd_soc_dapm_widget *w,
 		gpio_set_value(GPIO_LINEOUT_EN, 0);
 		break;
 	}
+#endif
 #endif
 	return 0;
 }
@@ -757,7 +758,7 @@ static void midas_mic_id(void *data, u16 status)
 	struct wm1811_machine_priv *wm1811 = data;
 	struct wm8994_priv *wm8994 = snd_soc_codec_get_drvdata(wm1811->codec);
 
-	pr_info("%s: detected jack\n", __func__);
+	pr_err("%s: detected jack: status=%d\n", __func__, status);
 	wake_lock_timeout(&wm1811->jackdet_wake_lock, 5 * HZ);
 
 	/* Either nothing present or just starting detection */
@@ -1571,23 +1572,8 @@ static int midas_wm1811_init_paiftx(struct snd_soc_pcm_runtime *rtd)
 	if (wm8994->revision > 1) {
 		dev_info(codec->dev, "wm1811: Rev %c support mic detection\n",
 			'A' + wm8994->revision);
-#ifdef CONFIG_EXYNOS_SOUND_PLATFORM_DATA
-#ifdef CONFIG_USE_ADC_DET
-		if (sound_pdata->use_jackdet_type) {
-			ret = wm8958_mic_detect(codec, &wm1811->jack,
-					midas_micdet, wm1811, NULL, NULL);
-		} else {
-			ret = wm8958_mic_detect(codec, &wm1811->jack, NULL,
-				NULL, midas_mic_id, wm1811);
-		}
-#else
-	ret = wm8958_mic_detect(codec, &wm1811->jack, NULL,
-				NULL, midas_mic_id, wm1811);
-#endif
-#else
-	ret = wm8958_mic_detect(codec, &wm1811->jack, NULL,
-				NULL, midas_mic_id, wm1811);
-#endif
+		ret = wm8958_mic_detect(codec, &wm1811->jack, NULL,
+					NULL, NULL, NULL);
 
 		if (ret < 0)
 			dev_err(codec->dev, "Failed start detection: %d\n",
@@ -1685,6 +1671,9 @@ static struct snd_soc_dai_link midas_dai[] = {
 
 static int midas_card_suspend_pre(struct snd_soc_card *card)
 {
+	struct snd_soc_codec *codec = card->rtd->codec;
+	struct wm8994_priv *wm8994 = snd_soc_codec_get_drvdata(codec);
+
 #ifdef CONFIG_SEC_DEV_JACK
 	snd_soc_dapm_disable_pin(&codec->dapm, "AIF1CLK");
 #endif
@@ -1742,6 +1731,7 @@ static int midas_card_suspend_post(struct snd_soc_card *card)
 
 static int midas_card_resume_pre(struct snd_soc_card *card)
 {
+	struct snd_soc_codec *codec = card->rtd->codec;
 	struct snd_soc_dai *aif1_dai = card->rtd[0].codec_dai;
 	int ret;
 
@@ -1773,6 +1763,7 @@ static int midas_card_resume_pre(struct snd_soc_card *card)
 static int midas_card_resume_post(struct snd_soc_card *card)
 {
 	struct snd_soc_codec *codec = card->rtd->codec;
+	struct wm8994_priv *wm8994 = snd_soc_codec_get_drvdata(codec);
 	int reg = 0;
 
 	/* workaround for jack detection
