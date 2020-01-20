@@ -167,17 +167,6 @@ static void midas_gpio_init(void)
 	gpio_set_value(GPIO_FM_MIC_SW, 0);
 	gpio_free(GPIO_FM_MIC_SW);
 #endif
-
-#ifdef CONFIG_SND_USE_LINEOUT_SWITCH
-	err = gpio_request(GPIO_LINEOUT_EN, "LINEOUT_EN");
-	if (err) {
-		pr_err(KERN_ERR "LINEOUT_EN GPIO set error!\n");
-		return;
-	}
-	gpio_direction_output(GPIO_LINEOUT_EN, 1);
-	gpio_set_value(GPIO_LINEOUT_EN, 0);
-	gpio_free(GPIO_LINEOUT_EN);
-#endif
 }
 
 static const struct soc_enum lineout_mode_enum[] = {
@@ -412,17 +401,6 @@ static int midas_lineout_switch(struct snd_soc_dapm_widget *w,
 		break;
 	case SND_SOC_DAPM_PRE_PMD:
 		max77693_muic_set_audio_switch(0);
-		break;
-	}
-#endif
-
-#ifdef CONFIG_SND_USE_LINEOUT_SWITCH
-	switch (event) {
-	case SND_SOC_DAPM_POST_PMU:
-		gpio_set_value(GPIO_LINEOUT_EN, 1);
-		break;
-	case SND_SOC_DAPM_PRE_PMD:
-		gpio_set_value(GPIO_LINEOUT_EN, 0);
 		break;
 	}
 #endif
@@ -950,8 +928,6 @@ static int midas_card_suspend_post(struct snd_soc_card *card)
 
 		midas_snd_set_mclk(false, true);
 	}
-
-	exynos4_sys_powerdown_xusbxti_control(midas_snd_get_mclk() ? 1 : 0);
 
 	return 0;
 }
