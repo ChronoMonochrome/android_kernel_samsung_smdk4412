@@ -39,7 +39,7 @@ struct link_pm_data {
 	int hub_init_lock;
 	/* C1 stay disconnect status after send 'a', skip 'a' next enumeration*/
 	int hub_handshake_done;
-	struct wake_lock hub_lock;
+	struct wakeup_source hub_lock;
 	struct delayed_work link_pm_hub;
 	bool hub_work_running;
 	int hub_on_retry_cnt;

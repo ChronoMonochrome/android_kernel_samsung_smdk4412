@@ -731,7 +731,7 @@ static void handle_no_cp_crash_ack(unsigned long arg)
 	mif_err("%s: ERR! No CRASH_EXIT ACK from CP\n", ld->mc->name);
 
 	if (!wake_lock_active(&dpld->wlock))
-		wake_lock(&dpld->wlock);
+		__pm_stay_awake(&dpld->wlock);
 
 	handle_cp_crash(dpld);
 }
@@ -894,7 +894,7 @@ static void cmd_crash_reset_handler(struct dpram_link_device *dpld)
 	ld->mode = LINK_MODE_ULOAD;
 
 	if (!wake_lock_active(&dpld->wlock))
-		wake_lock(&dpld->wlock);
+		__pm_stay_awake(&dpld->wlock);
 
 	/* Stop network interfaces */
 	mif_netif_stop(ld);
@@ -933,7 +933,7 @@ static void cmd_crash_exit_handler(struct dpram_link_device *dpld)
 	ld->mode = LINK_MODE_ULOAD;
 
 	if (!wake_lock_active(&dpld->wlock))
-		wake_lock(&dpld->wlock);
+		__pm_stay_awake(&dpld->wlock);
 
 	del_timer(&dpld->crash_ack_timer);
 
@@ -995,7 +995,7 @@ static int init_dpram_ipc(struct dpram_link_device *dpld)
 
 	/* Enable IPC */
 	if (wake_lock_active(&dpld->wlock))
-		wake_unlock(&dpld->wlock);
+		__pm_relax(&dpld->wlock);
 
 	atomic_set(&dpld->accessing, 0);
 
@@ -2760,7 +2760,7 @@ struct link_device *dpram_create_link_device(struct platform_device *pdev)
 	** Initialize locks, completions, and bottom halves
 	*/
 	snprintf(dpld->wlock_name, MIF_MAX_NAME_LEN, "%s_wlock", ld->name);
-	wake_lock_init(&dpld->wlock, WAKE_LOCK_SUSPEND, dpld->wlock_name);
+	wakeup_source_init(&dpld->wlock, dpld->wlock_name);
 
 	init_completion(&dpld->udl_cmpl);
 	init_completion(&dpld->crash_cmpl);

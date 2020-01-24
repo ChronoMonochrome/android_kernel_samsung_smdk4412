@@ -467,7 +467,7 @@ static int if_usb_suspend(struct usb_interface *intf, pm_message_t message)
 		if (pm_data->freq_unlock)
 			pm_data->freq_unlock(&usb_ld->usbdev->dev);
 
-		wake_unlock(&usb_ld->susplock);
+		__pm_relax(&usb_ld->susplock);
 	}
 
 	return 0;
@@ -525,7 +525,7 @@ static int if_usb_resume(struct usb_interface *intf)
 		spin_unlock_irq(&usb_ld->lock);
 
 		mif_debug("\n");
-		wake_lock(&usb_ld->susplock);
+		__pm_stay_awake(&usb_ld->susplock);
 
 		/* HACK: Runtime pm does not allow requesting autosuspend from
 		 * resume callback, delayed it after resume */
@@ -839,7 +839,7 @@ irqreturn_t usb_resume_irq(int irq, void *data)
 	 * this is temporary solution until SYS.LSI resolve this problem.
 	 */
 	__raw_writel(eint_irq_to_bit(irq), S5P_EINT_PEND(EINT_REG_NR(irq)));
-	wake_lock_timeout(&usb_ld->gpiolock, 100);
+	__pm_wakeup_event(&usb_ld->gpiolock, 100);
 
 	mif_err("< H-WUP %d\n", hwup);
 
@@ -947,9 +947,9 @@ struct link_device *usb_create_link_device(void *data)
 	}
 
 	usb_ld->pdata->irq_host_wakeup = platform_get_irq(pdev, 1);
-	wake_lock_init(&usb_ld->gpiolock, WAKE_LOCK_SUSPEND,
+	wakeup_source_init(&usb_ld->gpiolock,
 		"modem_usb_gpio_wake");
-	wake_lock_init(&usb_ld->susplock, WAKE_LOCK_SUSPEND,
+	wakeup_source_init(&usb_ld->susplock,
 		"modem_usb_suspend_block");
 
 	INIT_DELAYED_WORK(&ld->tx_delayed_work, usb_tx_work);

@@ -114,8 +114,8 @@ struct idpram_pm_data {
 
 	struct completion down_cmpl;
 
-	struct wake_lock ap_wlock;
-	struct wake_lock hold_wlock;
+	struct wakeup_source ap_wlock;
+	struct wakeup_source hold_wlock;
 
 	struct delayed_work tx_dwork;
 	struct delayed_work resume_dwork;
@@ -181,7 +181,7 @@ struct dpram_link_device {
 	u16 __iomem *mbx2cp;
 
 	/* Wakelock for DPRAM device */
-	struct wake_lock wlock;
+	struct wakeup_source wlock;
 	char wlock_name[MIF_MAX_NAME_LEN];
 
 	/* For booting */

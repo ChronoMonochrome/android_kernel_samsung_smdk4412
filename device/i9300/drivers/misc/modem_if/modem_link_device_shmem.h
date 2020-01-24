@@ -117,11 +117,11 @@ struct shmem_link_device {
 	u32 __iomem *mbx2cp;
 
 	/* Wakelock for SHMEM device */
-	struct wake_lock wlock;
+	struct wakeup_source wlock;
 	char wlock_name[MIF_MAX_NAME_LEN];
-	struct wake_lock ap_wlock;
+	struct wakeup_source ap_wlock;
 	char ap_wlock_name[MIF_MAX_NAME_LEN];
-	struct wake_lock cp_wlock;
+	struct wakeup_source cp_wlock;
 	char cp_wlock_name[MIF_MAX_NAME_LEN];
 
 	/* for UDL */
