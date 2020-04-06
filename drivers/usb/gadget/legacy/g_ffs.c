@@ -58,8 +58,9 @@ MODULE_DESCRIPTION(DRIVER_DESC);
 MODULE_AUTHOR("Michal Nazarewicz");
 MODULE_LICENSE("GPL");
 
-#define GFS_VENDOR_ID	0x1d6b	/* Linux Foundation */
-#define GFS_PRODUCT_ID	0x0105	/* FunctionFS Gadget */
+#define GFS_VENDOR_ID	0x18d1	/* Linux Foundation */
+#define GFS_PRODUCT_ID	0x4EE7	/* FunctionFS Gadget */
+#define GFS_SERIAL_NUM	0x4EE7 /* aa */
 
 #define GFS_MAX_DEVS	10
 
