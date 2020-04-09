@@ -316,6 +316,7 @@ static int midas_set_bias_level(struct snd_soc_card *card,
 static int midas_late_probe(struct snd_soc_card *card) {
 	struct snd_soc_pcm_runtime *rtd = snd_soc_get_pcm_runtime(card,
 			card->dai_link[0].name);
+	struct snd_soc_codec *codec = rtd->codec;
 	struct snd_soc_component *component = rtd->codec_dai->component;
 	struct snd_soc_dai *aif1_dai = rtd->codec_dai;
 	struct midas_machine_priv *priv = snd_soc_card_get_drvdata(card);
@@ -352,7 +353,7 @@ static int midas_late_probe(struct snd_soc_card *card) {
 	if (ret)
 		return ret;
 
-	wm8958_mic_detect(component, &midas_headset, NULL, NULL, NULL, NULL);
+	wm8958_mic_detect(codec, &midas_headset, NULL, NULL, NULL, NULL);
 	return 0;
 }
 
@@ -405,7 +406,6 @@ static struct snd_soc_dai_link midas_dai[] = {
 	{
 		.name = "WM8994 AIF1",
 		.stream_name = "HiFi Primary",
-		.cpu_dai_name = SAMSUNG_I2S_DAI,
 		.codec_dai_name = "wm8994-aif1",
 		.ops = &midas_aif1_ops,
 		.dai_fmt = SND_SOC_DAIFMT_I2S | SND_SOC_DAIFMT_NB_NF |
@@ -414,7 +414,6 @@ static struct snd_soc_dai_link midas_dai[] = {
 	{
 		.name = "WM1811 Voice",
 		.stream_name = "Voice call",
-		.cpu_dai_name = SAMSUNG_I2S_DAI,
 		.codec_dai_name = "wm8994-aif2",
 		//.ops = &midas_wm1811_aif2_ops,
 		.ignore_suspend = 1,
@@ -422,7 +421,6 @@ static struct snd_soc_dai_link midas_dai[] = {
 	{
 		.name = "WM1811 BT",
 		.stream_name = "Bluetooth",
-		.cpu_dai_name = SAMSUNG_I2S_DAI,
 		.codec_dai_name = "wm8994-aif3",
 		.ignore_suspend = 1,
 	},
@@ -530,6 +528,7 @@ static int midas_probe(struct platform_device *pdev)
 	}
 
 	for (i = 0; i < card->num_links; i++) {
+		card->dai_link[i].cpu_dai_name = NULL;
 		card->dai_link[i].cpu_name = NULL;
 		card->dai_link[i].platform_name = NULL;
 		card->dai_link[i].codec_of_node = codec_dai_node;
