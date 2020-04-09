@@ -1,0 +1,5 @@
+kernel/drivers/net/wireless/brcm80211/brcmutil/brcmutil.ko:
+kernel/drivers/net/wireless/brcm80211/brcmfmac/brcmfmac.ko: kernel/drivers/net/wireless/brcm80211/brcmutil/brcmutil.ko
+kernel/drivers/usb/gadget/libcomposite.ko:
+kernel/drivers/usb/gadget/usb_f_fs.ko: kernel/drivers/usb/gadget/libcomposite.ko
+kernel/drivers/usb/gadget/g_ffs.ko: kernel/drivers/usb/gadget/usb_f_fs.ko kernel/drivers/usb/gadget/libcomposite.ko
