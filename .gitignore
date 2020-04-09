@@ -27,7 +27,6 @@
 *.tar
 *.gz
 *.bz2
-*.lzma
 *.xz
 *.lz4
 *.lzo
