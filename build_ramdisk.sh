@@ -1,7 +1,5 @@
 set -x
 
-REBUILD_RAMDISK=1
-
 if [ $REBUILD_RAMDISK -eq 1 ] ; then
 rm -rf ramdisk
 cp rootfs.cpio.lzma ramdisk.cpio.lzma
