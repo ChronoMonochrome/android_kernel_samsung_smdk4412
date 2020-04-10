@@ -52,6 +52,8 @@ struct exynos_ehci_hcd {
 static int exynos_ehci_get_phy(struct device *dev,
 				struct exynos_ehci_hcd *exynos_ehci)
 {
+	pr_err("EHCI: %s:", __func__);
+
 	struct device_node *child;
 	struct phy *phy;
 	int phy_number;
@@ -91,6 +93,7 @@ static int exynos_ehci_get_phy(struct device *dev,
 
 static int exynos_ehci_phy_enable(struct device *dev)
 {
+	pr_err("EHCI: %s:", __func__);
 	struct usb_hcd *hcd = dev_get_drvdata(dev);
 	struct exynos_ehci_hcd *exynos_ehci = to_exynos_ehci(hcd);
 	int i;
@@ -109,6 +112,7 @@ static int exynos_ehci_phy_enable(struct device *dev)
 
 static void exynos_ehci_phy_disable(struct device *dev)
 {
+	pr_err("EHCI: %s:", __func__);
 	struct usb_hcd *hcd = dev_get_drvdata(dev);
 	struct exynos_ehci_hcd *exynos_ehci = to_exynos_ehci(hcd);
 	int i;
@@ -120,6 +124,7 @@ static void exynos_ehci_phy_disable(struct device *dev)
 
 static void exynos_setup_vbus_gpio(struct device *dev)
 {
+	pr_err("EHCI: %s:", __func__);
 	int err;
 	int gpio;
 
@@ -144,6 +149,8 @@ static int exynos_ehci_probe(struct platform_device *pdev)
 	struct resource *res;
 	int irq;
 	int err;
+
+	pr_err("EHCI: %s:", __func__);
 
 	/*
 	 * Right now device-tree probed devices don't get dma_mask set.
@@ -237,6 +244,7 @@ fail_clk:
 
 static int exynos_ehci_remove(struct platform_device *pdev)
 {
+	pr_err("EHCI: %s:", __func__);
 	struct usb_hcd *hcd = platform_get_drvdata(pdev);
 	struct exynos_ehci_hcd *exynos_ehci = to_exynos_ehci(hcd);
 
@@ -254,6 +262,7 @@ static int exynos_ehci_remove(struct platform_device *pdev)
 #ifdef CONFIG_PM
 static int exynos_ehci_suspend(struct device *dev)
 {
+	pr_err("EHCI: %s:", __func__);
 	struct usb_hcd *hcd = dev_get_drvdata(dev);
 	struct exynos_ehci_hcd *exynos_ehci = to_exynos_ehci(hcd);
 
@@ -273,6 +282,7 @@ static int exynos_ehci_suspend(struct device *dev)
 
 static int exynos_ehci_resume(struct device *dev)
 {
+	pr_err("EHCI: %s:", __func__);
 	struct usb_hcd *hcd = dev_get_drvdata(dev);
 	struct exynos_ehci_hcd *exynos_ehci = to_exynos_ehci(hcd);
 	int ret;
@@ -327,10 +337,11 @@ static const struct ehci_driver_overrides exynos_overrides __initdata = {
 
 static int __init ehci_exynos_init(void)
 {
+	pr_err("EHCI: %s:", __func__);
 	if (usb_disabled())
 		return -ENODEV;
 
-	pr_info("%s: " DRIVER_DESC "\n", hcd_name);
+	pr_err("%s: " DRIVER_DESC "\n", hcd_name);
 	ehci_init_driver(&exynos_ehci_hc_driver, &exynos_overrides);
 	return platform_driver_register(&exynos_ehci_driver);
 }
