@@ -31,12 +31,6 @@
 #include <linux/irqdomain.h>
 #include <linux/delay.h>
 
-#include <linux/regulator/machine.h>
-#include <linux/regulator/fixed.h>
-#include <linux/gpio.h>
-#include <linux/gpio/consumer.h>
-#include <linux/power_supply.h>
-
 #define	DEV_NAME			"max77693-muic"
 #define	DELAY_MS_DEFAULT		20000		/* unit: millisecond */
 
@@ -110,9 +104,6 @@ struct max77693_muic_info {
 	 */
 	int path_usb;
 	int path_uart;
-
-	struct gpio_desc *otg_en_gpio;
-        struct gpio_desc *usb_sel_gpio;
 };
 
 enum max77693_muic_cable_group {
@@ -1298,26 +1289,6 @@ static int max77693_muic_probe(struct platform_device *pdev)
 		info->path_uart = MAX77693_CONTROL1_SW_UART;
 		delay_jiffies = msecs_to_jiffies(DELAY_MS_DEFAULT);
 	}
-
-        info->otg_en_gpio = gpiod_get(max77693->dev, "otg_en" , GPIOD_OUT_LOW);
-
-        if (IS_ERR(info->otg_en_gpio)) {
-                ret = PTR_ERR(info->otg_en_gpio);
-                dev_err(max77693->dev,
-                       "Failed to get OTG_EN gpio \n");
-        }
-
-	pr_err("%s: got otg_en GPIO: %p", __func__, info->otg_en_gpio);
-
-        info->usb_sel_gpio = gpiod_get(max77693->dev, "usb_sel" , GPIOD_OUT_LOW);
-
-        if (IS_ERR(info->usb_sel_gpio)) {
-                ret = PTR_ERR(info->usb_sel_gpio);
-                dev_err(max77693->dev,
-                       "Failed to get USB_SEL gpio \n");
-        }
-
-	pr_err("%s: got usb_sel GPIO: %p", __func__, info->usb_sel_gpio);
 
 	/* Check revision number of MUIC device*/
 	ret = regmap_read(info->max77693->regmap_muic,
