@@ -584,7 +584,7 @@ void max77693_otg_control(struct max77693_muic_info *info, int enable)
 {
 	int chg_int_state;
 	int int_mask, cdetctrl1, chg_cnfg_00;
-	dev_dbg(info->dev, "%s: enable(%d)\n", __func__, enable);
+	pr_err("%s: enable(%d)\n", __func__, enable);
 
 	if (enable) {
 		/* disable charger interrupt */
@@ -649,11 +649,38 @@ void max77693_otg_control(struct max77693_muic_info *info, int enable)
 				__func__, int_mask, cdetctrl1, chg_cnfg_00);
 }
 
+struct max77693_muic_info *g_info;
+
+int vbus_switch = 0;
+
+static int set_vbus_enable(const char *val, struct kernel_param *kp)
+{
+	if (!g_info) {
+                pr_err("%s: MUIC info struct is NULL!\n", __func__);
+		return -EFAULT;
+	}
+
+        if (strcmp(val, "1") >= 0 || strcmp(val, "true") >= 0) {
+                vbus_switch = 1;
+		max77693_otg_control(g_info, vbus_switch);
+	} else if (strcmp(val, "0") >= 0 || strcmp(val, "false") >= 0) {
+                vbus_switch = 0;
+		max77693_otg_control(g_info, vbus_switch);
+        } else {
+                pr_err("%s: invalid input '%s' for 'enable'; use 1 or 0\n", __func__, val);
+        }
+
+        return 0;
+}
+
+module_param_call(vbus_enable, set_vbus_enable, param_get_int, &vbus_switch, 0664);
+
 static int max77693_muic_adc_ground_handler(struct max77693_muic_info *info)
 {
 	int cable_type_gnd;
 	int ret = 0;
 	bool attached;
+	pr_err("%s\n", __func__);
 
 	cable_type_gnd = max77693_muic_get_cable_type(info,
 				MAX77693_CABLE_GROUP_ADC_GND, &attached);
@@ -661,6 +688,8 @@ static int max77693_muic_adc_ground_handler(struct max77693_muic_info *info)
 	switch (cable_type_gnd) {
 	case MAX77693_MUIC_GND_USB_HOST:
 	case MAX77693_MUIC_GND_USB_HOST_VB:
+		pr_err("%s: MAX77693_MUIC_GND_USB_HOST\n", __func__);
+
 		/* USB_HOST, PATH: AP_USB */
 		ret = max77693_muic_set_path(info, MAX77693_CONTROL1_SW_USB,
 						attached);
@@ -670,6 +699,7 @@ static int max77693_muic_adc_ground_handler(struct max77693_muic_info *info)
 		max77693_otg_control(info, attached);
 		break;
 	case MAX77693_MUIC_GND_AV_CABLE_LOAD:
+		pr_err("%s: MAX77693_MUIC_GND_AV_CABLE_LOAD\n", __func__);
 		/* Audio Video Cable with load, PATH:AUDIO */
 		ret = max77693_muic_set_path(info, MAX77693_CONTROL1_SW_AUDIO,
 						attached);
@@ -681,10 +711,14 @@ static int max77693_muic_adc_ground_handler(struct max77693_muic_info *info)
 		break;
 	case MAX77693_MUIC_GND_MHL:
 	case MAX77693_MUIC_GND_MHL_VB:
+		pr_err("%s: MAX77693_MUIC_GND_MHL\n", __func__);
+
 		/* MHL or MHL with USB/TA cable */
 		extcon_set_cable_state_(info->edev, EXTCON_DISP_MHL, attached);
 		break;
 	default:
+		pr_err("%s: default\n", __func__);
+
 		dev_err(info->dev, "failed to detect %s cable of gnd type\n",
 			attached ? "attached" : "detached");
 		return -EINVAL;
@@ -1313,6 +1347,8 @@ static int max77693_muic_probe(struct platform_device *pdev)
 	INIT_DELAYED_WORK(&info->wq_detcable, max77693_muic_detect_cable_wq);
 	queue_delayed_work(system_power_efficient_wq, &info->wq_detcable,
 			delay_jiffies);
+
+	g_info = info;
 
 	return ret;
 }
