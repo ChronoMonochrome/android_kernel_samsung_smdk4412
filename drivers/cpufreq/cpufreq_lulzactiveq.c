@@ -31,7 +31,8 @@
 #include <linux/timer.h>
 #include <linux/workqueue.h>
 #include <linux/kthread.h>
-#include <linux/earlysuspend.h>
+#include <linux/notifier.h>
+#include <linux/fb.h>
 #include <asm/cputime.h>
 #include <linux/suspend.h>
 #include <linux/slab.h>
@@ -142,7 +143,8 @@ static unsigned long pump_down_step;
 /*
  * Use minimum frequency while suspended.
  */
-static unsigned int early_suspended;
+static unsigned int fb_suspended;
+static struct notifier_block fb_notif;
 
 #define SCREEN_OFF_LOWEST_STEP 		(0xffffffff)
 #define DEFAULT_SCREEN_OFF_MIN_STEP	(SCREEN_OFF_LOWEST_STEP)
@@ -365,7 +367,7 @@ static inline void fix_screen_off_min_step(struct cpufreq_lulzactive_cpuinfo *pc
 static inline unsigned int adjust_screen_off_freq(
 	struct cpufreq_lulzactive_cpuinfo *pcpu, unsigned int freq) {
 	
-	if (early_suspended && freq > pcpu->lulzfreq_table[screen_off_min_step].frequency) {		
+	if (fb_suspended && freq > pcpu->lulzfreq_table[screen_off_min_step].frequency) {
 		freq = pcpu->lulzfreq_table[screen_off_min_step].frequency;
 		pcpu->target_freq = pcpu->policy->cur;
 		
@@ -1542,7 +1544,7 @@ static struct attribute *lulzactive_attributes[] = {
 	&up_nr_cpus.attr,
 #endif
 	/* priority: hotplug_lock > max_cpu_lock > min_cpu_lock
-	   Exception: hotplug_lock on early_suspend uses min_cpu_lock */
+	   Exception: hotplug_lock on fb_suspended uses min_cpu_lock */
 	&max_cpu_lock.attr,
 	&min_cpu_lock.attr,
 	&hotplug_lock.attr,
@@ -1961,19 +1963,39 @@ static struct notifier_block cpufreq_lulzactive_idle_nb = {
 	.notifier_call = cpufreq_lulzactive_idle_notifier,
 };
 
-static void lulzactive_early_suspend(struct early_suspend *handler) {
-	early_suspended = 1;
+static void lulzactive_fb_suspend() {
+	fb_suspended = 1;
 }
 
-static void lulzactive_late_resume(struct early_suspend *handler) {
-	early_suspended = 0;
+static void lulzactive_fb_resume() {
+	fb_suspended = 0;
 }
 
-static struct early_suspend lulzactive_power_suspend = {
-	.suspend = lulzactive_early_suspend,
-	.resume = lulzactive_late_resume,
-	.level = EARLY_SUSPEND_LEVEL_DISABLE_FB + 1,
-};
+static int fb_notifier_callback(struct notifier_block *self,
+                               unsigned long event, void *data)
+{
+       struct fb_event *evdata = data;
+       int *blank;
+       if (evdata && evdata->data) {
+               if (event == FB_EVENT_BLANK) {
+                       blank = evdata->data;
+                       switch (*blank) {
+                               case FB_BLANK_UNBLANK:
+                               case FB_BLANK_NORMAL:
+                               case FB_BLANK_VSYNC_SUSPEND:
+                               case FB_BLANK_HSYNC_SUSPEND:
+                                       lulzactive_fb_resume();
+                                       break;
+                               default:
+                               case FB_BLANK_POWERDOWN:
+                                       lulzactive_fb_suspend();
+                                       break;
+                       }
+               }
+       }
+
+       return 0;
+}
 
 void start_lulzactiveq(void)
 {
@@ -2011,7 +2033,10 @@ void start_lulzactiveq(void)
 	get_task_struct(up_task);
 
 	idle_notifier_register(&cpufreq_lulzactive_idle_nb);
-	register_early_suspend(&lulzactive_power_suspend);
+
+	fb_suspended = 0;
+	fb_notif.notifier_call = fb_notifier_callback;
+	fb_register_client(&fb_notif);
 }
 
 void stop_lulzactiveq(void)
@@ -2021,7 +2046,8 @@ void stop_lulzactiveq(void)
 	put_task_struct(up_task);
 
 	idle_notifier_unregister(&cpufreq_lulzactive_idle_nb);
-	unregister_early_suspend(&lulzactive_power_suspend);
+	fb_unregister_client(&fb_notif);
+
 	pump_up_step = DEFAULT_PUMP_UP_STEP;
 	pump_down_step = DEFAULT_PUMP_DOWN_STEP;
 }
@@ -2036,7 +2062,7 @@ static int __init cpufreq_lulzactive_init(void)
 	dec_cpu_load = DEFAULT_DEC_CPU_LOAD;
 	pump_up_step = DEFAULT_PUMP_UP_STEP;
 	pump_down_step = DEFAULT_PUMP_DOWN_STEP;
-	early_suspended = 0;
+	fb_suspended = 0;
 	screen_off_min_step = DEFAULT_SCREEN_OFF_MIN_STEP;
 	timer_rate = DEFAULT_TIMER_RATE;
 	ret = init_rq_avg();
