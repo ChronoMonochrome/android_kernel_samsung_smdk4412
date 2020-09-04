@@ -31,8 +31,9 @@
 #include <linux/suspend.h>
 #include <linux/reboot.h>
 
-#ifdef CONFIG_HAS_EARLYSUSPEND
-#include <linux/earlysuspend.h>
+#ifdef CONFIG_FB
+#include <linux/notifier.h>
+#include <linux/fb.h>
 #endif
 #define EARLYSUSPEND_HOTPLUGLOCK 1
 
@@ -198,8 +199,8 @@ static struct dbs_tuners {
 	unsigned int dvfs_debug;
 	unsigned int max_freq;
 	unsigned int min_freq;
-#ifdef CONFIG_HAS_EARLYSUSPEND
-	int early_suspend;
+#ifdef CONFIG_FB
+	int fb_suspend;
 #endif
 #ifdef CONFIG_CPU_FREQ_GOV_ONDEMAND_FLEXRATE
 	unsigned int flex_sampling_rate;
@@ -235,8 +236,8 @@ static struct dbs_tuners {
 	.min_cpu_lock = DEF_MIN_CPU_LOCK,
 	.hotplug_lock = ATOMIC_INIT(0),
 	.dvfs_debug = 0,
-#ifdef CONFIG_HAS_EARLYSUSPEND
-	.early_suspend = -1,
+#ifdef CONFIG_FB
+	.fb_suspend = -1,
 #endif
 	.up_threshold_at_min_freq = UP_THRESHOLD_AT_MIN_FREQ,
 	.freq_for_responsiveness = FREQ_FOR_RESPONSIVENESS,
@@ -1043,7 +1044,7 @@ static struct attribute *dbs_attributes[] = {
 	&cpu_online_bias_up_threshold.attr,
 	&cpu_online_bias_down_threshold.attr,
 	/* priority: hotplug_lock > max_cpu_lock > min_cpu_lock
-	   Exception: hotplug_lock on early_suspend uses min_cpu_lock */
+	   Exception: hotplug_lock on fb_suspend uses min_cpu_lock */
 	&max_cpu_lock.attr,
 	&min_cpu_lock.attr,
 	&hotplug_lock.attr,
@@ -1756,17 +1757,18 @@ static struct notifier_block reboot_notifier = {
 	.notifier_call = reboot_notifier_call,
 };
 
-#ifdef CONFIG_HAS_EARLYSUSPEND
-static struct early_suspend early_suspend;
+#ifdef CONFIG_FB
+static struct notifier_block fb_notif;
+static bool fb_suspended = false;
 unsigned int prev_freq_stepplus;
 unsigned int prev_sampling_rateplus;
 #ifdef CONFIG_CPU_FREQ_LCD_FREQ_DFS
 int prev_lcdfreq_enable;
 #endif
-static void cpufreq_pegasusqplus_early_suspend(struct early_suspend *h)
+static void cpufreq_pegasusqplus_fb_suspend(void)
 {
 #if EARLYSUSPEND_HOTPLUGLOCK
-	dbs_tuners_ins.early_suspend =
+	dbs_tuners_ins.fb_suspend =
 		atomic_read(&g_hotplug_lock);
 #endif
 #ifdef CONFIG_CPU_FREQ_LCD_FREQ_DFS
@@ -1782,22 +1784,53 @@ static void cpufreq_pegasusqplus_early_suspend(struct early_suspend *h)
 	    (dbs_tuners_ins.min_cpu_lock) ? dbs_tuners_ins.min_cpu_lock : 1);
 	apply_hotplug_lock();
 #endif
+	fb_suspended = true;
 }
-static void cpufreq_pegasusqplus_late_resume(struct early_suspend *h)
+static void cpufreq_pegasusqplus_fb_resume(void)
 {
+	if (!fb_suspended)
+		return;
+
 #if EARLYSUSPEND_HOTPLUGLOCK
-	atomic_set(&g_hotplug_lock, dbs_tuners_ins.early_suspend);
+	atomic_set(&g_hotplug_lock, dbs_tuners_ins.fb_suspend);
 #endif
 #ifdef CONFIG_CPU_FREQ_LCD_FREQ_DFS
 	dbs_tuners_ins.lcdfreq_enable = prev_lcdfreq_enable;
 #endif
-	dbs_tuners_ins.early_suspend = -1;
+	dbs_tuners_ins.fb_suspend = -1;
 	dbs_tuners_ins.freq_step = prev_freq_stepplus;
 	dbs_tuners_ins.sampling_rate = prev_sampling_rateplus;
 #if EARLYSUSPEND_HOTPLUGLOCK
 	apply_hotplug_lock();
 #endif
+	fb_suspended = false;
 }
+
+static int fb_notifier_callback(struct notifier_block *self,
+				unsigned long event, void *data)
+{
+	struct fb_event *evdata = data;
+	int *blank;
+	if (evdata && evdata->data) {
+		if (event == FB_EVENT_BLANK) {
+			blank = evdata->data;
+			switch (*blank) {
+				case FB_BLANK_UNBLANK:
+				case FB_BLANK_NORMAL:
+				case FB_BLANK_VSYNC_SUSPEND:
+				case FB_BLANK_HSYNC_SUSPEND:
+					cpufreq_pegasusqplus_fb_resume();
+					break;
+				default:
+				case FB_BLANK_POWERDOWN:
+					cpufreq_pegasusqplus_fb_suspend();
+					break;
+			}
+		}
+	}
+
+	return 0;
+ }
 #endif
 
 static int cpufreq_governor_dbs(struct cpufreq_policy *policy,
@@ -1865,14 +1898,16 @@ static int cpufreq_governor_dbs(struct cpufreq_policy *policy,
 #if !EARLYSUSPEND_HOTPLUGLOCK
 		register_pm_notifier(&pm_notifier);
 #endif
-#ifdef CONFIG_HAS_EARLYSUSPEND
-		register_early_suspend(&early_suspend);
+#ifdef CONFIG_FB
+		fb_suspended = false;
+		fb_notif.notifier_call = fb_notifier_callback;
+		fb_register_client(&fb_notif);
 #endif
 		break;
 
 	case CPUFREQ_GOV_STOP:
-#ifdef CONFIG_HAS_EARLYSUSPEND
-		unregister_early_suspend(&early_suspend);
+#ifdef CONFIG_FB
+		fb_unregister_client(&fb_notif);
 #endif
 #if !EARLYSUSPEND_HOTPLUGLOCK
 		unregister_pm_notifier(&pm_notifier);
@@ -1936,12 +1971,6 @@ static int __init cpufreq_gov_dbs_init(void)
 	ret = cpufreq_register_governor(&cpufreq_gov_pegasusqplus);
 	if (ret)
 		goto err_reg;
-
-#ifdef CONFIG_HAS_EARLYSUSPEND
-	early_suspend.level = EARLY_SUSPEND_LEVEL_DISABLE_FB;
-	early_suspend.suspend = cpufreq_pegasusqplus_early_suspend;
-	early_suspend.resume = cpufreq_pegasusqplus_late_resume;
-#endif
 
 	return ret;
 
