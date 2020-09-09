@@ -391,7 +391,7 @@ static int samsung_cable_status_update(int status)
 	if (source == CHARGER_USB || source == CHARGER_AC)
 		__pm_stay_awake(&vbus_wake_lock);
 	else
-		__pm_wakeup_event(&vbus_wake_lock, HZ / 2);
+		__pm_wakeup_event(&vbus_wake_lock, 500);
 
 	/* if the power source changes, all power supplies may change state */
 	power_supply_changed(&samsung_power_supplies[CHARGER_BATTERY]);
