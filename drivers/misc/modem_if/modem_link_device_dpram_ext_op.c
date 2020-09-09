@@ -1736,7 +1736,7 @@ static void s5p_idpram_try_resume(struct work_struct *work)
 		__pm_relax(&pm_data->hold_wlock);
 
 		/* hold wakelock until uevnet sent to rild */
-		__pm_wakeup_event(&pm_data->hold_wlock, HZ*7);
+		__pm_wakeup_event(&pm_data->hold_wlock, 7000);
 		s5p_idpram_set_pm_lock(dpld, 0);
 	}
 
@@ -1752,7 +1752,7 @@ static irqreturn_t s5p_cp_dump_irq_handler(int irq, void *data)
 static irqreturn_t s5p_ap_wakeup_irq_handler(int irq, void *data)
 {
 	struct idpram_pm_data *pm_data = data;
-	__pm_wakeup_event(&pm_data->ap_wlock, HZ*5);
+	__pm_wakeup_event(&pm_data->ap_wlock, 5000);
 	return IRQ_HANDLED;
 }
 
@@ -1844,7 +1844,7 @@ static int s5p_idpram_prepare_suspend(struct dpram_link_device *dpld)
 	default:
 		mif_err("ERR! %s down or not ready!!! (intr 0x%04X)\n",
 			ld->name, dpld->recv_intr(dpld));
-		timeout = msecs_to_jiffies(500);
+		timeout = 500;
 		__pm_wakeup_event(&pm_data->hold_wlock, timeout);
 		s5p_idpram_set_pm_lock(dpld, 0);
 		break;
