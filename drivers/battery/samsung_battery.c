@@ -1802,8 +1802,8 @@ monitor_finish:
 		info->prev_charge_virt_state != info->charge_virt_state ||
 		info->prev_battery_soc != info->battery_soc) {
 		/* TBD : timeout value */
-		pr_info("%s : update wakelock (%d)\n", __func__, HZ);
-		__pm_wakeup_event(&info->update_wake_lock, HZ);
+		pr_info("%s : update wakelock (%d)\n", __func__, 1500);
+		__pm_wakeup_event(&info->update_wake_lock, 1500);
 	}
 
 	info->prev_cable_type = info->cable_type;
@@ -1816,9 +1816,9 @@ monitor_finish:
 	if ((info->lpm_state == true) &&
 		(info->cable_type == POWER_SUPPLY_TYPE_BATTERY)) {
 		pr_info("%s: lpm with battery, maybe power off\n", __func__);
-		__pm_wakeup_event(&info->monitor_wake_lock, 3 * HZ);
+		__pm_wakeup_event(&info->monitor_wake_lock, 5000);
 	} else
-		__pm_wakeup_event(&info->monitor_wake_lock, HZ / 4);
+		__pm_wakeup_event(&info->monitor_wake_lock, 500);
 
 	mutex_unlock(&info->mon_lock);
 
