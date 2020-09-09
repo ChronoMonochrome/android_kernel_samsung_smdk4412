@@ -43,6 +43,7 @@
 #include <linux/module.h>
 #include <linux/mutex.h>
 #include <linux/slab.h>
+#include <linux/workqueue.h>
 #include <mach/gpio.h>
 #include <linux/uaccess.h>
 
@@ -194,6 +195,17 @@ int touch_is_pressed = 0;
 
 #define ISC_CHAR_2_BCD(num)	(((num/10)<<4) + (num%10))
 #define ISC_MAX(x, y)		(((x) > (y)) ? (x) : (y))
+
+bool mmsts_sleep __read_mostly = false;
+
+struct task_struct * this_task;
+
+#ifdef CONFIG_SPEEDUP_KEYRESUME
+	struct sched_param earlysuspend_s = { .sched_priority = 66 };
+	struct sched_param earlysuspend_v = { .sched_priority = 0 };
+	int earlysuspend_old_prio = 0;
+	int earlysuspend_old_policy = 0;
+#endif
 
 static const char section_name[SECTION_NUM][SECTION_NAME_LEN] = {
 	"BOOT", "CORE", "PRIV", "PUBL"
@@ -3194,10 +3206,38 @@ static void mms_ts_fb_suspend(struct mms_ts_info *info)
 	info->fb_suspended = true;
 }
 
+
+#ifdef CONFIG_SPEEDUP_KEYRESUME
+static void restore_old_prio(struct work_struct *work)
+{
+	earlysuspend_v.sched_priority = earlysuspend_old_prio;
+	if ((sched_setscheduler(this_task, earlysuspend_old_policy, &earlysuspend_v)) < 0)
+		printk(KERN_ERR "late_resume: down late_resume failed\n");
+	else
+		pr_err("%s: restored old prio (%d)\n", __func__, earlysuspend_v.sched_priority);
+}
+static DECLARE_DELAYED_WORK(restore_old_prio_delayedwork, restore_old_prio);
+#endif
+
 static void mms_ts_fb_resume(struct mms_ts_info *info)
 {
 	if (!info->fb_suspended)
 		return;
+
+#ifdef CONFIG_SPEEDUP_KEYRESUME
+	earlysuspend_old_prio = current->rt_priority;
+	earlysuspend_old_policy = current->policy;
+
+	/* set us real-time */
+	if (sched_setscheduler(current, SCHED_RR, &earlysuspend_s) < 0)
+		printk(KERN_ERR "late_resume: up late_resume failed\n");
+	else
+		pr_err("%s: set us real-time (%d)\n", __func__, current->rt_priority);
+
+	this_task = current;
+
+	schedule_delayed_work(&restore_old_prio_delayedwork, msecs_to_jiffies(5000));
+#endif
 
 	mms_ts_resume(&info->client->dev);
 	info->fb_suspended = false;
