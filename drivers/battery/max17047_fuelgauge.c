@@ -511,7 +511,7 @@ static void max17047_update_work(struct work_struct *work)
 				POWER_SUPPLY_PROP_STATUS,
 				&value);
 
-	__pm_wakeup_event(&fg_data->update_wake_lock, HZ);
+	__pm_wakeup_event(&fg_data->update_wake_lock, 1000);
 }
 
 #ifdef DEBUG_FUELGAUGE_POLLING
