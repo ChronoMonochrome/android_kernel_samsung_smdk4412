@@ -112,9 +112,6 @@ static void haptic_enable(struct timed_output_dev *tout_dev, int value)
 			HRTIMER_MODE_REL);
 	}
 	spin_unlock_irqrestore(&hap_data->lock, flags);
-#ifdef SEC_DEBUG_VIB
-	printk(KERN_DEBUG "[VIB] haptic_enable is called\n");
-#endif
 }
 
 static enum hrtimer_restart haptic_timer_func(struct hrtimer *timer)
@@ -192,9 +189,6 @@ static void haptic_work(struct work_struct *work)
 
 		hap_data->running = false;
 	}
-#ifdef SEC_DEBUG_VIB
-	printk(KERN_DEBUG "[VIB] haptic_work is called\n");
-#endif
 	return;
 }
 
@@ -234,9 +228,6 @@ void vibtonz_en(bool en)
 
 		g_hap_data->running = false;
 	}
-#ifdef SEC_DEBUG_VIB
-	printk(KERN_DEBUG "[VIB] vibtonz_en is called\n");
-#endif
 }
 EXPORT_SYMBOL(vibtonz_en);
 
@@ -258,9 +249,6 @@ void vibtonz_pwm(int nForce)
         pr_debug("[VIB] %s: setting pwm_duty=%d", __func__, pwm_duty);
 		pwm_config(g_hap_data->pwm, pwm_duty, pwm_period);
 	}
-#ifdef SEC_DEBUG_VIB
-	printk(KERN_DEBUG "[VIB] vibtonz_pwm is called(%d)\n", nForce);
-#endif
 }
 EXPORT_SYMBOL(vibtonz_pwm);
 #endif
