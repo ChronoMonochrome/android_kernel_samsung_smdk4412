@@ -741,7 +741,7 @@ static void midas_micdet(void *data)
 	pr_info("%s: detected jack\n", __func__);
 	wm8994->mic_detecting = true;
 
-	__pm_wakeup_event(&wm1811->jackdet_wake_lock, 5 * HZ);
+	__pm_wakeup_event(&wm1811->jackdet_wake_lock, 5000);
 
 	snd_soc_update_bits(codec, WM8958_MICBIAS2,
 				WM8958_MICB2_MODE, 0);
@@ -758,7 +758,7 @@ static void midas_mic_id(void *data, u16 status)
 	struct wm8994_priv *wm8994 = snd_soc_codec_get_drvdata(wm1811->codec);
 
 	pr_info("%s: detected jack\n", __func__);
-	__pm_wakeup_event(&wm1811->jackdet_wake_lock, 5 * HZ);
+	__pm_wakeup_event(&wm1811->jackdet_wake_lock, 5000);
 
 	/* Either nothing present or just starting detection */
 	if (!(status & WM8958_MICD_STS)) {
