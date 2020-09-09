@@ -2828,7 +2828,7 @@ static void max77693_muic_detect_dev(struct max77693_muic_info *info, int irq)
 	}
 #endif
 
-	__pm_wakeup_event(&info->muic_wake_lock, HZ * 2);
+	__pm_wakeup_event(&info->muic_wake_lock, 2000);
 
 	intr = max77693_muic_filter_dev(info, status[0], status[1]);
 
