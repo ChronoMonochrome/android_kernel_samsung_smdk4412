@@ -748,7 +748,7 @@ irqreturn_t cm36651_irq_thread_fn(int irq, void *data)
 	/* 0 is close, 1 is far */
 	input_report_abs(cm36651->proximity_input_dev, ABS_DISTANCE, val);
 	input_sync(cm36651->proximity_input_dev);
-	__pm_wakeup_event(&cm36651->prx_wake_lock, 3 * HZ);
+	__pm_wakeup_event(&cm36651->prx_wake_lock, 3000);
 #ifdef CONFIG_SLP
 	pm_wakeup_event(cm36651->proximity_dev, 0);
 #endif
