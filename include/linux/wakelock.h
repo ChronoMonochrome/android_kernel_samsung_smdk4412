@@ -52,11 +52,6 @@ struct wake_lock {
 #endif
 };
 
-#ifdef CONFIG_PM_WAKELOCKS
-extern int pm_wake_lock(const char *buf);
-extern int pm_wake_unlock(const char *buf);
-#endif
-
 #ifdef CONFIG_HAS_WAKELOCK
 
 void wake_lock_init(struct wake_lock *lock, int type, const char *name);

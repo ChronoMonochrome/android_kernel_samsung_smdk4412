@@ -1324,6 +1324,11 @@ retry:
 	return 0;
 }
 
+#ifdef CONFIG_VIDEO_S5C73M3_WAKELOCK
+extern int pm_wake_lock(const char *buf);
+extern int pm_wake_unlock(const char *buf);
+#endif
+
 static int s5c73m3_set_flash(struct v4l2_subdev *sd, int val, int recording)
 {
 	struct s5c73m3_state *state = to_state(sd);

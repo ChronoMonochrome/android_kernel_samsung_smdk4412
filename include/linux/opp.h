@@ -20,6 +20,10 @@
 
 struct opp;
 
+enum opp_event {
+       OPP_EVENT_ADD, OPP_EVENT_ENABLE, OPP_EVENT_DISABLE,
+};
+
 #if defined(CONFIG_PM_OPP)
 
 unsigned long opp_get_voltage(struct opp *opp);

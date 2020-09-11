@@ -3,10 +3,6 @@
 #include <linux/utsname.h>
 #include <linux/freezer.h>
 
-#if defined(CONFIG_CPU_FREQ) && defined(CONFIG_ARCH_EXYNOS4)
-#define CONFIG_DVFS_LIMIT
-#endif
-
 struct swsusp_info {
 	struct new_utsname	uts;
 	u32			version_code;
