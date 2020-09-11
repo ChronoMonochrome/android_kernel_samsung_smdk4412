@@ -1553,33 +1553,16 @@ unsigned int prev_freq_step;
 unsigned int prev_sampling_rate;
 static void cpufreq_pegasusq_early_suspend(struct early_suspend *h)
 {
-#if EARLYSUSPEND_HOTPLUGLOCK
-	dbs_tuners_ins.early_suspend =
-		atomic_read(&g_hotplug_lock);
-#endif
 	prev_freq_step = dbs_tuners_ins.freq_step;
 	prev_sampling_rate = dbs_tuners_ins.sampling_rate;
 	dbs_tuners_ins.freq_step = 20;
 	dbs_tuners_ins.sampling_rate *= 4;
-#if EARLYSUSPEND_HOTPLUGLOCK
-	atomic_set(&g_hotplug_lock,
-	    (dbs_tuners_ins.min_cpu_lock) ? dbs_tuners_ins.min_cpu_lock : 1);
-	apply_hotplug_lock();
-	stop_rq_work();
-#endif
 }
 static void cpufreq_pegasusq_late_resume(struct early_suspend *h)
 {
-#if EARLYSUSPEND_HOTPLUGLOCK
-	atomic_set(&g_hotplug_lock, dbs_tuners_ins.early_suspend);
-#endif
 	dbs_tuners_ins.early_suspend = -1;
 	dbs_tuners_ins.freq_step = prev_freq_step;
 	dbs_tuners_ins.sampling_rate = prev_sampling_rate;
-#if EARLYSUSPEND_HOTPLUGLOCK
-	apply_hotplug_lock();
-	start_rq_work();
-#endif
 }
 #endif
 
