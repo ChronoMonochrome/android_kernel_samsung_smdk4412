@@ -59,6 +59,8 @@
 #include "mdnie_table_p4note.h"
 #elif defined(CONFIG_FB_S5P_S6D6AA1) && defined(CONFIG_MACH_GD2)
 #include "mdnie_table_gd2.h"
+#elif defined(CONFIG_FB_S5P_S6D6AA1) && defined(CONFIG_MACH_SF2)
+#include "mdnie_table_sf2.h"
 #elif defined(CONFIG_FB_S5P_S6D6AA1)
 #include "mdnie_table_gc1.h"
 #elif defined(CONFIG_FB_S5P_LMS501XX)
@@ -827,17 +829,6 @@ static ssize_t accessibility_store(struct device *dev,
 
 	return count;
 }
-
-static ssize_t accessibility_max_show(struct device *dev,
-		struct device_attribute *attr, char *buf)
-{
-	char *pos = buf;
-
-	pos += sprintf(pos, "%d\n", ACCESSIBILITY_MAX);
-
-	return pos - buf;
-}
-
 #ifdef CONFIG_FB_MDNIE_RGB_ADJUST
 #define ADJ_ATTR(name) \
 static ssize_t show_##name (struct device *dev, \
@@ -890,40 +881,6 @@ static ssize_t store_rgb_adj_enable(struct device *dev,
 	mdnie_update(mdnie);
 	return size;
 }
-
-static ssize_t show_sensorRGB(struct device *dev,
-		struct device_attribute *attr, char *buf)
-{
-	struct mdnie_info *mdnie = dev_get_drvdata(dev);
-	char *pos = buf;
-
-	pos += sprintf(pos, "%d ", mdnie->r_adj);
-	pos += sprintf(pos, "%d ", mdnie->g_adj);
-	pos += sprintf(pos, "%d", mdnie->b_adj);
-	pos += sprintf(pos, "\n");
-
-	return pos - buf;
-}
-
-static ssize_t store_sensorRGB(struct device *dev,
-		struct device_attribute *attr, const char *buf, size_t count)
-{
-	struct mdnie_info *mdnie = dev_get_drvdata(dev);
-	unsigned int s[3];
-	int ret;
-
-	ret = sscanf(buf, "%d %d %d", &s[0], &s[1], &s[2]);
-	if (ret < 0)
-		return ret;
-
-	mdnie->r_adj = s[0];
-	mdnie->g_adj = s[1];
-	mdnie->b_adj = s[2];
-
-	mdnie_update(mdnie);
-
-	return count;
-}
 #endif
 
 #if !defined(CONFIG_FB_MDNIE_PWM)
@@ -956,7 +913,6 @@ static struct device_attribute mdnie_attributes[] = {
 #endif
 	__ATTR(tuning, 0664, tuning_show, tuning_store),
 	__ATTR(accessibility, 0664, accessibility_show, accessibility_store),
-	__ATTR(accessibility_max, 0664, accessibility_max_show, NULL),
 #if !defined(CONFIG_FB_MDNIE_PWM)
 	__ATTR(color_correct, 0444, color_correct_show, NULL),
 #endif
@@ -965,21 +921,16 @@ static struct device_attribute mdnie_attributes[] = {
 	__ATTR(g_adj, 0666, show_g_adj, store_g_adj),
 	__ATTR(b_adj, 0666, show_b_adj, store_b_adj),
 	__ATTR(rgb_adj_enable, 0666, show_rgb_adj_enable, store_rgb_adj_enable),
-	__ATTR(sensorRGB, 0666, show_sensorRGB, store_sensorRGB),
 #endif
 	__ATTR_NULL,
 };
 
 #ifdef CONFIG_PM
-#if defined(CONFIG_FB)
+#if defined(CONFIG_HAS_EARLYSUSPEND)
 #if defined(CONFIG_FB_MDNIE_PWM)
-static void mdnie_fb_suspend(struct mdnie_info *mdnie)
+static void mdnie_early_suspend(struct early_suspend *h)
 {
-	if (mdnie->fb_suspended)
-		return;
-
-	mdnie->fb_suspended = true;
-
+	struct mdnie_info *mdnie = container_of(h, struct mdnie_info, early_suspend);
 	struct lcd_platform_data *pd = mdnie->lcd_pd;
 
 	dev_info(mdnie->dev, "+%s\n", __func__);
@@ -998,12 +949,9 @@ static void mdnie_fb_suspend(struct mdnie_info *mdnie)
 }
 #endif
 
-static void mdnie_fb_resume(struct mdnie_info *mdnie)
+static void mdnie_late_resume(struct early_suspend *h)
 {
-	if (!mdnie->fb_suspended)
-		return;
-
-	mdnie->fb_suspended = false;
+	struct mdnie_info *mdnie = container_of(h, struct mdnie_info, early_suspend);
 #if defined(CONFIG_FB_MDNIE_PWM)
 	struct lcd_platform_data *pd = mdnie->lcd_pd;
 #endif
@@ -1032,34 +980,6 @@ static void mdnie_fb_resume(struct mdnie_info *mdnie)
 	return;
 }
 #endif
-
-static int fb_notifier_callback(struct notifier_block *self,
-				unsigned long event, void *data)
-{
-	struct fb_event *evdata = data;
-	int *blank;
-	struct mdnie_info *mdnie = container_of(self, struct mdnie_info, fb_notif);
-	if (evdata && evdata->data && mdnie) {
-		if (event == FB_EVENT_BLANK) {
-			blank = evdata->data;
-			switch (*blank) {
-				case FB_BLANK_UNBLANK:
-				case FB_BLANK_NORMAL:
-				case FB_BLANK_VSYNC_SUSPEND:
-				case FB_BLANK_HSYNC_SUSPEND:
-					mdnie_fb_resume(mdnie);
-					break;
-				default:
-				case FB_BLANK_POWERDOWN:
-#if defined(CONFIG_FB_MDNIE_PWM)
-					mdnie_fb_suspend(mdnie);
-#endif
-					break;
-			}
-		}
-	}
-	return 0;
-}
 #endif
 
 static int mdnie_probe(struct platform_device *pdev)
@@ -1137,10 +1057,13 @@ static int mdnie_probe(struct platform_device *pdev)
 	platform_set_drvdata(pdev, mdnie);
 	dev_set_drvdata(mdnie->dev, mdnie);
 
-#ifdef CONFIG_FB
-	mdnie->fb_suspended = false;
-	mdnie->fb_notif.notifier_call = fb_notifier_callback;
-	fb_register_client(&mdnie->fb_notif);
+#ifdef CONFIG_HAS_EARLYSUSPEND
+#if defined(CONFIG_FB_MDNIE_PWM)
+	mdnie->early_suspend.suspend = mdnie_early_suspend;
+#endif
+	mdnie->early_suspend.resume = mdnie_late_resume;
+	mdnie->early_suspend.level = EARLY_SUSPEND_LEVEL_DISABLE_FB - 1;
+	register_early_suspend(&mdnie->early_suspend);
 #endif
 
 
@@ -1222,7 +1145,7 @@ static struct platform_driver mdnie_driver = {
 	},
 	.probe		= mdnie_probe,
 	.remove		= mdnie_remove,
-#ifndef CONFIG_FB
+#ifndef CONFIG_HAS_EARLYSUSPEND
 	.suspend	= mdnie_suspend,
 	.resume		= mdnie_resume,
 #endif

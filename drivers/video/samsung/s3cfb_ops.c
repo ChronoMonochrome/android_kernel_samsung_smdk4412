@@ -919,9 +919,6 @@ int s3cfb_setcolreg(unsigned int regno, unsigned int red,
 
 int s3cfb_blank(int blank_mode, struct fb_info *fb)
 {
-#if defined(CONFIG_CPU_EXYNOS4210) || defined(CONFIG_CPU_EXYNOS4412)
-	return 0;
-#endif
 	struct s3cfb_window *win = fb->par;
 	struct s3cfb_window *tmp_win;
 	struct s3cfb_global *fbdev = get_fimd_global(win->id);
@@ -1098,7 +1095,6 @@ int s3cfb_blank(int blank_mode, struct fb_info *fb)
 	return 0;
 }
 
-extern unsigned int poweroff_charging;
 int s3cfb_pan_display(struct fb_var_screeninfo *var, struct fb_info *fb)
 {
 	struct s3cfb_window *win = fb->par;
@@ -1628,7 +1624,7 @@ void s3c_fb_update_regs(struct s3cfb_global *fbdev, struct s3c_reg_data *regs)
 	if (fbdev->support_fence == FENCE_SUPPORT) {
 	do {
 #if defined(CONFIG_FB_S5P_VSYNC_THREAD)
-		s3cfb_wait_for_vsync(fbdev, msecs_to_jiffies(100));
+		s3cfb_wait_for_vsync(fbdev, HZ/10);
 #else
 		s3cfb_wait_for_vsync(fbdev);
 #endif
@@ -2092,7 +2088,7 @@ int s3cfb_ioctl(struct fb_info *fb, unsigned int cmd, unsigned long arg)
 #endif
 		/* Wait for Vsync */
 #if defined(CONFIG_FB_S5P_VSYNC_THREAD)
-		s3cfb_wait_for_vsync(fbdev, msecs_to_jiffies(100));
+		s3cfb_wait_for_vsync(fbdev, HZ/10);
 #else
 		s3cfb_wait_for_vsync(fbdev);
 #endif

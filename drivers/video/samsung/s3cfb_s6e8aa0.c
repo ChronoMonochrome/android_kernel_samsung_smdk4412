@@ -26,10 +26,10 @@
 #include <plat/regs-dsim.h>
 #include <mach/dsim.h>
 #include <mach/mipi_ddi.h>
-#ifdef CONFIG_FB
-#include <linux/notifier.h>
-#include <linux/fb.h>
+#ifdef CONFIG_HAS_EARLYSUSPEND
+#include <linux/earlysuspend.h>
 #endif
+
 #include "s5p-dsim.h"
 #include "s3cfb.h"
 #include "s6e8aa0_gamma_l.h"
@@ -108,8 +108,7 @@ struct lcd_info {
 	struct lcd_device		*ld;
 	struct backlight_device		*bd;
 	struct lcd_platform_data	*lcd_pd;
-	struct notifier_block fb_notif;
-	bool fb_suspended;
+	struct early_suspend		early_suspend;
 
 	unsigned char			id[LDI_ID_LEN];
 
@@ -136,8 +135,6 @@ struct lcd_info {
 	struct dsim_global		*dsim;
 };
 
-struct lcd_info *lcd_ptr;
-
 #ifdef CONFIG_AID_DIMMING
 static const unsigned int candela_table[GAMMA_MAX] = {
 	 20,  30,  40,  50,  60,  70,  80,  90, 100,
@@ -147,7 +144,13 @@ static const unsigned int candela_table[GAMMA_MAX] = {
 	190, 200, 210, 220, 230, 240, 250, MAX_GAMMA-1
 };
 
-static unsigned int aid_candela_table[GAMMA_MAX];
+static unsigned int aid_candela_table[GAMMA_MAX] = {
+	base_20to100, base_20to100, base_20to100, base_20to100, base_20to100, base_20to100, base_20to100, base_20to100, base_20to100,
+	AOR40_BASE_102, AOR40_BASE_104, AOR40_BASE_106, AOR40_BASE_108,
+	AOR40_BASE_110, AOR40_BASE_120, AOR40_BASE_130, AOR40_BASE_140, AOR40_BASE_150, AOR40_BASE_160, AOR40_BASE_170, AOR40_BASE_180,
+	AOR40_BASE_182, AOR40_BASE_184, AOR40_BASE_186, AOR40_BASE_188,
+	190, 200, 210, 220, 230, 240, 250, MAX_GAMMA-1
+};
 
 static unsigned int elvss_offset_table[ELVSS_STATUS_MAX] = {
 	ELVSS_OFFSET_110,
@@ -186,8 +189,8 @@ static unsigned int elvss_offset_table[ELVSS_STATUS_MAX] = {
 };
 #endif
 
-extern void (*lcd_fb_suspend)(void);
-extern void (*lcd_fb_resume)(void);
+extern void (*lcd_early_suspend)(void);
+extern void (*lcd_late_resume)(void);
 
 #if defined(GPIO_OLED_DET)
 static void oled_detection_work(struct work_struct *work)
@@ -201,7 +204,7 @@ static void oled_detection_work(struct work_struct *work)
 
 	if (!oled_det_level) {
 		if (lcd->oled_detection_count < 10) {
-			schedule_delayed_work(&lcd->oled_detection, msecs_to_jiffies(125));
+			schedule_delayed_work(&lcd->oled_detection, HZ/8);
 			lcd->oled_detection_count++;
 			set_dsim_hs_clk_toggle_count(15);
 		} else
@@ -218,7 +221,7 @@ static irqreturn_t oled_detection_int(int irq, void *_lcd)
 	dev_info(&lcd->ld->dev, "%s\n", __func__);
 
 	lcd->oled_detection_count = 0;
-	schedule_delayed_work(&lcd->oled_detection, msecs_to_jiffies(63));
+	schedule_delayed_work(&lcd->oled_detection, HZ/16);
 
 	return IRQ_HANDLED;
 }
@@ -292,8 +295,6 @@ static int get_backlight_level_from_brightness(int brightness)
 	/* brightness setting from platform is from 0 to 255
 	 * But in this driver, brightness is only supported from 0 to 24 */
 
-if(brightness_config == 0)
-{
 	switch (brightness) {
 	case 0 ... 29:
 		backlightlevel = GAMMA_20CD;
@@ -398,114 +399,6 @@ if(brightness_config == 0)
 		backlightlevel = DEFAULT_GAMMA_LEVEL;
 		break;
 	}
-}
-else
-{
-	switch (brightness) {
-	case 0 ... 19:
-		backlightlevel = GAMMA_20CD;
-		break;
-	case 20 ... 29:
-		backlightlevel = GAMMA_30CD;
-		break;
-	case 30 ... 39:
-		backlightlevel = GAMMA_40CD;
-		break;
-	case 40 ... 49:
-		backlightlevel = GAMMA_50CD;
-		break;
-	case 50 ... 59:
-		backlightlevel = GAMMA_60CD;
-		break;
-	case 60 ... 69:
-		backlightlevel = GAMMA_70CD;
-		break;
-	case 70 ... 79:
-		backlightlevel = GAMMA_80CD;
-		break;
-	case 80 ... 89:
-		backlightlevel = GAMMA_90CD;
-		break;
-	case 90 ... 99:
-		backlightlevel = GAMMA_100CD;
-		break;
-	case 100 ... 109:
-		backlightlevel = GAMMA_102CD;
-		break;
-	case 110 ... 119:
-		backlightlevel = GAMMA_104CD;
-		break;
-	case 120 ... 129:
-		backlightlevel = GAMMA_106CD;
-		break;
-	case 130 ... 139:
-		backlightlevel = GAMMA_108CD;
-		break;
-	case 140 ... 145:
-		backlightlevel = GAMMA_110CD;
-		break;
-	case 146 ... 151:
-		backlightlevel = GAMMA_120CD;
-		break;
-	case 152 ... 157:
-		backlightlevel = GAMMA_130CD;
-		break;
-	case 158 ... 163:
-		backlightlevel = GAMMA_140CD;
-		break;
-	case 164 ... 170:
-		backlightlevel = GAMMA_150CD;
-		break;
-	case 171 ... 176:
-		backlightlevel = GAMMA_160CD;
-		break;
-	case 177 ... 182:
-		backlightlevel = GAMMA_170CD;
-		break;
-	case 183 ... 189:
-		backlightlevel = GAMMA_180CD;
-		break;
-	case 190 ... 195:
-		backlightlevel = GAMMA_182CD;
-		break;
-	case 196 ... 202:
-		backlightlevel = GAMMA_184CD;
-		break;
-	case 203 ... 209:
-		backlightlevel = GAMMA_186CD;
-		break;
-	case 210 ... 215:
-		backlightlevel = GAMMA_188CD;
-		break;
-	case 216 ... 221:
-		backlightlevel = GAMMA_190CD;
-		break;
-	case 222 ... 227:
-		backlightlevel = GAMMA_200CD;
-		break;
-	case 228 ... 233:
-		backlightlevel = GAMMA_210CD;
-		break;
-	case 234 ... 239:
-		backlightlevel = GAMMA_220CD;
-		break;
-	case 240 ... 245:
-		backlightlevel = GAMMA_230CD;
-		break;
-	case 246 ... 251:
-		backlightlevel = GAMMA_240CD;
-		break;
-	case 252 ... 254:
-		backlightlevel = GAMMA_250CD;
-		break;
-	case 255:
-		backlightlevel = GAMMA_300CD;
-		break;
-	default:
-		backlightlevel = DEFAULT_GAMMA_LEVEL;
-		break;
-	}
-}
 	return backlightlevel;
 }
 
@@ -922,12 +815,6 @@ err_alloc_gamma_table:
 	return ret;
 }
 
-static int destroy_gamma_table(struct lcd_info *lcd)
-{
-	kfree(lcd->gamma_table);
-	return 0;
-}
-
 static int init_aid_dimming_table(struct lcd_info *lcd)
 {
 	unsigned int i, j;
@@ -1196,7 +1083,7 @@ static int s6e8ax0_check_fb(struct lcd_device *ld, struct fb_info *fb)
 {
 	struct lcd_info *lcd = lcd_get_data(ld);
 
-	//dev_info(&lcd->ld->dev, "%s, fb%d\n", __func__, fb->node);
+	dev_info(&lcd->ld->dev, "%s, fb%d\n", __func__, fb->node);
 
 	return 0;
 }
@@ -1393,169 +1280,13 @@ static ssize_t auto_brightness_store(struct device *dev,
 
 static DEVICE_ATTR(auto_brightness, 0644, auto_brightness_show, auto_brightness_store);
 
-static ssize_t brightness_config_show(struct device *dev,
-	struct device_attribute *attr, char *buf)
-{
-	char temp[3];
-
-	snprintf(temp, 3, "%u\n", brightness_config);
-	strcpy(buf, temp);
-
-	return strlen(buf);
-}
-
-static ssize_t brightness_config_store(struct device *dev,
-	struct device_attribute *attr, const char *buf, size_t size)
-{
-	int value;
-	int rc;
-
-	rc = strict_strtoul(buf, (unsigned int)0, (unsigned long *)&value);
-	if (rc < 0 || rc > 1)
-		return -EINVAL;
-	else {
-			brightness_config = value;
-		}
-
-	if(brightness_config == 1)
-	{
-		aid_108nit_F8_18th = 0x04;
-		aid_106nit_F8_18th = 0x1B;
-		aid_104nit_F8_18th = 0x32;
-		aid_102nit_F8_18th = 0x49;
-		aid_100nit_F8_18th = 0x5E;
-		aid_90nit_F8_18th = 0x73;
-		aid_80nit_F8_18th = 0x88;
-		aid_70nit_F8_18th = 0x90;
-		aid_60nit_F8_18th = 0x97;
-		aid_50nit_F8_18th = 0x9B;
-		aid_40nit_F8_18th = 0x9E;
-		aid_30nit_F8_18th = 0xA0;
-		aid_20nit_F8_18th = 0xA1;
-		AOR40_BASE_108 = 110;
-		AOR40_BASE_106 = 110;
-		AOR40_BASE_104 = 110;
-		AOR40_BASE_102 = 110;
-	}
-
-	if(brightness_config == 0)
-	{
-		aid_108nit_F8_18th = 0x38;
-		aid_106nit_F8_18th = 0x2F;
-		aid_104nit_F8_18th = 0x25;
-		aid_102nit_F8_18th = 0x1C;
-		aid_100nit_F8_18th = 0x12;
-		aid_90nit_F8_18th = 0x22;
-		aid_80nit_F8_18th = 0x32;
-		aid_70nit_F8_18th = 0x41;
-		aid_60nit_F8_18th = 0x50;
-		aid_50nit_F8_18th = 0x5E;
-		aid_40nit_F8_18th = 0x6C;
-		aid_30nit_F8_18th = 0x7A;
-		aid_20nit_F8_18th = 0x88;
-		AOR40_BASE_108 = 156;
-		AOR40_BASE_106 = 143;
-		AOR40_BASE_104 = 130;
-		AOR40_BASE_102 = 120;
-	}
-
-	aid_command_20[0] = aid_20nit_F8_18th;
-	aid_command_20[1] = aid_100nit_20nit_F8_1st;
-
-	aid_command_30[0] = aid_30nit_F8_18th;
-	aid_command_30[1] = aid_100nit_20nit_F8_1st;
-
-	aid_command_40[0] = aid_40nit_F8_18th;
-	aid_command_40[1] = aid_100nit_20nit_F8_1st;
-
-	aid_command_50[0] = aid_50nit_F8_18th;
-	aid_command_50[1] = aid_100nit_20nit_F8_1st;
-
-	aid_command_60[0] = aid_60nit_F8_18th;
-	aid_command_60[1] = aid_100nit_20nit_F8_1st;
-
-	aid_command_70[0] = aid_70nit_F8_18th,
-	aid_command_70[1] = aid_100nit_20nit_F8_1st;
-
-	aid_command_80[0] = aid_80nit_F8_18th;
-	aid_command_80[1] = aid_100nit_20nit_F8_1st;
-
-	aid_command_90[0] = aid_90nit_F8_18th;
-	aid_command_90[1] = aid_100nit_20nit_F8_1st;
-
-	aid_command_100[0] = aid_100nit_F8_18th;
-	aid_command_100[1] = aid_100nit_20nit_F8_1st;
-
-	aid_command_102[0] = aid_102nit_F8_18th;
-	aid_command_102[1] = aid_100nit_20nit_F8_1st;
-
-	aid_command_104[0] = aid_104nit_F8_18th;
-	aid_command_104[1] = aid_100nit_20nit_F8_1st;
-
-	aid_command_106[0] = aid_106nit_F8_18th;
-	aid_command_106[1] = aid_100nit_20nit_F8_1st;
-
-	aid_command_108[0] = aid_108nit_F8_18th;
-	aid_command_108[1] = aid_100nit_20nit_F8_1st;
-
-	aid_candela_table[0] = base_20to100;
-	aid_candela_table[1] = base_20to100;
-	aid_candela_table[2] = base_20to100;
-	aid_candela_table[3] = base_20to100; 
-	aid_candela_table[4] = base_20to100;
-	aid_candela_table[5] = base_20to100;
-	aid_candela_table[6] = base_20to100;
-	aid_candela_table[7] = base_20to100;
-	aid_candela_table[8] = base_20to100;
-	aid_candela_table[9] = AOR40_BASE_102;
-	aid_candela_table[10] = AOR40_BASE_104;
-	aid_candela_table[11] = AOR40_BASE_106;
-	aid_candela_table[12] = AOR40_BASE_108;
-	aid_candela_table[13] = AOR40_BASE_110;
-	aid_candela_table[14] = AOR40_BASE_120;
-	aid_candela_table[15] = AOR40_BASE_130;
-	aid_candela_table[16] = AOR40_BASE_140;
-	aid_candela_table[17] = AOR40_BASE_150;
-	aid_candela_table[18] = AOR40_BASE_160;
-	aid_candela_table[19] = AOR40_BASE_170;
-	aid_candela_table[20] = AOR40_BASE_180;
-	aid_candela_table[21] = AOR40_BASE_182;
-	aid_candela_table[22] = AOR40_BASE_184;
-	aid_candela_table[23] = AOR40_BASE_186;
-	aid_candela_table[24] = AOR40_BASE_188;
-	aid_candela_table[25] = 190;
-	aid_candela_table[26] = 200;
-	aid_candela_table[27] = 210;
-	aid_candela_table[28] = 220;
-	aid_candela_table[29] = 230;
-	aid_candela_table[30] = 240;
-	aid_candela_table[31] = 250;
-	aid_candela_table[32] = MAX_GAMMA-1;
-
-	mutex_lock(&lcd_ptr->bl_lock);
-	destroy_gamma_table(lcd_ptr);
-	init_gamma_table(lcd_ptr);
-	init_aid_dimming_table(lcd_ptr);
-	mutex_unlock(&lcd_ptr->bl_lock);
-	update_brightness(lcd_ptr, 1);
-	return size;
-}
-
-static DEVICE_ATTR(brightness_config, 0666, brightness_config_show, brightness_config_store);
-
 #ifdef CONFIG_HAS_EARLYSUSPEND
 struct lcd_info *g_lcd;
 
-int s6e8ax0_suspended;
-int s6e8ax0_fix_fence;
-
-void s6e8ax0_fb_suspend(void)
+void s6e8ax0_early_suspend(void)
 {
 	struct lcd_info *lcd = g_lcd;
 	int err = 0;
-
-	if (lcd->fb_suspended)
-		return;
 
 	set_dsim_lcd_enabled(0);
 
@@ -1572,21 +1303,13 @@ void s6e8ax0_fb_suspend(void)
 #endif
 	s6e8ax0_power(lcd, FB_BLANK_POWERDOWN);
 	dev_info(&lcd->ld->dev, "-%s\n", __func__);
-	s6e8ax0_suspended = 1;
-	s6e8ax0_fix_fence = 1;
-
-	lcd->fb_suspended = true;
 
 	return ;
 }
 
-void s6e8ax0_fb_resume(void)
+void s6e8ax0_late_resume(void)
 {
 	struct lcd_info *lcd = g_lcd;
-	s6e8ax0_suspended = 0;
-
-	if (!lcd->fb_suspended)
-		return;
 
 	dev_info(&lcd->ld->dev, "+%s\n", __func__);
 	s6e8ax0_power(lcd, FB_BLANK_UNBLANK);
@@ -1598,8 +1321,6 @@ void s6e8ax0_fb_resume(void)
 	dev_info(&lcd->ld->dev, "-%s\n", __func__);
 
 	set_dsim_lcd_enabled(1);
-
-	lcd->fb_suspended = false;
 
 	return ;
 }
@@ -1699,7 +1420,6 @@ static int s6e8ax0_probe(struct device *dev)
 		ret = -ENOMEM;
 		goto err_alloc;
 	}
-	lcd_ptr = lcd;
 
 	g_lcd = lcd;
 
@@ -1732,7 +1452,6 @@ static int s6e8ax0_probe(struct device *dev)
 	lcd->ldi_enable = 1;
 	lcd->connected = 1;
 	lcd->auto_brightness = 0;
-	lcd->fb_suspended = false;
 
 	ret = device_create_file(&lcd->ld->dev, &dev_attr_power_reduce);
 	if (ret < 0)
@@ -1755,10 +1474,6 @@ static int s6e8ax0_probe(struct device *dev)
 		dev_err(&lcd->ld->dev, "failed to add sysfs entries, %d\n", __LINE__);
 
 	ret = device_create_file(&lcd->bd->dev, &dev_attr_auto_brightness);
-	if (ret < 0)
-		dev_err(&lcd->ld->dev, "failed to add sysfs entries, %d\n", __LINE__);
-
-	ret = device_create_file(&lcd->bd->dev, &dev_attr_brightness_config);
 	if (ret < 0)
 		dev_err(&lcd->ld->dev, "failed to add sysfs entries, %d\n", __LINE__);
 
@@ -1826,8 +1541,8 @@ static int s6e8ax0_probe(struct device *dev)
 	}
 #endif
 
-	lcd_fb_suspend = s6e8ax0_fb_suspend;
-	lcd_fb_resume = s6e8ax0_fb_resume;
+	lcd_early_suspend = s6e8ax0_early_suspend;
+	lcd_late_resume = s6e8ax0_late_resume;
 
 	return 0;
 
@@ -1875,80 +1590,6 @@ static struct mipi_lcd_driver s6e8ax0_mipi_driver = {
 
 static int s6e8ax0_init(void)
 {
-
-	aid_command_20[0] = aid_20nit_F8_18th;
-	aid_command_20[1] = aid_100nit_20nit_F8_1st;
-
-	aid_command_30[0] = aid_30nit_F8_18th;
-	aid_command_30[1] = aid_100nit_20nit_F8_1st;
-
-	aid_command_40[0] = aid_40nit_F8_18th;
-	aid_command_40[1] = aid_100nit_20nit_F8_1st;
-
-	aid_command_50[0] = aid_50nit_F8_18th;
-	aid_command_50[1] = aid_100nit_20nit_F8_1st;
-
-	aid_command_60[0] = aid_60nit_F8_18th;
-	aid_command_60[1] = aid_100nit_20nit_F8_1st;
-
-	aid_command_70[0] = aid_70nit_F8_18th,
-	aid_command_70[1] = aid_100nit_20nit_F8_1st;
-
-	aid_command_80[0] = aid_80nit_F8_18th;
-	aid_command_80[1] = aid_100nit_20nit_F8_1st;
-
-	aid_command_90[0] = aid_90nit_F8_18th;
-	aid_command_90[1] = aid_100nit_20nit_F8_1st;
-
-	aid_command_100[0] = aid_100nit_F8_18th;
-	aid_command_100[1] = aid_100nit_20nit_F8_1st;
-
-	aid_command_102[0] = aid_102nit_F8_18th;
-	aid_command_102[1] = aid_100nit_20nit_F8_1st;
-
-	aid_command_104[0] = aid_104nit_F8_18th;
-	aid_command_104[1] = aid_100nit_20nit_F8_1st;
-
-	aid_command_106[0] = aid_106nit_F8_18th;
-	aid_command_106[1] = aid_100nit_20nit_F8_1st;
-
-	aid_command_108[0] = aid_108nit_F8_18th;
-	aid_command_108[1] = aid_100nit_20nit_F8_1st;
-
-	aid_candela_table[0] = base_20to100;
-	aid_candela_table[1] = base_20to100;
-	aid_candela_table[2] = base_20to100;
-	aid_candela_table[3] = base_20to100; 
-	aid_candela_table[4] = base_20to100;
-	aid_candela_table[5] = base_20to100;
-	aid_candela_table[6] = base_20to100;
-	aid_candela_table[7] = base_20to100;
-	aid_candela_table[8] = base_20to100;
-	aid_candela_table[9] = AOR40_BASE_102;
-	aid_candela_table[10] = AOR40_BASE_104;
-	aid_candela_table[11] = AOR40_BASE_106;
-	aid_candela_table[12] = AOR40_BASE_108;
-	aid_candela_table[13] = AOR40_BASE_110;
-	aid_candela_table[14] = AOR40_BASE_120;
-	aid_candela_table[15] = AOR40_BASE_130;
-	aid_candela_table[16] = AOR40_BASE_140;
-	aid_candela_table[17] = AOR40_BASE_150;
-	aid_candela_table[18] = AOR40_BASE_160;
-	aid_candela_table[19] = AOR40_BASE_170;
-	aid_candela_table[20] = AOR40_BASE_180;
-	aid_candela_table[21] = AOR40_BASE_182;
-	aid_candela_table[22] = AOR40_BASE_184;
-	aid_candela_table[23] = AOR40_BASE_186;
-	aid_candela_table[24] = AOR40_BASE_188;
-	aid_candela_table[25] = 190;
-	aid_candela_table[26] = 200;
-	aid_candela_table[27] = 210;
-	aid_candela_table[28] = 220;
-	aid_candela_table[29] = 230;
-	aid_candela_table[30] = 240;
-	aid_candela_table[31] = 250;
-	aid_candela_table[32] = MAX_GAMMA-1;
-
 	return s5p_dsim_register_lcd_driver(&s6e8ax0_mipi_driver);
 }
 

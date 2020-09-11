@@ -279,12 +279,6 @@ config FB_S5P_NT71391
 	---help---
 	  This enables support for Novatek NT71391 MIPI LCD
 
-config FB_S5P_NT71391
-	bool "NT71391 MIPI LCD"
-	depends on FB_S5P_MIPI_DSIM
-	---help---
-	  This enables support for Novatek NT71391 MIPI LCD
-
 config FB_S5P_S6D7AA0
 	bool "S6D7AA0 MIPI LCD"
 	depends on FB_S5P_MIPI_DSIM

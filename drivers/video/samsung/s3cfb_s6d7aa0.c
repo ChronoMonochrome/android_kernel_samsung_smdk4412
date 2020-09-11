@@ -19,10 +19,10 @@
 #include <plat/regs-dsim.h>
 #include <mach/dsim.h>
 #include <mach/mipi_ddi.h>
-#ifdef CONFIG_FB
-#include <linux/notifier.h>
-#include <linux/fb.h>
+#ifdef CONFIG_HAS_EARLYSUSPEND
+#include <linux/earlysuspend.h>
 #endif
+
 #include "s5p-dsim.h"
 #include "s3cfb.h"
 #include "s6d7aa0_param.h"
@@ -52,8 +52,8 @@ struct lcd_info {
 };
 
 
-extern void (*lcd_fb_suspend)(void);
-extern void (*lcd_fb_resume)(void);
+extern void (*lcd_early_suspend)(void);
+extern void (*lcd_late_resume)(void);
 static int s6d7aa0_power(struct lcd_info *lcd, int power);
 
 static int _s6d7aa0_write(struct lcd_info *lcd, const unsigned char *seq, int len)
@@ -154,7 +154,7 @@ static void err_fg_detection_work(struct work_struct *work)
 
 	if (!err_fg_level && lcd->ldi_enable) {
 		if (lcd->err_fg_detection_count < 10) {
-			schedule_delayed_work(&lcd->err_fg_detection, msecs_to_jiffies(125));
+			schedule_delayed_work(&lcd->err_fg_detection, HZ/8);
 			lcd->err_fg_detection_count++;
 		} else {
 			s6d7aa0_power(lcd, FB_BLANK_POWERDOWN);
@@ -171,7 +171,7 @@ static irqreturn_t err_fg_detection_int(int irq, void *_lcd)
 	dev_info(&lcd->ld->dev, "%s\n", __func__);
 
 	lcd->err_fg_detection_count = 0;
-	schedule_delayed_work(&lcd->err_fg_detection, msecs_to_jiffies(63));
+	schedule_delayed_work(&lcd->err_fg_detection, HZ/16);
 
 	return IRQ_HANDLED;
 }
@@ -370,7 +370,7 @@ static int s6d7aa0_check_fb(struct lcd_device *ld, struct fb_info *fb)
 {
 	struct lcd_info *lcd = lcd_get_data(ld);
 
-	//dev_info(&lcd->ld->dev, "%s, fb%d\n", __func__, fb->node);
+	dev_info(&lcd->ld->dev, "%s, fb%d\n", __func__, fb->node);
 
 	return 0;
 }
@@ -406,7 +406,7 @@ static DEVICE_ATTR(window_type, 0444, window_type_show, NULL);
 #ifdef CONFIG_HAS_EARLYSUSPEND
 static struct lcd_info *g_lcd;
 
-void s6d7aa0_fb_suspend(void)
+void s6d7aa0_early_suspend(void)
 {
 	struct lcd_info *lcd = g_lcd;
 
@@ -420,7 +420,7 @@ void s6d7aa0_fb_suspend(void)
 	return ;
 }
 
-void s6d7aa0_fb_resume(void)
+void s6d7aa0_late_resume(void)
 {
 	struct lcd_info *lcd = g_lcd;
 
@@ -430,8 +430,6 @@ void s6d7aa0_fb_resume(void)
 	dev_info(&lcd->ld->dev, "-%s\n", __func__);
 
 	set_dsim_lcd_enabled(1);
-
-	lcd->fb_suspended = false;
 
 	return ;
 }
@@ -515,8 +513,8 @@ static int s6d7aa0_probe(struct device *dev)
 			pr_err("failed to reqeust irq. %d\n", lcd->err_fg_irq);
 	}
 
-	lcd_fb_suspend = s6d7aa0_fb_suspend;
-	lcd_fb_resume = s6d7aa0_fb_resume;
+	lcd_early_suspend = s6d7aa0_early_suspend;
+	lcd_late_resume = s6d7aa0_late_resume;
 
 	return 0;
 

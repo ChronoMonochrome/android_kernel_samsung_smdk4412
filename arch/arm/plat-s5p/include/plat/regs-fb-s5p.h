@@ -321,7 +321,7 @@
 #define S3C_WINCON1_LOCALSEL_MASK		(1 << 23)
 
 /* WINSHMAP */
-#define S3C_WINSHMAP_PROTECT(x)		(1 << (10 + (x)))
+#define S3C_WINSHMAP_PROTECT(x)			(((x) & 0x1f) << 10)
 #define S3C_WINSHMAP_CH_ENABLE(x)		(1 << (x))
 #define S3C_WINSHMAP_CH_DISABLE(x)		(1 << (x))
 #define S3C_WINSHMAP_LOCAL_ENABLE(x)		(0x20 << (x))
@@ -430,6 +430,7 @@
 /* WIN_RGB_ORDERx */
 #define WIN_RGB_ORDER_FORWARD			(0 << 11)
 #define WIN_RGB_ORDER_REVERSE			(1 << 11)
+
 
 /* DUALRGB */
 #define S3C_DUALRGB_BYPASS_SINGLE	(0 << 0)

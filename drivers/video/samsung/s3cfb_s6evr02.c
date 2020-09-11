@@ -29,10 +29,10 @@
 #include <plat/regs-dsim.h>
 #include <mach/dsim.h>
 #include <mach/mipi_ddi.h>
-#ifdef CONFIG_FB
-#include <linux/notifier.h>
-#include <linux/fb.h>
+#ifdef CONFIG_HAS_EARLYSUSPEND
+#include <linux/earlysuspend.h>
 #endif
+
 #include "s5p-dsim.h"
 #include "s3cfb.h"
 #include "s6evr02_param.h"
@@ -76,8 +76,7 @@ struct lcd_info {
 	struct lcd_device		*ld;
 	struct backlight_device		*bd;
 	struct lcd_platform_data	*lcd_pd;
-	struct notifier_block		fb_notif;
-	bool				fb_suspended;
+	struct early_suspend		early_suspend;
 	unsigned char			id[LDI_ID_LEN];
 	unsigned char			**gamma_table;
 	unsigned char			**elvss_table;
@@ -119,8 +118,8 @@ static unsigned int aid_candela_table[GAMMA_MAX] = {
 };
 #endif
 
-extern void (*lcd_fb_suspend)(void);
-extern void (*lcd_fb_resume)(void);
+extern void (*lcd_early_suspend)(void);
+extern void (*lcd_late_resume)(void);
 
 #if defined(GPIO_ERR_FG)
 static void err_fg_detection_work(struct work_struct *work)
@@ -134,7 +133,7 @@ static void err_fg_detection_work(struct work_struct *work)
 
 	if (!err_fg_level) {
 		if (lcd->err_fg_detection_count < 10) {
-			schedule_delayed_work(&lcd->err_fg_detection, msecs_to_jiffies(125));
+			schedule_delayed_work(&lcd->err_fg_detection, HZ/8);
 			lcd->err_fg_detection_count++;
 			set_dsim_hs_clk_toggle_count(15);
 		} else
@@ -151,7 +150,7 @@ static irqreturn_t err_fg_detection_int(int irq, void *_lcd)
 	dev_info(&lcd->ld->dev, "\t\t%s\n", __func__);
 
 	lcd->err_fg_detection_count = 0;
-	schedule_delayed_work(&lcd->err_fg_detection, msecs_to_jiffies(63));
+	schedule_delayed_work(&lcd->err_fg_detection, HZ/16);
 
 	return IRQ_HANDLED;
 }
@@ -928,7 +927,7 @@ static int s6evr02_check_fb(struct lcd_device *ld, struct fb_info *fb)
 {
 	struct lcd_info *lcd = lcd_get_data(ld);
 
-	//dev_info(&lcd->ld->dev, "%s, fb%d\n", __func__, fb->node);
+	dev_info(&lcd->ld->dev, "%s, fb%d\n", __func__, fb->node);
 
 	return 0;
 }
@@ -1069,10 +1068,7 @@ static DEVICE_ATTR(auto_brightness, 0644, auto_brightness_show, auto_brightness_
 #ifdef CONFIG_HAS_EARLYSUSPEND
 static struct lcd_info *g_lcd;
 
-int s6e8ax0_suspended;
-int s6e8ax0_fix_fence;
-
-void s6evr02_fb_suspend(void)
+void s6evr02_early_suspend(void)
 {
 	struct lcd_info *lcd = g_lcd;
 
@@ -1099,16 +1095,13 @@ void s6evr02_fb_suspend(void)
 
 	s6evr02_power(lcd, FB_BLANK_POWERDOWN);
 	dev_info(&lcd->ld->dev, "-%s\n", __func__);
-	s6e8ax0_suspended = 1;
-	s6e8ax0_fix_fence = 1;
 
 	return ;
 }
 
-void s6evr02_fb_resume(void)
+void s6evr02_late_resume(void)
 {
 	struct lcd_info *lcd = g_lcd;
-	s6e8ax0_suspended = 0;
 
 	dev_info(&lcd->ld->dev, "+%s\n", __func__);
 	s6evr02_power(lcd, FB_BLANK_UNBLANK);
@@ -1129,8 +1122,6 @@ void s6evr02_fb_resume(void)
 	dev_info(&lcd->ld->dev, "-%s\n", __func__);
 
 	set_dsim_lcd_enabled(1);
-
-	lcd->fb_suspended = false;
 
 	return ;
 }
@@ -1207,7 +1198,6 @@ static int s6evr02_probe(struct device *dev)
 	lcd->ldi_enable = 1;
 	lcd->connected = 1;
 	lcd->auto_brightness = 0;
-	lcd->fb_suspended = false;
 
 	ret = device_create_file(&lcd->ld->dev, &dev_attr_power_reduce);
 	if (ret < 0)
@@ -1299,8 +1289,8 @@ static int s6evr02_probe(struct device *dev)
 	}
 #endif
 
-	lcd_fb_suspend = s6evr02_fb_suspend;
-	lcd_fb_resume = s6evr02_fb_resume;
+	lcd_early_suspend = s6evr02_early_suspend;
+	lcd_late_resume = s6evr02_late_resume;
 
 	return 0;
 
