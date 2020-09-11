@@ -440,26 +440,6 @@ static ssize_t store_scaling_max_freq
 	ret = __cpufreq_set_policy(policy, &new_policy);
 	policy->user_policy.max = policy->max;
 
-	/* Yank555.lu : set cpufreq_max_limit accordingly if dvfs limit is defined */
-#ifdef CONFIG_DVFS_LIMIT
-	/*
-	 * Keep scaling_max linked to cpufreq_max_limit only if it was previously linked,
-	 * link will be re-established when cpufreq_max_limit is released again, this will
-	 * enable Powersave mode to continue working as designed !
-	 */
-	if ((cpufreq_max_limit_coupled == SCALING_MAX_COUPLED)   ||
-	    (cpufreq_max_limit_coupled == SCALING_MAX_UNDEFINED)    ) {
-		if (get_cpufreq_level(policy->max, &cpufreq_level) == VALID_LEVEL) {
-			if (cpufreq_max_limit_val != -1)
-				/* Unlock the previous lock */
-				exynos_cpufreq_upper_limit_free(DVFS_LOCK_ID_USER);
-			lock_ret = exynos_cpufreq_upper_limit(DVFS_LOCK_ID_USER, cpufreq_level);
-			cpufreq_max_limit_val = policy->max;
-			cpufreq_max_limit_coupled = SCALING_MAX_COUPLED;
-		}
-	}
-#endif
-
 	return ret ? ret : count;
 }
 
