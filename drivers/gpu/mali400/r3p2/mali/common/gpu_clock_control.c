@@ -62,8 +62,6 @@ static ssize_t gpu_clock_store(struct device *dev, struct device_attribute *attr
         unsigned int ret = -EINVAL;
         int i = 0;
 
-	dump_stack();
-
         if ( (ret=sscanf(buf, "%d%% %d%% %d%% %d%% %d%% %d%% %d%% %d%%",
                          &g[0], &g[1], &g[2], &g[3], &g[4], &g[5], &g[6], &g[7]))
               == (MALI_STEPS-1)*2 ) i=1;
