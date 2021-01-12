@@ -683,8 +683,8 @@ static struct wacom_g5_callbacks *wacom_callbacks;
 static int wacom_init_hw(void);
 static int wacom_suspend_hw(void);
 static int wacom_resume_hw(void);
-static int wacom_early_suspend_hw(void);
-static int wacom_late_resume_hw(void);
+static int wacom_fb_suspend_hw(void);
+static int wacom_fb_resume_hw(void);
 static int wacom_reset_hw(void);
 static void wacom_register_callbacks(struct wacom_g5_callbacks *cb);
 
@@ -702,8 +702,8 @@ static struct wacom_g5_platform_data wacom_platform_data = {
 	.init_platform_hw = wacom_init_hw,
 	.suspend_platform_hw = wacom_suspend_hw,
 	.resume_platform_hw = wacom_resume_hw,
-	.early_suspend_platform_hw = wacom_early_suspend_hw,
-	.late_resume_platform_hw = wacom_late_resume_hw,
+	.fb_suspend_platform_hw = wacom_fb_suspend_hw,
+	.fb_resume_platform_hw = wacom_fb_resume_hw,
 	.reset_platform_hw = wacom_reset_hw,
 	.register_cb = wacom_register_callbacks,
 };
@@ -771,21 +771,21 @@ static int wacom_init_hw(void)
 
 static int wacom_suspend_hw(void)
 {
-	return wacom_early_suspend_hw();
+	return wacom_fb_suspend_hw();
 }
 
 static int wacom_resume_hw(void)
 {
-	return wacom_late_resume_hw();
+	return wacom_fb_resume_hw();
 }
 
-static int wacom_early_suspend_hw(void)
+static int wacom_fb_suspend_hw(void)
 {
 	gpio_set_value(GPIO_PEN_LDO_EN, 0);
 	return 0;
 }
 
-static int wacom_late_resume_hw(void)
+static int wacom_fb_resume_hw(void)
 {
 	gpio_set_value(GPIO_PEN_LDO_EN, 1);
 	return 0;
