@@ -1022,10 +1022,9 @@ static int if_usb_suspend(struct usb_interface *intf, pm_message_t message)
 
 	if (devdata->usb_ld->suspended == LINKPM_DEV_NUM) {
 		mif_debug("[if_usb_suspended]\n");
-		__pm_wakeup_event(&pm_data->l2_wake, msecs_to_jiffies(50));
+		__pm_wakeup_event(&pm_data->l2_wake, 50);
 #ifdef	CONFIG_SLP
-		pm_wakeup_event(pm_data->miscdev.this_device,
-				msecs_to_jiffies(20));
+		pm_wakeup_event(pm_data->miscdev.this_device, 20);
 #endif
 		/* XMM6262 Host wakeup toggle recovery */
 		if (!pm_data->rx_cnt && !pm_data->tx_cnt) {
