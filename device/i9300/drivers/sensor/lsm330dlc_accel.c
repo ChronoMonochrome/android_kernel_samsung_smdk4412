@@ -993,7 +993,7 @@ static irqreturn_t lsm330dlc_accel_interrupt_thread(int irq\
 #endif
 
 	data->interrupt_state = 1;
-	__pm_wakeup_event(&data->reactive_wake_lock, msecs_to_jiffies(2000));
+	__pm_wakeup_event(&data->reactive_wake_lock, 2000);
 	accel_dbgmsg("irq is handled\n");
 
 	return IRQ_HANDLED;
