@@ -46,9 +46,8 @@
 #endif
 #include "linux/charge_level.h"
 
-int ac_level = AC_CHARGE_LEVEL_DEFAULT;    // Set AC default charge level
-int usb_level  = USB_CHARGE_LEVEL_DEFAULT; // Set USB default charge level
-
+int ac_level = AC_CHARGE_LEVEL_MAX;    // Set AC default charge level
+int usb_level = USB_CHARGE_LEVEL_MAX; // Set USB default charge level
 
 static char *supply_list[] = {
 	"battery",
