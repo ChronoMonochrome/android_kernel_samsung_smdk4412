@@ -2726,12 +2726,12 @@ int fimc_streamon_capture(void *fh)
                 fimc_err("%s: No capture device.\n", __func__);
                 return -ENODEV;
         }
-
+#ifndef CONFIG_MACH_KONA
 	if (cam->sd) {
 		if (is_scale_up(ctrl))
 			return -EINVAL;
 	}
-
+#endif
 	if (pdata->hw_ver < 0x51)
 		fimc_hw_reset_camera(ctrl);
 #if (!defined(CONFIG_EXYNOS_DEV_PD) && !defined(CONFIG_PM_RUNTIME))
