@@ -21,6 +21,7 @@
 #include <linux/io.h>
 #include <linux/time.h>
 #include <linux/wakelock.h>
+#include <linux/pm_runtime.h>
 #include <linux/suspend.h>
 #include <mach/subsystem_restart.h>
 #include <mach/sec_debug.h>
@@ -36,7 +37,7 @@ struct subsys_soc_restart_order {
 
 struct restart_wq_data {
 	struct subsys_data *subsys;
-	struct wake_lock ssr_wake_lock;
+	struct wakeup_source ssr_wake_lock;
 	char wakelockname[64];
 	int coupled;
 	struct work_struct work;
@@ -191,8 +192,8 @@ static void subsystem_restart_wq_func(struct work_struct *work)
 	pr_info("[%p]: Released powerup lock!\n", current);
 
 out:
-	wake_unlock(&r_work->ssr_wake_lock);
-	wake_lock_destroy(&r_work->ssr_wake_lock);
+	__pm_relax(&r_work->ssr_wake_lock);
+	wakeup_source_trash(&r_work->ssr_wake_lock);
 	kfree(r_work);
 	subsys->ongoing = false;
 }
@@ -247,9 +248,9 @@ int subsystem_restart(const char *subsys_name)
 
 	snprintf(data->wakelockname, sizeof(data->wakelockname),
 						"ssr(%s)", subsys_name);
-	wake_lock_init(&data->ssr_wake_lock, WAKE_LOCK_SUSPEND,
+	wakeup_source_init(&data->ssr_wake_lock,
 							data->wakelockname);
-	wake_lock(&data->ssr_wake_lock);
+	__pm_stay_awake(&data->ssr_wake_lock);
 
 	INIT_WORK(&data->work, subsystem_restart_wq_func);
 	rc = schedule_work(&data->work);
