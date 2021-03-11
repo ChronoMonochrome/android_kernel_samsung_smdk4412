@@ -26,12 +26,10 @@
 #include <plat/gpio-cfg.h>
 #include <linux/mdm_hsic_pm.h>
 #include <linux/suspend.h>
-#include <linux/wakelock.h>
 #include <mach/subsystem_restart.h>
 #include <mach/sec_modem.h>
 #include <linux/msm_charm.h>
 #include "mdm_private.h"
-#include <linux/wakelock.h>
 #include <device/linux/usb.h>
 #include <device/linux/usb/hcd.h>
 #include <device/linux/usb/ehci_def.h>
@@ -119,13 +117,13 @@ struct mdm_hsic_pm_data {
 	int irq;
 
 	/* wakelock for L0 - L2 */
-	struct wake_lock l2_wake;
+	struct wakeup_source l2_wake;
 
 	/* wakelock for boot */
-	struct wake_lock boot_wake;
+	struct wakeup_source boot_wake;
 
 	/* wakelock for fast dormancy */
-	struct wake_lock fd_wake;
+	struct wakeup_source fd_wake;
 	long fd_wake_time; /* wake time for raw packet in jiffies */
 
 	/* workqueue, work for delayed autosuspend */
@@ -393,7 +391,7 @@ void request_active_lock_set(const char *name)
 	struct mdm_hsic_pm_data *pm_data = get_pm_data_by_dev_name(name);
 	pr_info("%s\n", __func__);
 	if (pm_data) {
-		wake_lock(&pm_data->l2_wake);
+		__pm_stay_awake(&pm_data->l2_wake);
 		pm_data->scc = 0;
 		queue_delayed_work(pm_data->wq, &pm_data->rpm_state_check_work,
 							msecs_to_jiffies(3000));
@@ -405,7 +403,7 @@ void request_active_lock_release(const char *name)
 	struct mdm_hsic_pm_data *pm_data = get_pm_data_by_dev_name(name);
 	pr_info("%s\n", __func__);
 	if (pm_data) {
-		wake_unlock(&pm_data->l2_wake);
+		__pm_relax(&pm_data->l2_wake);
 		cancel_delayed_work(&pm_data->rpm_state_check_work);
 	}
 }
@@ -415,7 +413,7 @@ void request_boot_lock_set(const char *name)
 	struct mdm_hsic_pm_data *pm_data = get_pm_data_by_dev_name(name);
 	pr_info("%s\n", __func__);
 	if (pm_data)
-		wake_lock(&pm_data->boot_wake);
+		__pm_stay_awake(&pm_data->boot_wake);
 }
 
 void request_boot_lock_release(const char *name)
@@ -423,7 +421,7 @@ void request_boot_lock_release(const char *name)
 	struct mdm_hsic_pm_data *pm_data = get_pm_data_by_dev_name(name);
 	pr_info("%s\n", __func__);
 	if (pm_data)
-		wake_unlock(&pm_data->boot_wake);
+		__pm_relax(&pm_data->boot_wake);
 }
 
 bool check_request_blocked(const char *name)
@@ -822,7 +820,7 @@ static void fast_dormancy_func(struct work_struct *work)
 	if (!pm_data || !pm_data->fd_wake_time)
 		return;
 
-	wake_lock_timeout(&pm_data->fd_wake, pm_data->fd_wake_time);
+	__pm_wakeup_event(&pm_data->fd_wake, pm_data->fd_wake_time);
 };
 
 void fast_dormancy_wakelock(const char *name)
@@ -985,7 +983,7 @@ static irqreturn_t mdm_hsic_irq_handler(int irq, void *data)
 		pr_info("%s: request blocked by kernel suspending\n", __func__);
 		pm_data->state_busy = true;
 		/* for blocked request, set wakelock to return at dpm suspend */
-		wake_lock(&pm_data->l2_wake);
+		__pm_stay_awake(&pm_data->l2_wake);
 		return IRQ_HANDLED;
 	}
 #if 0
@@ -1329,9 +1327,9 @@ static int mdm_hsic_pm_probe(struct platform_device *pdev)
 	register_cpu_notifier(&pm_data->cpu_hotplug_notifier);
 #endif
 
-	wake_lock_init(&pm_data->l2_wake, WAKE_LOCK_SUSPEND, pm_data->name);
-	wake_lock_init(&pm_data->boot_wake, WAKE_LOCK_SUSPEND, "mdm_boot");
-	wake_lock_init(&pm_data->fd_wake, WAKE_LOCK_SUSPEND, "fast_dormancy");
+	wakeup_source_init(&pm_data->l2_wake, pm_data->name);
+	wakeup_source_init(&pm_data->boot_wake, "mdm_boot");
+	wakeup_source_init(&pm_data->fd_wake, "fast_dormancy");
 	pm_data->fd_wake_time = DEFAULT_RAW_WAKE_TIME;
 	pm_data->qmicm_mode = false;
 
