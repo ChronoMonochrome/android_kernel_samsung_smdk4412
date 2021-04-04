@@ -16,6 +16,7 @@ struct scm_fp_list {
 	struct list_head	list;
 	short			count;
 	short			max;
+	struct user_struct	*user;
 	struct file		*fp[SCM_MAX_FD];
 };
 
@@ -50,15 +51,9 @@ static __inline__ void scm_set_cred(struct scm_cookie *scm,
 {
 	scm->pid  = get_pid(pid);
 	scm->cred = cred ? get_cred(cred) : NULL;
-	cred_to_ucred(pid, cred, &scm->creds);
-}
-
-static __inline__ void scm_set_cred_noref(struct scm_cookie *scm,
-				    struct pid *pid, const struct cred *cred)
-{
-	scm->pid  = pid;
-	scm->cred = cred;
-	cred_to_ucred(pid, cred, &scm->creds);
+	scm->creds.pid = pid_vnr(pid);
+	scm->creds.uid = cred ? cred->euid : INVALID_UID;
+	scm->creds.gid = cred ? cred->egid : INVALID_GID;
 }
 
 static __inline__ void scm_destroy_cred(struct scm_cookie *scm)
@@ -75,15 +70,6 @@ static __inline__ void scm_destroy(struct scm_cookie *scm)
 {
 	scm_destroy_cred(scm);
 	if (scm && scm->fp)
-		__scm_destroy(scm);
-}
-
-static __inline__ void scm_release(struct scm_cookie *scm)
-{
-	/* keep ref on pid and cred */
-	scm->pid = NULL;
-	scm->cred = NULL;
-	if (scm->fp)
 		__scm_destroy(scm);
 }
 
@@ -126,13 +112,16 @@ static __inline__ void scm_recv(struct socket *sock, struct msghdr *msg,
 	if (!msg->msg_control) {
 		if (test_bit(SOCK_PASSCRED, &sock->flags) || scm->fp)
 			msg->msg_flags |= MSG_CTRUNC;
-		if (scm && scm->fp)
-			__scm_destroy(scm);
+		scm_destroy(scm);
 		return;
 	}
 
 	if (test_bit(SOCK_PASSCRED, &sock->flags))
 		put_cmsg(msg, SOL_SOCKET, SCM_CREDENTIALS, sizeof(scm->creds), &scm->creds);
+
+	scm_destroy_cred(scm);
+
+	scm_destroy_cred(scm);
 
 	scm_passec(sock, msg, scm);
 
