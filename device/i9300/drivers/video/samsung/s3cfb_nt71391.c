@@ -21,8 +21,9 @@
 #include <plat/regs-dsim.h>
 #include <mach/dsim.h>
 #include <mach/mipi_ddi.h>
-#ifdef CONFIG_HAS_EARLYSUSPEND
-#include <linux/earlysuspend.h>
+#ifdef CONFIG_FB
+#include <linux/fb.h>
+#include <linux/notifier.h>
 #endif
 
 #include "s3cfb.h"
@@ -45,6 +46,7 @@ struct lcd_info {
 	struct lcd_device		*ld;
 	struct lcd_platform_data	*lcd_pd;
 	struct dsim_global		*dsim;
+    bool fb_suspended;
 };
 
 #ifdef NT71391_CHANGE_MINI_LVDS_FREQ_MIPI
@@ -284,7 +286,7 @@ static struct lcd_ops nt71391_lcd_ops = {
 	.get_power = nt71391_get_power,
 };
 
-#ifdef CONFIG_HAS_EARLYSUSPEND
+#ifdef CONFIG_FB
 extern void (*lcd_fb_suspend)(void);
 extern void (*lcd_fb_resume)(void);
 
@@ -356,7 +358,7 @@ static int __init nt71391_probe(struct device *dev)
 
 	dev_info(dev, "lcd panel driver has been probed.\n");
 
-#ifdef CONFIG_HAS_EARLYSUSPEND
+#ifdef CONFIG_FB
 	lcd_fb_suspend = nt71391_fb_suspend;
 	lcd_fb_resume = nt71391_fb_resume;
 #endif
