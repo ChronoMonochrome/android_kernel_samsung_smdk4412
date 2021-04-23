@@ -118,8 +118,8 @@ static struct wacom_g5_platform_data wacom_platform_data = {
 	/*      .exit_platform_hw =,    */
 	.suspend_platform_hw = wacom_suspend_hw,
 	.resume_platform_hw = wacom_resume_hw,
-	.early_suspend_platform_hw = wacom_early_suspend_hw,
-	.late_resume_platform_hw = wacom_late_resume_hw,
+	.fb_suspend_platform_hw = wacom_early_suspend_hw,
+	.fb_resume_platform_hw = wacom_late_resume_hw,
 	.reset_platform_hw = wacom_reset_hw,
 	.register_cb = wacom_register_callbacks,
 #ifdef WACOM_PEN_DETECT
