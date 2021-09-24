@@ -59,6 +59,13 @@
 #include <linux/pfn.h>
 #include <linux/bsearch.h>
 
+#ifdef CONFIG_SYMBOL_PREFIX
+#define MODULE_SYMBOL_PREFIX CONFIG_SYMBOL_PREFIX
+#else
+#define MODULE_SYMBOL_PREFIX ""
+#endif
+
+
 #define CREATE_TRACE_POINTS
 #include <trace/events/module.h>
 
