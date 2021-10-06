@@ -23,7 +23,6 @@
 #include <linux/sched.h>
 #include <linux/spinlock.h>
 #include <linux/uaccess.h>
-#include <linux/wakelock.h>
 
 #define ANDROID_ALARM_PRINT_INFO (1U << 0)
 #define ANDROID_ALARM_PRINT_IO (1U << 1)
@@ -50,7 +49,7 @@ module_param_named(debug_mask, debug_mask, int, S_IRUGO | S_IWUSR | S_IWGRP);
 static int alarm_opened;
 static DEFINE_MUTEX(alarm_mutex);
 static DEFINE_SPINLOCK(alarm_slock);
-static struct wake_lock alarm_wake_lock;
+static struct wakeup_source alarm_wake_lock;
 static DECLARE_WAIT_QUEUE_HEAD(alarm_wait_queue);
 static uint32_t alarm_pending;
 static uint32_t alarm_enabled;
@@ -100,7 +99,7 @@ static long alarm_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 		if (alarm_pending) {
 			alarm_pending &= ~alarm_type_mask;
 			if (!alarm_pending && !wait_pending)
-				wake_unlock(&alarm_wake_lock);
+				__pm_relax(&alarm_wake_lock);
 		}
 		alarm_enabled &= ~alarm_type_mask;
 		spin_unlock_irqrestore(&alarm_slock, flags);
@@ -150,7 +149,7 @@ from_old_alarm_set:
 		spin_lock_irqsave(&alarm_slock, flags);
 		pr_alarm(IO, "alarm wait\n");
 		if (!alarm_pending && wait_pending) {
-			wake_unlock(&alarm_wake_lock);
+			__pm_relax(&alarm_wake_lock);
 			wait_pending = 0;
 		}
 		spin_unlock_irqrestore(&alarm_slock, flags);
@@ -254,7 +253,7 @@ static int alarm_release(struct inode *inode, struct file *file)
 			if (alarm_pending)
 				pr_alarm(INFO, "alarm_release: clear "
 					"pending alarms %x\n", alarm_pending);
-			wake_unlock(&alarm_wake_lock);
+			__pm_relax(&alarm_wake_lock);
 			wait_pending = 0;
 			alarm_pending = 0;
 		}
@@ -272,7 +271,7 @@ static void alarm_triggered(struct alarm *alarm)
 	pr_alarm(INT, "alarm_triggered type %d\n", alarm->type);
 	spin_lock_irqsave(&alarm_slock, flags);
 	if (alarm_enabled & alarm_type_mask) {
-		wake_lock_timeout(&alarm_wake_lock, 5 * HZ);
+		__pm_wakeup_event(&alarm_wake_lock, 5 * HZ);
 		alarm_enabled &= ~alarm_type_mask;
 		alarm_pending |= alarm_type_mask;
 		wake_up(&alarm_wait_queue);
@@ -304,7 +303,7 @@ static int __init alarm_dev_init(void)
 
 	for (i = 0; i < ANDROID_ALARM_TYPE_COUNT; i++)
 		alarm_init(&alarms[i], i, alarm_triggered);
-	wake_lock_init(&alarm_wake_lock, WAKE_LOCK_SUSPEND, "alarm");
+	wakeup_source_init(&alarm_wake_lock, WAKE_LOCK_SUSPEND, "alarm");
 
 	return 0;
 }
@@ -312,7 +311,7 @@ static int __init alarm_dev_init(void)
 static void  __exit alarm_dev_exit(void)
 {
 	misc_deregister(&alarm_device);
-	wake_lock_destroy(&alarm_wake_lock);
+	wakeup_source_trash(&alarm_wake_lock);
 }
 
 module_init(alarm_dev_init);
