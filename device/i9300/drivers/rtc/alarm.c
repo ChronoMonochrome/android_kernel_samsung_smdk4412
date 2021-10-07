@@ -753,7 +753,7 @@ static int __init alarm_driver_init(void)
 	err = platform_driver_register(&alarm_driver);
 	if (err < 0)
 		goto err1;
-	wakeup_source_init(&alarm_rtc_wake_lock, WAKE_LOCK_SUSPEND, "alarm_rtc");
+	wakeup_source_init(&alarm_rtc_wake_lock, "alarm_rtc");
 	rtc_alarm_interface.class = rtc_class;
 	err = class_interface_register(&rtc_alarm_interface);
 	if (err < 0)
