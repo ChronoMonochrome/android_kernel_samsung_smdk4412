@@ -303,7 +303,7 @@ static int __init alarm_dev_init(void)
 
 	for (i = 0; i < ANDROID_ALARM_TYPE_COUNT; i++)
 		alarm_init(&alarms[i], i, alarm_triggered);
-	wakeup_source_init(&alarm_wake_lock, WAKE_LOCK_SUSPEND, "alarm");
+	wakeup_source_init(&alarm_wake_lock, "alarm");
 
 	return 0;
 }
