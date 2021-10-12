@@ -177,7 +177,7 @@ static void subsystem_restart_wq_func(struct work_struct *work)
 					restart_list[i]->name);
 
 		if (restart_list[i]->powerup(subsys) < 0)
-			panic("%s[%p]: Failed to powerup %s!", __func__,
+			pr_info("%s[%p]: Failed to powerup %s!", __func__,
 				current, restart_list[i]->name);
 	}
 
