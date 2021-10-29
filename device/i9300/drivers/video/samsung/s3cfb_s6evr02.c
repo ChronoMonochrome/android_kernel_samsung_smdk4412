@@ -76,7 +76,8 @@ struct lcd_info {
 	struct lcd_device		*ld;
 	struct backlight_device		*bd;
 	struct lcd_platform_data	*lcd_pd;
-	struct early_suspend		early_suspend;
+	struct notifier_block		fb_notif;
+	bool				fb_suspended;
 	unsigned char			id[LDI_ID_LEN];
 	unsigned char			**gamma_table;
 	unsigned char			**elvss_table;
