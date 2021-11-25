@@ -1045,7 +1045,10 @@ static void ip6_rt_update_pmtu(struct dst_entry *dst, u32 mtu)
 {
 	struct rt6_info *rt6 = (struct rt6_info*)dst;
 
+	dst_confirm(dst);
 	if (mtu < dst_mtu(dst) && rt6->rt6i_dst.plen == 128) {
+		struct net *net = dev_net(dst->dev);
+
 		rt6->rt6i_flags |= RTF_MODIFIED;
 		if (mtu < IPV6_MIN_MTU) {
 			u32 features = dst_metric(dst, RTAX_FEATURES);
@@ -1056,6 +1059,35 @@ static void ip6_rt_update_pmtu(struct dst_entry *dst, u32 mtu)
 		dst_metric_set(dst, RTAX_MTU, mtu);
 	}
 }
+
+void ip6_update_pmtu(struct sk_buff *skb, struct net *net, u32 mtu,
+		     int oif, __be32 mark)
+{
+	const struct ipv6hdr *iph = (struct ipv6hdr *) skb->data;
+	struct dst_entry *dst;
+	struct flowi6 fl6;
+
+	memset(&fl6, 0, sizeof(fl6));
+	fl6.flowi6_oif = oif;
+	fl6.flowi6_mark = mark;
+	fl6.flowi6_flags = FLOWI_FLAG_PRECOW_METRICS;
+	fl6.daddr = iph->daddr;
+	fl6.saddr = iph->saddr;
+	fl6.flowlabel = (*(__be32 *) iph) & IPV6_FLOWINFO_MASK;
+
+	dst = ip6_route_output(net, NULL, &fl6);
+	if (!dst->error)
+		ip6_rt_update_pmtu(dst, ntohl(mtu));
+	dst_release(dst);
+}
+EXPORT_SYMBOL_GPL(ip6_update_pmtu);
+
+void ip6_sk_update_pmtu(struct sk_buff *skb, struct sock *sk, __be32 mtu)
+{
+	ip6_update_pmtu(skb, sock_net(sk), mtu,
+			sk->sk_bound_dev_if, sk->sk_mark);
+}
+EXPORT_SYMBOL_GPL(ip6_sk_update_pmtu);
 
 static unsigned int ip6_default_advmss(const struct dst_entry *dst)
 {
