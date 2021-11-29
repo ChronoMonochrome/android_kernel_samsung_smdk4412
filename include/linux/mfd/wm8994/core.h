@@ -12,8 +12,8 @@
  *
  */
 
-#ifndef __MFD_WM8994_CORE_H__
-#define __MFD_WM8994_CORE_H__
+#ifndef __MIDAS_MFD_WM8994_CORE_H__
+#define __MIDAS_MFD_WM8994_CORE_H__
 
 #include <linux/interrupt.h>
 

@@ -66,7 +66,7 @@
 #include <mach/dev.h>
 #include <mach/ppmu.h>
 
-#ifdef CONFIG_MFD_MAX77693
+#ifdef CONFIG_MIDAS_MFD_MAX77693
 #include <linux/mfd/max77693.h>
 #include <linux/mfd/max77693-private.h>
 #endif
@@ -409,7 +409,7 @@ static void __init smdk4212_usbgadget_init(void)
 }
 #endif
 
-#ifdef CONFIG_MFD_MAX77693
+#ifdef CONFIG_MIDAS_MFD_MAX77693
 #ifdef CONFIG_VIBETONZ
 static struct max77693_haptic_platform_data max77693_haptic_pdata = {
     .reg2 = MOTOR_LRA | EXT_PWM | DIVIDER_128,
@@ -546,7 +546,7 @@ struct platform_device s3c_device_i2c15 = {
 static struct i2c_board_info i2c_devs15_emul[] __initdata = {
 };
 
-#if defined(CONFIG_MFD_MAX77693)
+#if defined(CONFIG_MIDAS_MFD_MAX77693)
 static struct i2c_gpio_platform_data gpio_i2c_data17 = {
     .sda_pin = GPIO_IF_PMIC_SDA,
     .scl_pin = GPIO_IF_PMIC_SCL,
@@ -854,7 +854,7 @@ static struct platform_device samsung_device_battery = {
 #endif
 
 #ifdef CONFIG_USB_HOST_NOTIFY
-#ifdef CONFIG_MFD_MAX77693
+#ifdef CONFIG_MIDAS_MFD_MAX77693
 static void otg_accessory_power(int enable)
 {
 	u8 on = (u8)!!enable;
@@ -1153,7 +1153,7 @@ static struct platform_device sec_motor = {
 #endif
 
 #ifdef CONFIG_USB_HOST_NOTIFY
-#ifndef CONFIG_MFD_MAX77693
+#ifndef CONFIG_MIDAS_MFD_MAX77693
 static void px_usb_otg_power(int active)
 {
 	smdk_accessory_power(2, active);
@@ -1383,7 +1383,7 @@ static struct platform_device *midas_devices[] __initdata = {
 #ifdef CONFIG_SAMSUNG_MHL
 	&s3c_device_i2c15,
 #endif
-#if defined(CONFIG_MFD_MAX77693)
+#if defined(CONFIG_MIDAS_MFD_MAX77693)
 	&s3c_device_i2c17,
 #endif
 #ifdef CONFIG_IR_REMOCON_MC96
@@ -1962,7 +1962,7 @@ static void __init midas_machine_init(void)
 	i2c_register_board_info(15, i2c_devs15_emul,
 				ARRAY_SIZE(i2c_devs15_emul));
 #endif
-#if defined(CONFIG_MFD_MAX77693)
+#if defined(CONFIG_MIDAS_MFD_MAX77693)
 	i2c_register_board_info(17, i2c_devs17_emul,
 				ARRAY_SIZE(i2c_devs17_emul));
 #endif
@@ -2097,7 +2097,7 @@ static void __init midas_machine_init(void)
 	smdk_accessory_gpio_init();
 #endif
 #ifdef CONFIG_USB_HOST_NOTIFY
-#ifndef CONFIG_MFD_MAX77693
+#ifndef CONFIG_MIDAS_MFD_MAX77693
 	acc_chk_gpio_init();
 #endif
 #endif

@@ -12,8 +12,8 @@
  *
  */
 
-#ifndef __MFD_WM8994_PDATA_H__
-#define __MFD_WM8994_PDATA_H__
+#ifndef __MIDAS_MFD_WM8994_PDATA_H__
+#define __MIDAS_MFD_WM8994_PDATA_H__
 
 /* Used to enable configuration of a GPIO to all zeros */
 #define WM8904_GPIO_NO_CONFIG 0x8000

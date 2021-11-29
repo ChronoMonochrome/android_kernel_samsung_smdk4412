@@ -1,1 +1,2 @@
 source "midas/spi/Kconfig"
+source "midas/mfd/Kconfig"

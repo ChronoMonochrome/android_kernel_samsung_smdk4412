@@ -22,7 +22,7 @@
 #ifndef __MIDAS_POWER_H
 #define __MIDAS_POWER_H __FILE__
 
-#if defined(CONFIG_MFD_S5M_CORE) && defined(CONFIG_MFD_MAX77686)
+#if defined(CONFIG_MFD_S5M_CORE) && defined(CONFIG_MIDAS_MFD_MAX77686)
 extern struct s5m_platform_data exynos4_s5m8767_info;
 extern struct max77686_platform_data exynos4_max77686_info;
 #elif defined(CONFIG_MFD_S5M_CORE)

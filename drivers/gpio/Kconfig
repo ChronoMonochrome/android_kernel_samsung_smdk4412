@@ -329,7 +329,7 @@ config GPIO_WM8350
 
 config GPIO_WM8994
 	tristate "WM8994 GPIOs"
-	depends on MFD_WM8994
+	depends on MIDAS_MFD_WM8994
 	help
 	  Say yes here to access the GPIO signals of WM8994 audio hub
 	  CODECs from Wolfson Microelectronics.

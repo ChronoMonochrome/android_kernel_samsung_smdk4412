@@ -27,7 +27,7 @@
 #ifdef CONFIG_LEDS_AAT1290A
 #include <linux/leds-aat1290a.h>
 #endif
-#ifdef CONFIG_MFD_MAX77693
+#ifdef CONFIG_MIDAS_MFD_MAX77693
 #include <linux/mfd/max77693.h>
 #include <linux/mfd/max77693-private.h>
 #include <linux/leds-max77693.h>
@@ -1016,7 +1016,7 @@ static void motor_en(bool enable)
 }
 #endif
 
-#ifdef CONFIG_MFD_MAX77693
+#ifdef CONFIG_MIDAS_MFD_MAX77693
 #ifdef CONFIG_VIBETONZ
 static struct max77693_haptic_platform_data max77693_haptic_pdata = {
 #ifdef CONFIG_MACH_GC1
@@ -1165,7 +1165,7 @@ static struct i2c_board_info i2c_devs1[] __initdata = {
 };
 
 #ifdef CONFIG_S3C_DEV_I2C4
-#ifdef CONFIG_MFD_MAX77693
+#ifdef CONFIG_MIDAS_MFD_MAX77693
 static struct i2c_board_info i2c_devs4_max77693[] __initdata = {
 	{
 		I2C_BOARD_INFO("max77693", (0xCC >> 1)),
@@ -1419,7 +1419,7 @@ struct platform_device s3c_device_i2c17 = {
 
 /* I2C17 */
 static struct i2c_board_info i2c_devs17_emul[] __initdata = {
-#ifdef CONFIG_MFD_MAX77693
+#ifdef CONFIG_MIDAS_MFD_MAX77693
 	{
 		I2C_BOARD_INFO("max77693", (0xCC >> 1)),
 		.platform_data	= &exynos4_max77693_info,

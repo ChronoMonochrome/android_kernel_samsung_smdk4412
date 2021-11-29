@@ -93,7 +93,7 @@ static void sii9234_power_onoff(bool on)
 }
 
 #ifdef __MHL_NEW_CBUS_MSC_CMD__
-#if defined(CONFIG_MFD_MAX77693)
+#if defined(CONFIG_MIDAS_MFD_MAX77693)
 static int sii9234_usb_op(bool on, int value)
 {
 	pr_info("func:%s bool on(%d) int value(%d)\n", __func__, on, value);

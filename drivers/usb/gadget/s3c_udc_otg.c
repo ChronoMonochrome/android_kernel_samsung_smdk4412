@@ -411,8 +411,8 @@ int usb_gadget_probe_driver(struct usb_gadget_driver *driver,
 		dev->gadget.dev.driver = 0;
 		return retval;
 	}
-#if defined(CONFIG_USB_EXYNOS_SWITCH) || defined(CONFIG_MFD_MAX77693)\
-	|| defined(CONFIG_MFD_MAX8997) || defined(CONFIG_MFD_MAX77686)
+#if defined(CONFIG_USB_EXYNOS_SWITCH) || defined(CONFIG_MIDAS_MFD_MAX77693)\
+	|| defined(CONFIG_MFD_MAX8997) || defined(CONFIG_MIDAS_MFD_MAX77686)
 	printk(KERN_INFO "usb: Skip udc_enable\n");
 #else
 	printk(KERN_INFO "usb: udc_enable\n");
@@ -1391,8 +1391,8 @@ static int s3c_udc_suspend(struct platform_device *pdev, pm_message_t state)
 		if (dev->driver->disconnect)
 			dev->driver->disconnect(&dev->gadget);
 
-#if defined(CONFIG_USB_EXYNOS_SWITCH) || defined(CONFIG_MFD_MAX77693)\
-	|| defined(CONFIG_MFD_MAX8997) || defined(CONFIG_MFD_MAX77686)
+#if defined(CONFIG_USB_EXYNOS_SWITCH) || defined(CONFIG_MIDAS_MFD_MAX77693)\
+	|| defined(CONFIG_MFD_MAX8997) || defined(CONFIG_MIDAS_MFD_MAX77686)
 	/* Nothing to do */
 #else
 		udc_disable(dev);
@@ -1408,8 +1408,8 @@ static int s3c_udc_resume(struct platform_device *pdev)
 
 	if (dev->driver) {
 		udc_reinit(dev);
-#if defined(CONFIG_USB_EXYNOS_SWITCH) || defined(CONFIG_MFD_MAX77693)\
-	|| defined(CONFIG_MFD_MAX8997) || defined(CONFIG_MFD_MAX77686)
+#if defined(CONFIG_USB_EXYNOS_SWITCH) || defined(CONFIG_MIDAS_MFD_MAX77693)\
+	|| defined(CONFIG_MFD_MAX8997) || defined(CONFIG_MIDAS_MFD_MAX77686)
 	/* Nothing to do */
 #else
 		udc_enable(dev);

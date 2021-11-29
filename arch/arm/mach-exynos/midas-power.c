@@ -745,7 +745,7 @@ void midas_power_gpio_init(void)
 #endif
 }
 
-#ifdef CONFIG_MFD_MAX77693
+#ifdef CONFIG_MIDAS_MFD_MAX77693
 static struct regulator_consumer_supply safeout1_supply[] = {
 	REGULATOR_SUPPLY("safeout1", NULL),
 };
@@ -842,7 +842,7 @@ postcore_initcall(regulator_init_with_redwood);
 
 
 #endif /* CONFIG_MACH_SLP_PQ */
-#endif /* CONFIG_MFD_MAX77693 */
+#endif /* CONFIG_MIDAS_MFD_MAX77693 */
 
 #if defined(CONFIG_REGULATOR_S5M8767)
 /* S5M8767 Regulator */

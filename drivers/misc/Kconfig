@@ -613,7 +613,7 @@ config MUIC_MAX8997_OVPUI
 
 config MUIC_MAX77693_SEPARATE_MHL_PORT
 	bool "MUIC_MAX77693_SEPARATE_MHL_PORT"
-	depends on MFD_MAX77693
+	depends on MIDAS_MFD_MAX77693
 	default n
 	help
 	  If you say yes here you will get support for the separated
@@ -621,21 +621,21 @@ config MUIC_MAX77693_SEPARATE_MHL_PORT
 
 config MUIC_MAX77693_SUPPORT_OTG_AUDIO_DOCK
 	bool "MUIC_MAX77693_SUPPORT_OTG_AUDIO_DOCK"
-	depends on MFD_MAX77693
+	depends on MIDAS_MFD_MAX77693
 	default n
 	help
 	  If you say yes here you will get support for the OTG audio dock.
 
 config MUIC_MAX77693_SUPPORT_SMART_DOCK
 	bool "MUIC_MAX77693_SUPPORT_SMART_DOCK"
-	depends on MFD_MAX77693
+	depends on MIDAS_MFD_MAX77693
 	default n
 	help
 	  If you say yes here you will get support for the smart dock.
 
 config MUIC_MAX77693_SUPPORT_CAR_DOCK
 	bool "MUIC_MAX77693_SUPPORT_CAR_DOCK"
-	depends on MFD_MAX77693
+	depends on MIDAS_MFD_MAX77693
 	default n
 	help
 	  If you say yes here you will get support for the car dock.

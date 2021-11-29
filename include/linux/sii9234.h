@@ -57,7 +57,7 @@ extern u8 mhl_onoff_ex(bool onoff);
 #endif
 
 #if defined(__MHL_NEW_CBUS_MSC_CMD__)
-#if defined(CONFIG_MFD_MAX77693)
+#if defined(CONFIG_MIDAS_MFD_MAX77693)
 extern void max77693_muic_usb_cb(u8 usb_mode);
 #endif
 #endif

@@ -65,7 +65,7 @@ else
 obj-$(CONFIG_SEC_MODEM)		+= modem_if/
 endif
 endif
-#obj-$(CONFIG_MFD_MAX77693)	+= max77693-muic.o
+#obj-$(CONFIG_MIDAS_MFD_MAX77693)	+= max77693-muic.o
 obj-$(CONFIG_STMPE811_ADC)	+= stmpe811-adc.o
 obj-$(CONFIG_JACK_MON)		+= jack.o
 obj-$(CONFIG_UART_SELECT)	+= uart_select.o

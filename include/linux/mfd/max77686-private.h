@@ -19,8 +19,8 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef __LINUX_MFD_MAX77686_PRIV_H
-#define __LINUX_MFD_MAX77686_PRIV_H
+#ifndef __LINUX_MIDAS_MFD_MAX77686_PRIV_H
+#define __LINUX_MIDAS_MFD_MAX77686_PRIV_H
 
 #include <linux/i2c.h>
 
@@ -256,4 +256,4 @@ extern int max77686_bulk_write(struct i2c_client *i2c, u8 reg, int count,
 				u8 *buf);
 extern int max77686_update_reg(struct i2c_client *i2c, u8 reg, u8 val, u8 mask);
 
-#endif /*  __LINUX_MFD_MAX77686_PRIV_H */
+#endif /*  __LINUX_MIDAS_MFD_MAX77686_PRIV_H */

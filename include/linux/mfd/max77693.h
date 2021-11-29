@@ -25,8 +25,8 @@
  * this mfd driver.
  */
 
-#ifndef __LINUX_MFD_MAX77693_H
-#define __LINUX_MFD_MAX77693_H
+#ifndef __LINUX_MIDAS_MFD_MAX77693_H
+#define __LINUX_MIDAS_MFD_MAX77693_H
 
 #include <linux/regulator/consumer.h>
 
@@ -150,4 +150,4 @@ struct max77693_muic_data {
 extern int max7693_muic_cp_usb_state(void);
 #endif
 
-#endif				/* __LINUX_MFD_MAX77693_H */
+#endif				/* __LINUX_MIDAS_MFD_MAX77693_H */

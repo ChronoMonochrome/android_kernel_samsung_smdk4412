@@ -383,7 +383,7 @@ void midas_power_gpio_init(void)
 {
 }
 
-#ifdef CONFIG_MFD_MAX77693
+#ifdef CONFIG_MIDAS_MFD_MAX77693
 static struct regulator_consumer_supply safeout1_supply[] = {
 	REGULATOR_SUPPLY("safeout1", NULL),
 };
@@ -444,7 +444,7 @@ struct max77693_regulator_data max77693_regulators[] = {
 	{MAX77693_CHARGER, &charger_init_data,},
 };
 
-#endif /* CONFIG_MFD_MAX77693 */
+#endif /* CONFIG_MIDAS_MFD_MAX77693 */
 
 #if defined(CONFIG_REGULATOR_S5M8767)
 /* S5M8767 Regulator */

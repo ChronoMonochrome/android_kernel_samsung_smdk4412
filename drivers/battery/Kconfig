@@ -62,7 +62,7 @@ config BATTERY_SMB136_CHARGER
 
 config BATTERY_MAX77693_CHARGER
 	tristate "MAX77693 battery charger support"
-	depends on MFD_MAX77693 && I2C
+	depends on MIDAS_MFD_MAX77693 && I2C
 	help
 	  Say Y here to enable support for the MAX77693 charger
 

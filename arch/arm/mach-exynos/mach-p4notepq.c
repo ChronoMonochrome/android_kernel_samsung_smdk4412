@@ -27,7 +27,7 @@
 #include <linux/leds-aat1290a.h>
 #endif
 
-#ifdef CONFIG_MFD_MAX77693
+#ifdef CONFIG_MIDAS_MFD_MAX77693
 #include <linux/mfd/max77693.h>
 #include <linux/mfd/max77693-private.h>
 #include <linux/leds-max77693.h>

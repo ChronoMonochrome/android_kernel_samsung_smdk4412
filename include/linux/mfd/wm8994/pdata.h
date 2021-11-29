@@ -12,8 +12,8 @@
  *
  */
 
-#ifndef __MFD_WM8994_PDATA_H__
-#define __MFD_WM8994_PDATA_H__
+#ifndef __MIDAS_MFD_WM8994_PDATA_H__
+#define __MIDAS_MFD_WM8994_PDATA_H__
 
 #define WM8994_NUM_LDO   2
 #define WM8994_NUM_GPIO 11

@@ -417,7 +417,7 @@ config LEDS_SWITCH
 config LEDS_MAX77693
 	bool "LED support for the MAX77693"
 	depends on LEDS_CLASS
-	depends on MFD_MAX77693
+	depends on MIDAS_MFD_MAX77693
 	default n
 	help
 	  This option enables support for the LEDs on the MAX77693.

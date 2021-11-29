@@ -19,8 +19,8 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef __LINUX_MFD_MAX77693_PRIV_H
-#define __LINUX_MFD_MAX77693_PRIV_H
+#ifndef __LINUX_MIDAS_MFD_MAX77693_PRIV_H
+#define __LINUX_MIDAS_MFD_MAX77693_PRIV_H
 
 #include <linux/i2c.h>
 
@@ -381,7 +381,7 @@ extern void otg_control(int);
 extern void powered_otg_control(int);
 extern int max77693_muic_set_audio_switch(bool enable);
 
-#ifdef CONFIG_MFD_MAX77693
+#ifdef CONFIG_MIDAS_MFD_MAX77693
 enum cable_type_muic {
 	CABLE_TYPE_NONE_MUIC = 0,
 	CABLE_TYPE_USB_MUIC,
@@ -427,6 +427,6 @@ enum {
 #endif
 
 };
-#endif /* CONFIG_MFD_MAX77693 */
+#endif /* CONFIG_MIDAS_MFD_MAX77693 */
 
-#endif /*  __LINUX_MFD_MAX77693_PRIV_H */
+#endif /*  __LINUX_MIDAS_MFD_MAX77693_PRIV_H */

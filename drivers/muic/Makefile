@@ -7,8 +7,8 @@ obj-$(CONFIG_MUIC_MAX14577)		+= max14577-muic.o
 obj-$(CONFIG_MUIC_MAX8997)		+= max8997-muic.o
 
 ifeq ($(CONFIG_SAMSUNG_MUIC),y)
-obj-$(CONFIG_MFD_MAX77693)		+= max77693-muic.o
+obj-$(CONFIG_MIDAS_MFD_MAX77693)		+= max77693-muic.o
 else ifeq ($(CONFIG_DI_MUIC),y)
-obj-$(CONFIG_MFD_MAX77693)		+= max77693-muic_di.o
+obj-$(CONFIG_MIDAS_MFD_MAX77693)		+= max77693-muic_di.o
 endif
 

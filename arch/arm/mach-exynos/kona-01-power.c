@@ -36,7 +36,7 @@
 #include <linux/mfd/max77693.h>
 
 
-#ifdef CONFIG_MFD_MAX77693
+#ifdef CONFIG_MIDAS_MFD_MAX77693
 static struct regulator_consumer_supply safeout1_supply[] = {
 	REGULATOR_SUPPLY("safeout1", NULL),
 };
