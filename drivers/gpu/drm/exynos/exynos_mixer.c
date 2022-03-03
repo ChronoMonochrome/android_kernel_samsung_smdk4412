@@ -284,13 +284,13 @@ static void mixer_cfg_scan(struct mixer_context *ctx, unsigned int height)
 				MXR_CFG_SCAN_PROGRASSIVE);
 
 	/* choosing between porper HD and SD mode */
-	if (height <= 480)
+	if (height == 480)
 		val |= MXR_CFG_SCAN_NTSC | MXR_CFG_SCAN_SD;
-	else if (height <= 576)
+	else if (height == 576)
 		val |= MXR_CFG_SCAN_PAL | MXR_CFG_SCAN_SD;
-	else if (height <= 720)
+	else if (height == 720)
 		val |= MXR_CFG_SCAN_HD_720 | MXR_CFG_SCAN_HD;
-	else if (height <= 1080)
+	else if (height == 1080)
 		val |= MXR_CFG_SCAN_HD_1080 | MXR_CFG_SCAN_HD;
 	else
 		val |= MXR_CFG_SCAN_HD_720 | MXR_CFG_SCAN_HD;
@@ -643,14 +643,12 @@ static void mixer_win_reset(struct mixer_context *ctx)
 	/* setting graphical layers */
 	val  = MXR_GRP_CFG_COLOR_KEY_DISABLE; /* no blank key */
 	val |= MXR_GRP_CFG_WIN_BLEND_EN;
-	val |= MXR_GRP_CFG_ALPHA_VAL(0xff); /* non-transparent alpha */
-
-	/* Don't blend layer 0 onto the mixer background */
-	mixer_reg_write(res, MXR_GRAPHIC_CFG(0), val);
-
-	/* Blend layer 1 into layer 0 */
 	val |= MXR_GRP_CFG_BLEND_PRE_MUL;
 	val |= MXR_GRP_CFG_PIXEL_BLEND_EN;
+	val |= MXR_GRP_CFG_ALPHA_VAL(0xff); /* non-transparent alpha */
+
+	/* the same configuration for both layers */
+	mixer_reg_write(res, MXR_GRAPHIC_CFG(0), val);
 	mixer_reg_write(res, MXR_GRAPHIC_CFG(1), val);
 
 	/* setting video layers */
@@ -820,25 +818,6 @@ static void mixer_win_disable(void *ctx, int win)
 	mixer_ctx->win_data[win].enabled = false;
 }
 
-static int mixer_check_timing(void *ctx, struct fb_videomode *timing)
-{
-	u32 w, h;
-
-	w = timing->xres;
-	h = timing->yres;
-
-	DRM_DEBUG_KMS("%s : xres=%d, yres=%d, refresh=%d, intl=%d\n",
-		__func__, timing->xres, timing->yres,
-		timing->refresh, (timing->vmode &
-		FB_VMODE_INTERLACED) ? true : false);
-
-	if ((w >= 464 && w <= 720 && h >= 261 && h <= 576) ||
-		(w >= 1024 && w <= 1280 && h >= 576 && h <= 720) ||
-		(w >= 1664 && w <= 1920 && h >= 936 && h <= 1080))
-		return 0;
-
-	return -EINVAL;
-}
 static void mixer_wait_for_vblank(void *ctx)
 {
 	struct mixer_context *mixer_ctx = ctx;
@@ -976,9 +955,6 @@ static struct exynos_mixer_ops mixer_ops = {
 	.win_mode_set		= mixer_win_mode_set,
 	.win_commit		= mixer_win_commit,
 	.win_disable		= mixer_win_disable,
-
-	/* display */
-	.check_timing		= mixer_check_timing,
 };
 
 static irqreturn_t mixer_irq_handler(int irq, void *arg)
@@ -1045,13 +1021,13 @@ static int mixer_resources_init(struct exynos_drm_hdmi_context *ctx,
 	spin_lock_init(&mixer_res->reg_slock);
 
 	mixer_res->mixer = devm_clk_get(dev, "mixer");
-	if (IS_ERR(mixer_res->mixer)) {
+	if (IS_ERR_OR_NULL(mixer_res->mixer)) {
 		dev_err(dev, "failed to get clock 'mixer'\n");
 		return -ENODEV;
 	}
 
 	mixer_res->sclk_hdmi = devm_clk_get(dev, "sclk_hdmi");
-	if (IS_ERR(mixer_res->sclk_hdmi)) {
+	if (IS_ERR_OR_NULL(mixer_res->sclk_hdmi)) {
 		dev_err(dev, "failed to get clock 'sclk_hdmi'\n");
 		return -ENODEV;
 	}
@@ -1061,7 +1037,7 @@ static int mixer_resources_init(struct exynos_drm_hdmi_context *ctx,
 		return -ENXIO;
 	}
 
-	mixer_res->mixer_regs = devm_ioremap(dev, res->start,
+	mixer_res->mixer_regs = devm_ioremap(&pdev->dev, res->start,
 							resource_size(res));
 	if (mixer_res->mixer_regs == NULL) {
 		dev_err(dev, "register mapping failed.\n");
@@ -1074,7 +1050,7 @@ static int mixer_resources_init(struct exynos_drm_hdmi_context *ctx,
 		return -ENXIO;
 	}
 
-	ret = devm_request_irq(dev, res->start, mixer_irq_handler,
+	ret = devm_request_irq(&pdev->dev, res->start, mixer_irq_handler,
 							0, "drm_mixer", ctx);
 	if (ret) {
 		dev_err(dev, "request interrupt failed.\n");
@@ -1094,17 +1070,17 @@ static int vp_resources_init(struct exynos_drm_hdmi_context *ctx,
 	struct resource *res;
 
 	mixer_res->vp = devm_clk_get(dev, "vp");
-	if (IS_ERR(mixer_res->vp)) {
+	if (IS_ERR_OR_NULL(mixer_res->vp)) {
 		dev_err(dev, "failed to get clock 'vp'\n");
 		return -ENODEV;
 	}
 	mixer_res->sclk_mixer = devm_clk_get(dev, "sclk_mixer");
-	if (IS_ERR(mixer_res->sclk_mixer)) {
+	if (IS_ERR_OR_NULL(mixer_res->sclk_mixer)) {
 		dev_err(dev, "failed to get clock 'sclk_mixer'\n");
 		return -ENODEV;
 	}
 	mixer_res->sclk_dac = devm_clk_get(dev, "sclk_dac");
-	if (IS_ERR(mixer_res->sclk_dac)) {
+	if (IS_ERR_OR_NULL(mixer_res->sclk_dac)) {
 		dev_err(dev, "failed to get clock 'sclk_dac'\n");
 		return -ENODEV;
 	}
@@ -1118,7 +1094,7 @@ static int vp_resources_init(struct exynos_drm_hdmi_context *ctx,
 		return -ENXIO;
 	}
 
-	mixer_res->vp_regs = devm_ioremap(dev, res->start,
+	mixer_res->vp_regs = devm_ioremap(&pdev->dev, res->start,
 							resource_size(res));
 	if (mixer_res->vp_regs == NULL) {
 		dev_err(dev, "register mapping failed.\n");
@@ -1169,14 +1145,14 @@ static int mixer_probe(struct platform_device *pdev)
 
 	dev_info(dev, "probe start\n");
 
-	drm_hdmi_ctx = devm_kzalloc(dev, sizeof(*drm_hdmi_ctx),
+	drm_hdmi_ctx = devm_kzalloc(&pdev->dev, sizeof(*drm_hdmi_ctx),
 								GFP_KERNEL);
 	if (!drm_hdmi_ctx) {
 		DRM_ERROR("failed to allocate common hdmi context.\n");
 		return -ENOMEM;
 	}
 
-	ctx = devm_kzalloc(dev, sizeof(*ctx), GFP_KERNEL);
+	ctx = devm_kzalloc(&pdev->dev, sizeof(*ctx), GFP_KERNEL);
 	if (!ctx) {
 		DRM_ERROR("failed to alloc mixer context.\n");
 		return -ENOMEM;
@@ -1187,14 +1163,14 @@ static int mixer_probe(struct platform_device *pdev)
 	if (dev->of_node) {
 		const struct of_device_id *match;
 		match = of_match_node(of_match_ptr(mixer_match_types),
-							  dev->of_node);
+							  pdev->dev.of_node);
 		drv = (struct mixer_drv_data *)match->data;
 	} else {
 		drv = (struct mixer_drv_data *)
 			platform_get_device_id(pdev)->driver_data;
 	}
 
-	ctx->dev = dev;
+	ctx->dev = &pdev->dev;
 	ctx->parent_ctx = (void *)drm_hdmi_ctx;
 	drm_hdmi_ctx->ctx = (void *)ctx;
 	ctx->vp_enabled = drv->is_vp_enabled;

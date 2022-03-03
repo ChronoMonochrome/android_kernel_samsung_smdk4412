@@ -33,6 +33,7 @@ nouveau_engine_create_(struct nouveau_object *parent,
 		       const char *iname, const char *fname,
 		       int length, void **pobject)
 {
+	struct nouveau_device *device = nv_device(parent);
 	struct nouveau_engine *engine;
 	int ret;
 
@@ -42,8 +43,7 @@ nouveau_engine_create_(struct nouveau_object *parent,
 	if (ret)
 		return ret;
 
-	if ( parent &&
-	    !nouveau_boolopt(nv_device(parent)->cfgopt, iname, enable)) {
+	if (!nouveau_boolopt(device->cfgopt, iname, enable)) {
 		if (!enable)
 			nv_warn(engine, "disabled, %s=1 to enable\n", iname);
 		return -ENODEV;

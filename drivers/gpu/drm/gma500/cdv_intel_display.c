@@ -1462,7 +1462,7 @@ static int cdv_intel_crtc_cursor_set(struct drm_crtc *crtc,
 	size_t addr = 0;
 	struct gtt_range *gt;
 	struct drm_gem_object *obj;
-	int ret = 0;
+	int ret;
 
 	/* if we want to turn of the cursor ignore width and height */
 	if (!handle) {
@@ -1499,8 +1499,7 @@ static int cdv_intel_crtc_cursor_set(struct drm_crtc *crtc,
 
 	if (obj->size < width * height * 4) {
 		dev_dbg(dev->dev, "buffer is to small\n");
-		ret = -ENOMEM;
-		goto unref_cursor;
+		return -ENOMEM;
 	}
 
 	gt = container_of(obj, struct gtt_range, gem);
@@ -1509,7 +1508,7 @@ static int cdv_intel_crtc_cursor_set(struct drm_crtc *crtc,
 	ret = psb_gtt_pin(gt);
 	if (ret) {
 		dev_err(dev->dev, "Can not pin down handle 0x%x\n", handle);
-		goto unref_cursor;
+		return ret;
 	}
 
 	addr = gt->offset;	/* Or resource.start ??? */
@@ -1533,14 +1532,9 @@ static int cdv_intel_crtc_cursor_set(struct drm_crtc *crtc,
 							struct gtt_range, gem);
 		psb_gtt_unpin(gt);
 		drm_gem_object_unreference(psb_intel_crtc->cursor_obj);
+		psb_intel_crtc->cursor_obj = obj;
 	}
-
-	psb_intel_crtc->cursor_obj = obj;
-	return ret;
-
-unref_cursor:
-	drm_gem_object_unreference(obj);
-	return ret;
+	return 0;
 }
 
 static int cdv_intel_crtc_cursor_move(struct drm_crtc *crtc, int x, int y)
@@ -1756,19 +1750,6 @@ static void cdv_intel_crtc_destroy(struct drm_crtc *crtc)
 	kfree(psb_intel_crtc);
 }
 
-static void cdv_intel_crtc_disable(struct drm_crtc *crtc)
-{
-	struct gtt_range *gt;
-	struct drm_crtc_helper_funcs *crtc_funcs = crtc->helper_private;
-
-	crtc_funcs->dpms(crtc, DRM_MODE_DPMS_OFF);
-
-	if (crtc->fb) {
-		gt = to_psb_fb(crtc->fb)->gtt;
-		psb_gtt_unpin(gt);
-	}
-}
-
 const struct drm_crtc_helper_funcs cdv_intel_helper_funcs = {
 	.dpms = cdv_intel_crtc_dpms,
 	.mode_fixup = cdv_intel_crtc_mode_fixup,
@@ -1776,7 +1757,6 @@ const struct drm_crtc_helper_funcs cdv_intel_helper_funcs = {
 	.mode_set_base = cdv_intel_pipe_set_base,
 	.prepare = cdv_intel_crtc_prepare,
 	.commit = cdv_intel_crtc_commit,
-	.disable = cdv_intel_crtc_disable,
 };
 
 const struct drm_crtc_funcs cdv_intel_crtc_funcs = {

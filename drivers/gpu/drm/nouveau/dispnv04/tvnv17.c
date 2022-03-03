@@ -768,7 +768,7 @@ static int nv17_tv_set_property(struct drm_encoder *encoder,
 				.crtc = crtc,
 			};
 
-			drm_mode_set_config_internal(&modeset);
+			crtc->funcs->set_config(&modeset);
 		}
 	}
 

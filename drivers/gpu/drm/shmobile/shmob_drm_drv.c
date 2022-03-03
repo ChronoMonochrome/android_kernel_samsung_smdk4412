@@ -313,9 +313,9 @@ static int shmob_drm_pm_resume(struct device *dev)
 {
 	struct shmob_drm_device *sdev = dev_get_drvdata(dev);
 
-	drm_modeset_lock_all(sdev->ddev);
+	mutex_lock(&sdev->ddev->mode_config.mutex);
 	shmob_drm_crtc_resume(&sdev->crtc);
-	drm_modeset_unlock_all(sdev->ddev);
+	mutex_unlock(&sdev->ddev->mode_config.mutex);
 
 	drm_kms_helper_poll_enable(sdev->ddev);
 	return 0;

@@ -12,13 +12,15 @@
 #include <linux/module.h>
 #include <linux/of.h>
 #include <linux/platform_device.h>
-#include <linux/clk/tegra.h>
+
+#include <mach/clk.h>
 
 #include "host1x_client.h"
 #include "dc.h"
 #include "drm.h"
 #include "gem.h"
 
+<<<<<<< HEAD:drivers/gpu/host1x/drm/dc.c
 struct tegra_plane {
 	struct drm_plane base;
 	unsigned int index;
@@ -250,28 +252,28 @@ static int tegra_dc_page_flip(struct drm_crtc *crtc, struct drm_framebuffer *fb,
 	return 0;
 }
 
+=======
+struct tegra_dc_window {
+	fixed20_12 x;
+	fixed20_12 y;
+	fixed20_12 w;
+	fixed20_12 h;
+	unsigned int outx;
+	unsigned int outy;
+	unsigned int outw;
+	unsigned int outh;
+	unsigned int stride;
+	unsigned int fmt;
+};
+
+>>>>>>> a6a73ceace86... gpu:drivers/gpu/drm/tegra/dc.c
 static const struct drm_crtc_funcs tegra_crtc_funcs = {
-	.page_flip = tegra_dc_page_flip,
 	.set_config = drm_crtc_helper_set_config,
 	.destroy = drm_crtc_cleanup,
 };
 
-static void tegra_crtc_disable(struct drm_crtc *crtc)
+static void tegra_crtc_dpms(struct drm_crtc *crtc, int mode)
 {
-	struct drm_device *drm = crtc->dev;
-	struct drm_plane *plane;
-
-	list_for_each_entry(plane, &drm->mode_config.plane_list, head) {
-		if (plane->crtc == crtc) {
-			tegra_plane_disable(plane);
-			plane->crtc = NULL;
-
-			if (plane->fb) {
-				drm_framebuffer_unreference(plane->fb);
-				plane->fb = NULL;
-			}
-		}
-	}
 }
 
 static bool tegra_crtc_mode_fixup(struct drm_crtc *crtc,
@@ -281,11 +283,10 @@ static bool tegra_crtc_mode_fixup(struct drm_crtc *crtc,
 	return true;
 }
 
-static inline u32 compute_dda_inc(unsigned int in, unsigned int out, bool v,
+static inline u32 compute_dda_inc(fixed20_12 inf, unsigned int out, bool v,
 				  unsigned int bpp)
 {
 	fixed20_12 outf = dfixed_init(out);
-	fixed20_12 inf = dfixed_init(in);
 	u32 dda_inc;
 	int max;
 
@@ -315,10 +316,9 @@ static inline u32 compute_dda_inc(unsigned int in, unsigned int out, bool v,
 	return dda_inc;
 }
 
-static inline u32 compute_initial_dda(unsigned int in)
+static inline u32 compute_initial_dda(fixed20_12 in)
 {
-	fixed20_12 inf = dfixed_init(in);
-	return dfixed_frac(inf);
+	return dfixed_frac(in);
 }
 
 static int tegra_dc_set_timings(struct tegra_dc *dc,
@@ -389,6 +389,7 @@ static int tegra_crtc_setup_clk(struct drm_crtc *crtc,
 	return 0;
 }
 
+<<<<<<< HEAD:drivers/gpu/host1x/drm/dc.c
 static bool tegra_dc_format_is_yuv(unsigned int format, bool *planar)
 {
 	switch (format) {
@@ -571,18 +572,23 @@ unsigned int tegra_dc_format(uint32_t format)
 	return WIN_COLOR_DEPTH_B8G8R8A8;
 }
 
+=======
+>>>>>>> a6a73ceace86... gpu:drivers/gpu/drm/tegra/dc.c
 static int tegra_crtc_mode_set(struct drm_crtc *crtc,
 			       struct drm_display_mode *mode,
 			       struct drm_display_mode *adjusted,
 			       int x, int y, struct drm_framebuffer *old_fb)
 {
+<<<<<<< HEAD:drivers/gpu/host1x/drm/dc.c
 	struct tegra_bo *bo = tegra_fb_get_plane(crtc->fb, 0);
+=======
+	struct tegra_framebuffer *fb = to_tegra_fb(crtc->fb);
+>>>>>>> a6a73ceace86... gpu:drivers/gpu/drm/tegra/dc.c
 	struct tegra_dc *dc = to_tegra_dc(crtc);
-	struct tegra_dc_window window;
+	unsigned int h_dda, v_dda, bpp;
+	struct tegra_dc_window win;
 	unsigned long div, value;
 	int err;
-
-	drm_vblank_pre_modeset(crtc->dev, dc->pipe);
 
 	err = tegra_crtc_setup_clk(crtc, mode, &div);
 	if (err) {
@@ -611,6 +617,7 @@ static int tegra_crtc_mode_set(struct drm_crtc *crtc,
 	tegra_dc_writel(dc, value, DC_DISP_DISP_CLOCK_CONTROL);
 
 	/* setup window parameters */
+<<<<<<< HEAD:drivers/gpu/host1x/drm/dc.c
 	memset(&window, 0, sizeof(window));
 	window.src.x = 0;
 	window.src.y = 0;
@@ -628,16 +635,85 @@ static int tegra_crtc_mode_set(struct drm_crtc *crtc,
 	err = tegra_dc_setup_window(dc, 0, &window);
 	if (err < 0)
 		dev_err(dc->dev, "failed to enable root plane\n");
+=======
+	memset(&win, 0, sizeof(win));
+	win.x.full = dfixed_const(0);
+	win.y.full = dfixed_const(0);
+	win.w.full = dfixed_const(mode->hdisplay);
+	win.h.full = dfixed_const(mode->vdisplay);
+	win.outx = 0;
+	win.outy = 0;
+	win.outw = mode->hdisplay;
+	win.outh = mode->vdisplay;
+
+	switch (crtc->fb->pixel_format) {
+	case DRM_FORMAT_XRGB8888:
+		win.fmt = WIN_COLOR_DEPTH_B8G8R8A8;
+		break;
+>>>>>>> a6a73ceace86... gpu:drivers/gpu/drm/tegra/dc.c
+
+	case DRM_FORMAT_RGB565:
+		win.fmt = WIN_COLOR_DEPTH_B5G6R5;
+		break;
+
+	default:
+		win.fmt = WIN_COLOR_DEPTH_B8G8R8A8;
+		WARN_ON(1);
+		break;
+	}
+
+	bpp = crtc->fb->bits_per_pixel / 8;
+	win.stride = crtc->fb->pitches[0];
+
+	/* program window registers */
+	value = WINDOW_A_SELECT;
+	tegra_dc_writel(dc, value, DC_CMD_DISPLAY_WINDOW_HEADER);
+
+	tegra_dc_writel(dc, win.fmt, DC_WIN_COLOR_DEPTH);
+	tegra_dc_writel(dc, 0, DC_WIN_BYTE_SWAP);
+
+	value = V_POSITION(win.outy) | H_POSITION(win.outx);
+	tegra_dc_writel(dc, value, DC_WIN_POSITION);
+
+	value = V_SIZE(win.outh) | H_SIZE(win.outw);
+	tegra_dc_writel(dc, value, DC_WIN_SIZE);
+
+	value = V_PRESCALED_SIZE(dfixed_trunc(win.h)) |
+		H_PRESCALED_SIZE(dfixed_trunc(win.w) * bpp);
+	tegra_dc_writel(dc, value, DC_WIN_PRESCALED_SIZE);
+
+	h_dda = compute_dda_inc(win.w, win.outw, false, bpp);
+	v_dda = compute_dda_inc(win.h, win.outh, true, bpp);
+
+	value = V_DDA_INC(v_dda) | H_DDA_INC(h_dda);
+	tegra_dc_writel(dc, value, DC_WIN_DDA_INC);
+
+	h_dda = compute_initial_dda(win.x);
+	v_dda = compute_initial_dda(win.y);
+
+	tegra_dc_writel(dc, h_dda, DC_WIN_H_INITIAL_DDA);
+	tegra_dc_writel(dc, v_dda, DC_WIN_V_INITIAL_DDA);
+
+	tegra_dc_writel(dc, 0, DC_WIN_UV_BUF_STRIDE);
+	tegra_dc_writel(dc, 0, DC_WIN_BUF_STRIDE);
+
+	tegra_dc_writel(dc, fb->obj->paddr, DC_WINBUF_START_ADDR);
+	tegra_dc_writel(dc, win.stride, DC_WIN_LINE_STRIDE);
+	tegra_dc_writel(dc, dfixed_trunc(win.x) * bpp,
+			DC_WINBUF_ADDR_H_OFFSET);
+	tegra_dc_writel(dc, dfixed_trunc(win.y), DC_WINBUF_ADDR_V_OFFSET);
+
+	value = WIN_ENABLE;
+
+	if (bpp < 24)
+		value |= COLOR_EXPAND;
+
+	tegra_dc_writel(dc, value, DC_WIN_WIN_OPTIONS);
+
+	tegra_dc_writel(dc, 0xff00, DC_WIN_BLEND_NOKEY);
+	tegra_dc_writel(dc, 0xff00, DC_WIN_BLEND_1WIN);
 
 	return 0;
-}
-
-static int tegra_crtc_mode_set_base(struct drm_crtc *crtc, int x, int y,
-				    struct drm_framebuffer *old_fb)
-{
-	struct tegra_dc *dc = to_tegra_dc(crtc);
-
-	return tegra_dc_set_base(dc, x, y, crtc->fb);
 }
 
 static void tegra_crtc_prepare(struct drm_crtc *crtc)
@@ -684,24 +760,31 @@ static void tegra_crtc_prepare(struct drm_crtc *crtc)
 	tegra_dc_writel(dc, value, DC_DISP_DISP_MEM_HIGH_PRIORITY_TIMER);
 
 	value = VBLANK_INT | WIN_A_UF_INT | WIN_B_UF_INT | WIN_C_UF_INT;
-	tegra_dc_writel(dc, value, DC_CMD_INT_ENABLE);
-
-	value = WIN_A_UF_INT | WIN_B_UF_INT | WIN_C_UF_INT;
 	tegra_dc_writel(dc, value, DC_CMD_INT_MASK);
+
+	value = VBLANK_INT | WIN_A_UF_INT | WIN_B_UF_INT | WIN_C_UF_INT;
+	tegra_dc_writel(dc, value, DC_CMD_INT_ENABLE);
 }
 
 static void tegra_crtc_commit(struct drm_crtc *crtc)
 {
 	struct tegra_dc *dc = to_tegra_dc(crtc);
+	unsigned long update_mask;
 	unsigned long value;
 
-	value = GENERAL_UPDATE | WIN_A_UPDATE;
-	tegra_dc_writel(dc, value, DC_CMD_STATE_CONTROL);
+	update_mask = GENERAL_ACT_REQ | WIN_A_ACT_REQ;
 
-	value = GENERAL_ACT_REQ | WIN_A_ACT_REQ;
-	tegra_dc_writel(dc, value, DC_CMD_STATE_CONTROL);
+	tegra_dc_writel(dc, update_mask << 8, DC_CMD_STATE_CONTROL);
 
-	drm_vblank_post_modeset(crtc->dev, dc->pipe);
+	value = tegra_dc_readl(dc, DC_CMD_INT_ENABLE);
+	value |= FRAME_END_INT;
+	tegra_dc_writel(dc, value, DC_CMD_INT_ENABLE);
+
+	value = tegra_dc_readl(dc, DC_CMD_INT_MASK);
+	value |= FRAME_END_INT;
+	tegra_dc_writel(dc, value, DC_CMD_INT_MASK);
+
+	tegra_dc_writel(dc, update_mask, DC_CMD_STATE_CONTROL);
 }
 
 static void tegra_crtc_load_lut(struct drm_crtc *crtc)
@@ -709,16 +792,15 @@ static void tegra_crtc_load_lut(struct drm_crtc *crtc)
 }
 
 static const struct drm_crtc_helper_funcs tegra_crtc_helper_funcs = {
-	.disable = tegra_crtc_disable,
+	.dpms = tegra_crtc_dpms,
 	.mode_fixup = tegra_crtc_mode_fixup,
 	.mode_set = tegra_crtc_mode_set,
-	.mode_set_base = tegra_crtc_mode_set_base,
 	.prepare = tegra_crtc_prepare,
 	.commit = tegra_crtc_commit,
 	.load_lut = tegra_crtc_load_lut,
 };
 
-static irqreturn_t tegra_dc_irq(int irq, void *data)
+static irqreturn_t tegra_drm_irq(int irq, void *data)
 {
 	struct tegra_dc *dc = data;
 	unsigned long status;
@@ -737,7 +819,6 @@ static irqreturn_t tegra_dc_irq(int irq, void *data)
 		dev_dbg(dc->dev, "%s(): vertical blank\n", __func__);
 		*/
 		drm_handle_vblank(dc->base.dev, dc->pipe);
-		tegra_dc_finish_page_flip(dc);
 	}
 
 	if (status & (WIN_A_UF_INT | WIN_B_UF_INT | WIN_C_UF_INT)) {
@@ -952,7 +1033,7 @@ static int tegra_dc_show_regs(struct seq_file *s, void *data)
 	DUMP_REG(DC_WIN_BLEND_1WIN);
 	DUMP_REG(DC_WIN_BLEND_2WIN_X);
 	DUMP_REG(DC_WIN_BLEND_2WIN_Y);
-	DUMP_REG(DC_WIN_BLEND_3WIN_XY);
+	DUMP_REG(DC_WIN_BLEND32WIN_XY);
 	DUMP_REG(DC_WIN_HP_FETCH_CONTROL);
 	DUMP_REG(DC_WINBUF_START_ADDR);
 	DUMP_REG(DC_WINBUF_START_ADDR_NS);
@@ -1054,17 +1135,13 @@ static int tegra_dc_drm_init(struct host1x_client *client,
 		return err;
 	}
 
-	err = tegra_dc_add_planes(drm, dc);
-	if (err < 0)
-		return err;
-
 	if (IS_ENABLED(CONFIG_DEBUG_FS)) {
 		err = tegra_dc_debugfs_init(dc, drm->primary);
 		if (err < 0)
 			dev_err(dc->dev, "debugfs setup failed: %d\n", err);
 	}
 
-	err = devm_request_irq(dc->dev, dc->irq, tegra_dc_irq, 0,
+	err = devm_request_irq(dc->dev, dc->irq, tegra_drm_irq, 0,
 			       dev_name(dc->dev), dc);
 	if (err < 0) {
 		dev_err(dc->dev, "failed to request IRQ#%u: %d\n", dc->irq,
@@ -1113,7 +1190,6 @@ static int tegra_dc_probe(struct platform_device *pdev)
 	if (!dc)
 		return -ENOMEM;
 
-	spin_lock_init(&dc->lock);
 	INIT_LIST_HEAD(&dc->list);
 	dc->dev = &pdev->dev;
 
@@ -1128,9 +1204,22 @@ static int tegra_dc_probe(struct platform_device *pdev)
 		return err;
 
 	regs = platform_get_resource(pdev, IORESOURCE_MEM, 0);
+<<<<<<< HEAD:drivers/gpu/host1x/drm/dc.c
 	dc->regs = devm_ioremap_resource(&pdev->dev, regs);
 	if (IS_ERR(dc->regs))
 		return PTR_ERR(dc->regs);
+=======
+	if (!regs) {
+		dev_err(&pdev->dev, "failed to get registers\n");
+		return -ENXIO;
+	}
+
+	dc->regs = devm_request_and_ioremap(&pdev->dev, regs);
+	if (!dc->regs) {
+		dev_err(&pdev->dev, "failed to remap registers\n");
+		return -ENXIO;
+	}
+>>>>>>> a6a73ceace86... gpu:drivers/gpu/drm/tegra/dc.c
 
 	dc->irq = platform_get_irq(pdev, 0);
 	if (dc->irq < 0) {

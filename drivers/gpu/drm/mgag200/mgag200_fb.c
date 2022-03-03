@@ -13,7 +13,6 @@
 #include <linux/module.h>
 #include <drm/drmP.h>
 #include <drm/drm_fb_helper.h>
-#include <drm/drm_crtc_helper.h>
 
 #include <linux/fb.h>
 
@@ -29,51 +28,15 @@ static void mga_dirty_update(struct mga_fbdev *mfbdev,
 	int bpp = (mfbdev->mfb.base.bits_per_pixel + 7)/8;
 	int ret;
 	bool unmap = false;
-	bool store_for_later = false;
-	int x2, y2;
-	unsigned long flags;
 
 	obj = mfbdev->mfb.obj;
 	bo = gem_to_mga_bo(obj);
 
-	/*
-	 * try and reserve the BO, if we fail with busy
-	 * then the BO is being moved and we should
-	 * store up the damage until later.
-	 */
 	ret = mgag200_bo_reserve(bo, true);
 	if (ret) {
-		if (ret != -EBUSY)
-			return;
-
-		store_for_later = true;
-	}
-
-	x2 = x + width - 1;
-	y2 = y + height - 1;
-	spin_lock_irqsave(&mfbdev->dirty_lock, flags);
-
-	if (mfbdev->y1 < y)
-		y = mfbdev->y1;
-	if (mfbdev->y2 > y2)
-		y2 = mfbdev->y2;
-	if (mfbdev->x1 < x)
-		x = mfbdev->x1;
-	if (mfbdev->x2 > x2)
-		x2 = mfbdev->x2;
-
-	if (store_for_later) {
-		mfbdev->x1 = x;
-		mfbdev->x2 = x2;
-		mfbdev->y1 = y;
-		mfbdev->y2 = y2;
-		spin_unlock_irqrestore(&mfbdev->dirty_lock, flags);
+		DRM_ERROR("failed to reserve fb bo\n");
 		return;
 	}
-
-	mfbdev->x1 = mfbdev->y1 = INT_MAX;
-	mfbdev->x2 = mfbdev->y2 = 0;
-	spin_unlock_irqrestore(&mfbdev->dirty_lock, flags);
 
 	if (!bo->kmap.virtual) {
 		ret = ttm_bo_kmap(&bo->bo, 0, bo->bo.num_pages, &bo->kmap);
@@ -84,10 +47,10 @@ static void mga_dirty_update(struct mga_fbdev *mfbdev,
 		}
 		unmap = true;
 	}
-	for (i = y; i <= y2; i++) {
+	for (i = y; i < y + height; i++) {
 		/* assume equal stride for now */
 		src_offset = dst_offset = i * mfbdev->mfb.base.pitches[0] + (x * bpp);
-		memcpy_toio(bo->kmap.virtual + src_offset, mfbdev->sysram + src_offset, (x2 - x + 1) * bpp);
+		memcpy_toio(bo->kmap.virtual + src_offset, mfbdev->sysram + src_offset, width * bpp);
 
 	}
 	if (unmap)
@@ -141,9 +104,12 @@ static int mgag200fb_create_object(struct mga_fbdev *afbdev,
 				   struct drm_gem_object **gobj_p)
 {
 	struct drm_device *dev = afbdev->helper.dev;
+	u32 bpp, depth;
 	u32 size;
 	struct drm_gem_object *gobj;
+
 	int ret = 0;
+	drm_fb_get_bpp_depth(mode_cmd->pixel_format, &depth, &bpp);
 
 	size = mode_cmd->pitches[0] * mode_cmd->height;
 	ret = mgag200_gem_create(dev, size, true, &gobj);
@@ -154,10 +120,9 @@ static int mgag200fb_create_object(struct mga_fbdev *afbdev,
 	return ret;
 }
 
-static int mgag200fb_create(struct drm_fb_helper *helper,
+static int mgag200fb_create(struct mga_fbdev *mfbdev,
 			   struct drm_fb_helper_surface_size *sizes)
 {
-	struct mga_fbdev *mfbdev = (struct mga_fbdev *)helper;
 	struct drm_device *dev = mfbdev->helper.dev;
 	struct drm_mode_fb_cmd2 mode_cmd;
 	struct mga_device *mdev = dev->dev_private;
@@ -244,6 +209,23 @@ out:
 	return ret;
 }
 
+static int mga_fb_find_or_create_single(struct drm_fb_helper *helper,
+					   struct drm_fb_helper_surface_size
+					   *sizes)
+{
+	struct mga_fbdev *mfbdev = (struct mga_fbdev *)helper;
+	int new_fb = 0;
+	int ret;
+
+	if (!helper->fb) {
+		ret = mgag200fb_create(mfbdev, sizes);
+		if (ret)
+			return ret;
+		new_fb = 1;
+	}
+	return new_fb;
+}
+
 static int mga_fbdev_destroy(struct drm_device *dev,
 				struct mga_fbdev *mfbdev)
 {
@@ -265,7 +247,6 @@ static int mga_fbdev_destroy(struct drm_device *dev,
 	}
 	drm_fb_helper_fini(&mfbdev->helper);
 	vfree(mfbdev->sysram);
-	drm_framebuffer_unregister_private(&mfb->base);
 	drm_framebuffer_cleanup(&mfb->base);
 
 	return 0;
@@ -274,7 +255,7 @@ static int mga_fbdev_destroy(struct drm_device *dev,
 static struct drm_fb_helper_funcs mga_fb_helper_funcs = {
 	.gamma_set = mga_crtc_fb_gamma_set,
 	.gamma_get = mga_crtc_fb_gamma_get,
-	.fb_probe = mgag200fb_create,
+	.fb_probe = mga_fb_find_or_create_single,
 };
 
 int mgag200_fbdev_init(struct mga_device *mdev)
@@ -282,24 +263,20 @@ int mgag200_fbdev_init(struct mga_device *mdev)
 	struct mga_fbdev *mfbdev;
 	int ret;
 
-	mfbdev = devm_kzalloc(mdev->dev->dev, sizeof(struct mga_fbdev), GFP_KERNEL);
+	mfbdev = kzalloc(sizeof(struct mga_fbdev), GFP_KERNEL);
 	if (!mfbdev)
 		return -ENOMEM;
 
 	mdev->mfbdev = mfbdev;
 	mfbdev->helper.funcs = &mga_fb_helper_funcs;
-	spin_lock_init(&mfbdev->dirty_lock);
 
 	ret = drm_fb_helper_init(mdev->dev, &mfbdev->helper,
 				 mdev->num_crtc, MGAG200FB_CONN_LIMIT);
-	if (ret)
+	if (ret) {
+		kfree(mfbdev);
 		return ret;
-
+	}
 	drm_fb_helper_single_add_all_connectors(&mfbdev->helper);
-
-	/* disable all the possible outputs/crtcs before entering KMS mode */
-	drm_helper_disable_unused_functions(mdev->dev);
-
 	drm_fb_helper_initial_config(&mfbdev->helper, 32);
 
 	return 0;
@@ -311,4 +288,6 @@ void mgag200_fbdev_fini(struct mga_device *mdev)
 		return;
 
 	mga_fbdev_destroy(mdev->dev, mdev->mfbdev);
+	kfree(mdev->mfbdev);
+	mdev->mfbdev = NULL;
 }

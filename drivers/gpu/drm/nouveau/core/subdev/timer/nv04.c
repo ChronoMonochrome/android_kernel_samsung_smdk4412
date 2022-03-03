@@ -79,7 +79,7 @@ nv04_timer_alarm_trigger(struct nouveau_timer *ptimer)
 
 	/* execute any pending alarm handlers */
 	list_for_each_entry_safe(alarm, atemp, &exec, head) {
-		list_del_init(&alarm->head);
+		list_del(&alarm->head);
 		alarm->func(alarm);
 	}
 }
@@ -96,16 +96,11 @@ nv04_timer_alarm(struct nouveau_timer *ptimer, u64 time,
 
 	/* append new alarm to list, in soonest-alarm-first order */
 	spin_lock_irqsave(&priv->lock, flags);
-	if (!time) {
-		if (!list_empty(&alarm->head))
-			list_del(&alarm->head);
-	} else {
-		list_for_each_entry(list, &priv->alarms, head) {
-			if (list->timestamp > alarm->timestamp)
-				break;
-		}
-		list_add_tail(&alarm->head, &list->head);
+	list_for_each_entry(list, &priv->alarms, head) {
+		if (list->timestamp > alarm->timestamp)
+			break;
 	}
+	list_add_tail(&alarm->head, &list->head);
 	spin_unlock_irqrestore(&priv->lock, flags);
 
 	/* process pending alarms */

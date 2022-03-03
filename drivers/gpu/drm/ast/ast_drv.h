@@ -98,8 +98,6 @@ struct ast_private {
 
 	struct drm_gem_object *cursor_cache;
 	uint64_t cursor_cache_gpu_addr;
-	/* Acces to this cache is protected by the crtc->mutex of the only crtc
-	 * we have. */
 	struct ttm_bo_kmap_obj cache_kmap;
 	int next_cursor;
 };
@@ -241,8 +239,6 @@ struct ast_fbdev {
 	void *sysram;
 	int size;
 	struct ttm_bo_kmap_obj mapping;
-	int x1, y1, x2, y2; /* dirty rect */
-	spinlock_t dirty_lock;
 };
 
 #define to_ast_crtc(x) container_of(x, struct ast_crtc, base)

@@ -347,14 +347,14 @@ static void intel_didl_outputs(struct drm_device *dev)
 	int i = 0;
 
 	handle = DEVICE_ACPI_HANDLE(&dev->pdev->dev);
-	if (!handle || acpi_bus_get_device(handle, &acpi_dev))
+	if (!handle || ACPI_FAILURE(acpi_bus_get_device(handle, &acpi_dev)))
 		return;
 
-	if (acpi_is_video_device(handle))
+	if (acpi_is_video_device(acpi_dev))
 		acpi_video_bus = acpi_dev;
 	else {
 		list_for_each_entry(acpi_cdev, &acpi_dev->children, node) {
-			if (acpi_is_video_device(acpi_cdev->handle)) {
+			if (acpi_is_video_device(acpi_cdev)) {
 				acpi_video_bus = acpi_cdev;
 				break;
 			}

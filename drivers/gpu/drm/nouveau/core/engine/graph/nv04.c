@@ -22,7 +22,6 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-#include <core/client.h>
 #include <core/os.h>
 #include <core/class.h>
 #include <core/handle.h>
@@ -1298,17 +1297,16 @@ nv04_graph_intr(struct nouveau_subdev *subdev)
 	nv_wr32(priv, NV04_PGRAPH_FIFO, 0x00000001);
 
 	if (show) {
-		nv_error(priv, "%s", "");
+		nv_error(priv, "");
 		nouveau_bitfield_print(nv04_graph_intr_name, show);
-		pr_cont(" nsource:");
+		printk(" nsource:");
 		nouveau_bitfield_print(nv04_graph_nsource, nsource);
-		pr_cont(" nstatus:");
+		printk(" nstatus:");
 		nouveau_bitfield_print(nv04_graph_nstatus, nstatus);
-		pr_cont("\n");
-		nv_error(priv,
-			 "ch %d [%s] subc %d class 0x%04x mthd 0x%04x data 0x%08x\n",
-			 chid, nouveau_client_name(chan), subc, class, mthd,
-			 data);
+		printk("\n");
+		nv_error(priv, "ch %d/%d class 0x%04x "
+			       "mthd 0x%04x data 0x%08x\n",
+			 chid, subc, class, mthd, data);
 	}
 
 	nouveau_namedb_put(handle);

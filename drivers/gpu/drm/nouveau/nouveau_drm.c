@@ -31,13 +31,11 @@
 #include <core/gpuobj.h>
 #include <core/class.h>
 
-#include <engine/device.h>
-#include <engine/disp.h>
-#include <engine/fifo.h>
-
+#include <subdev/device.h>
 #include <subdev/vm.h>
 
 #include "nouveau_drm.h"
+#include "nouveau_irq.h"
 #include "nouveau_dma.h"
 #include "nouveau_ttm.h"
 #include "nouveau_gem.h"
@@ -50,7 +48,6 @@
 #include "nouveau_abi16.h"
 #include "nouveau_fbcon.h"
 #include "nouveau_fence.h"
-#include "nouveau_debugfs.h"
 
 MODULE_PARM_DESC(config, "option string to pass to driver core");
 static char *nouveau_config;
@@ -70,41 +67,6 @@ int nouveau_modeset = -1;
 module_param_named(modeset, nouveau_modeset, int, 0400);
 
 static struct drm_driver driver;
-
-static int
-nouveau_drm_vblank_handler(struct nouveau_eventh *event, int head)
-{
-	struct nouveau_drm *drm =
-		container_of(event, struct nouveau_drm, vblank[head]);
-	drm_handle_vblank(drm->dev, head);
-	return NVKM_EVENT_KEEP;
-}
-
-static int
-nouveau_drm_vblank_enable(struct drm_device *dev, int head)
-{
-	struct nouveau_drm *drm = nouveau_drm(dev);
-	struct nouveau_disp *pdisp = nouveau_disp(drm->device);
-
-	if (WARN_ON_ONCE(head > ARRAY_SIZE(drm->vblank)))
-		return -EIO;
-	WARN_ON_ONCE(drm->vblank[head].func);
-	drm->vblank[head].func = nouveau_drm_vblank_handler;
-	nouveau_event_get(pdisp->vblank, head, &drm->vblank[head]);
-	return 0;
-}
-
-static void
-nouveau_drm_vblank_disable(struct drm_device *dev, int head)
-{
-	struct nouveau_drm *drm = nouveau_drm(dev);
-	struct nouveau_disp *pdisp = nouveau_disp(drm->device);
-	if (drm->vblank[head].func)
-		nouveau_event_put(pdisp->vblank, head, &drm->vblank[head]);
-	else
-		WARN_ON_ONCE(1);
-	drm->vblank[head].func = NULL;
-}
 
 static u64
 nouveau_name(struct pci_dev *pdev)
@@ -165,13 +127,12 @@ nouveau_accel_init(struct nouveau_drm *drm)
 	u32 arg0, arg1;
 	int ret;
 
-	if (nouveau_noaccel || !nouveau_fifo(device) /*XXX*/)
+	if (nouveau_noaccel)
 		return;
 
 	/* initialise synchronisation routines */
 	if      (device->card_type < NV_10) ret = nv04_fence_create(drm);
-	else if (device->chipset   <  0x17) ret = nv10_fence_create(drm);
-	else if (device->card_type < NV_50) ret = nv17_fence_create(drm);
+	else if (device->card_type < NV_50) ret = nv10_fence_create(drm);
 	else if (device->chipset   <  0x84) ret = nv50_fence_create(drm);
 	else if (device->card_type < NV_C0) ret = nv84_fence_create(drm);
 	else                                ret = nvc0_fence_create(drm);
@@ -365,6 +326,10 @@ nouveau_drm_load(struct drm_device *dev, unsigned long flags)
 	if (ret)
 		goto fail_bios;
 
+	ret = nouveau_irq_init(dev);
+	if (ret)
+		goto fail_irq;
+
 	ret = nouveau_display_create(dev);
 	if (ret)
 		goto fail_dispctor;
@@ -384,6 +349,8 @@ nouveau_drm_load(struct drm_device *dev, unsigned long flags)
 fail_dispinit:
 	nouveau_display_destroy(dev);
 fail_dispctor:
+	nouveau_irq_fini(dev);
+fail_irq:
 	nouveau_bios_takedown(dev);
 fail_bios:
 	nouveau_ttm_fini(drm);
@@ -409,6 +376,7 @@ nouveau_drm_unload(struct drm_device *dev)
 		nouveau_display_fini(dev);
 	nouveau_display_destroy(dev);
 
+	nouveau_irq_fini(dev);
 	nouveau_bios_takedown(dev);
 
 	nouveau_ttm_fini(drm);
@@ -433,7 +401,7 @@ nouveau_drm_remove(struct pci_dev *pdev)
 	nouveau_object_debug();
 }
 
-static int
+int
 nouveau_do_suspend(struct drm_device *dev)
 {
 	struct nouveau_drm *drm = nouveau_drm(dev);
@@ -453,32 +421,18 @@ nouveau_do_suspend(struct drm_device *dev)
 	NV_INFO(drm, "evicting buffers...\n");
 	ttm_bo_evict_mm(&drm->ttm.bdev, TTM_PL_VRAM);
 
-	NV_INFO(drm, "waiting for kernel channels to go idle...\n");
-	if (drm->cechan) {
-		ret = nouveau_channel_idle(drm->cechan);
-		if (ret)
-			return ret;
-	}
-
-	if (drm->channel) {
-		ret = nouveau_channel_idle(drm->channel);
-		if (ret)
-			return ret;
-	}
-
-	NV_INFO(drm, "suspending client object trees...\n");
 	if (drm->fence && nouveau_fence(drm)->suspend) {
 		if (!nouveau_fence(drm)->suspend(drm))
 			return -ENOMEM;
 	}
 
+	NV_INFO(drm, "suspending client object trees...\n");
 	list_for_each_entry(cli, &drm->clients, head) {
 		ret = nouveau_client_fini(&cli->base, true);
 		if (ret)
 			goto fail_client;
 	}
 
-	NV_INFO(drm, "suspending kernel object tree...\n");
 	ret = nouveau_client_fini(&drm->client.base, true);
 	if (ret)
 		goto fail_client;
@@ -518,7 +472,7 @@ int nouveau_pmops_suspend(struct device *dev)
 	return 0;
 }
 
-static int
+int
 nouveau_do_resume(struct drm_device *dev)
 {
 	struct nouveau_drm *drm = nouveau_drm(dev);
@@ -528,19 +482,19 @@ nouveau_do_resume(struct drm_device *dev)
 
 	nouveau_agp_reset(drm);
 
-	NV_INFO(drm, "resuming kernel object tree...\n");
+	NV_INFO(drm, "resuming client object trees...\n");
 	nouveau_client_init(&drm->client.base);
 	nouveau_agp_init(drm);
-
-	NV_INFO(drm, "resuming client object trees...\n");
-	if (drm->fence && nouveau_fence(drm)->resume)
-		nouveau_fence(drm)->resume(drm);
 
 	list_for_each_entry(cli, &drm->clients, head) {
 		nouveau_client_init(&cli->base);
 	}
 
+	if (drm->fence && nouveau_fence(drm)->resume)
+		nouveau_fence(drm)->resume(drm);
+
 	nouveau_run_vbios_init(dev);
+	nouveau_irq_postinstall(dev);
 	nouveau_pm_resume(dev);
 
 	if (dev->mode_config.num_crtc) {
@@ -592,11 +546,10 @@ nouveau_drm_open(struct drm_device *dev, struct drm_file *fpriv)
 	struct pci_dev *pdev = dev->pdev;
 	struct nouveau_drm *drm = nouveau_drm(dev);
 	struct nouveau_cli *cli;
-	char name[32], tmpname[TASK_COMM_LEN];
+	char name[16];
 	int ret;
 
-	get_task_comm(tmpname, current);
-	snprintf(name, sizeof(name), "%s[%d]", tmpname, pid_nr(fpriv->pid));
+	snprintf(name, sizeof(name), "%d", pid_nr(fpriv->pid));
 
 	ret = nouveau_cli_create(pdev, name, sizeof(*cli), (void **)&cli);
 	if (ret)
@@ -676,7 +629,8 @@ static struct drm_driver
 driver = {
 	.driver_features =
 		DRIVER_USE_AGP | DRIVER_PCI_DMA | DRIVER_SG |
-		DRIVER_GEM | DRIVER_MODESET | DRIVER_PRIME,
+		DRIVER_HAVE_IRQ | DRIVER_IRQ_SHARED | DRIVER_GEM |
+		DRIVER_MODESET | DRIVER_PRIME,
 
 	.load = nouveau_drm_load,
 	.unload = nouveau_drm_unload,
@@ -685,27 +639,22 @@ driver = {
 	.postclose = nouveau_drm_postclose,
 	.lastclose = nouveau_vga_lastclose,
 
-#if defined(CONFIG_DEBUG_FS)
-	.debugfs_init = nouveau_debugfs_init,
-	.debugfs_cleanup = nouveau_debugfs_takedown,
-#endif
+	.irq_preinstall = nouveau_irq_preinstall,
+	.irq_postinstall = nouveau_irq_postinstall,
+	.irq_uninstall = nouveau_irq_uninstall,
+	.irq_handler = nouveau_irq_handler,
 
 	.get_vblank_counter = drm_vblank_count,
-	.enable_vblank = nouveau_drm_vblank_enable,
-	.disable_vblank = nouveau_drm_vblank_disable,
+	.enable_vblank = nouveau_vblank_enable,
+	.disable_vblank = nouveau_vblank_disable,
 
 	.ioctls = nouveau_ioctls,
 	.fops = &nouveau_driver_fops,
 
 	.prime_handle_to_fd = drm_gem_prime_handle_to_fd,
 	.prime_fd_to_handle = drm_gem_prime_fd_to_handle,
-	.gem_prime_export = drm_gem_prime_export,
-	.gem_prime_import = drm_gem_prime_import,
-	.gem_prime_pin = nouveau_gem_prime_pin,
-	.gem_prime_get_sg_table = nouveau_gem_prime_get_sg_table,
-	.gem_prime_import_sg_table = nouveau_gem_prime_import_sg_table,
-	.gem_prime_vmap = nouveau_gem_prime_vmap,
-	.gem_prime_vunmap = nouveau_gem_prime_vunmap,
+	.gem_prime_export = nouveau_gem_prime_export,
+	.gem_prime_import = nouveau_gem_prime_import,
 
 	.gem_init_object = nouveau_gem_object_new,
 	.gem_free_object = nouveau_gem_object_del,

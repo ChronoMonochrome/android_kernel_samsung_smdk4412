@@ -60,19 +60,6 @@ nvc8_graph_sclass[] = {
 	{}
 };
 
-u64
-nvc0_graph_units(struct nouveau_graph *graph)
-{
-	struct nvc0_graph_priv *priv = (void *)graph;
-	u64 cfg;
-
-	cfg  = (u32)priv->gpc_nr;
-	cfg |= (u32)priv->tpc_total << 8;
-	cfg |= (u64)priv->rop_nr << 32;
-
-	return cfg;
-}
-
 /*******************************************************************************
  * PGRAPH context
  ******************************************************************************/
@@ -102,8 +89,7 @@ nvc0_graph_context_ctor(struct nouveau_object *parent,
 	 * fuc to modify some per-context register settings on first load
 	 * of the context.
 	 */
-	ret = nouveau_gpuobj_new(nv_object(chan), NULL, 0x1000, 0x100, 0,
-				&chan->mmio);
+	ret = nouveau_gpuobj_new(parent, NULL, 0x1000, 0x100, 0, &chan->mmio);
 	if (ret)
 		return ret;
 
@@ -115,8 +101,8 @@ nvc0_graph_context_ctor(struct nouveau_object *parent,
 
 	/* allocate buffers referenced by mmio list */
 	for (i = 0; data->size && i < ARRAY_SIZE(priv->mmio_data); i++) {
-		ret = nouveau_gpuobj_new(nv_object(chan), NULL, data->size,
-					 data->align, 0, &chan->data[i].mem);
+		ret = nouveau_gpuobj_new(parent, NULL, data->size, data->align,
+					 0, &chan->data[i].mem);
 		if (ret)
 			return ret;
 
@@ -447,10 +433,10 @@ nvc0_graph_intr(struct nouveau_subdev *subdev)
 	if (stat & 0x00000010) {
 		handle = nouveau_handle_get_class(engctx, class);
 		if (!handle || nv_call(handle->object, mthd, data)) {
-			nv_error(priv,
-				 "ILLEGAL_MTHD ch %d [0x%010llx %s] subc %d class 0x%04x mthd 0x%04x data 0x%08x\n",
-				 chid, inst << 12, nouveau_client_name(engctx),
-				 subc, class, mthd, data);
+			nv_error(priv, "ILLEGAL_MTHD ch %d [0x%010llx] "
+				     "subc %d class 0x%04x mthd 0x%04x "
+				     "data 0x%08x\n",
+				 chid, inst << 12, subc, class, mthd, data);
 		}
 		nouveau_handle_put(handle);
 		nv_wr32(priv, 0x400100, 0x00000010);
@@ -458,10 +444,9 @@ nvc0_graph_intr(struct nouveau_subdev *subdev)
 	}
 
 	if (stat & 0x00000020) {
-		nv_error(priv,
-			 "ILLEGAL_CLASS ch %d [0x%010llx %s] subc %d class 0x%04x mthd 0x%04x data 0x%08x\n",
-			 chid, inst << 12, nouveau_client_name(engctx), subc,
-			 class, mthd, data);
+		nv_error(priv, "ILLEGAL_CLASS ch %d [0x%010llx] subc %d "
+			     "class 0x%04x mthd 0x%04x data 0x%08x\n",
+			chid, inst << 12, subc, class, mthd, data);
 		nv_wr32(priv, 0x400100, 0x00000020);
 		stat &= ~0x00000020;
 	}
@@ -469,16 +454,15 @@ nvc0_graph_intr(struct nouveau_subdev *subdev)
 	if (stat & 0x00100000) {
 		nv_error(priv, "DATA_ERROR [");
 		nouveau_enum_print(nv50_data_error_names, code);
-		pr_cont("] ch %d [0x%010llx %s] subc %d class 0x%04x mthd 0x%04x data 0x%08x\n",
-			chid, inst << 12, nouveau_client_name(engctx), subc,
-			class, mthd, data);
+		printk("] ch %d [0x%010llx] subc %d class 0x%04x "
+		       "mthd 0x%04x data 0x%08x\n",
+		       chid, inst << 12, subc, class, mthd, data);
 		nv_wr32(priv, 0x400100, 0x00100000);
 		stat &= ~0x00100000;
 	}
 
 	if (stat & 0x00200000) {
-		nv_error(priv, "TRAP ch %d [0x%010llx %s]\n", chid, inst << 12,
-			 nouveau_client_name(engctx));
+		nv_error(priv, "TRAP ch %d [0x%010llx]\n", chid, inst << 12);
 		nvc0_graph_trap_intr(priv);
 		nv_wr32(priv, 0x400100, 0x00200000);
 		stat &= ~0x00200000;
@@ -532,10 +516,9 @@ nvc0_graph_ctor(struct nouveau_object *parent, struct nouveau_object *engine,
 {
 	struct nouveau_device *device = nv_device(parent);
 	struct nvc0_graph_priv *priv;
-	bool enable = device->chipset != 0xd7;
 	int ret, i;
 
-	ret = nouveau_graph_create(parent, engine, oclass, enable, &priv);
+	ret = nouveau_graph_create(parent, engine, oclass, true, &priv);
 	*pobject = nv_object(priv);
 	if (ret)
 		return ret;
@@ -543,8 +526,6 @@ nvc0_graph_ctor(struct nouveau_object *parent, struct nouveau_object *engine,
 	nv_subdev(priv)->unit = 0x18001000;
 	nv_subdev(priv)->intr = nvc0_graph_intr;
 	nv_engine(priv)->cclass = &nvc0_graph_cclass;
-
-	priv->base.units = nvc0_graph_units;
 
 	if (nouveau_boolopt(device->cfgopt, "NvGrUseFW", false)) {
 		nv_info(priv, "using external firmware\n");
@@ -568,13 +549,11 @@ nvc0_graph_ctor(struct nouveau_object *parent, struct nouveau_object *engine,
 		break;
 	}
 
-	ret = nouveau_gpuobj_new(nv_object(priv), NULL, 0x1000, 256, 0,
-				&priv->unk4188b4);
+	ret = nouveau_gpuobj_new(parent, NULL, 0x1000, 256, 0, &priv->unk4188b4);
 	if (ret)
 		return ret;
 
-	ret = nouveau_gpuobj_new(nv_object(priv), NULL, 0x1000, 256, 0,
-				&priv->unk4188b8);
+	ret = nouveau_gpuobj_new(parent, NULL, 0x1000, 256, 0, &priv->unk4188b8);
 	if (ret)
 		return ret;
 
@@ -632,8 +611,10 @@ nvc0_graph_ctor(struct nouveau_object *parent, struct nouveau_object *engine,
 static void
 nvc0_graph_dtor_fw(struct nvc0_graph_fuc *fuc)
 {
-	kfree(fuc->data);
-	fuc->data = NULL;
+	if (fuc->data) {
+		kfree(fuc->data);
+		fuc->data = NULL;
+	}
 }
 
 void
@@ -641,7 +622,8 @@ nvc0_graph_dtor(struct nouveau_object *object)
 {
 	struct nvc0_graph_priv *priv = (void *)object;
 
-	kfree(priv->data);
+	if (priv->data)
+		kfree(priv->data);
 
 	nvc0_graph_dtor_fw(&priv->fuc409c);
 	nvc0_graph_dtor_fw(&priv->fuc409d);

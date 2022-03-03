@@ -1692,9 +1692,11 @@ static int gsc_probe(struct platform_device *pdev)
 
 	/* resource memory */
 	ctx->regs_res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
-	ctx->regs = devm_ioremap_resource(dev, ctx->regs_res);
-	if (IS_ERR(ctx->regs))
-		return PTR_ERR(ctx->regs);
+	ctx->regs = devm_request_and_ioremap(dev, ctx->regs_res);
+	if (!ctx->regs) {
+		dev_err(dev, "failed to map registers.\n");
+		return -ENXIO;
+	}
 
 	/* resource irq */
 	res = platform_get_resource(pdev, IORESOURCE_IRQ, 0);
@@ -1704,7 +1706,7 @@ static int gsc_probe(struct platform_device *pdev)
 	}
 
 	ctx->irq = res->start;
-	ret = devm_request_threaded_irq(dev, ctx->irq, NULL, gsc_irq_handler,
+	ret = request_threaded_irq(ctx->irq, NULL, gsc_irq_handler,
 		IRQF_ONESHOT, "drm_gsc", ctx);
 	if (ret < 0) {
 		dev_err(dev, "failed to request irq.\n");
@@ -1725,7 +1727,7 @@ static int gsc_probe(struct platform_device *pdev)
 	ret = gsc_init_prop_list(ippdrv);
 	if (ret < 0) {
 		dev_err(dev, "failed to init property list.\n");
-		return ret;
+		goto err_get_irq;
 	}
 
 	DRM_DEBUG_KMS("%s:id[%d]ippdrv[0x%x]\n", __func__, ctx->id,
@@ -1743,12 +1745,15 @@ static int gsc_probe(struct platform_device *pdev)
 		goto err_ippdrv_register;
 	}
 
-	dev_info(dev, "drm gsc registered successfully.\n");
+	dev_info(&pdev->dev, "drm gsc registered successfully.\n");
 
 	return 0;
 
 err_ippdrv_register:
+	devm_kfree(dev, ippdrv->prop_list);
 	pm_runtime_disable(dev);
+err_get_irq:
+	free_irq(ctx->irq, ctx);
 	return ret;
 }
 
@@ -1758,11 +1763,14 @@ static int gsc_remove(struct platform_device *pdev)
 	struct gsc_context *ctx = get_gsc_context(dev);
 	struct exynos_drm_ippdrv *ippdrv = &ctx->ippdrv;
 
+	devm_kfree(dev, ippdrv->prop_list);
 	exynos_drm_ippdrv_unregister(ippdrv);
 	mutex_destroy(&ctx->lock);
 
 	pm_runtime_set_suspended(dev);
 	pm_runtime_disable(dev);
+
+	free_irq(ctx->irq, ctx);
 
 	return 0;
 }

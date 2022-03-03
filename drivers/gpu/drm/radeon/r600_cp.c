@@ -24,8 +24,6 @@
  * Authors:
  *     Dave Airlie <airlied@redhat.com>
  *     Alex Deucher <alexander.deucher@amd.com>
- *
- * ------------------------ This file is DEPRECATED! -------------------------
  */
 
 #include <linux/module.h>

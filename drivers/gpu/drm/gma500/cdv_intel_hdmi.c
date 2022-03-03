@@ -319,7 +319,6 @@ void cdv_hdmi_init(struct drm_device *dev,
 		goto err_priv;
 
 	connector = &psb_intel_connector->base;
-	connector->polled = DRM_CONNECTOR_POLL_HPD;
 	encoder = &psb_intel_encoder->base;
 	drm_connector_init(dev, connector,
 			   &cdv_hdmi_connector_funcs,

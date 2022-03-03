@@ -50,9 +50,6 @@ nvd0_dmaobj_bind(struct nouveau_dmaeng *dmaeng,
 		case NVE0_DISP_MAST_CLASS:
 		case NVE0_DISP_SYNC_CLASS:
 		case NVE0_DISP_OVLY_CLASS:
-		case NVF0_DISP_MAST_CLASS:
-		case NVF0_DISP_SYNC_CLASS:
-		case NVF0_DISP_OVLY_CLASS:
 			break;
 		default:
 			return -EINVAL;

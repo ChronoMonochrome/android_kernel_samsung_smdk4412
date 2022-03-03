@@ -380,10 +380,6 @@ static int __init exynos_drm_init(void)
 	ret = platform_driver_register(&ipp_driver);
 	if (ret < 0)
 		goto out_ipp;
-
-	ret = exynos_platform_device_ipp_register();
-	if (ret < 0)
-		goto out_ipp_dev;
 #endif
 
 	ret = platform_driver_register(&exynos_drm_platform_driver);
@@ -392,7 +388,7 @@ static int __init exynos_drm_init(void)
 
 	exynos_drm_pdev = platform_device_register_simple("exynos-drm", -1,
 				NULL, 0);
-	if (IS_ERR(exynos_drm_pdev)) {
+	if (IS_ERR_OR_NULL(exynos_drm_pdev)) {
 		ret = PTR_ERR(exynos_drm_pdev);
 		goto out;
 	}
@@ -404,8 +400,6 @@ out:
 
 out_drm:
 #ifdef CONFIG_DRM_EXYNOS_IPP
-	exynos_platform_device_ipp_unregister();
-out_ipp_dev:
 	platform_driver_unregister(&ipp_driver);
 out_ipp:
 #endif
@@ -462,7 +456,6 @@ static void __exit exynos_drm_exit(void)
 	platform_driver_unregister(&exynos_drm_platform_driver);
 
 #ifdef CONFIG_DRM_EXYNOS_IPP
-	exynos_platform_device_ipp_unregister();
 	platform_driver_unregister(&ipp_driver);
 #endif
 

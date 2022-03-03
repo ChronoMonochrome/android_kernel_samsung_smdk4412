@@ -121,7 +121,6 @@ int drm_helper_probe_single_connector_modes(struct drm_connector *connector,
 		connector->helper_private;
 	int count = 0;
 	int mode_flags = 0;
-	bool verbose_prune = true;
 
 	DRM_DEBUG_KMS("[CONNECTOR:%d:%s]\n", connector->base.id,
 			drm_get_connector_name(connector));
@@ -150,7 +149,6 @@ int drm_helper_probe_single_connector_modes(struct drm_connector *connector,
 		DRM_DEBUG_KMS("[CONNECTOR:%d:%s] disconnected\n",
 			connector->base.id, drm_get_connector_name(connector));
 		drm_mode_connector_update_edid_property(connector, NULL);
-		verbose_prune = false;
 		goto prune;
 	}
 
@@ -184,7 +182,7 @@ int drm_helper_probe_single_connector_modes(struct drm_connector *connector,
 	}
 
 prune:
-	drm_mode_prune_invalid(dev, &connector->modes, verbose_prune);
+	drm_mode_prune_invalid(dev, &connector->modes, true);
 
 	if (list_empty(&connector->modes))
 		return 0;
@@ -650,9 +648,6 @@ int drm_crtc_helper_set_config(struct drm_mode_set *set)
 		} else if (set->fb->bits_per_pixel !=
 			   set->crtc->fb->bits_per_pixel) {
 			mode_changed = true;
-		} else if (set->fb->pixel_format !=
-			   set->crtc->fb->pixel_format) {
-			mode_changed = true;
 		} else
 			fb_changed = true;
 	}
@@ -1007,20 +1002,12 @@ static void output_poll_execute(struct work_struct *work)
 			continue;
 
 		connector->status = connector->funcs->detect(connector, false);
-		if (old_status != connector->status) {
-			const char *old, *new;
-
-			old = drm_get_connector_status_name(old_status);
-			new = drm_get_connector_status_name(connector->status);
-
-			DRM_DEBUG_KMS("[CONNECTOR:%d:%s] "
-				      "status updated from %s to %s\n",
-				      connector->base.id,
-				      drm_get_connector_name(connector),
-				      old, new);
-
+		DRM_DEBUG_KMS("[CONNECTOR:%d:%s] status updated from %d to %d\n",
+			      connector->base.id,
+			      drm_get_connector_name(connector),
+			      old_status, connector->status);
+		if (old_status != connector->status)
 			changed = true;
-		}
 	}
 
 	mutex_unlock(&dev->mode_config.mutex);
@@ -1093,11 +1080,10 @@ void drm_helper_hpd_irq_event(struct drm_device *dev)
 		old_status = connector->status;
 
 		connector->status = connector->funcs->detect(connector, false);
-		DRM_DEBUG_KMS("[CONNECTOR:%d:%s] status updated from %s to %s\n",
+		DRM_DEBUG_KMS("[CONNECTOR:%d:%s] status updated from %d to %d\n",
 			      connector->base.id,
 			      drm_get_connector_name(connector),
-			      drm_get_connector_status_name(old_status),
-			      drm_get_connector_status_name(connector->status));
+			      old_status, connector->status);
 		if (old_status != connector->status)
 			changed = true;
 	}

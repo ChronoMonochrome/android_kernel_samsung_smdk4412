@@ -51,15 +51,14 @@ nouveau_channel_idle(struct nouveau_channel *chan)
 	struct nouveau_fence *fence = NULL;
 	int ret;
 
-	ret = nouveau_fence_new(chan, false, &fence);
+	ret = nouveau_fence_new(chan, &fence);
 	if (!ret) {
 		ret = nouveau_fence_wait(fence, false, false);
 		nouveau_fence_unref(&fence);
 	}
 
 	if (ret)
-		NV_ERROR(cli, "failed to idle channel 0x%08x [%s]\n",
-			 chan->handle, cli->base.name);
+		NV_ERROR(cli, "failed to idle channel 0x%08x\n", chan->handle);
 	return ret;
 }
 

@@ -25,7 +25,6 @@
 #include <subdev/bios.h>
 #include <subdev/bios/dcb.h>
 #include <subdev/bios/gpio.h>
-#include <subdev/bios/xpio.h>
 
 u16
 dcb_gpio_table(struct nouveau_bios *bios, u8 *ver, u8 *hdr, u8 *cnt, u8 *len)
@@ -61,14 +60,8 @@ dcb_gpio_table(struct nouveau_bios *bios, u8 *ver, u8 *hdr, u8 *cnt, u8 *len)
 u16
 dcb_gpio_entry(struct nouveau_bios *bios, int idx, int ent, u8 *ver, u8 *len)
 {
-	u8  hdr, cnt, xver; /* use gpio version for xpio entry parsing */
-	u16 gpio;
-
-	if (!idx--)
-		gpio = dcb_gpio_table(bios, ver, &hdr, &cnt, len);
-	else
-		gpio = dcb_xpio_table(bios, idx, &xver, &hdr, &cnt, len);
-
+	u8  hdr, cnt;
+	u16 gpio = !idx ? dcb_gpio_table(bios, ver, &hdr, &cnt, len) : 0x0000;
 	if (gpio && ent < cnt)
 		return gpio + hdr + (ent * *len);
 	return 0x0000;

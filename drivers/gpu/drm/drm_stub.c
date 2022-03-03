@@ -109,6 +109,7 @@ EXPORT_SYMBOL(drm_ut_debug_printk);
 
 static int drm_minor_get_id(struct drm_device *dev, int type)
 {
+	int new_id;
 	int ret;
 	int base = 0, limit = 63;
 
@@ -120,11 +121,25 @@ static int drm_minor_get_id(struct drm_device *dev, int type)
                 limit = base + 255;
         }
 
+again:
+	if (idr_pre_get(&drm_minors_idr, GFP_KERNEL) == 0) {
+		DRM_ERROR("Out of memory expanding drawable idr\n");
+		return -ENOMEM;
+	}
 	mutex_lock(&dev->struct_mutex);
-	ret = idr_alloc(&drm_minors_idr, NULL, base, limit, GFP_KERNEL);
+	ret = idr_get_new_above(&drm_minors_idr, NULL,
+				base, &new_id);
 	mutex_unlock(&dev->struct_mutex);
+	if (ret == -EAGAIN)
+		goto again;
+	else if (ret)
+		return ret;
 
-	return ret == -ENOSPC ? -EINVAL : ret;
+	if (new_id >= limit) {
+		idr_remove(&drm_minors_idr, new_id);
+		return -EINVAL;
+	}
+	return new_id;
 }
 
 struct drm_master *drm_master_create(struct drm_minor *minor)
@@ -352,7 +367,7 @@ int drm_get_minor(struct drm_device *dev, struct drm_minor **minor, int type)
 	idr_replace(&drm_minors_idr, new_minor, minor_id);
 
 	if (type == DRM_MINOR_LEGACY) {
-		ret = drm_proc_init(new_minor, drm_proc_root);
+		ret = drm_proc_init(new_minor, minor_id, drm_proc_root);
 		if (ret) {
 			DRM_ERROR("DRM: Failed to initialize /proc/dri.\n");
 			goto err_mem;

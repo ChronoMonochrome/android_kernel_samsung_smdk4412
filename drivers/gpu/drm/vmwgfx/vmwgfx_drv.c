@@ -829,7 +829,7 @@ static void vmw_lastclose(struct drm_device *dev)
 
 	list_for_each_entry(crtc, &dev->mode_config.crtc_list, head) {
 		set.crtc = crtc;
-		ret = drm_mode_set_config_internal(&set);
+		ret = crtc->funcs->set_config(&set);
 		WARN_ON(ret != 0);
 	}
 

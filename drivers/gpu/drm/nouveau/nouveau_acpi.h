@@ -3,7 +3,7 @@
 
 #define ROM_BIOS_PAGE 4096
 
-#if defined(CONFIG_ACPI) && defined(CONFIG_X86)
+#if defined(CONFIG_ACPI)
 bool nouveau_is_optimus(void);
 bool nouveau_is_v1_dsm(void);
 void nouveau_register_dsm_handler(void);

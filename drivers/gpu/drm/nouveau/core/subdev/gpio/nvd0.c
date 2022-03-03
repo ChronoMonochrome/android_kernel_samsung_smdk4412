@@ -22,13 +22,13 @@
  * Authors: Ben Skeggs
  */
 
-#include "priv.h"
+#include <subdev/gpio.h>
 
 struct nvd0_gpio_priv {
 	struct nouveau_gpio base;
 };
 
-void
+static void
 nvd0_gpio_reset(struct nouveau_gpio *gpio, u8 match)
 {
 	struct nouveau_bios *bios = nouveau_bios(gpio);
@@ -57,7 +57,7 @@ nvd0_gpio_reset(struct nouveau_gpio *gpio, u8 match)
 	}
 }
 
-int
+static int
 nvd0_gpio_drive(struct nouveau_gpio *gpio, int line, int dir, int out)
 {
 	u32 data = ((dir ^ 1) << 13) | (out << 12);
@@ -66,7 +66,7 @@ nvd0_gpio_drive(struct nouveau_gpio *gpio, int line, int dir, int out)
 	return 0;
 }
 
-int
+static int
 nvd0_gpio_sense(struct nouveau_gpio *gpio, int line)
 {
 	return !!(nv_rd32(gpio, 0x00d610 + (line * 4)) & 0x00004000);
@@ -80,7 +80,7 @@ nvd0_gpio_ctor(struct nouveau_object *parent, struct nouveau_object *engine,
 	struct nvd0_gpio_priv *priv;
 	int ret;
 
-	ret = nouveau_gpio_create(parent, engine, oclass, 32, &priv);
+	ret = nouveau_gpio_create(parent, engine, oclass, &priv);
 	*pobject = nv_object(priv);
 	if (ret)
 		return ret;
@@ -88,9 +88,7 @@ nvd0_gpio_ctor(struct nouveau_object *parent, struct nouveau_object *engine,
 	priv->base.reset = nvd0_gpio_reset;
 	priv->base.drive = nvd0_gpio_drive;
 	priv->base.sense = nvd0_gpio_sense;
-	priv->base.events->priv = priv;
-	priv->base.events->enable = nv50_gpio_intr_enable;
-	priv->base.events->disable = nv50_gpio_intr_disable;
+	priv->base.irq_enable = nv50_gpio_irq_enable;
 	nv_subdev(priv)->intr = nv50_gpio_intr;
 	return 0;
 }

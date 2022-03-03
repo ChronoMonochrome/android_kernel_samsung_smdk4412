@@ -30,7 +30,6 @@
 #include <subdev/fb.h>
 #include <subdev/timer.h>
 #include <subdev/instmem.h>
-#include <engine/graph.h>
 
 #include "nouveau_drm.h"
 #include "nouveau_dma.h"
@@ -117,11 +116,6 @@ nouveau_abi16_chan_fini(struct nouveau_abi16 *abi16,
 {
 	struct nouveau_abi16_ntfy *ntfy, *temp;
 
-	/* wait for all activity to stop before releasing notify object, which
-	 * may be still in use */
-	if (chan->chan && chan->ntfy)
-		nouveau_channel_idle(chan->chan);
-
 	/* cleanup notifier state */
 	list_for_each_entry_safe(ntfy, temp, &chan->notifiers, head) {
 		nouveau_abi16_ntfy_fini(chan, ntfy);
@@ -169,7 +163,6 @@ nouveau_abi16_ioctl_getparam(ABI16_IOCTL_ARGS)
 	struct nouveau_drm *drm = nouveau_drm(dev);
 	struct nouveau_device *device = nv_device(drm->device);
 	struct nouveau_timer *ptimer = nouveau_timer(device);
-	struct nouveau_graph *graph = (void *)nouveau_engine(device, NVDEV_ENGINE_GR);
 	struct drm_nouveau_getparam *getparam = data;
 
 	switch (getparam->param) {
@@ -210,8 +203,14 @@ nouveau_abi16_ioctl_getparam(ABI16_IOCTL_ARGS)
 		getparam->value = 1;
 		break;
 	case NOUVEAU_GETPARAM_GRAPH_UNITS:
-		getparam->value = graph->units ? graph->units(graph) : 0;
-		break;
+		/* NV40 and NV50 versions are quite different, but register
+		 * address is the same. User is supposed to know the card
+		 * family anyway... */
+		if (device->chipset >= 0x40) {
+			getparam->value = nv_rd32(device, 0x001540);
+			break;
+		}
+		/* FALLTHRU */
 	default:
 		nv_debug(device, "unknown parameter %lld\n", getparam->param);
 		return -EINVAL;
@@ -387,7 +386,7 @@ nouveau_abi16_ioctl_notifierobj_alloc(ABI16_IOCTL_ARGS)
 	struct nouveau_drm *drm = nouveau_drm(dev);
 	struct nouveau_device *device = nv_device(drm->device);
 	struct nouveau_abi16 *abi16 = nouveau_abi16_get(file_priv, dev);
-	struct nouveau_abi16_chan *chan = NULL, *temp;
+	struct nouveau_abi16_chan *chan, *temp;
 	struct nouveau_abi16_ntfy *ntfy;
 	struct nouveau_object *object;
 	struct nv_dma_class args = {};
@@ -400,11 +399,10 @@ nouveau_abi16_ioctl_notifierobj_alloc(ABI16_IOCTL_ARGS)
 	if (unlikely(nv_device(abi16->device)->card_type >= NV_C0))
 		return nouveau_abi16_put(abi16, -EINVAL);
 
-	list_for_each_entry(temp, &abi16->channels, head) {
-		if (temp->chan->handle == (NVDRM_CHAN | info->channel)) {
-			chan = temp;
+	list_for_each_entry_safe(chan, temp, &abi16->channels, head) {
+		if (chan->chan->handle == (NVDRM_CHAN | info->channel))
 			break;
-		}
+		chan = NULL;
 	}
 
 	if (!chan)
@@ -456,18 +454,17 @@ nouveau_abi16_ioctl_gpuobj_free(ABI16_IOCTL_ARGS)
 {
 	struct drm_nouveau_gpuobj_free *fini = data;
 	struct nouveau_abi16 *abi16 = nouveau_abi16_get(file_priv, dev);
-	struct nouveau_abi16_chan *chan = NULL, *temp;
+	struct nouveau_abi16_chan *chan, *temp;
 	struct nouveau_abi16_ntfy *ntfy;
 	int ret;
 
 	if (unlikely(!abi16))
 		return -ENOMEM;
 
-	list_for_each_entry(temp, &abi16->channels, head) {
-		if (temp->chan->handle == (NVDRM_CHAN | fini->channel)) {
-			chan = temp;
+	list_for_each_entry_safe(chan, temp, &abi16->channels, head) {
+		if (chan->chan->handle == (NVDRM_CHAN | fini->channel))
 			break;
-		}
+		chan = NULL;
 	}
 
 	if (!chan)

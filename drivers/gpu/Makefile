@@ -1,7 +1,7 @@
 ifeq ($(CONFIG_VITHAR_HWVER_R0P0),y)
-obj-y			+= drm/ vga/ ion/
+obj-y			+= drm/ vga/ stub/ ion/
 else
-obj-y			+= drm/ vga/ ion/
+obj-y			+= drm/ vga/ stub/ ion/
 endif
 
 ifeq ($(CONFIG_MALI400),y)
@@ -17,5 +17,3 @@ endif
 ifeq ($(CONFIG_UMP),y)
 obj-y			+= mali400/ump/
 endif
-
-obj-$(CONFIG_TEGRA_HOST1X)	+= host1x/

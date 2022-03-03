@@ -41,13 +41,6 @@ struct omap_encoder {
 	struct omap_dss_device *dssdev;
 };
 
-struct omap_dss_device *omap_encoder_get_dssdev(struct drm_encoder *encoder)
-{
-	struct omap_encoder *omap_encoder = to_omap_encoder(encoder);
-
-	return omap_encoder->dssdev;
-}
-
 static void omap_encoder_destroy(struct drm_encoder *encoder)
 {
 	struct omap_encoder *omap_encoder = to_omap_encoder(encoder);
@@ -135,26 +128,13 @@ int omap_encoder_update(struct drm_encoder *encoder,
 
 	dssdev->output->manager = mgr;
 
-	if (dssdrv->check_timings) {
-		ret = dssdrv->check_timings(dssdev, timings);
-	} else {
-		struct omap_video_timings t = {0};
-
-		dssdrv->get_timings(dssdev, &t);
-
-		if (memcmp(timings, &t, sizeof(struct omap_video_timings)))
-			ret = -EINVAL;
-		else
-			ret = 0;
-	}
-
+	ret = dssdrv->check_timings(dssdev, timings);
 	if (ret) {
 		dev_err(dev->dev, "could not set timings: %d\n", ret);
 		return ret;
 	}
 
-	if (dssdrv->set_timings)
-		dssdrv->set_timings(dssdev, timings);
+	dssdrv->set_timings(dssdev, timings);
 
 	return 0;
 }

@@ -7,7 +7,7 @@ struct nouveau_client {
 	struct nouveau_namedb base;
 	struct nouveau_handle *root;
 	struct nouveau_object *device;
-	char name[32];
+	char name[16];
 	u32 debug;
 	struct nouveau_vm *vm;
 };
@@ -41,6 +41,5 @@ int  nouveau_client_create_(const char *name, u64 device, const char *cfg,
 
 int  nouveau_client_init(struct nouveau_client *);
 int  nouveau_client_fini(struct nouveau_client *, bool suspend);
-const char *nouveau_client_name(void *obj);
 
 #endif

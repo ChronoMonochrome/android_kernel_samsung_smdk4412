@@ -11,7 +11,6 @@ nouveau-y := core/core/client.o
 nouveau-y += core/core/engctx.o
 nouveau-y += core/core/engine.o
 nouveau-y += core/core/enum.o
-nouveau-y += core/core/event.o
 nouveau-y += core/core/falcon.o
 nouveau-y += core/core/gpuobj.o
 nouveau-y += core/core/handle.o
@@ -41,11 +40,6 @@ nouveau-y += core/subdev/bios/mxm.o
 nouveau-y += core/subdev/bios/perf.o
 nouveau-y += core/subdev/bios/pll.o
 nouveau-y += core/subdev/bios/therm.o
-nouveau-y += core/subdev/bios/xpio.o
-nouveau-y += core/subdev/bus/nv04.o
-nouveau-y += core/subdev/bus/nv31.o
-nouveau-y += core/subdev/bus/nv50.o
-nouveau-y += core/subdev/bus/nvc0.o
 nouveau-y += core/subdev/clock/nv04.o
 nouveau-y += core/subdev/clock/nv40.o
 nouveau-y += core/subdev/clock/nv50.o
@@ -53,6 +47,15 @@ nouveau-y += core/subdev/clock/nva3.o
 nouveau-y += core/subdev/clock/nvc0.o
 nouveau-y += core/subdev/clock/pllnv04.o
 nouveau-y += core/subdev/clock/pllnva3.o
+nouveau-y += core/subdev/device/base.o
+nouveau-y += core/subdev/device/nv04.o
+nouveau-y += core/subdev/device/nv10.o
+nouveau-y += core/subdev/device/nv20.o
+nouveau-y += core/subdev/device/nv30.o
+nouveau-y += core/subdev/device/nv40.o
+nouveau-y += core/subdev/device/nv50.o
+nouveau-y += core/subdev/device/nvc0.o
+nouveau-y += core/subdev/device/nve0.o
 nouveau-y += core/subdev/devinit/base.o
 nouveau-y += core/subdev/devinit/nv04.o
 nouveau-y += core/subdev/devinit/nv05.o
@@ -82,16 +85,9 @@ nouveau-y += core/subdev/gpio/base.o
 nouveau-y += core/subdev/gpio/nv10.o
 nouveau-y += core/subdev/gpio/nv50.o
 nouveau-y += core/subdev/gpio/nvd0.o
-nouveau-y += core/subdev/gpio/nve0.o
 nouveau-y += core/subdev/i2c/base.o
-nouveau-y += core/subdev/i2c/anx9805.o
 nouveau-y += core/subdev/i2c/aux.o
 nouveau-y += core/subdev/i2c/bit.o
-nouveau-y += core/subdev/i2c/nv04.o
-nouveau-y += core/subdev/i2c/nv4e.o
-nouveau-y += core/subdev/i2c/nv50.o
-nouveau-y += core/subdev/i2c/nv94.o
-nouveau-y += core/subdev/i2c/nvd0.o
 nouveau-y += core/subdev/ibus/nvc0.o
 nouveau-y += core/subdev/ibus/nve0.o
 nouveau-y += core/subdev/instmem/base.o
@@ -110,16 +106,10 @@ nouveau-y += core/subdev/mxm/mxms.o
 nouveau-y += core/subdev/mxm/nv50.o
 nouveau-y += core/subdev/therm/base.o
 nouveau-y += core/subdev/therm/fan.o
-nouveau-y += core/subdev/therm/fannil.o
-nouveau-y += core/subdev/therm/fanpwm.o
-nouveau-y += core/subdev/therm/fantog.o
 nouveau-y += core/subdev/therm/ic.o
-nouveau-y += core/subdev/therm/temp.o
 nouveau-y += core/subdev/therm/nv40.o
 nouveau-y += core/subdev/therm/nv50.o
-nouveau-y += core/subdev/therm/nv84.o
-nouveau-y += core/subdev/therm/nva3.o
-nouveau-y += core/subdev/therm/nvd0.o
+nouveau-y += core/subdev/therm/temp.o
 nouveau-y += core/subdev/timer/base.o
 nouveau-y += core/subdev/timer/nv04.o
 nouveau-y += core/subdev/vm/base.o
@@ -142,16 +132,6 @@ nouveau-y += core/engine/copy/nvc0.o
 nouveau-y += core/engine/copy/nve0.o
 nouveau-y += core/engine/crypt/nv84.o
 nouveau-y += core/engine/crypt/nv98.o
-nouveau-y += core/engine/device/base.o
-nouveau-y += core/engine/device/nv04.o
-nouveau-y += core/engine/device/nv10.o
-nouveau-y += core/engine/device/nv20.o
-nouveau-y += core/engine/device/nv30.o
-nouveau-y += core/engine/device/nv40.o
-nouveau-y += core/engine/device/nv50.o
-nouveau-y += core/engine/device/nvc0.o
-nouveau-y += core/engine/device/nve0.o
-nouveau-y += core/engine/disp/base.o
 nouveau-y += core/engine/disp/nv04.o
 nouveau-y += core/engine/disp/nv50.o
 nouveau-y += core/engine/disp/nv84.o
@@ -160,15 +140,12 @@ nouveau-y += core/engine/disp/nva0.o
 nouveau-y += core/engine/disp/nva3.o
 nouveau-y += core/engine/disp/nvd0.o
 nouveau-y += core/engine/disp/nve0.o
-nouveau-y += core/engine/disp/nvf0.o
 nouveau-y += core/engine/disp/dacnv50.o
-nouveau-y += core/engine/disp/dport.o
 nouveau-y += core/engine/disp/hdanva3.o
 nouveau-y += core/engine/disp/hdanvd0.o
 nouveau-y += core/engine/disp/hdminv84.o
 nouveau-y += core/engine/disp/hdminva3.o
 nouveau-y += core/engine/disp/hdminvd0.o
-nouveau-y += core/engine/disp/piornv50.o
 nouveau-y += core/engine/disp/sornv50.o
 nouveau-y += core/engine/disp/sornv94.o
 nouveau-y += core/engine/disp/sornvd0.o
@@ -214,11 +191,10 @@ nouveau-y += core/engine/vp/nve0.o
 
 # drm/core
 nouveau-y += nouveau_drm.o nouveau_chan.o nouveau_dma.o nouveau_fence.o
-nouveau-y += nouveau_vga.o nouveau_agp.o
+nouveau-y += nouveau_irq.o nouveau_vga.o nouveau_agp.o
 nouveau-y += nouveau_ttm.o nouveau_sgdma.o nouveau_bo.o nouveau_gem.o
 nouveau-y += nouveau_prime.o nouveau_abi16.o
-nouveau-y += nv04_fence.o nv10_fence.o nv17_fence.o
-nouveau-y += nv50_fence.o nv84_fence.o nvc0_fence.o
+nouveau-y += nv04_fence.o nv10_fence.o nv50_fence.o nv84_fence.o nvc0_fence.o
 
 # drm/kms
 nouveau-y += nouveau_bios.o nouveau_fbcon.o nouveau_display.o
@@ -226,7 +202,9 @@ nouveau-y += nouveau_connector.o nouveau_dp.o
 nouveau-y += nv04_fbcon.o nv50_fbcon.o nvc0_fbcon.o
 
 # drm/kms/nv04:nv50
-include $(src)/dispnv04/Makefile
+nouveau-y += nouveau_hw.o nouveau_calc.o
+nouveau-y += nv04_dac.o nv04_dfp.o nv04_tv.o nv17_tv.o nv17_tv_modes.o
+nouveau-y += nv04_crtc.o nv04_display.o nv04_cursor.o
 
 # drm/kms/nv50-
 nouveau-y += nv50_display.o
@@ -238,10 +216,7 @@ nouveau-y += nouveau_mem.o
 
 # other random bits
 nouveau-$(CONFIG_COMPAT) += nouveau_ioc32.o
-ifdef CONFIG_X86
 nouveau-$(CONFIG_ACPI) += nouveau_acpi.o
-endif
 nouveau-$(CONFIG_DRM_NOUVEAU_BACKLIGHT) += nouveau_backlight.o
-nouveau-$(CONFIG_DEBUG_FS) += nouveau_debugfs.o
 
 obj-$(CONFIG_DRM_NOUVEAU)+= nouveau.o

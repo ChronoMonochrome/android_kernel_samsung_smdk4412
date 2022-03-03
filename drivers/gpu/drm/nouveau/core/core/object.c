@@ -136,30 +136,26 @@ nouveau_object_ctor(struct nouveau_object *parent,
 		    struct nouveau_object **pobject)
 {
 	struct nouveau_ofuncs *ofuncs = oclass->ofuncs;
-	struct nouveau_object *object = NULL;
 	int ret;
 
-	ret = ofuncs->ctor(parent, engine, oclass, data, size, &object);
-	*pobject = object;
+	*pobject = NULL;
+
+	ret = ofuncs->ctor(parent, engine, oclass, data, size, pobject);
 	if (ret < 0) {
 		if (ret != -ENODEV) {
 			nv_error(parent, "failed to create 0x%08x, %d\n",
 				 oclass->handle, ret);
 		}
 
-		if (object) {
-			ofuncs->dtor(object);
+		if (*pobject) {
+			ofuncs->dtor(*pobject);
 			*pobject = NULL;
 		}
 
 		return ret;
 	}
 
-	if (ret == 0) {
-		nv_debug(object, "created\n");
-		atomic_set(&object->refcount, 1);
-	}
-
+	nv_debug(*pobject, "created\n");
 	return 0;
 }
 
@@ -282,6 +278,7 @@ nouveau_object_del(struct nouveau_object *client, u32 _parent, u32 _handle)
 	struct nouveau_object *parent = NULL;
 	struct nouveau_object *namedb = NULL;
 	struct nouveau_handle *handle = NULL;
+	int ret = -EINVAL;
 
 	parent = nouveau_handle_ref(client, _parent);
 	if (!parent)
@@ -298,7 +295,7 @@ nouveau_object_del(struct nouveau_object *client, u32 _parent, u32 _handle)
 	}
 
 	nouveau_object_ref(NULL, &parent);
-	return handle ? 0 : -EINVAL;
+	return ret;
 }
 
 int
@@ -331,7 +328,6 @@ nouveau_object_inc(struct nouveau_object *object)
 	}
 
 	ret = nv_ofuncs(object)->init(object);
-	atomic_set(&object->usecount, 1);
 	if (ret) {
 		nv_error(object, "init failed, %d\n", ret);
 		goto fail_self;
@@ -362,7 +358,6 @@ nouveau_object_decf(struct nouveau_object *object)
 	nv_trace(object, "stopping...\n");
 
 	ret = nv_ofuncs(object)->fini(object, false);
-	atomic_set(&object->usecount, 0);
 	if (ret)
 		nv_warn(object, "failed fini, %d\n", ret);
 
@@ -387,7 +382,6 @@ nouveau_object_decs(struct nouveau_object *object)
 	nv_trace(object, "suspending...\n");
 
 	ret = nv_ofuncs(object)->fini(object, true);
-	atomic_set(&object->usecount, 0);
 	if (ret) {
 		nv_error(object, "failed suspend, %d\n", ret);
 		return ret;

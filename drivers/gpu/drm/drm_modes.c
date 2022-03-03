@@ -35,8 +35,6 @@
 #include <linux/export.h>
 #include <drm/drmP.h>
 #include <drm/drm_crtc.h>
-#include <video/of_videomode.h>
-#include <video/videomode.h>
 
 /**
  * drm_mode_debug_printmodeline - debug print a mode
@@ -506,74 +504,6 @@ drm_gtf_mode(struct drm_device *dev, int hdisplay, int vdisplay, int vrefresh,
 }
 EXPORT_SYMBOL(drm_gtf_mode);
 
-#ifdef CONFIG_VIDEOMODE_HELPERS
-int drm_display_mode_from_videomode(const struct videomode *vm,
-				    struct drm_display_mode *dmode)
-{
-	dmode->hdisplay = vm->hactive;
-	dmode->hsync_start = dmode->hdisplay + vm->hfront_porch;
-	dmode->hsync_end = dmode->hsync_start + vm->hsync_len;
-	dmode->htotal = dmode->hsync_end + vm->hback_porch;
-
-	dmode->vdisplay = vm->vactive;
-	dmode->vsync_start = dmode->vdisplay + vm->vfront_porch;
-	dmode->vsync_end = dmode->vsync_start + vm->vsync_len;
-	dmode->vtotal = dmode->vsync_end + vm->vback_porch;
-
-	dmode->clock = vm->pixelclock / 1000;
-
-	dmode->flags = 0;
-	if (vm->flags & DISPLAY_FLAGS_HSYNC_HIGH)
-		dmode->flags |= DRM_MODE_FLAG_PHSYNC;
-	else if (vm->flags & DISPLAY_FLAGS_HSYNC_LOW)
-		dmode->flags |= DRM_MODE_FLAG_NHSYNC;
-	if (vm->flags & DISPLAY_FLAGS_VSYNC_HIGH)
-		dmode->flags |= DRM_MODE_FLAG_PVSYNC;
-	else if (vm->flags & DISPLAY_FLAGS_VSYNC_LOW)
-		dmode->flags |= DRM_MODE_FLAG_NVSYNC;
-	if (vm->flags & DISPLAY_FLAGS_INTERLACED)
-		dmode->flags |= DRM_MODE_FLAG_INTERLACE;
-	if (vm->flags & DISPLAY_FLAGS_DOUBLESCAN)
-		dmode->flags |= DRM_MODE_FLAG_DBLSCAN;
-	drm_mode_set_name(dmode);
-
-	return 0;
-}
-EXPORT_SYMBOL_GPL(drm_display_mode_from_videomode);
-
-#ifdef CONFIG_OF
-/**
- * of_get_drm_display_mode - get a drm_display_mode from devicetree
- * @np: device_node with the timing specification
- * @dmode: will be set to the return value
- * @index: index into the list of display timings in devicetree
- *
- * This function is expensive and should only be used, if only one mode is to be
- * read from DT. To get multiple modes start with of_get_display_timings and
- * work with that instead.
- */
-int of_get_drm_display_mode(struct device_node *np,
-			    struct drm_display_mode *dmode, int index)
-{
-	struct videomode vm;
-	int ret;
-
-	ret = of_get_videomode(np, &vm, index);
-	if (ret)
-		return ret;
-
-	drm_display_mode_from_videomode(&vm, dmode);
-
-	pr_debug("%s: got %dx%d display mode from %s\n",
-		of_node_full_name(np), vm.hactive, vm.vactive, np->name);
-	drm_mode_debug_printmodeline(dmode);
-
-	return 0;
-}
-EXPORT_SYMBOL_GPL(of_get_drm_display_mode);
-#endif /* CONFIG_OF */
-#endif /* CONFIG_VIDEOMODE_HELPERS */
-
 /**
  * drm_mode_set_name - set the name on a mode
  * @mode: name will be set in this mode
@@ -848,26 +778,6 @@ bool drm_mode_equal(const struct drm_display_mode *mode1, const struct drm_displ
 	} else if (mode1->clock != mode2->clock)
 		return false;
 
-	return drm_mode_equal_no_clocks(mode1, mode2);
-}
-EXPORT_SYMBOL(drm_mode_equal);
-
-/**
- * drm_mode_equal_no_clocks - test modes for equality
- * @mode1: first mode
- * @mode2: second mode
- *
- * LOCKING:
- * None.
- *
- * Check to see if @mode1 and @mode2 are equivalent, but
- * don't check the pixel clocks.
- *
- * RETURNS:
- * True if the modes are equal, false otherwise.
- */
-bool drm_mode_equal_no_clocks(const struct drm_display_mode *mode1, const struct drm_display_mode *mode2)
-{
 	if (mode1->hdisplay == mode2->hdisplay &&
 	    mode1->hsync_start == mode2->hsync_start &&
 	    mode1->hsync_end == mode2->hsync_end &&
@@ -883,7 +793,7 @@ bool drm_mode_equal_no_clocks(const struct drm_display_mode *mode1, const struct
 
 	return false;
 }
-EXPORT_SYMBOL(drm_mode_equal_no_clocks);
+EXPORT_SYMBOL(drm_mode_equal);
 
 /**
  * drm_mode_validate_size - make sure modes adhere to size constraints
@@ -1143,7 +1053,6 @@ bool drm_mode_parse_command_line_for_connector(const char *mode_option,
 				was_digit = false;
 			} else
 				goto done;
-			break;
 		case '0' ... '9':
 			was_digit = true;
 			break;
