@@ -498,7 +498,7 @@ static void release_all_fingers(struct mms_ts_info *info)
 	}
 	input_sync(info->input_dev);
 #if TOUCH_BOOSTER
-	set_dvfs_lock(info, 2);
+	//set_dvfs_lock(info, 2);
 	pr_debug("[TSP] dvfs_lock free.\n ");
 #endif
 }
@@ -732,7 +732,7 @@ static irqreturn_t mms_ts_interrupt(int irq, void *dev_id)
 	}
 
 #if TOUCH_BOOSTER
-	set_dvfs_lock(info, !!touch_is_pressed);
+	//set_dvfs_lock(info, !!touch_is_pressed);
 #endif
 out:
 	return IRQ_HANDLED;
