@@ -89,11 +89,7 @@ static const struct net_device_ops dhd_mon_if_ops = {
 	.ndo_open		= dhd_mon_if_open,
 	.ndo_stop		= dhd_mon_if_stop,
 	.ndo_start_xmit		= dhd_mon_if_subif_start_xmit,
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 2, 0))
 	.ndo_set_rx_mode = dhd_mon_if_set_multicast_list,
-#else
-	.ndo_set_multicast_list = dhd_mon_if_set_multicast_list,
-#endif
 	.ndo_set_mac_address 	= dhd_mon_if_change_mac,
 };
 
