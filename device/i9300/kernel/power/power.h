@@ -256,17 +256,6 @@ extern struct wake_lock sync_wake_lock;
 extern suspend_state_t requested_suspend_state;
 #endif
 
-#ifdef CONFIG_USER_WAKELOCK
-ssize_t wake_lock_show(struct kobject *kobj, struct kobj_attribute *attr,
-			char *buf);
-ssize_t wake_lock_store(struct kobject *kobj, struct kobj_attribute *attr,
-			const char *buf, size_t n);
-ssize_t wake_unlock_show(struct kobject *kobj, struct kobj_attribute *attr,
-			char *buf);
-ssize_t  wake_unlock_store(struct kobject *kobj, struct kobj_attribute *attr,
-			const char *buf, size_t n);
-#endif
-
 struct pm_wd_data {
 	struct task_struct *tsk;
 	int timeout;
