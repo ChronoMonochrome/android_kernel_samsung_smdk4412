@@ -3,7 +3,7 @@
  *
  * Copyright (c) 2003 Patrick Mochel
  * Copyright (c) 2003 Open Source Development Lab
- * 
+ *
  * This file is released under the GPLv2
  *
  */
@@ -167,7 +167,7 @@ struct kobject *power_kobj;
  *	'standby' (Power-On Suspend), 'mem' (Suspend-to-RAM), and
  *	'disk' (Suspend-to-Disk).
  *
- *	store() accepts one of those strings, translates it into the 
+ *	store() accepts one of those strings, translates it into the
  *	proper enumerated value, and initiates a suspend transition.
  */
 static ssize_t state_show(struct kobject *kobj, struct kobj_attribute *attr,
@@ -426,11 +426,6 @@ pm_trace_dev_match_store(struct kobject *kobj, struct kobj_attribute *attr,
 power_attr(pm_trace_dev_match);
 
 #endif /* CONFIG_PM_TRACE */
-
-#ifdef CONFIG_USER_WAKELOCK
-power_attr(wake_lock);
-power_attr(wake_unlock);
-#endif
 
 #ifdef CONFIG_DVFS_LIMIT
 static int cpufreq_max_limit_val = -1;
@@ -808,10 +803,6 @@ static struct attribute * g[] = {
 #endif
 #ifdef CONFIG_PM_DEBUG
 	&pm_test_attr.attr,
-#endif
-#ifdef CONFIG_USER_WAKELOCK
-	&wake_lock_attr.attr,
-	&wake_unlock_attr.attr,
 #endif
 #endif
 #ifdef CONFIG_DVFS_LIMIT
