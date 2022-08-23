@@ -1318,7 +1318,6 @@ void s6e8ax0_fb_suspend(void)
 void s6e8ax0_fb_resume(void)
 {
 	struct lcd_info *lcd = g_lcd;
-	s6e8ax0_suspended = 0;
 
 	if (!lcd->fb_suspended)
 		return;
