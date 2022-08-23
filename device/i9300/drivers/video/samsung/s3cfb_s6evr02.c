@@ -1103,7 +1103,6 @@ void s6evr02_fb_suspend(void)
 void s6evr02_fb_resume(void)
 {
 	struct lcd_info *lcd = g_lcd;
-	s6e8ax0_suspended = 0;
 
 	dev_info(&lcd->ld->dev, "+%s\n", __func__);
 	s6evr02_power(lcd, FB_BLANK_UNBLANK);
