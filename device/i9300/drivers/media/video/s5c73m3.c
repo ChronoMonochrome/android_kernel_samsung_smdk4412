@@ -70,6 +70,10 @@ struct device *bus_dev;
 				cam_err("i2c failed, err %d\n", x); \
 				return x; \
 			}
+#ifdef CONFIG_VIDEO_S5C73M3_WAKELOCK
+static struct wakeup_source s5c73m3_wakelock;
+#endif
+
 struct s5c73m3_fw_version camfw_info[S5C73M3_PATH_MAX];
 
 static const struct s5c73m3_frmsizeenum preview_frmsizes[] = {
@@ -1248,6 +1252,9 @@ static int s5c73m3_set_flash(struct v4l2_subdev *sd, int val, int recording)
 retry:
 	switch (val) {
 	case FLASH_MODE_OFF:
+#ifdef CONFIG_VIDEO_S5C73M3_WAKELOCK
+		__pm_relax(&s5c73m3_wakelock);
+#endif
 		err = s5c73m3_writeb(sd, S5C73M3_FLASH_MODE,
 			S5C73M3_FLASH_MODE_OFF);
 		CHECK_ERR(err);
@@ -1275,6 +1282,9 @@ retry:
 		break;
 
 	case FLASH_MODE_TORCH:
+#ifdef CONFIG_VIDEO_S5C73M3_WAKELOCK
+	    __pm_stay_awake(&s5c73m3_wakelock);
+#endif
 		err = s5c73m3_writeb(sd, S5C73M3_FLASH_MODE,
 			S5C73M3_FLASH_MODE_OFF);
 		CHECK_ERR(err);
@@ -3557,6 +3567,10 @@ static int __init s5c73m3_mod_init(void)
 					dev_attr_isp_core.attr.name);
 		}
 	}
+
+#ifdef CONFIG_VIDEO_S5C73M3_WAKELOCK
+	wakeup_source_init(&s5c73m3_wakelock, "s5c73m3_wake_lock");
+#endif
 
 	return i2c_add_driver(&s5c73m3_i2c_driver);
 }
