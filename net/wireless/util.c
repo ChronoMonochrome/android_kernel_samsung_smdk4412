@@ -643,8 +643,7 @@ void ieee80211_amsdu_to_8023s(struct sk_buff *skb, struct sk_buff_head *list,
 EXPORT_SYMBOL(ieee80211_amsdu_to_8023s);
 
 /* Given a data frame determine the 802.1p/1d tag to use. */
-unsigned int cfg80211_classify8021d(struct sk_buff *skb,
-				    struct cfg80211_qos_map *qos_map)
+unsigned int cfg80211_classify8021d(struct sk_buff *skb)
 {
 	unsigned int dscp;
 
@@ -658,28 +657,10 @@ unsigned int cfg80211_classify8021d(struct sk_buff *skb,
 
 	switch (skb->protocol) {
 	case htons(ETH_P_IP):
-		dscp = ipv4_get_dsfield(ip_hdr(skb)) & 0xfc;
-		break;
-	case htons(ETH_P_IPV6):
-		dscp = ipv6_get_dsfield(ipv6_hdr(skb)) & 0xfc;
+		dscp = ip_hdr(skb)->tos & 0xfc;
 		break;
 	default:
 		return 0;
-	}
-
-	if (qos_map) {
-		unsigned int i, tmp_dscp = dscp >> 2;
-
-		for (i = 0; i < qos_map->num_des; i++) {
-			if (tmp_dscp == qos_map->dscp_exception[i].dscp)
-				return qos_map->dscp_exception[i].up;
-		}
-
-		for (i = 0; i < 8; i++) {
-			if (tmp_dscp >= qos_map->up[i].low &&
-			    tmp_dscp <= qos_map->up[i].high)
-				return i;
-		}
 	}
 
 	return dscp >> 5;
@@ -835,9 +816,6 @@ int cfg80211_change_iface(struct cfg80211_registered_device *rdev,
 
 		dev->ieee80211_ptr->use_4addr = false;
 		dev->ieee80211_ptr->mesh_id_up_len = 0;
-		if (rdev->ops->set_qos_map) {
-			rdev->ops->set_qos_map(&rdev->wiphy, dev, NULL);
-		}
 
 		switch (otype) {
 		case NL80211_IFTYPE_ADHOC:

@@ -2763,10 +2763,8 @@ void ieee80211_amsdu_to_8023s(struct sk_buff *skb, struct sk_buff_head *list,
 /**
  * cfg80211_classify8021d - determine the 802.1p/1d tag for a data frame
  * @skb: the data frame
- * @qos_map: Interworking QoS mapping or %NULL if not in use
  */
-unsigned int cfg80211_classify8021d(struct sk_buff *skb,
-				    struct cfg80211_qos_map *qos_map);
+unsigned int cfg80211_classify8021d(struct sk_buff *skb);
 
 /**
  * cfg80211_find_ie - find information element in data
