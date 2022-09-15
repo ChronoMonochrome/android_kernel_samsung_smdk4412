@@ -21,7 +21,6 @@ static DEVICE_ATTR(hwrev, S_IRUGO, hwrev_show, NULL);
 static int __init gps_bcm475x_init(void)
 {
 	int n_rst_pin = 0;
-	int n_rst_nc_pin = 0;
 	BUG_ON(!sec_class);
 	gps_dev = device_create(sec_class, NULL, 0, NULL, "gps");
 	BUG_ON(!gps_dev);

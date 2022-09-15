@@ -187,47 +187,6 @@ static void exynos4_gpio_conpdn_reg(void)
 	__raw_writel(val, gpio_base + GPIO_PUD_PDN_OFFSET);
 }
 
-static void exynos4212_gpio_conpdn_reg(void)
-{
-	void __iomem *gpio_base = S5P_VA_GPIO;
-	unsigned int val;
-
-	do {
-		/* Keep the previous state in didle mode */
-		__raw_writel(0xffff, gpio_base + GPIO_CON_PDN_OFFSET);
-
-		/* Pull up-down state in didle is same as normal */
-		val = __raw_readl(gpio_base + GPIO_PUD_OFFSET);
-		__raw_writel(val, gpio_base + GPIO_PUD_PDN_OFFSET);
-
-		gpio_base += GPIO_OFFSET;
-
-		/* Skip gpio_base there aren't gpios in part1 & part4 of exynos4212 */
-		if (gpio_base == (S5P_VA_GPIO + 0xE0))
-			gpio_base = S5P_VA_GPIO + 0x180;
-		else if (gpio_base == (S5P_VA_GPIO + 0x200))
-			gpio_base = S5P_VA_GPIO + 0x240;
-		else if (gpio_base == (S5P_VA_GPIO4 + 0x40))
-			gpio_base = S5P_VA_GPIO4 + 0x60;
-		else if (gpio_base == (S5P_VA_GPIO4 + 0xA0))
-			gpio_base = S5P_VA_GPIO4 + 0xC0;
-
-		if (gpio_base == S5P_VA_GPIO + GPIO1_END_OFFSET)
-			gpio_base = S5P_VA_GPIO2 + 0x40; /* GPK0CON */
-
-		if (gpio_base == S5P_VA_GPIO2 + GPIO2_END_OFFSET)
-			gpio_base = S5P_VA_GPIO4;
-
-	} while (gpio_base <= S5P_VA_GPIO4 + GPIO4_END_OFFSET);
-
-	/* set the GPZ */
-	gpio_base = S5P_VA_GPIO3;
-	__raw_writel(0xffff, gpio_base + GPIO_CON_PDN_OFFSET);
-
-	val = __raw_readl(gpio_base + GPIO_PUD_OFFSET);
-	__raw_writel(val, gpio_base + GPIO_PUD_PDN_OFFSET);
-}
-
 static int check_power_domain(void)
 {
 	unsigned long tmp;
@@ -346,11 +305,6 @@ static int check_usb_op(void)
 #endif
 }
 
-#if defined (CONFIG_MACH_U1_NA_SPR) || (CONFIG_MACH_U1_NA_USCC)
-#include "../../../sound/soc/samsung/srp-types.h"
-#include "../../../sound/soc/samsung/idma.h"
-#endif
-
 #ifdef CONFIG_SND_SAMSUNG_RP
 extern int srp_get_op_level(void);	/* By srp driver */
 #endif
@@ -433,16 +387,6 @@ static int exynos4_check_operation(void)
 #ifdef CONFIG_SND_SAMSUNG_RP
 	if (srp_get_op_level())
 		return 1;
-#endif
-
-#if defined (CONFIG_MACH_U1_NA_SPR) || (CONFIG_MACH_U1_NA_USCC)
-#ifdef CONFIG_SND_SAMSUNG_RP
-	if (!srp_get_status(IS_RUNNING))
-		return 1;
-#elif defined(CONFIG_SND_SAMSUNG_ALP)
-	if (!idma_is_running())
-		return 1;
-#endif
 #endif
 
 	if (check_usb_op())

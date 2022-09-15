@@ -92,51 +92,6 @@ static void sii9234_power_onoff(bool on)
 	}
 }
 
-#ifdef __MHL_NEW_CBUS_MSC_CMD__
-#if defined(CONFIG_MFD_MAX77693)
-static int sii9234_usb_op(bool on, int value)
-{
-	pr_info("func:%s bool on(%d) int value(%d)\n", __func__, on, value);
-	if (on) {
-		if (value == 1)
-			max77693_muic_usb_cb(USB_CABLE_ATTACHED);
-		else if (value == 2)
-			max77693_muic_usb_cb(USB_POWERED_HOST_ATTACHED);
-		else
-			return 0;
-	} else {
-		if (value == 1)
-			max77693_muic_usb_cb(USB_CABLE_DETACHED);
-		else if (value == 2)
-			max77693_muic_usb_cb(USB_POWERED_HOST_DETACHED);
-		else
-			return 0;
-	}
-	return 1;
-}
-#endif
-static void sii9234_vbus_present(bool on, int value)
-{
-	struct power_supply *psy = power_supply_get_by_name(PSY_CHG_NAME);
-	union power_supply_propval power_value;
-	u8 intval;
-	pr_info("%s: on(%d), vbus type(%d)\n", __func__, on, value);
-
-	if (!psy) {
-		pr_err("%s: fail to get %s psy\n", __func__, PSY_CHG_NAME);
-		return;
-	}
-
-	power_value.intval = ((POWER_SUPPLY_TYPE_MISC << 4) |
-			(on << 2) | (value << 0));
-
-	pr_info("%s: value.intval(0x%x)\n", __func__, power_value.intval);
-	psy->set_property(psy, POWER_SUPPLY_PROP_ONLINE, &power_value);
-
-	return;
-}
-#endif
-
 #ifdef CONFIG_SAMSUNG_MHL_UNPOWERED
 static int sii9234_get_vbus_status(void)
 {
