@@ -804,7 +804,6 @@ static bool battery_fullcharged_cond(struct battery_info *info)
 {
 	int f_cond_soc;
 	int f_cond_vcell;
-	int full_state;
 	pr_debug("%s\n", __func__);
 
 	/* max voltage - RECHG_DROP_VALUE: recharge voltage */
