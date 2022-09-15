@@ -40,6 +40,22 @@ import subprocess
 ofile = None
 
 additional_build_rules = {
+    "arch/arm/mm/built-in.o" :
+    {
+        "config": "CONFIG_DMA_CMA",
+        "injected_objects":
+        [
+            "device/i9300/arch/arm/mm/init-cma.o",
+            "device/i9300/arch/arm/mm/dma-mapping-cma.o",
+            "device/i9300/arch/arm/mm/mmu-cma.o",
+        ],
+        "removed_objects":
+        [
+           "arch/arm/mm/init.o",
+           "arch/arm/mm/dma-mapping.o",
+           "arch/arm/mm/mmu.o",
+        ]
+    },
 }
 
 # Check if the config is enabled
