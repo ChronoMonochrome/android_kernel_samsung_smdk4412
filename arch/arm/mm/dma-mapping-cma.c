@@ -122,12 +122,6 @@ static void __dma_free_buffer(struct page *page, size_t size)
 #define CONSISTENT_PTE_INDEX(x) (((unsigned long)(x) - CONSISTENT_BASE) >> PGDIR_SHIFT)
 #define NUM_CONSISTENT_PTES (CONSISTENT_DMA_SIZE >> PGDIR_SHIFT)
 
-/*
- * These are the page tables (2MB each) covering uncached,
- * DMA consistent allocations
- */
-static pte_t *consistent_pte[NUM_CONSISTENT_PTES];
-
 #include "vmregion.h"
 
 static struct arm_vmregion_head consistent_head = {
@@ -146,14 +140,6 @@ static struct arm_vmregion_head consistent_head = {
  */
 static int __init consistent_init(void)
 {
-	int ret = 0;
-	pgd_t *pgd;
-	pud_t *pud;
-	pmd_t *pmd;
-	pte_t *pte;
-	int i = 0;
-	u32 base = CONSISTENT_BASE;
-
 	return 0;
 
 #if 0
@@ -286,111 +272,6 @@ void __init dma_contiguous_remap(void)
 	}
 }
 
-static void *
-__dma_alloc_remap(struct page *page, size_t size, gfp_t gfp, pgprot_t prot)
-{
-	struct arm_vmregion *c;
-	size_t align;
-	int bit;
-
-	if (!consistent_pte[0]) {
-		printk(KERN_ERR "%s: not initialised\n", __func__);
-		dump_stack();
-		return NULL;
-	}
-
-	/*
-	 * Align the virtual region allocation - maximum alignment is
-	 * a section size, minimum is a page size.  This helps reduce
-	 * fragmentation of the DMA space, and also prevents allocations
-	 * smaller than a section from crossing a section boundary.
-	 */
-	bit = fls(size - 1);
-	if (bit > SECTION_SHIFT)
-		bit = SECTION_SHIFT;
-	align = 1 << bit;
-
-	/*
-	 * Allocate a virtual address in the consistent mapping region.
-	 */
-	c = arm_vmregion_alloc(&consistent_head, align, size,
-			    gfp & ~(__GFP_DMA | __GFP_HIGHMEM));
-	if (c) {
-		pte_t *pte;
-		int idx = CONSISTENT_PTE_INDEX(c->vm_start);
-		u32 off = CONSISTENT_OFFSET(c->vm_start) & (PTRS_PER_PTE-1);
-
-		pte = consistent_pte[idx] + off;
-		c->vm_pages = page;
-
-		do {
-			BUG_ON(!pte_none(*pte));
-
-			set_pte_ext(pte, mk_pte(page, prot), 0);
-			page++;
-			pte++;
-			off++;
-			if (off >= PTRS_PER_PTE) {
-				off = 0;
-				pte = consistent_pte[++idx];
-			}
-		} while (size -= PAGE_SIZE);
-
-		dsb();
-
-		return (void *)c->vm_start;
-	}
-	return NULL;
-}
-
-static void __dma_free_remap(void *cpu_addr, size_t size)
-{
-	struct arm_vmregion *c;
-	unsigned long addr;
-	pte_t *ptep;
-	int idx;
-	u32 off;
-
-	c = arm_vmregion_find_remove(&consistent_head, (unsigned long)cpu_addr);
-	if (!c) {
-		printk(KERN_ERR "%s: trying to free invalid coherent area: %p\n",
-		       __func__, cpu_addr);
-		dump_stack();
-		return;
-	}
-
-	if ((c->vm_end - c->vm_start) != size) {
-		printk(KERN_ERR "%s: freeing wrong coherent size (%ld != %d)\n",
-		       __func__, c->vm_end - c->vm_start, size);
-		dump_stack();
-		size = c->vm_end - c->vm_start;
-	}
-
-	idx = CONSISTENT_PTE_INDEX(c->vm_start);
-	off = CONSISTENT_OFFSET(c->vm_start) & (PTRS_PER_PTE-1);
-	ptep = consistent_pte[idx] + off;
-	addr = c->vm_start;
-	do {
-		pte_t pte = ptep_get_and_clear(&init_mm, addr, ptep);
-
-		ptep++;
-		addr += PAGE_SIZE;
-		off++;
-		if (off >= PTRS_PER_PTE) {
-			off = 0;
-			ptep = consistent_pte[++idx];
-		}
-
-		if (pte_none(pte) || !pte_present(pte))
-			printk(KERN_CRIT "%s: bad page in kernel page table\n",
-			       __func__);
-	} while (size -= PAGE_SIZE);
-
-	flush_tlb_kernel_range(c->vm_start, c->vm_end);
-
-	arm_vmregion_free(&consistent_head, c);
-}
-
 static int __dma_update_pte(pte_t *pte, pgtable_t token, unsigned long addr,
 			    void *data)
 {
@@ -409,25 +290,6 @@ static void __dma_remap(struct page *page, size_t size, pgprot_t prot)
 	apply_to_page_range(&init_mm, start, size, __dma_update_pte, &prot);
 	dsb();
 	flush_tlb_kernel_range(start, end);
-}
-
-static void *__alloc_remap_buffer(struct device *dev, size_t size, gfp_t gfp,
-				 pgprot_t prot, struct page **ret_page)
-{
-	struct page *page;
-	void *ptr;
-	page = __dma_alloc_buffer(dev, size, gfp);
-	if (!page)
-		return NULL;
-
-	ptr = __dma_alloc_remap(page, size, gfp, prot);
-	if (!ptr) {
-		__dma_free_buffer(page, size);
-		return NULL;
-	}
-
-	*ret_page = page;
-	return ptr;
 }
 
 static void *__alloc_from_pool(struct device *dev, size_t size,
