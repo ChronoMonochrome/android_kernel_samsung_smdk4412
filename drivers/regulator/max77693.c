@@ -514,7 +514,6 @@ static __devinit int max77693_pmic_probe(struct platform_device *pdev)
 	for (i = 0; i < max77693->num_regulators; i++)
 		if (rdev[i])
 			regulator_unregister(rdev[i]);
- err_alloc:
 	pr_err("[%s:%d] err_alloc\n", __FILE__, __LINE__);
 	kfree(max77693->rdev);
 	kfree(max77693);
