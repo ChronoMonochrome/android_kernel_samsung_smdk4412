@@ -196,22 +196,6 @@ int get_switch_sel(void)
 	return switch_sel;
 }
 
-static int max77693_muic_get_comp2_comn1_pass2
-	(struct max77693_muic_info *info)
-{
-	int ret;
-	u8 val;
-
-	ret = max77693_read_reg(info->muic, MAX77693_MUIC_REG_CTRL1, &val);
-	val = val & CLEAR_IDBEN_MICEN_MASK;
-	dev_info(info->dev, "func:%s ret:%d val:%x\n", __func__, ret, val);
-	if (ret) {
-		dev_err(info->dev, "%s: fail to read muic reg\n", __func__);
-		return -EINVAL;
-	}
-	return val;
-}
-
 static int max77693_muic_set_comp2_comn1_pass2
 	(struct max77693_muic_info *info, int type, int path)
 {
@@ -313,32 +297,6 @@ static int max77693_muic_set_comp2_comn1_pass2
 	return ret;
 }
 
-static int max77693_muic_set_usb_path_pass2
-	(struct max77693_muic_info *info, int path)
-{
-	int ret = 0;
-	ret = max77693_muic_set_comp2_comn1_pass2
-		(info, 0/*usb*/, path);
-	sysfs_notify(&switch_dev->kobj, NULL, "usb_sel");
-	return ret;
-}
-
-static int max77693_muic_get_usb_path_pass2
-	(struct max77693_muic_info *info)
-{
-	u8 val;
-
-	val = max77693_muic_get_comp2_comn1_pass2(info);
-	if (val == CTRL1_AP_USB)
-		return AP_USB_MODE;
-	else if (val == CTRL1_CP_USB)
-		return CP_USB_MODE;
-	else if (val == CTRL1_AUDIO)
-		return AUDIO_MODE;
-	else
-		return -EINVAL;
-}
-
 static int max77693_muic_set_uart_path_pass2
 	(struct max77693_muic_info *info, int path)
 {
@@ -347,42 +305,6 @@ static int max77693_muic_set_uart_path_pass2
 		(info, 1/*uart*/, path);
 	return ret;
 
-}
-
-static int max77693_muic_get_uart_path_pass2
-	(struct max77693_muic_info *info)
-{
-	u8 val;
-
-	val = max77693_muic_get_comp2_comn1_pass2(info);
-
-	if (val == CTRL1_AP_UART) {
-		if (info->is_default_uart_path_cp)
-			return UART_PATH_CP;
-		else
-			return UART_PATH_AP;
-	} else if (val == CTRL1_CP_UART) {
-#ifdef CONFIG_LTE_VIA_SWITCH
-		if (gpio_is_valid(GPIO_LTE_VIA_UART_SEL)) {
-			if (gpio_get_value(GPIO_LTE_VIA_UART_SEL))
-				return UART_PATH_CP;
-			else
-				return UART_PATH_LTE;
-		} else {
-			dev_info(info->dev, "%s: ERR_UART_PATH_LTE\n"
-								, __func__);
-			return -EINVAL;
-		}
-#endif
-#ifndef CONFIG_LTE_VIA_SWITCH
-		if (info->is_default_uart_path_cp)
-			return UART_PATH_AP;
-		else
-			return UART_PATH_CP;
-#endif
-	} else {
-		return -EINVAL;
-	}
 }
 
 #if defined(CONFIG_MUIC_DET_JACK)
