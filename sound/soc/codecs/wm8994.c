@@ -126,7 +126,6 @@ static void wm8958_micd_set_rate(struct snd_soc_codec *codec)
 
 static int wm8994_readable(struct snd_soc_codec *codec, unsigned int reg)
 {
-	struct wm8994_priv *wm8994 = snd_soc_codec_get_drvdata(codec);
 	struct wm8994 *control = codec->control_data;
 
 	switch (reg) {
@@ -2310,15 +2309,6 @@ out:
 	return 0;
 }
 
-static irqreturn_t wm8994_fll_locked_irq(int irq, void *data)
-{
-	struct completion *completion = data;
-
-	complete(completion);
-
-	return IRQ_HANDLED;
-}
-
 static int opclk_divs[] = { 10, 20, 30, 40, 55, 60, 80, 120, 160 };
 
 static int wm8994_set_fll(struct snd_soc_dai *dai, int id, int src,
@@ -3138,7 +3128,6 @@ static int wm8994_codec_suspend(struct snd_soc_codec *codec, pm_message_t state)
 static int wm8994_codec_resume(struct snd_soc_codec *codec)
 {
 	struct wm8994_priv *wm8994 = snd_soc_codec_get_drvdata(codec);
-	struct wm8994 *control = codec->control_data;
 	int i, ret;
 	unsigned int val, mask;
 
@@ -3782,33 +3771,6 @@ static irqreturn_t wm8958_mic_irq(int irq, void *data)
 		wm8958_button_det(codec, reg);
 
 out:
-	return IRQ_HANDLED;
-}
-
-static irqreturn_t wm8994_fifo_error(int irq, void *data)
-{
-	struct snd_soc_codec *codec = data;
-
-	dev_err(codec->dev, "FIFO error\n");
-
-	return IRQ_HANDLED;
-}
-
-static irqreturn_t wm8994_temp_warn(int irq, void *data)
-{
-	struct snd_soc_codec *codec = data;
-
-	dev_err(codec->dev, "Thermal warning\n");
-
-	return IRQ_HANDLED;
-}
-
-static irqreturn_t wm8994_temp_shut(int irq, void *data)
-{
-	struct snd_soc_codec *codec = data;
-
-	dev_crit(codec->dev, "Thermal shutdown\n");
-
 	return IRQ_HANDLED;
 }
 
