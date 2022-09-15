@@ -861,11 +861,6 @@ static bool need_cache_invalidate(long dir)
 							DMA_TO_DEVICE);
 }
 
-static void flush_local_cache_all(void *p)
-{
-	flush_cache_all();
-}
-
 static long ion_exynos_heap_msync(struct ion_client *client,
 		struct ion_handle *handle, off_t offset, size_t size, long dir)
 {
