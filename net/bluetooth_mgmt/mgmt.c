@@ -128,71 +128,6 @@ struct pending_cmd {
 	void *user_data;
 };
 
-/* HCI to MGMT error code conversion table */
-static u8 mgmt_status_table[] = {
-	MGMT_STATUS_SUCCESS,
-	MGMT_STATUS_UNKNOWN_COMMAND,	/* Unknown Command */
-	MGMT_STATUS_NOT_CONNECTED,	/* No Connection */
-	MGMT_STATUS_FAILED,		/* Hardware Failure */
-	MGMT_STATUS_CONNECT_FAILED,	/* Page Timeout */
-	MGMT_STATUS_AUTH_FAILED,	/* Authentication Failed */
-	MGMT_STATUS_NOT_PAIRED,		/* PIN or Key Missing */
-	MGMT_STATUS_NO_RESOURCES,	/* Memory Full */
-	MGMT_STATUS_TIMEOUT,		/* Connection Timeout */
-	MGMT_STATUS_NO_RESOURCES,	/* Max Number of Connections */
-	MGMT_STATUS_NO_RESOURCES,	/* Max Number of SCO Connections */
-	MGMT_STATUS_ALREADY_CONNECTED,	/* ACL Connection Exists */
-	MGMT_STATUS_BUSY,		/* Command Disallowed */
-	MGMT_STATUS_NO_RESOURCES,	/* Rejected Limited Resources */
-	MGMT_STATUS_REJECTED,		/* Rejected Security */
-	MGMT_STATUS_REJECTED,		/* Rejected Personal */
-	MGMT_STATUS_TIMEOUT,		/* Host Timeout */
-	MGMT_STATUS_NOT_SUPPORTED,	/* Unsupported Feature */
-	MGMT_STATUS_INVALID_PARAMS,	/* Invalid Parameters */
-	MGMT_STATUS_DISCONNECTED,	/* OE User Ended Connection */
-	MGMT_STATUS_NO_RESOURCES,	/* OE Low Resources */
-	MGMT_STATUS_DISCONNECTED,	/* OE Power Off */
-	MGMT_STATUS_DISCONNECTED,	/* Connection Terminated */
-	MGMT_STATUS_BUSY,		/* Repeated Attempts */
-	MGMT_STATUS_REJECTED,		/* Pairing Not Allowed */
-	MGMT_STATUS_FAILED,		/* Unknown LMP PDU */
-	MGMT_STATUS_NOT_SUPPORTED,	/* Unsupported Remote Feature */
-	MGMT_STATUS_REJECTED,		/* SCO Offset Rejected */
-	MGMT_STATUS_REJECTED,		/* SCO Interval Rejected */
-	MGMT_STATUS_REJECTED,		/* Air Mode Rejected */
-	MGMT_STATUS_INVALID_PARAMS,	/* Invalid LMP Parameters */
-	MGMT_STATUS_FAILED,		/* Unspecified Error */
-	MGMT_STATUS_NOT_SUPPORTED,	/* Unsupported LMP Parameter Value */
-	MGMT_STATUS_FAILED,		/* Role Change Not Allowed */
-	MGMT_STATUS_TIMEOUT,		/* LMP Response Timeout */
-	MGMT_STATUS_FAILED,		/* LMP Error Transaction Collision */
-	MGMT_STATUS_FAILED,		/* LMP PDU Not Allowed */
-	MGMT_STATUS_REJECTED,		/* Encryption Mode Not Accepted */
-	MGMT_STATUS_FAILED,		/* Unit Link Key Used */
-	MGMT_STATUS_NOT_SUPPORTED,	/* QoS Not Supported */
-	MGMT_STATUS_TIMEOUT,		/* Instant Passed */
-	MGMT_STATUS_NOT_SUPPORTED,	/* Pairing Not Supported */
-	MGMT_STATUS_FAILED,		/* Transaction Collision */
-	MGMT_STATUS_INVALID_PARAMS,	/* Unacceptable Parameter */
-	MGMT_STATUS_REJECTED,		/* QoS Rejected */
-	MGMT_STATUS_NOT_SUPPORTED,	/* Classification Not Supported */
-	MGMT_STATUS_REJECTED,		/* Insufficient Security */
-	MGMT_STATUS_INVALID_PARAMS,	/* Parameter Out Of Range */
-	MGMT_STATUS_BUSY,		/* Role Switch Pending */
-	MGMT_STATUS_FAILED,		/* Slot Violation */
-	MGMT_STATUS_FAILED,		/* Role Switch Failed */
-	MGMT_STATUS_INVALID_PARAMS,	/* EIR Too Large */
-	MGMT_STATUS_NOT_SUPPORTED,	/* Simple Pairing Not Supported */
-	MGMT_STATUS_BUSY,		/* Host Busy Pairing */
-	MGMT_STATUS_REJECTED,		/* Rejected, No Suitable Channel */
-	MGMT_STATUS_BUSY,		/* Controller Busy */
-	MGMT_STATUS_INVALID_PARAMS,	/* Unsuitable Connection Interval */
-	MGMT_STATUS_TIMEOUT,		/* Directed Advertising Timeout */
-	MGMT_STATUS_AUTH_FAILED,	/* Terminated Due to MIC Failure */
-	MGMT_STATUS_CONNECT_FAILED,	/* Connection Establishment Failed */
-	MGMT_STATUS_CONNECT_FAILED,	/* MAC Connection Failed */
-};
-
 static u8 mgmt_status(u8 hci_status)
 {
 	/* bluetoothd is still checking hci status. so no need to check mgmt status
@@ -1460,7 +1395,6 @@ static int pin_code_reply(struct sock *sk, u16 index, void *data, u16 len)
 	struct hci_dev *hdev;
 	struct hci_conn *conn;
 	struct mgmt_cp_pin_code_reply *cp = data;
-	struct mgmt_cp_pin_code_neg_reply ncp;
 	struct hci_cp_pin_code_reply reply;
 	struct pending_cmd *cmd;
 	int err;
