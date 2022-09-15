@@ -121,7 +121,6 @@ static enum hrtimer_restart haptic_timer_func(struct hrtimer *timer)
 {
 	struct max77693_haptic_data *hap_data
 		= container_of(timer, struct max77693_haptic_data, timer);
-	unsigned long flags;
 
 	hap_data->timeout = 0;
 	queue_work(hap_data->workqueue, &hap_data->work);
