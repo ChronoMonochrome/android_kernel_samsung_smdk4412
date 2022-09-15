@@ -40,7 +40,6 @@
 
 #include "modem.h"
 #include "modem_prj.h"
-#include "modem_variation.h"
 #include "modem_utils.h"
 
 #define CMD_SUSPEND	((unsigned short)(0x00CA))
