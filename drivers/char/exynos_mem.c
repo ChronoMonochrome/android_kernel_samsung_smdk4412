@@ -147,26 +147,6 @@ outer_cache_ops:
 	}
 }
 
-static void exynos_mem_paddr_cache_clean(dma_addr_t start, size_t length)
-{
-	if (length > (size_t) L2_FLUSH_ALL) {
-		flush_cache_all();		/* L1 */
-		smp_call_function((smp_call_func_t)__cpuc_flush_kern_all, NULL, 1);
-		outer_clean_all();		/* L2 */
-	} else if (length > (size_t) L1_FLUSH_ALL) {
-		dma_addr_t end = start + length - 1;
-
-		flush_cache_all();		/* L1 */
-		smp_call_function((smp_call_func_t)__cpuc_flush_kern_all, NULL, 1);
-		outer_clean_range(start, end);  /* L2 */
-	} else {
-		dma_addr_t end = start + length - 1;
-
-		dmac_flush_range(phys_to_virt(start), phys_to_virt(end));
-		outer_clean_range(start, end);	/* L2 */
-	}
-}
-
 long exynos_mem_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 {
 	switch (cmd) {
