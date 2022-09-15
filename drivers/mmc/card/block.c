@@ -995,7 +995,7 @@ static int mmc_blk_issue_secdiscard_rq(struct mmc_queue *mq,
 {
 	struct mmc_blk_data *md = mq->data;
 	struct mmc_card *card = md->queue.card;
-	unsigned int from, nr, arg;
+	unsigned int from = 0, nr = 0, arg = 0;
 	int err = 0, type = MMC_BLK_SECDISCARD;
 
 	if (!(mmc_can_secure_erase_trim(card) || mmc_can_sanitize(card))) {
@@ -2402,56 +2402,6 @@ static struct mmc_blk_data *mmc_blk_alloc(struct mmc_card *card)
 
 	md = mmc_blk_alloc_req(card, &card->dev, size, false, NULL);
 	return md;
-}
-
-static int mmc_blk_alloc_part(struct mmc_card *card,
-			      struct mmc_blk_data *md,
-			      unsigned int part_type,
-			      sector_t size,
-			      bool default_ro,
-			      const char *subname)
-{
-	char cap_str[10];
-	struct mmc_blk_data *part_md;
-
-	part_md = mmc_blk_alloc_req(card, disk_to_dev(md->disk), size, default_ro,
-				    subname);
-	if (IS_ERR(part_md))
-		return PTR_ERR(part_md);
-	part_md->part_type = part_type;
-	list_add(&part_md->part, &md->part);
-
-	string_get_size((u64)get_capacity(part_md->disk) << 9, STRING_UNITS_2,
-			cap_str, sizeof(cap_str));
-	printk(KERN_INFO "%s: %s %s partition %u %s\n",
-	       part_md->disk->disk_name, mmc_card_id(card),
-	       mmc_card_name(card), part_md->part_type, cap_str);
-	return 0;
-}
-
-static int mmc_blk_alloc_parts(struct mmc_card *card, struct mmc_blk_data *md)
-{
-	int ret = 0;
-
-	if (!mmc_card_mmc(card))
-		return 0;
-
-	if (card->ext_csd.boot_size) {
-		ret = mmc_blk_alloc_part(card, md, EXT_CSD_PART_CONFIG_ACC_BOOT0,
-					 card->ext_csd.boot_size >> 9,
-					 true,
-					 "boot0");
-		if (ret)
-			return ret;
-		ret = mmc_blk_alloc_part(card, md, EXT_CSD_PART_CONFIG_ACC_BOOT1,
-					 card->ext_csd.boot_size >> 9,
-					 true,
-					 "boot1");
-		if (ret)
-			return ret;
-	}
-
-	return ret;
 }
 
 static int

@@ -347,21 +347,6 @@ static void sdhci_s3c_vtf_on_off(int on_off)
 		gpio_set_value(gpio, 0);
 	}
 }
-
-
-static int sdhci_s3c_get_card_exist(struct sdhci_host *host)
-{
-	struct sdhci_s3c *sc;
-	int status;
-
-	sc = sdhci_priv(host);
-
-	status = gpio_get_value(sc->ext_cd_gpio);
-	if (sc->pdata->ext_cd_gpio_invert)
-		status = !status;
-
-	return status;
-}
 #endif
 
 static struct sdhci_ops sdhci_s3c_ops = {
