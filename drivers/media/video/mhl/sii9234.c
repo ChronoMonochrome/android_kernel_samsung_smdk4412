@@ -176,11 +176,9 @@ int en_irq;
 /*////////////////////     global value area     /////////////////////////////*/
 /*////////////////////////////////////////////////////////////////////////////*/
 
-#ifdef __MHL_NEW_CBUS_MSC_CMD__
 LIST_HEAD(g_msc_packet_list);
 static int g_list_cnt;
 static struct workqueue_struct *sii9234_msc_wq;
-#endif
 
 static struct cbus_packet cbus_pkt_buf[CBUS_PKT_BUF_COUNT];
 #ifdef __CONFIG_USE_TIMER__
@@ -199,9 +197,6 @@ static u8 sii9234_tmds_control(struct sii9234_data *sii9234, bool enable);
 #ifdef __CONFIG_TMDS_OFFON_WORKAROUND__
 static u8 sii9234_tmds_control2(struct sii9234_data *sii9234, bool enable);
 #endif
-static bool cbus_command_request(struct sii9234_data *sii9234,
-				 enum cbus_command command, u8 offset, u8 data);
-static void cbus_command_response(struct sii9234_data *sii9234);
 static irqreturn_t sii9234_irq_thread(int irq, void *data);
 
 static void goto_d3(void);
@@ -470,31 +465,6 @@ static int tpi_read_reg(struct sii9234_data *sii9234, unsigned int offset,
 	}
 
 	ret = i2c_smbus_read_byte(sii9234->pdata->tpi_client);
-	if (ret < 0) {
-		pr_err("[ERROR] sii9234 : %s(0x%02x)\n", __func__, offset);
-		return ret;
-	}
-
-	*value = ret & 0x000000FF;
-
-	return 0;
-}
-
-static int hdmi_rx_read_reg(struct sii9234_data *sii9234, unsigned int offset,
-			    u8 *value)
-{
-	int ret;
-
-	if (!value)
-		return -EINVAL;
-
-	ret = i2c_smbus_write_byte(sii9234->pdata->hdmi_rx_client, offset);
-	if (ret < 0) {
-		pr_err("[ERROR] sii9234 : %s(0x%02x)\n", __func__, offset);
-		return ret;
-	}
-
-	ret = i2c_smbus_read_byte(sii9234->pdata->hdmi_rx_client);
 	if (ret < 0) {
 		pr_err("[ERROR] sii9234 : %s(0x%02x)\n", __func__, offset);
 		return ret;
@@ -998,12 +968,8 @@ static void cbus_process_rcp_key(struct sii9234_data *sii9234, u8 key)
 		/* Report the key */
 		rcp_uevent_report(sii9234, key);
 		/* Send the RCP ack */
-#ifndef __MHL_NEW_CBUS_MSC_CMD__
-		cbus_command_request(sii9234, CBUS_MSC_MSG, MSG_RCPK, key);
-#else
 		sii9234_enqueue_msc_work(sii9234, CBUS_MSC_MSG,
 					 MSG_RCPK, key, 0x0);
-#endif
 	} else {
 		sii9234->error_key = key;
 		/*
@@ -1013,12 +979,8 @@ static void cbus_process_rcp_key(struct sii9234_data *sii9234, u8 key)
 		 * Ineffective key code was received.
 		 * See Table 21.(PRM)for details.
 		 */
-#ifndef __MHL_NEW_CBUS_MSC_CMD__
-		cbus_command_request(sii9234, CBUS_MSC_MSG, MSG_RCPE, 0x01);
-#else
 		sii9234_enqueue_msc_work(sii9234, CBUS_MSC_MSG, MSG_RCPE, 0x01,
 					 0x0);
-#endif
 	}
 }
 #endif
@@ -1030,11 +992,7 @@ static void cbus_process_rap_key(struct sii9234_data *sii9234, u8 key)
 	else if (CBUS_MSC_RAP_CONTENT_OFF == key)
 		sii9234_tmds_control(sii9234, false);
 
-#ifndef __MHL_NEW_CBUS_MSC_CMD__
-	cbus_command_request(sii9234, CBUS_MSC_MSG, MSG_RAPK, 0x00);
-#else
 	sii9234_enqueue_msc_work(sii9234, CBUS_MSC_MSG, MSG_RAPK, 0x00, 0x0);
-#endif
 }
 
 /*
@@ -1087,12 +1045,8 @@ static void cbus_handle_msc_msg(struct sii9234_data *sii9234)
 	default:
 		pr_debug("sii9234: MAC error\n");
 		sii9234_cbus_mutex_unlock(&sii9234->cbus_lock);
-#ifndef __MHL_NEW_CBUS_MSC_CMD__
-		cbus_command_request(sii9234, CBUS_GET_MSC_ERR_CODE, 0, 0);
-#else
 		sii9234_enqueue_msc_work(sii9234, CBUS_GET_MSC_ERR_CODE, 0, 0,
 					 0x0);
-#endif
 		return;
 	}
 	sii9234_cbus_mutex_unlock(&sii9234->cbus_lock);
@@ -1107,19 +1061,9 @@ void mhl_path_enable(struct sii9234_data *sii9234, bool path_en)
 		sii9234->mhl_status_value.linkmode |= MHL_STATUS_PATH_ENABLED;
 	else
 		sii9234->mhl_status_value.linkmode &= ~MHL_STATUS_PATH_ENABLED;
-#ifndef __MHL_NEW_CBUS_MSC_CMD__
-	cbus_command_request(sii9234, CBUS_WRITE_STAT, CBUS_LINK_CONTROL_2_REG,
-			     sii9234->mhl_status_value.linkmode);
-#else
 	sii9234_enqueue_msc_work(sii9234, CBUS_WRITE_STAT,
 				 CBUS_LINK_CONTROL_2_REG,
 				 sii9234->mhl_status_value.linkmode, 0x0);
-#endif
-}
-
-static void cbus_handle_wrt_burst_recd(struct sii9234_data *sii9234)
-{
-	pr_debug("sii9234: CBUS WRT_BURST_RECD\n");
 }
 
 static void cbus_handle_wrt_stat_recd(struct sii9234_data *sii9234)
@@ -1169,12 +1113,6 @@ static void cbus_handle_wrt_stat_recd(struct sii9234_data *sii9234)
 
 	if (status_reg0 & MHL_STATUS_DCAP_READY) {
 		pr_debug("sii9234: DEV CAP READY\n");
-#ifndef __MHL_NEW_CBUS_MSC_CMD__
-		cbus_command_request(sii9234, CBUS_READ_DEVCAP,
-				     DEVCAP_DEV_CAT, 0x00);
-		cbus_command_request(sii9234, CBUS_READ_DEVCAP,
-				     DEVCAP_DEV_FEATURE_FLAG, 0x00);
-#else
 		sii9234_enqueue_msc_work(sii9234, CBUS_READ_DEVCAP,
 					 DEVCAP_DEV_CAT, 0x00, 0x0);
 		sii9234_enqueue_msc_work(sii9234, CBUS_READ_DEVCAP,
@@ -1185,7 +1123,6 @@ static void cbus_handle_wrt_stat_recd(struct sii9234_data *sii9234)
 					 DEVCAP_DEVICE_ID_L, 0x0, 0x0);
 		sii9234_enqueue_msc_work(sii9234, CBUS_READ_DEVCAP,
 					 DEVCAP_RESERVED, 0x0, 0x0);
-#endif
 	}
 }
 
@@ -1203,28 +1140,13 @@ static void cbus_handle_set_int_recd(struct sii9234_data *sii9234)
 	pr_debug("sii9234: INTR_REG0 : [%d]; INTR_REG1 : [%d]\n",
 		 intr_reg0, intr_reg1);
 
-	if (intr_reg0 & MHL_INT_DCAP_CHG) {
-#ifndef __MHL_NEW_CBUS_MSC_CMD__
-		pr_debug("sii9234: MHL_INT_DCAP_CHG\n");
-		cbus_command_request(sii9234, CBUS_READ_DEVCAP,
-				     DEVCAP_DEV_CAT, 0x00);
-		cbus_command_request(sii9234, CBUS_READ_DEVCAP,
-				     DEVCAP_DEV_FEATURE_FLAG, 0x00);
-#endif
-	}
-
 	if (intr_reg0 & MHL_INT_DSCR_CHG)
 		pr_debug("sii9234:  MHL_INT_DSCR_CHG\n");
 
 	if (intr_reg0 & MHL_INT_REQ_WRT) {
 		pr_debug("sii9234:  MHL_INT_REQ_WRT\n");
-#ifndef __MHL_NEW_CBUS_MSC_CMD__
-		cbus_command_request(sii9234, CBUS_SET_INT,
-				     MHL_RCHANGE_INT, MHL_INT_GRT_WRT);
-#else
 		sii9234_enqueue_msc_work(sii9234, CBUS_SET_INT,
 					 MHL_RCHANGE_INT, MHL_INT_GRT_WRT, 0x0);
-#endif
 	}
 
 	if (intr_reg0 & MHL_INT_GRT_WRT)
@@ -1407,13 +1329,11 @@ static void sii9234_power_down(struct sii9234_data *sii9234)
 {
 	sii9234_disable_irq();
 
-#ifdef __MHL_NEW_CBUS_MSC_CMD__
 	if (sii9234->claimed) {
 		if (sii9234->pdata->vbus_present)
 			sii9234->pdata->vbus_present(false,
 						     sii9234->vbus_owner);
 	}
-#endif
 
 	sii9234->state = STATE_DISCONNECTED;
 	sii9234->claimed = false;
@@ -1655,7 +1575,6 @@ static void goto_d3(void)
 	return;
 }
 
-#ifdef __MHL_NEW_CBUS_MSC_CMD__
 void sii9234_process_msc_work(struct work_struct *work)
 {
 	u8 value;
@@ -1929,7 +1848,6 @@ static int sii9234_msc_req_locked(struct sii9234_data *sii9234,
 
 	return ret ? 0 : -EIO;
 }
-#endif				/* __MHL_NEW_CBUS_MSC_CMD__ end */
 
 static void sii9234_detection_callback_worker(struct work_struct *p)
 {
@@ -1962,14 +1880,9 @@ static void mhl_goto_d3_worker(struct work_struct *p)
 static void mhl_cbus_write_stat_worker(struct work_struct *p)
 {
 	struct sii9234_data *sii9234 = dev_get_drvdata(sii9244_mhldev);
-#ifndef __MHL_NEW_CBUS_MSC_CMD__
-	cbus_command_request(sii9234, CBUS_WRITE_STAT, CBUS_LINK_CONTROL_2_REG,
-			     sii9234->mhl_status_value.linkmode);
-#else
 	sii9234_enqueue_msc_work(sii9234, CBUS_WRITE_STAT,
 				 CBUS_LINK_CONTROL_2_REG,
 				 sii9234->mhl_status_value.linkmode, 0x0);
-#endif
 	return;
 }
 
@@ -1988,9 +1901,7 @@ static int sii9234_detection_callback(void)
 	sii9234->rgnd = RGND_UNKNOWN;
 	sii9234->state = STATE_DISCONNECTED;
 	sii9234->rsen = false;
-#ifdef __MHL_NEW_CBUS_MSC_CMD__
 	sii9234->dcap_ready_status = 0;
-#endif
 	memset(cbus_pkt_buf, 0x00, sizeof(cbus_pkt_buf));
 	ret = sii9234_power_init(sii9234);
 	if (ret < 0) {
@@ -2263,7 +2174,6 @@ static int sii9234_detection_callback(void)
 	if (ret < 0)
 		goto unhandled_nolock;
 
-#ifdef __MHL_NEW_CBUS_MSC_CMD__
 	ret = wait_event_timeout(sii9234->wq,
 				 sii9234->dcap_ready_status,
 				 msecs_to_jiffies(500));
@@ -2284,7 +2194,6 @@ static int sii9234_detection_callback(void)
 	/*send some data for VBUS SRC such a TA or USB or UNKNOWN */
 	if (sii9234->pdata->vbus_present)
 		sii9234->pdata->vbus_present(true, sii9234->vbus_owner);
-#endif
 
 	return handled;
 
@@ -2702,178 +2611,6 @@ static int sii9234_30pin_init_for_9290(struct sii9234_data *sii9234)
 }
 #endif				/* CONFIG_SAMSUNG_MHL_9290 */
 
-static void save_cbus_pkt_to_buffer(struct sii9234_data *sii9234)
-{
-	int index;
-
-	for (index = 0; index < CBUS_PKT_BUF_COUNT; index++)
-		if (sii9234->cbus_pkt_buf[index].status == false)
-			break;
-
-	if (index == CBUS_PKT_BUF_COUNT) {
-		pr_debug("sii9234: Error save_cbus_pkt Buffer Full\n");
-		index -= 1;	/*adjust index */
-	}
-
-	pr_debug("sii9234: save_cbus_pkt_to_buffer index = %d\n", index);
-	memcpy(&sii9234->cbus_pkt_buf[index], &sii9234->cbus_pkt,
-	       sizeof(struct cbus_packet));
-	sii9234->cbus_pkt_buf[index].status = true;
-}
-
-static void cbus_command_response(struct sii9234_data *sii9234)
-{
-	u8 value, offset = 0;
-
-	sii9234_cbus_mutex_lock(&sii9234->cbus_lock);
-	pr_debug("sii9234: cbus_command_response\n");
-
-	switch (sii9234->cbus_pkt.command) {
-	case CBUS_MSC_MSG:
-		pr_debug("sii9234: cbus_command_response Received"
-			 " ACK for CBUS_MSC_MSG\n");
-#ifdef CONFIG_SII9234_RCP
-		if (sii9234->cbus_pkt.data[0] == MSG_RCPE &&
-		    sii9234->cbus_pkt.data[1] == 0x01) {
-			sii9234->cbus_pkt.command = CBUS_IDLE;
-			sii9234_cbus_mutex_unlock(&sii9234->cbus_lock);
-			cbus_command_request(sii9234, CBUS_MSC_MSG, MSG_RCPK,
-					     sii9234->error_key);
-			return;
-		}
-#endif
-		break;
-	case CBUS_WRITE_STAT:
-		pr_debug("sii9234: cbus_command_response" "CBUS_WRITE_STAT\n");
-		cbus_read_reg(sii9234, CBUS_MSC_FIRST_DATA_IN_REG,
-			      &sii9234->cbus_pkt.data[0]);
-		break;
-	case CBUS_SET_INT:
-		pr_debug("sii9234: cbus_command_response CBUS_SET_INT\n");
-		if (sii9234->cbus_pkt.offset == MHL_RCHANGE_INT &&
-		    sii9234->cbus_pkt.data[0] == MHL_INT_DSCR_CHG) {
-			/*Write burst final step... Req->GRT->Write->DSCR */
-			pr_debug("sii9234: MHL_RCHANGE_INT &"
-				 "MHL_INT_DSCR_CHG\n");
-		} else if (sii9234->cbus_pkt.offset == MHL_RCHANGE_INT &&
-			   sii9234->cbus_pkt.data[0] == MHL_INT_DCAP_CHG) {
-			pr_debug("sii9234: MHL_RCHANGE_INT &"
-				 "MHL_INT_DCAP_CHG\n");
-			sii9234->cbus_pkt.command = CBUS_IDLE;
-			sii9234_cbus_mutex_unlock(&sii9234->cbus_lock);
-			cbus_command_request(sii9234, CBUS_WRITE_STAT,
-					     MHL_STATUS_REG_CONNECTED_RDY,
-					     MHL_STATUS_DCAP_READY);
-			return;
-		}
-		break;
-	case CBUS_WRITE_BURST:
-		pr_debug("sii9234: cbus_command_response" "MHL_WRITE_BURST\n");
-		sii9234->cbus_pkt.command = CBUS_IDLE;
-		sii9234_cbus_mutex_unlock(&sii9234->cbus_lock);
-		cbus_command_request(sii9234, CBUS_SET_INT,
-				     MHL_RCHANGE_INT, MHL_INT_DSCR_CHG);
-		return;
-	case CBUS_READ_DEVCAP:
-		pr_debug("sii9234: cbus_command_response"
-			 " CBUS_READ_DEVCAP\n");
-		cbus_read_reg(sii9234, CBUS_MSC_FIRST_DATA_IN_REG, &value);
-		switch (sii9234->cbus_pkt.offset) {
-		case DEVCAP_MHL_VERSION:
-			sii9234->devcap.mhl_ver = value;
-			pr_debug("sii9234: MHL_VERSION: %X\n", value);
-			break;
-		case DEVCAP_DEV_CAT:
-			if (value & MHL_DEV_CATEGORY_POW_BIT)
-				pr_debug("sii9234: CAT=POWERED");
-			else
-				pr_debug("sii9234: CAT=UNPOWERED");
-			break;
-		case DEVCAP_ADOPTER_ID_H:
-			sii9234->devcap.adopter_id = (value & 0xFF) << 0x8;
-			pr_debug("sii9234: DEVCAP_ADOPTER_ID_H = %X\n", value);
-			break;
-		case DEVCAP_ADOPTER_ID_L:
-			sii9234->devcap.adopter_id |= value & 0xFF;
-			pr_debug("sii9234: DEVCAP_ADOPTER_ID_L = %X\n", value);
-			break;
-		case DEVCAP_VID_LINK_MODE:
-			sii9234->devcap.vid_link_mode = 0x3F & value;
-			pr_debug("sii9234: MHL_CAP_VID_LINK_MODE = %d\n",
-				 sii9234->devcap.vid_link_mode);
-			break;
-		case DEVCAP_AUD_LINK_MODE:
-			sii9234->devcap.aud_link_mode = 0x03 & value;
-			pr_debug("sii9234: DEVCAP_AUD_LINK_MODE =%d\n",
-				 sii9234->devcap.aud_link_mode);
-			break;
-		case DEVCAP_VIDEO_TYPE:
-			sii9234->devcap.video_type = 0x8F & value;
-			pr_debug("sii9234: DEVCAP_VIDEO_TYPE =%d\n",
-				 sii9234->devcap.video_type);
-			break;
-		case DEVCAP_LOG_DEV_MAP:
-			sii9234->devcap.log_dev_map = value;
-			pr_debug("sii9234: DEVCAP_LOG_DEV_MAP =%d\n",
-				 sii9234->devcap.log_dev_map);
-			break;
-		case DEVCAP_BANDWIDTH:
-			sii9234->devcap.bandwidth = value;
-			pr_debug("sii9234: DEVCAP_BANDWIDTH =%d\n",
-				 sii9234->devcap.bandwidth);
-			break;
-		case DEVCAP_DEV_FEATURE_FLAG:
-			if ((value & MHL_FEATURE_RCP_SUPPORT) == 0)
-				pr_debug("sii9234: FEATURE_FLAG=RCP");
-
-			if ((value & MHL_FEATURE_RAP_SUPPORT) == 0)
-				pr_debug("sii9234: FEATURE_FLAG=RAP\n");
-
-			if ((value & MHL_FEATURE_SP_SUPPORT) == 0)
-				pr_debug("sii9234: FEATURE_FLAG=SP\n");
-			break;
-		case DEVCAP_DEVICE_ID_H:
-			sii9234->devcap.device_id = (value & 0xFF) << 0x8;
-			pr_info("sii9234: DEVICE_ID_H=0x%x\n", value);
-			offset = DEVCAP_DEVICE_ID_L;
-			break;
-		case DEVCAP_DEVICE_ID_L:
-			sii9234->devcap.device_id |= value & 0xFF;
-			pr_info("sii9234: DEVICE_ID_L=0x%x\n", value);
-			break;
-		case DEVCAP_SCRATCHPAD_SIZE:
-			sii9234->devcap.scratchpad_size = value;
-			pr_debug("sii9234: DEVCAP_SCRATCHPAD_SIZE =%d\n",
-				 sii9234->devcap.scratchpad_size);
-			break;
-		case DEVCAP_INT_STAT_SIZE:
-			sii9234->devcap.int_stat_size = value;
-			pr_debug("sii9234: DEVCAP_INT_STAT_SIZE =%d\n",
-				 sii9234->devcap.int_stat_size);
-			break;
-		case DEVCAP_RESERVED:
-			pr_info("sii9234: DEVCAP_RESERVED : %d\n", value);
-			break;
-		case DEVCAP_DEV_STATE:
-			pr_debug("sii9234: DEVCAP_DEV_STATE\n");
-			break;
-		default:
-			pr_debug("sii9234: DEVCAP DEFAULT\n");
-			break;
-		}
-
-		break;
-	default:
-		pr_debug("sii9234: error: cbus_command_response"
-			 "cannot handle...\n");
-	}
-
-	sii9234->cbus_pkt.command = CBUS_IDLE;
-	sii9234_cbus_mutex_unlock(&sii9234->cbus_lock);
-
-	if (offset)
-		cbus_command_request(sii9234, CBUS_READ_DEVCAP, offset, 0x00);
-}
 
 #ifdef DEBUG_MHL
 static void cbus_command_response_dbg_msg(struct sii9234_data *sii9234,
@@ -2898,119 +2635,6 @@ static void cbus_command_response_dbg_msg(struct sii9234_data *sii9234,
 		sii9234->cbus_pkt_buf[index].offset, sii9234->cbus_pkt.offset);
 }
 #endif
-
-static void cbus_command_response_all(struct sii9234_data *sii9234)
-{
-	u8 index;
-	struct cbus_packet cbus_pkt_process_buf[CBUS_PKT_BUF_COUNT];
-
-	/*take bkp of cbus_pkt_buf */
-	memcpy(cbus_pkt_process_buf, sii9234->cbus_pkt_buf,
-	       sizeof(cbus_pkt_process_buf));
-
-	/*clear cbus_pkt_buf  to hold next request */
-	memset(sii9234->cbus_pkt_buf, 0x00, sizeof(sii9234->cbus_pkt_buf));
-
-	/*process all previous requests */
-	for (index = 0; index < CBUS_PKT_BUF_COUNT; index++) {
-		if (cbus_pkt_process_buf[index].status == true) {
-			memcpy(&sii9234->cbus_pkt, &cbus_pkt_process_buf[index],
-			       sizeof(struct cbus_packet));
-			cbus_command_response(sii9234);
-#ifdef DEBUG_MHL
-			/*print cbus_cmd messg */
-			cbus_command_response_dbg_msg(sii9234, index);
-#endif
-		}
-	}
-}
-
-static bool cbus_command_request(struct sii9234_data *sii9234,
-				 enum cbus_command command, u8 offset, u8 data)
-{
-	u8 start_bit = 0;
-
-	sii9234_cbus_mutex_lock(&sii9234->cbus_lock);
-	if (sii9234->state != STATE_ESTABLISHED) {
-		pr_debug("sii9234: cbus_command_request without establish\n");
-		pr_debug("sii9234: ==> command:0x%X, offset:0x%X",
-			 command, offset);
-		sii9234_cbus_mutex_unlock(&sii9234->cbus_lock);
-		return -EINVAL;
-	}
-
-	sii9234->cbus_pkt.command = command;
-	sii9234->cbus_pkt.offset = offset;
-
-	if (command == CBUS_MSC_MSG)
-		sii9234->cbus_pkt.data[0] = offset;
-	else
-		sii9234->cbus_pkt.data[0] = data;
-
-	pr_debug("sii9234: cbus_command_request Sending MSC_MSG SubCommand=%d"
-		 ",key-code=%d\n", sii9234->cbus_pkt.offset,
-		 sii9234->cbus_pkt.data[0]);
-
-	cbus_write_reg(sii9234, CBUS_MSC_OFFSET_REG, sii9234->cbus_pkt.offset);
-	cbus_write_reg(sii9234, CBUS_MSC_FIRST_DATA_OUT_REG,
-		       sii9234->cbus_pkt.data[0]);
-
-	switch (sii9234->cbus_pkt.command) {
-	case CBUS_SET_INT:
-		pr_debug("sii9234: cbus_command_request" "CBUS_SET_INT\n");
-		start_bit = START_BIT_WRITE_STAT_INT;
-		break;
-	case CBUS_WRITE_STAT:
-		pr_debug("sii9234: cbus_command_request" "CBUS_WRITE_STAT\n");
-		start_bit = START_BIT_WRITE_STAT_INT;
-		break;
-	case CBUS_MSC_MSG:
-		/*treat offset as data[0] in case of CBUS_MSC_MSG */
-		sii9234->cbus_pkt.data[0] = offset;
-		sii9234->cbus_pkt.data[1] = data;
-		pr_debug("sii9234: cbus_command_request CBUS_MSC_MSG"
-			 "SubCommand=%d,key-code=%d\n",
-			 sii9234->cbus_pkt.data[0], sii9234->cbus_pkt.data[1]);
-
-		cbus_write_reg(sii9234, CBUS_MSC_SECOND_DATA_OUT_REG,
-			       sii9234->cbus_pkt.data[1]);
-		cbus_write_reg(sii9234, CBUS_MSC_OFFSET_REG,
-			       sii9234->cbus_pkt.command);
-		start_bit = START_BIT_MSC_MSG;
-		break;
-	case CBUS_READ_DEVCAP:
-		pr_debug("sii9234: cbus_command_request CBUS_READ_DEVCAP\n");
-		start_bit = START_BIT_READ_DEVCAP;
-		break;
-	case CBUS_WRITE_BURST:
-		pr_debug("sii9234: cbus_command_request CBUS_WRITE_BURST\n");
-		start_bit = START_BIT_WRITE_BURST;
-		break;
-	case CBUS_GET_STATE:
-	case CBUS_GET_VENDOR_ID:
-	case CBUS_SET_HPD:
-	case CBUS_CLR_HPD:
-	case CBUS_GET_MSC_ERR_CODE:
-	case CBUS_GET_SC3_ERR_CODE:
-	case CBUS_GET_SC1_ERR_CODE:
-	case CBUS_GET_DDC_ERR_CODE:
-		cbus_write_reg(sii9234, CBUS_MSC_OFFSET_REG,
-			       sii9234->cbus_pkt.command);
-		start_bit = START_BIT_MSC_RESERVED;
-		break;
-	default:
-		pr_debug("sii9234: error send cbus command fail\n");
-		sii9234_cbus_mutex_unlock(&sii9234->cbus_lock);
-		return false;
-	}
-
-	pr_debug("sii9234: startbit = %d\n", start_bit);
-	cbus_write_reg(sii9234, CBUS_MSC_COMMAND_START_REG, start_bit);
-	save_cbus_pkt_to_buffer(sii9234);
-	sii9234_cbus_mutex_unlock(&sii9234->cbus_lock);
-
-	return true;
-}
 
 #ifdef __CONFIG_TMDS_OFFON_WORKAROUND__
 static u8 sii9234_tmds_control(struct sii9234_data *sii9234, bool enable)
@@ -3361,14 +2985,9 @@ static irqreturn_t sii9234_irq_thread(int irq, void *data)
 
 		sii9234->state = STATE_ESTABLISHED;
 
-#ifndef __MHL_NEW_CBUS_MSC_CMD__
-		cbus_command_request(sii9234, CBUS_SET_INT,
-				     MHL_RCHANGE_INT, MHL_INT_DCAP_CHG);
-#else
 		sii9234_enqueue_msc_work(sii9234, CBUS_SET_INT,
 					 MHL_RCHANGE_INT, MHL_INT_DCAP_CHG,
 					 0x0);
-#endif
 
 		ret = mhl_tx_write_reg(sii9234, MHL_TX_INTR1_ENABLE_REG,
 				       RSEN_CHANGE_INT_MASK |
@@ -3402,19 +3021,12 @@ static irqreturn_t sii9234_irq_thread(int irq, void *data)
 				cbus_command_abort_state = 0;
 			} else
 #endif
-#ifndef __MHL_NEW_CBUS_MSC_CMD__
-				cbus_command_request(sii9234, CBUS_WRITE_STAT,
-						CBUS_LINK_CONTROL_2_REG,
-						sii9234->mhl_status_value.
-						linkmode);
-#else
 				sii9234_enqueue_msc_work(sii9234,
 						CBUS_WRITE_STAT,
 						CBUS_LINK_CONTROL_2_REG,
 						sii9234->
 						mhl_status_value.
 						linkmode, 0x0);
-#endif
 			/* Enable TMDS */
 			sii9234_tmds_control(sii9234, true);
 			/*turn on&off hpd festure for only QCT HDMI */
@@ -3519,11 +3131,7 @@ static irqreturn_t sii9234_irq_thread(int irq, void *data)
 
 		if (cbus_intr1 & MSC_REQ_DONE) {
 			pr_debug("sii9234: CBUS cmd ACK Received\n");
-#ifndef __MHL_NEW_CBUS_MSC_CMD__
-			cbus_resp_callback = cbus_command_response_all;
-#else
 			complete(&sii9234->msc_complete);
-#endif
 		}
 #ifdef CONFIG_SII9234_RCP
 		if (cbus_intr1 & MSC_MSG_RECD) {
@@ -3648,84 +3256,6 @@ static ssize_t sysfs_check_factory_store(struct class *class,
 static CLASS_ATTR(test_result, 0664, sysfs_check_mhl_command,
 		sysfs_check_factory_store);
 #endif /*__CONFIG_SS_FACTORY__*/
-
-static ssize_t sysfs_mhl_read_reg_show(struct device *dev,
-				       struct device_attribute *attr, char *buf)
-{
-	pr_info("sii9234: %s()\n", __func__);
-	return sprintf(buf, "sysfs_mhl_read_reg_show\n");
-}
-
-static ssize_t sysfs_mhl_read_reg_store(struct device *dev,
-					struct device_attribute *attr,
-					const char *buf, size_t size)
-{
-	struct sii9234_data *sii9234 = dev_get_drvdata(sii9244_mhldev);
-	enum page_num pn;
-	unsigned int offset;
-	int ret;
-	u8 value = 0;
-	char dest[10];
-	char *buffer = (char *)buf;
-	char *token;
-
-	if (size > 10) {
-		pr_info("sii9234: Error : Unsupported format\n");
-		return size;
-	}
-
-	if (strnicmp(buf, "mhl", 3) == 0) {
-		printk(KERN_INFO "sii9234: %s() - mhl start\n", __func__);
-		schedule_work(&sii9234->mhl_restart_work);
-	}
-
-	token = strsep(&buffer, ":");
-	if (token != NULL)
-		strcpy(dest, token);
-	else {
-		pr_info("sii9234: Error: command parsing error\n");
-		return size;
-	}
-
-	ret = kstrtouint(dest, 0, &offset);
-	if (ret != 0) {
-		pr_info("sii9234: Error : Page number\n");
-		return size;
-	}
-	pn = (enum page_num)offset;
-
-	strcpy(dest, buffer);
-	ret = kstrtouint(dest, 0, &offset);
-	if (ret || offset > 0xff) {
-		pr_info("sii9234: Error : Offset number\n");
-		return size;
-	}
-
-	switch (pn) {
-	case PAGE0:
-		mhl_tx_read_reg(sii9234, offset, &value);
-		break;
-	case PAGE1:
-		tpi_read_reg(sii9234, offset, &value);
-		break;
-	case PAGE2:
-		hdmi_rx_read_reg(sii9234, offset, &value);
-		break;
-	case PAGE3:
-		cbus_read_reg(sii9234, offset, &value);
-		break;
-	default:
-		pr_info("\nsii9234: Error : Out of the page number range\n");
-		return size;
-	}
-	pr_info("sii9234: MHL register Page%d:0x%02x = 0x%02x\n", pn, offset,
-		value);
-
-	return size;
-}
-
-static DEVICE_ATTR(mhl_read_reg, S_IRUGO | S_IWUSR,
-		   sysfs_mhl_read_reg_show, sysfs_mhl_read_reg_store);
 
 #ifdef __CONFIG_MHL_DEBUG__
 module_param_named(mhl_dbg_flag, mhl_dbg_flag, uint, 0644);
@@ -3944,7 +3474,6 @@ static int __devinit sii9234_mhl_tx_i2c_probe(struct i2c_client *client,
 #endif
 	if (sii9234->pdata->swing_level == 0)
 		sii9234->pdata->swing_level = 0xEB;
-#ifdef __MHL_NEW_CBUS_MSC_CMD__
 	sii9234_msc_wq = create_singlethread_workqueue("sii9234_msc_wq");
 	if (!sii9234_msc_wq) {
 		printk(KERN_ERR
@@ -3953,7 +3482,6 @@ static int __devinit sii9234_mhl_tx_i2c_probe(struct i2c_client *client,
 		goto	err_msc_wq;
 	}
 	INIT_WORK(&sii9234->msc_work, sii9234_process_msc_work);
-#endif
 
 #ifdef __CONFIG_TMDS_OFFON_WORKAROUND__
 	sii9234_tmds_offon_wq =
@@ -4085,7 +3613,6 @@ err_extcon:
 #ifdef __CONFIG_MHL_SWING_LEVEL__
 	class_remove_file(sec_mhl, &class_attr_swing);
 #endif
- err_exit2b:
 #ifdef __CONFIG_SS_FACTORY__
 	class_remove_file(sec_mhl, &class_attr_test_result);
 #endif
@@ -4100,10 +3627,8 @@ err_tmds_offon_wq:
 	destroy_workqueue(sii9234_tmds_offon_wq);
 #endif
 
-#ifdef __MHL_NEW_CBUS_MSC_CMD__
 err_msc_wq:
 	destroy_workqueue(sii9234_msc_wq);
-#endif
 
 err_exit1:
 #ifdef CONFIG_SII9234_RCP

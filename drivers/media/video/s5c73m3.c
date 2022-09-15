@@ -227,19 +227,6 @@ static int s5c73m3_i2c_write(struct v4l2_subdev *sd,
 	return err;
 }
 
-static int s5c73m3_i2c_write_block(struct v4l2_subdev *sd,
-	const u32 regs[], int size)
-{
-	int i, err = 0;
-
-	for (i = 0; i < size; i++) {
-		err = s5c73m3_i2c_write(sd, (regs[i]>>16), regs[i]);
-		CHECK_ERR(err);
-	}
-
-	return err;
-}
-
 static int s5c73m3_i2c_read(struct v4l2_subdev *sd,
 	unsigned short addr, unsigned short *data)
 {
@@ -1132,79 +1119,6 @@ static int s5c73m3_update_camerafw_to_FROM(struct v4l2_subdev *sd)
 		return -1;
 	else
 		return 0;
-}
-
-static int s5c73m3_SPI_booting_by_ISP(struct v4l2_subdev *sd)
-{
-	u16 read_val;
-	int i;
-	int err = 0;
-
-	/*ARM go*/
-	err = s5c73m3_write(sd, 0x3000, 0x0004, 0xFFFF);
-	CHECK_ERR(err);
-
-	udelay(400);
-
-	/*Check boot done*/
-	for (i = 0; i < 3; i++) {
-		err = s5c73m3_read(sd, 0x3010, 0x0010, &read_val);
-		CHECK_ERR(err);
-
-		if (read_val == 0x0C)
-			break;
-
-		udelay(100);
-	}
-
-	if (read_val != 0x0C) {
-		cam_err("boot fail, read_val %#x\n", read_val);
-		return -1;
-	}
-
-	/* Change I/O Driver Current in order to read from F-ROM */
-	err = s5c73m3_write(sd, 0x3010, 0x0120, 0x0820);
-	CHECK_ERR(err);
-	err = s5c73m3_write(sd, 0x3010, 0x0124, 0x0820);
-	CHECK_ERR(err);
-
-	/*P,M,S and Boot Mode*/
-	err = s5c73m3_write(sd, 0x3010, 0x0014, 0x2146);
-	CHECK_ERR(err);
-	err = s5c73m3_write(sd, 0x3010, 0x0010, 0x230C);
-	CHECK_ERR(err);
-
-	udelay(200);
-
-	/*Check SPI ready*/
-	for (i = 0; i < 300; i++) {
-		err = s5c73m3_read(sd, 0x3010, 0x0010, &read_val);
-		CHECK_ERR(err);
-
-		if (read_val == 0x230E)
-			break;
-
-		udelay(100);
-	}
-
-	if (read_val != 0x230E) {
-		cam_err("SPI not ready, read_val %#x\n", read_val);
-		return -1;
-	}
-
-	/*ARM reset*/
-	err = s5c73m3_write(sd, 0x3000, 0x0004, 0xFFFD);
-	CHECK_ERR(err);
-
-	/*remap*/
-	err = s5c73m3_write(sd, 0x3010, 0x00A4, 0x0183);
-	CHECK_ERR(err);
-
-	/*ARM go*/
-	err = s5c73m3_write(sd, 0x3000, 0x0004, 0xFFFF);
-	CHECK_ERR(err);
-
-	return err;
 }
 
 static int s5c73m3_check_fw_date(struct v4l2_subdev *sd)
@@ -3172,88 +3086,6 @@ static int s5c73m3_s_stream(struct v4l2_subdev *sd, int enable)
 static int s5c73m3_init_param(struct v4l2_subdev *sd)
 {
 	s5c73m3_set_flash(sd, FLASH_MODE_OFF, 0);
-	return 0;
-}
-
-static int s5c73m3_FROM_booting(struct v4l2_subdev *sd)
-{
-	u16 read_val;
-	int i, err;
-
-	cam_trace("E\n");
-
-	/*ARM go*/
-	err = s5c73m3_write(sd, 0x3000, 0x0004, 0xFFFF);
-	CHECK_ERR(err);
-
-	udelay(400);
-
-	/*Check boot done*/
-	for (i = 0; i < 4; i++) {
-		err = s5c73m3_read(sd, 0x3010, 0x0010, &read_val);
-		CHECK_ERR(err);
-
-		if (read_val == 0x0C)
-			break;
-
-		udelay(100);
-	}
-
-	if (read_val != 0x0C) {
-		cam_err("boot fail, read_val %#x\n", read_val);
-		return -1;
-	}
-
-       /*P,M,S and Boot Mode*/
-	err = s5c73m3_write(sd, 0x3100, 0x010C, 0x0044);
-	CHECK_ERR(err);
-	err = s5c73m3_write(sd, 0x3100, 0x0108, 0x000D);
-	CHECK_ERR(err);
-	err = s5c73m3_write(sd, 0x3100, 0x0304, 0x0001);
-	CHECK_ERR(err);
-	err = s5c73m3_write(sd, 0x0001, 0x0000, 0x5800);
-	CHECK_ERR(err);
-	err = s5c73m3_write(sd, 0x0001, 0x0002, 0x0002);
-	CHECK_ERR(err);
-	err = s5c73m3_write(sd, 0x3100, 0x0000, 0x0001);
-	CHECK_ERR(err);
-	err = s5c73m3_write(sd, 0x3010, 0x0014, 0x1B85);
-	CHECK_ERR(err);
-	err = s5c73m3_write(sd, 0x3010, 0x0010, 0x230C);
-	CHECK_ERR(err);
-
-	mdelay(300);
-
-	/*Check binary read done*/
-	for (i = 0; i < 3; i++) {
-		err = s5c73m3_read(sd, 0x3010, 0x0010, &read_val);
-		CHECK_ERR(err);
-
-		if (read_val == 0x230E)
-			break;
-
-		udelay(100);
-	}
-
-	if (read_val != 0x230E) {
-		cam_err("binary read fail, read_val %#x\n", read_val);
-		return -1;
-	}
-
-	/*ARM reset*/
-	err = s5c73m3_write(sd, 0x3000, 0x0004, 0xFFFD);
-	CHECK_ERR(err);
-
-	/*remap*/
-	err = s5c73m3_write(sd, 0x3010, 0x00A4, 0x0183);
-	CHECK_ERR(err);
-
-	/*ARM go again*/
-	err = s5c73m3_write(sd, 0x3000, 0x0004, 0xFFFF);
-	CHECK_ERR(err);
-
-	cam_trace("X\n");
-
 	return 0;
 }
 

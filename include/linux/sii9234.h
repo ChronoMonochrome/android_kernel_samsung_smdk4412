@@ -15,13 +15,6 @@
 #ifndef _SII9234_H_
 #define _SII9234_H_
 
-#ifndef __MHL_NEW_CBUS_MSC_CMD__
-#define	__MHL_NEW_CBUS_MSC_CMD__
-/*
- * Read DCAP for distinguish TA and USB
- */
-#endif
-
 #ifdef __KERNEL__
 struct sii9234_platform_data {
 	u8 power_state;
@@ -33,11 +26,7 @@ struct sii9234_platform_data {
 	void (*hw_onoff)(bool on);
 	void (*hw_reset)(void);
 	void (*enable_vbus)(bool enable);
-#if defined(__MHL_NEW_CBUS_MSC_CMD__)
 	void (*vbus_present)(bool on, int value);
-#else
-	void (*vbus_present)(bool on);
-#endif
 #ifdef CONFIG_SAMSUNG_MHL_UNPOWERED
 	int (*get_vbus_status)(void);
 	void (*sii9234_otg_control)(bool onoff);
@@ -55,10 +44,8 @@ struct sii9234_platform_data {
 extern u8 mhl_onoff_ex(bool onoff);
 #endif
 
-#if defined(__MHL_NEW_CBUS_MSC_CMD__)
 #if defined(CONFIG_MFD_MAX77693)
 extern void max77693_muic_usb_cb(u8 usb_mode);
-#endif
 #endif
 
 #ifdef	CONFIG_SAMSUNG_WORKAROUND_HPD_GLANCE

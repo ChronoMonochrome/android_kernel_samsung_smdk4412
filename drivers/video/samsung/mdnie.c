@@ -96,7 +96,7 @@
 #endif
 
 #define SCENARIO_IS_COLOR(scenario)	\
-	((scenario >= COLOR_TONE_1) && (scenario < COLOR_TONE_MAX))
+	((scenario >= (enum SCENARIO)COLOR_TONE_1) && (scenario < (enum SCENARIO)COLOR_TONE_MAX))
 
 #if defined(CONFIG_TDMB) || defined(CONFIG_TARGET_LOCALE_NTT)
 #define SCENARIO_IS_DMB(scenario)	\

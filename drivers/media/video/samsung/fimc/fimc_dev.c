@@ -905,7 +905,7 @@ int fimc_mmap_own_mem(struct file *filp, struct vm_area_struct *vma)
 	struct fimc_control *ctrl = prv_data->ctrl;
 	u32 start_phy_addr = 0;
 	u32 size = vma->vm_end - vma->vm_start;
-	u32 pfn, idx = vma->vm_pgoff;
+	u32 pfn;
 	u32 buf_length = 0;
 
 	buf_length = ctrl->mem.size;
@@ -1018,23 +1018,7 @@ int fimc_mmap_out_dst(struct file *filp, struct vm_area_struct *vma, u32 idx)
 
 static inline int fimc_mmap_out(struct file *filp, struct vm_area_struct *vma)
 {
-	struct fimc_prv_data *prv_data =
-				(struct fimc_prv_data *)filp->private_data;
-	struct fimc_control *ctrl = prv_data->ctrl;
-	int ctx_id = prv_data->ctx_id;
-	int idx = ctrl->out->ctx[ctx_id].overlay.req_idx;
-	int ret = -1;
-
-#if 0
-	if (idx >= 0)
-		ret = fimc_mmap_out_dst(filp, vma, idx);
-	else if (idx == FIMC_MMAP_IDX)
-		ret = fimc_mmap_out_src(filp, vma);
-#else
-	ret = fimc_mmap_own_mem(filp, vma);
-#endif
-
-	return ret;
+	return fimc_mmap_own_mem(filp, vma);
 }
 
 static inline int fimc_mmap_cap(struct file *filp, struct vm_area_struct *vma)
@@ -1632,9 +1616,6 @@ static int fimc_release(struct file *filp)
 	struct mm_struct *mm = current->mm;
 	struct fimc_ctx *ctx;
 	int ret = 0, i;
-#if (defined(CONFIG_EXYNOS_DEV_PD) && defined(CONFIG_PM_RUNTIME))
-	struct platform_device *pdev = to_platform_device(ctrl->dev);
-#endif
 
 	ctx = &ctrl->out->ctx[ctx_id];
 

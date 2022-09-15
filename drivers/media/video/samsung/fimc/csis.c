@@ -230,7 +230,6 @@ void s3c_csis_start(int csis_id, int lanes, int settle, int align, int width, \
 {
 	struct platform_device *pdev = NULL;
 	struct s3c_platform_csis *pdata = NULL;
-	int i;
 
 	printk(KERN_INFO "csis width = %d, height = %d\n", width, height);
 
@@ -301,7 +300,6 @@ static irqreturn_t s3c_csis_irq(int irq, void *dev_id)
 	u32 cfg;
 
 	struct platform_device *pdev = (struct platform_device *) dev_id;
-	int bufnum = 0;
 	/* just clearing the pends */
 	cfg = readl(s3c_csis[pdev->id]->regs + S3C_CSIS_INTSRC);
 	writel(cfg, s3c_csis[pdev->id]->regs + S3C_CSIS_INTSRC);

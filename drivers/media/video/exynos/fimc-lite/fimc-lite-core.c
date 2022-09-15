@@ -2132,7 +2132,6 @@ err_vfd_alloc:
 	media_entity_cleanup(&flite->vfd->entity);
 	video_device_release(flite->vfd);
 #endif
-err_device_register:
 	kfree(sd);
 err_irq:
 	free_irq(flite->irq, flite);
@@ -2140,7 +2139,6 @@ err_reg_unmap:
 	iounmap(flite->regs);
 err_reg_region:
 	release_mem_region(regs_res->start, resource_size(regs_res));
-err_resource:
 	release_resource(regs_res);
 	kfree(regs_res);
 err_flite:

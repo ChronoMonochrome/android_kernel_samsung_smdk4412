@@ -84,7 +84,6 @@ static ssize_t hdmi_set_audio_read(struct device *dev,
 static ssize_t hdmi_set_audio_store(struct device *dev,
 	struct device_attribute *attr, const char *buf, size_t size)
 {
-	char *after;
 	bool value = !strncmp(buf, "1", 1) ? true : false;
 
 	printk(KERN_ERR "[HDMI] Change AUDIO PATH: %d\n", (int)value);
@@ -282,12 +281,9 @@ static CLASS_ATTR(dbg_msg, S_IRUGO | S_IWUSR,
 static int __devinit s5p_tvout_probe(struct platform_device *pdev)
 {
 #if defined(CONFIG_S5P_MEM_CMA)
-	struct cma_info mem_info;
-	int ret;
 #elif defined(CONFIG_S5P_MEM_BOOTMEM)
 	int mdev_id;
 #endif
-	unsigned int vp_buff_vir_addr;
 	unsigned int vp_buff_phy_addr = 0;
 	int i;
 
@@ -470,7 +466,6 @@ static int __devinit s5p_tvout_probe(struct platform_device *pdev)
 err_sysfs:
 	class_destroy(sec_tvout);
 err_class:
-err_ioremap:
 #if defined(CONFIG_S5P_MEM_CMA)
 	cma_free(vp_buff_phy_addr);
 #endif
