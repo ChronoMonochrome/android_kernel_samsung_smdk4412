@@ -675,7 +675,7 @@ struct Qdisc *dev_graft_qdisc(struct netdev_queue *dev_queue,
 	if (qdisc == NULL)
 		qdisc = &noop_qdisc;
 	dev_queue->qdisc_sleeping = qdisc;
-	rcu_assign_pointer(dev_queue->qdisc, &noop_qdisc);
+	RCU_INIT_POINTER(dev_queue->qdisc, &noop_qdisc);
 
 	spin_unlock_bh(root_lock);
 
@@ -730,7 +730,7 @@ static void transition_one_qdisc(struct net_device *dev,
 	if (!(new_qdisc->flags & TCQ_F_BUILTIN))
 		clear_bit(__QDISC_STATE_DEACTIVATED, &new_qdisc->state);
 
-	rcu_assign_pointer(dev_queue->qdisc, new_qdisc);
+	RCU_INIT_POINTER(dev_queue->qdisc, new_qdisc);
 	if (need_watchdog_p && new_qdisc != &noqueue_qdisc) {
 		dev_queue->trans_start = 0;
 		*need_watchdog_p = 1;
@@ -780,7 +780,7 @@ static void dev_deactivate_queue(struct net_device *dev,
 		if (!(qdisc->flags & TCQ_F_BUILTIN))
 			set_bit(__QDISC_STATE_DEACTIVATED, &qdisc->state);
 
-		rcu_assign_pointer(dev_queue->qdisc, qdisc_default);
+		RCU_INIT_POINTER(dev_queue->qdisc, qdisc_default);
 		qdisc_reset(qdisc);
 
 		spin_unlock_bh(qdisc_lock(qdisc));
@@ -888,7 +888,7 @@ static void shutdown_scheduler_queue(struct net_device *dev,
 	struct Qdisc *qdisc_default = _qdisc_default;
 
 	if (qdisc) {
-		rcu_assign_pointer(dev_queue->qdisc, qdisc_default);
+		RCU_INIT_POINTER(dev_queue->qdisc, qdisc_default);
 		dev_queue->qdisc_sleeping = qdisc_default;
 
 		qdisc_destroy(qdisc);
