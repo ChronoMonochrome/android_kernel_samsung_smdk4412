@@ -670,26 +670,6 @@ static void link_pm_runtime_start(struct work_struct *work)
 	}
 }
 
-static void link_pm_force_cp_dump(struct link_pm_data *pm_data)
-{
-	struct modem_ctl *mc = if_usb_get_modemctl(pm_data);
-
-	mif_err("Set modem crash ap_dump_int by %pF\n",
-		__builtin_return_address(0));
-
-	if (mc->gpio_ap_dump_int) {
-		if (gpio_get_value(mc->gpio_ap_dump_int)) {
-			gpio_set_value(mc->gpio_ap_dump_int, 0);
-			msleep(20);
-		}
-		gpio_set_value(mc->gpio_ap_dump_int, 1);
-		msleep(20);
-		mif_err("AP_DUMP_INT(%d)\n",
-			gpio_get_value(mc->gpio_ap_dump_int));
-		gpio_set_value(mc->gpio_ap_dump_int, 0);
-	}
-}
-
 static void link_pm_change_modem_state(struct link_pm_data *pm_data,
 						enum modem_state state)
 {
@@ -1115,7 +1095,7 @@ static void if_usb_disconnect(struct usb_interface *intf)
 {
 	struct if_usb_devdata *devdata = usb_get_intfdata(intf);
 	struct link_pm_data *pm_data = devdata->usb_ld->link_pm_data;
-	struct device *dev, *hdev;
+	struct device *hdev;
 	struct link_device *ld = &devdata->usb_ld->ld;
 
 	mif_info("\n");
