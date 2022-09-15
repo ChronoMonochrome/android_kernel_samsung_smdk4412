@@ -300,11 +300,6 @@ static void mms_ts_early_suspend(struct early_suspend *h);
 static void mms_ts_late_resume(struct early_suspend *h);
 #endif
 
-#if TOUCH_BOOSTER
-static bool dvfs_lock_status = false;
-static bool press_status = false;
-#endif
-
 #if defined(SEC_TSP_FACTORY_TEST)
 #define TSP_CMD(name, func) .cmd_name = name, .cmd_func = func
 
@@ -319,10 +314,6 @@ static void get_fw_ver_bin(void *device_data);
 static void get_fw_ver_ic(void *device_data);
 static void get_config_ver(void *device_data);
 static void get_threshold(void *device_data);
-static void module_off_master(void *device_data);
-static void module_on_master(void *device_data);
-static void module_off_slave(void *device_data);
-static void module_on_slave(void *device_data);
 static void get_chip_vendor(void *device_data);
 static void get_chip_name(void *device_data);
 static void get_reference(void *device_data);
@@ -1216,8 +1207,6 @@ static int mms100_update_section_data(struct i2c_client *_client)
 
 static eISCRet_t mms100_open_mbinary(struct i2c_client *_client)
 {
-	int i;
-	char file_name[64];
 	int ret = 0;
 
 	ret += request_firmware(&(fw_mbin[1]),\
@@ -1755,39 +1744,6 @@ static int get_hw_version(struct mms_ts_info *info)
 
 	return ret;
 }
-static int mms_ts_enable(struct mms_ts_info *info, int wakeupcmd)
-{
-	mutex_lock(&info->lock);
-	if (info->enabled)
-		goto out;
-	/* wake up the touch controller. */
-	if (wakeupcmd == 1) {
-		i2c_smbus_write_byte_data(info->client, 0, 0);
-		usleep_range(3000, 5000);
-	}
-	info->enabled = true;
-	enable_irq(info->irq);
-out:
-	mutex_unlock(&info->lock);
-	return 0;
-}
-
-static int mms_ts_disable(struct mms_ts_info *info, int sleepcmd)
-{
-	mutex_lock(&info->lock);
-	if (!info->enabled)
-		goto out;
-	disable_irq_nosync(info->irq);
-	if (sleepcmd == 1) {
-		i2c_smbus_write_byte_data(info->client, MMS_MODE_CONTROL, 0);
-		usleep_range(10000, 12000);
-	}
-	info->enabled = false;
-	touch_is_pressed = 0;
-out:
-	mutex_unlock(&info->lock);
-	return 0;
-}
 
 static int mms_ts_finish_config(struct mms_ts_info *info)
 {
@@ -1815,46 +1771,11 @@ static int mms_ts_finish_config(struct mms_ts_info *info)
 err_req_irq:
 	return ret;
 }
-static int mms_ts_fw_info(struct mms_ts_info *info)
-{
-	struct i2c_client *client = info->client;
-	struct i2c_adapter *adapter = to_i2c_adapter(client->dev.parent);
-	int ret = 0;
-	int ver, hw_rev;
-
-	ver = get_fw_version(info);
-	info->fw_ic_ver = ver;
-		dev_info(&client->dev,
-			 "[TSP]fw version 0x%02x !!!!\n", ver);
-
-	hw_rev = get_hw_version(info);
-	dev_info(&client->dev,
-		"[TSP] hw rev = %x\n", hw_rev);
-
-	if (ver < 0 || hw_rev < 0) {
-		ret = 1;
-		dev_err(&client->dev,
-			"i2c fail...tsp driver unload.\n");
-		return ret;
-	}
-
-	if (!info->pdata || !info->pdata->mux_fw_flash) {
-		ret = 1;
-		dev_err(&client->dev,
-			"fw cannot be updated, missing platform data\n");
-		return ret;
-	}
-
-	ret = mms_ts_finish_config(info);
-
-	return ret;
-}
 
 static int mms_ts_fw_load(struct mms_ts_info *info)
 {
 
 	struct i2c_client *client = info->client;
-	struct i2c_adapter *adapter = to_i2c_adapter(client->dev.parent);
 	int ret = 0;
 	int ver, hw_rev;
 	int retries = 3;
@@ -2042,6 +1963,7 @@ err_i2c:
 		__func__, cmd);
 }
 
+#ifdef ESD_DEBUG
 static u32 get_raw_data_one(struct mms_ts_info *info, u16 rx_idx, u16 tx_idx,
 			    u8 cmd)
 {
@@ -2088,6 +2010,7 @@ err_i2c:
 		__func__, cmd);
 	return FAIL;
 }
+#endif
 
 static ssize_t show_close_tsp_test(struct device *dev,
 				    struct device_attribute *attr, char *buf)
@@ -2287,7 +2210,6 @@ err_open:
 	set_fs(old_fs);
 }
 not_support:
-do_not_need_update:
 	snprintf(result, sizeof(result) , "%s", "NG");
 	set_cmd_result(info, result, strnlen(result, sizeof(result)));
 	return;
@@ -2298,7 +2220,6 @@ static void get_fw_ver_bin(void *device_data)
 	struct mms_ts_info *info = (struct mms_ts_info *)device_data;
 
 	char buff[16] = {0};
-	int hw_rev;
 
 	set_default_result(info);
 
@@ -3130,7 +3051,6 @@ static int mms_ts_resume(struct device *dev)
 {
 	struct i2c_client *client = to_i2c_client(dev);
 	struct mms_ts_info *info = i2c_get_clientdata(client);
-	int ret = 0;
 
 	if (info->enabled)
 		return 0;
