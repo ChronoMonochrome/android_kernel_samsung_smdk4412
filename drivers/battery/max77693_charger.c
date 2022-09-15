@@ -420,24 +420,6 @@ static void max77693_set_charger_state(struct max77693_charger_data *chg_data,
 	max77693_write_reg(i2c, MAX77693_CHG_REG_CHG_CNFG_00, reg_data);
 }
 
-static void max77693_set_buck(struct max77693_charger_data *chg_data,
-							int enable)
-{
-	struct i2c_client *i2c = chg_data->max77693->i2c;
-	u8 reg_data;
-	pr_debug("%s: enable(%d)\n", __func__, enable);
-
-	max77693_read_reg(i2c, MAX77693_CHG_REG_CHG_CNFG_00, &reg_data);
-
-	if (enable)
-		reg_data |= MAX77693_MODE_BUCK;
-	else
-		reg_data &= ~MAX77693_MODE_BUCK;
-
-	pr_debug("%s: CHG_CNFG_00(0x%02x)\n", __func__, reg_data);
-	max77693_write_reg(i2c, MAX77693_CHG_REG_CHG_CNFG_00, reg_data);
-}
-
 int max77693_get_input_current(struct max77693_charger_data *chg_data)
 {
 	struct i2c_client *i2c = chg_data->max77693->i2c;
@@ -688,7 +670,7 @@ static int max77693_get_cable_type(struct max77693_charger_data *chg_data)
 #ifdef CONFIG_BATTERY_WPC_CHARGER
 	bool wc_state;
 #endif
-	bool retry_det, chg_det_erred;
+	bool retry_det, chg_det_erred = false;
 	bool otg_detected = false;
 	int retry_cnt = 0;
 	pr_debug("%s\n", __func__);
@@ -976,24 +958,6 @@ static int max77693_get_battery_state(struct max77693_charger_data *chg_data)
 	}
 
 	chg_data->battery_state = state;
-	return state;
-}
-
-/* extended online type */
-static int max77693_get_online_type(struct max77693_charger_data *chg_data)
-{
-	int m_typ;
-	int state = 0;
-	pr_info("%s\n", __func__);
-
-	m_typ = max77693_get_cable_type(chg_data);
-
-	state = ((m_typ << ONLINE_TYPE_MAIN_SHIFT) |
-		(chg_data->cable_sub_type << ONLINE_TYPE_SUB_SHIFT) |
-		(chg_data->cable_pwr_type << ONLINE_TYPE_PWR_SHIFT));
-
-	pr_info("%s: online(0x%08x)\n", __func__, state);
-
 	return state;
 }
 
