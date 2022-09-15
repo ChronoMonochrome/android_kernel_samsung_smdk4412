@@ -170,7 +170,7 @@ static unsigned int get_nr_run_avg(void)
 #define HOTPLUG_DOWN_INDEX			(0)
 #define HOTPLUG_UP_INDEX			(1)
 
-#ifdef CONFIG_MACH_MIDAS
+#if defined(CONFIG_MACH_MIDAS)
 static int hotplug_rq[4][2] = {
 	{0, 100}, {100, 200}, {200, 300}, {300, 0}
 };
@@ -181,7 +181,7 @@ static int hotplug_freq[4][2] = {
 	{200000, 500000},
 	{200000, 0}
 };
-#elif CONFIG_MACH_SMDK4210
+#elif defined(CONFIG_MACH_SMDK4210)
 static int hotplug_rq[2][2] = {
 	{0, 100}, {100, 0}
 };
@@ -1510,6 +1510,7 @@ static inline void dbs_timer_exit(struct cpu_dbs_info_s *dbs_info)
 	cancel_work_sync(&dbs_info->down_work);
 }
 
+#if !EARLYSUSPEND_HOTPLUGLOCK
 static int pm_notifier_call(struct notifier_block *this,
 			    unsigned long event, void *ptr)
 {
@@ -1532,10 +1533,7 @@ static int pm_notifier_call(struct notifier_block *this,
 	}
 	return NOTIFY_DONE;
 }
-
-static struct notifier_block pm_notifier = {
-	.notifier_call = pm_notifier_call,
-};
+#endif
 
 static int reboot_notifier_call(struct notifier_block *this,
 				unsigned long code, void *_cmd)
