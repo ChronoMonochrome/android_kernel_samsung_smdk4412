@@ -1,1 +1,2 @@
 source "device/i9300/drivers/gpu/ion/Kconfig"
+source "device/i9300/drivers/gpu/mali400/Kconfig"

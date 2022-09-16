@@ -19,8 +19,8 @@ config MALI_VER_R3P2
 	  Choose this option to select DDK version.
 
 if MALI_VER_R3P2
-source "drivers/gpu/mali400/r3p2/mali/Kconfig"
-source "drivers/gpu/mali400/r3p2/ump/Kconfig"
+source "device/i9300/drivers/gpu/mali400/r3p2/mali/Kconfig"
+source "device/i9300/drivers/gpu/mali400/r3p2/ump/Kconfig"
 endif
 
 endchoice
