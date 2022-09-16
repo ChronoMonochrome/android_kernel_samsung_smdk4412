@@ -1,1 +1,2 @@
-obj-y := arch/
+obj-y += arch/
+obj-y += drivers/

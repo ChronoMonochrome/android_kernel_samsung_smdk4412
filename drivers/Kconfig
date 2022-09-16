@@ -134,8 +134,6 @@ source "drivers/clocksource/Kconfig"
 
 source "drivers/motor/Kconfig"
 
-source "drivers/samsung/Kconfig"
-
 source "drivers/sensor/Kconfig"
 
 source "drivers/sensorhub/Kconfig"
