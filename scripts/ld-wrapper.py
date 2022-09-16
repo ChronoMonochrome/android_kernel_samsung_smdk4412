@@ -56,6 +56,13 @@ additional_build_rules = {
            "arch/arm/mm/mmu.o",
         ]
     }],
+    "drivers/gpu/ion/built-in.o" :
+    [{
+        "injected_objects":
+        [
+            "device/i9300/drivers/gpu/ion/exynos/built-in.o",
+        ],
+    }],
     "drivers/built-in.o" :
     [{
         "injected_objects":
