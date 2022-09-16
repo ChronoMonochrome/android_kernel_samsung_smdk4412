@@ -41,7 +41,7 @@ ofile = None
 
 additional_build_rules = {
     "arch/arm/mm/built-in.o" :
-    {
+    [{
         "config": "CONFIG_DMA_CMA",
         "injected_objects":
         [
@@ -55,7 +55,7 @@ additional_build_rules = {
            "arch/arm/mm/dma-mapping.o",
            "arch/arm/mm/mmu.o",
         ]
-    },
+    }],
 }
 
 # Check if the config is enabled
@@ -83,22 +83,25 @@ def run_ld():
 
     try:
         if ofile in additional_build_rules:
-            build_config = additional_build_rules[ofile]["config"]
-            build_config_activated = True
+            build_rules = additional_build_rules[ofile]
+            injected_objects = []
+            removed_objects = []
+            for build_rule in build_rules:
+                build_config = build_rule.get("config")
+                build_config_activated = True
 
-            if build_config:
-                build_config_activated = check_config(build_config)
+                if build_config:
+                    build_config_activated = check_config(build_config)
 
-            if build_config_activated:
-                injected_objects = additional_build_rules[ofile]["injected_objects"]
-                removed_objects = additional_build_rules[ofile]["removed_objects"]
-                print("linking %s: inject the following files: %s, removing %s from build" % (ofile, str(injected_objects), str(removed_objects)))
-                for obj in removed_objects:
-                    args.remove(obj)
+                if build_config_activated:
+                    injected_objects += build_rule.get("injected_objects", [])
+                    removed_objects += build_rule.get("removed_objects", [])
 
-                args += injected_objects
-                #print(args)
-                #print(removed_objects)
+            print("linking %s: inject the following files: %s, removing %s from build" % (ofile, str(injected_objects), str(removed_objects)))
+            for obj in removed_objects:
+                args.remove(obj)
+            args += injected_objects
+
         proc = subprocess.Popen(args, stderr=subprocess.PIPE)
         for line in proc.stderr:
             print(line)
