@@ -56,6 +56,13 @@ additional_build_rules = {
            "arch/arm/mm/mmu.o",
         ]
     }],
+    "drivers/built-in.o" :
+    [{
+        "injected_objects":
+        [
+            "device/i9300/drivers/samsung/built-in.o",
+        ],
+    }],
 }
 
 # Check if the config is enabled
