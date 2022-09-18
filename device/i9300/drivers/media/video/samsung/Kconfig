@@ -14,11 +14,11 @@ config VIDEO_SAMSUNG_V4L2
 	  This feature is for new V4L2 APIs all about digital camera
 
 if CPU_EXYNOS4210 || CPU_EXYNOS4212 || CPU_EXYNOS4412
-	source "drivers/media/video/samsung/fimc/Kconfig"
-	source "drivers/media/video/samsung/tvout/Kconfig"
-	source "drivers/media/video/samsung/mfc5x/Kconfig"
-	source "drivers/media/video/samsung/mali/Kconfig"
-	source "drivers/media/video/samsung/ump/Kconfig"
+	source "device/i9300/drivers/media/video/samsung/fimc/Kconfig"
+	source "device/i9300/drivers/media/video/samsung/tvout/Kconfig"
+	source "device/i9300/drivers/media/video/samsung/mfc5x/Kconfig"
+	source "device/i9300/drivers/media/video/samsung/mali/Kconfig"
+	source "device/i9300/drivers/media/video/samsung/ump/Kconfig"
 endif
 
 config VIDEO_FIMG2D
@@ -32,22 +32,22 @@ config VIDEO_FIMG2D_DEBUG
 	default n
 
 if ARCH_EXYNOS5
-source "drivers/media/video/samsung/fimg2d3x/Kconfig"
-source "drivers/media/video/samsung/fimg2d4x/Kconfig"
+source "device/i9300/drivers/media/video/samsung/fimg2d3x/Kconfig"
+source "device/i9300/drivers/media/video/samsung/fimg2d4x/Kconfig"
 endif
 
 if ARCH_EXYNOS4
-source "drivers/media/video/samsung/fimg2d3x-exynos4/Kconfig"
-source "drivers/media/video/samsung/fimg2d4x-exynos4/Kconfig"
+source "device/i9300/drivers/media/video/samsung/fimg2d3x-exynos4/Kconfig"
+source "device/i9300/drivers/media/video/samsung/fimg2d4x-exynos4/Kconfig"
 endif
 
 
 if CPU_EXYNOS4210
-	source "drivers/media/video/samsung/jpeg/Kconfig"
+	source "device/i9300/drivers/media/video/samsung/jpeg/Kconfig"
 endif
 
 if CPU_EXYNOS4212 || CPU_EXYNOS4412 || CPU_EXYNOS5250
-	source "drivers/media/video/samsung/jpeg_v2x/Kconfig"
+	source "device/i9300/drivers/media/video/samsung/jpeg_v2x/Kconfig"
 endif
 
 if VIDEO_SAMSUNG

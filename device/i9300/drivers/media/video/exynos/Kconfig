@@ -18,18 +18,18 @@ config VIDEO_EXYNOS_MEMSIZE_FIMC_IS
 	help
 	  This is to assign memory used in FIMC-IS.
 
-	source "drivers/media/video/exynos/mdev/Kconfig"
-	source "drivers/media/video/exynos/fimc-lite/Kconfig"
-	source "drivers/media/video/exynos/mipi-csis/Kconfig"
-	source "drivers/media/video/exynos/tv/Kconfig"
-	source "drivers/media/video/exynos/rotator/Kconfig"
+	source "device/i9300/drivers/media/video/exynos/mdev/Kconfig"
+	source "device/i9300/drivers/media/video/exynos/fimc-lite/Kconfig"
+	source "device/i9300/drivers/media/video/exynos/mipi-csis/Kconfig"
+	source "device/i9300/drivers/media/video/exynos/tv/Kconfig"
+	source "device/i9300/drivers/media/video/exynos/rotator/Kconfig"
 if ARCH_EXYNOS4
-	source "drivers/media/video/exynos/fimc-is/Kconfig"
+	source "device/i9300/drivers/media/video/exynos/fimc-is/Kconfig"
 endif
 
 if ARCH_EXYNOS5
-	source "drivers/media/video/exynos/gsc/Kconfig"
-	source "drivers/media/video/exynos/fimc-is-mc/Kconfig"
+	source "device/i9300/drivers/media/video/exynos/gsc/Kconfig"
+	source "device/i9300/drivers/media/video/exynos/fimc-is-mc/Kconfig"
 endif
 config VIDEO_EXYNOS_MEMSIZE_FIMC_IS
 	int "Memory size in Kbytes for FIMC-IS"

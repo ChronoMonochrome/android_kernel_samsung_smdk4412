@@ -1,0 +1,112 @@
+choice
+prompt "Select Videobuf2 allocator"
+default VIDEOBUF2_CMA_PHYS
+config VIDEOBUF2_CMA_PHYS
+       bool "CMA_PHYS"
+       depends on CMA
+       select VIDEOBUF2_CORE
+       select VIDEOBUF2_MEMOPS
+       help
+         Use videobuf2 CMA-phys allocator
+
+config VIDEOBUF2_ION
+       bool "Android ION"
+       depends on ION_EXYNOS
+       select VIDEOBUF2_CORE
+       select VIDEOBUF2_MEMOPS
+       help
+         Use videobuf2 Android ION allocator
+endchoice
+
+config VIDEO_S5K6A3
+       tristate "S5K6A3 supporting camera driver"
+       depends on VIDEO_V4L2 && ((VIDEO_FIMC_MIPI || VIDEO_S5P_MIPI_CSIS) && VIDEO_EXYNOS_FIMC_IS) || VIDEO_EXYNOS5_FIMC_IS
+       ---help---
+         This driver supports S5K6A3 sensor.
+
+choice
+depends on VIDEO_S5K6A3
+prompt "MIPI Camera port for S5K6A3"
+default S5K6A3_CSI_D
+config S5K6A3_CSI_C
+       bool "CSI Camera A port"
+       depends on (VIDEO_FIMC_MIPI || VIDEO_S5P_MIPI_CSIS || VIDEO_EXYNOS5_FIMC_IS)
+       help
+         This enables support for CSI A port
+config S5K6A3_CSI_D
+       bool "CSI Camera B port"
+       depends on (VIDEO_FIMC_MIPI || VIDEO_S5P_MIPI_CSIS || VIDEO_EXYNOS5_FIMC_IS)
+       help
+         This enalbes support for CSI B port
+endchoice
+
+config VIDEO_S5C73M3
+       tristate "S5C73M3 MIPI CSI-2 supporting camera driver"
+       depends on I2C && VIDEO_V4L2 && VIDEO_FIMC_MIPI
+       ---help---
+         This driver supports s5c73m3 ISP camera module with
+         MIPI CSI-2 as well
+
+config VIDEO_S5C73M3_SPI
+       tristate "S5C73M3 SPI driver"
+       depends on SPI && (VIDEO_S5C73M3 || VIDEO_SLP_S5C73M3)
+       ---help---
+         This driver supports s5c73m3 SPI
+
+config SAMSUNG_MFC_DRIVERS
+       bool "Samsung EXYNOS MFC driver"
+       ---help---
+         This is a v4l2 driver for Samsung EXYNOS4/EXYNOS5 MFC.
+
+if SAMSUNG_MFC_DRIVERS
+
+choice
+       prompt "Select MFC driver type"
+       default USE_LEGACY_MFC
+config USE_LEGACY_MFC
+       bool "Legacy style MFC"
+       depends on VIDEO_SAMSUNG && ARCH_EXYNOS4
+       select VIDEO_MFC5X
+       ---help---
+         Use MFC legacy style driver.
+
+config USE_V4L2_MFC
+       bool "V4L2 style MFC"
+       depends on VIDEO_V4L2 && PLAT_S5P
+       select VIDEO_SAMSUNG_S5P_MFC
+       select VIDEO_FIXED_MINOR_RANGES
+       ---help---
+         Use MFC V4L2 style driver.
+
+endchoice
+
+config VIDEO_SAMSUNG_S5P_MFC
+       bool
+       depends on USE_V4L2_MFC
+       select VIDEOBUF2_CORE
+       ---help---
+         MFC driver for V4L2.
+
+choice
+       prompt "MFC V4L2 Driver"
+       default S5P_MFC_V5
+       depends on USE_V4L2_MFC
+       ---help---
+         Select version of MFC driver
+
+config S5P_MFC_V5
+       bool "MFC 5.x"
+       ---help---
+         Use MFC 5.x V4L2 Driver
+
+config S5P_MFC_V6
+       bool "MFC 6.x"
+       ---help---
+         Use MFC 6.x V4L2 Driver
+endchoice
+endif
+
+source "device/i9300/drivers/media/video/samsung/Kconfig"
+source "device/i9300/drivers/media/video/exynos/Kconfig"
+
+source "device/i9300/drivers/media/video/mhl/Kconfig"

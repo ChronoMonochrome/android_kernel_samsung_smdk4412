@@ -5,6 +5,7 @@ obj-y                         += gpu/
 obj-$(CONFIG_MOBICORE_SUPPORT)  += gud/
 
 obj-y                         += leds/
+obj-y                         += media/
 obj-$(CONFIG_MMC)             += mmc/
 obj-y                         += mfd/
 obj-$(CONFIG_POWER_SUPPLY)    += power/
