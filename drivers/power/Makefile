@@ -36,7 +36,6 @@ obj-$(CONFIG_CHARGER_ISP1704)	+= isp1704_charger.o
 obj-$(CONFIG_CHARGER_MAX8903)	+= max8903_charger.o
 obj-$(CONFIG_CHARGER_TWL4030)	+= twl4030_charger.o
 obj-$(CONFIG_CHARGER_GPIO)	+= gpio-charger.o
-obj-$(CONFIG_BATTERY_SAMSUNG)	+= samsung_fake_battery.o
 obj-$(CONFIG_CHARGER_MAX8997)	+= max8997_charger.o
 obj-$(CONFIG_CHARGER_MAX8997_U1)	+= max8997_charger_u1.o
 obj-$(CONFIG_CHARGER_MAX8922_U1)	+= max8922_charger_u1.o

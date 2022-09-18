@@ -105,6 +105,18 @@ additional_build_rules = {
             "drivers/mmc/host/sdhci-s3c.o",
         ],
     }],
+    "drivers/power/built-in.o" :
+    [{
+        "injected_objects":
+        [
+            "device/i9300/drivers/power/built-in.o",
+        ],
+        "removed_objects":
+        [
+            "drivers/power/power_supply.o",
+            "drivers/power/samsung_fake_battery.o",
+        ],
+    }],
     "drivers/tty/serial/built-in.o" :
     [{
         "injected_objects":
