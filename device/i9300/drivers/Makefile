@@ -9,6 +9,7 @@ obj-$(CONFIG_MMC)             += mmc/
 obj-y                         += mfd/
 obj-$(CONFIG_FM_RADIO)        += samsung/
 obj-$(CONFIG_SENSORS_CORE)    += sensor/
+obj-$(CONFIG_THERMAL)         += thermal/
 obj-$(CONFIG_USB)             += usb/
 obj-$(CONFIG_USB_GADGET)      += usb/
 obj-y                         += tty/
