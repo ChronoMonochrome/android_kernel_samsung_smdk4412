@@ -1,0 +1,15 @@
+config LEDS_AAT1290A
+	bool "LED support for the AAT1290A"
+	depends on LEDS_CLASS
+	default n
+	help
+	  This option enables support for the LEDs on the AAT1290A.
+
+config LEDS_AN30259A
+	tristate "LED driver for panasonic AN30259A RGB LED"
+	depends on I2C
+	help
+	  This option enables support for AN30259A RGB LED chips
+	  accessed via the I2C bus.
+	  AN30259A has three channel LED driver. By synchronous clock
+	  function, combined operation is possible.
