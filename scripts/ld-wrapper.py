@@ -125,7 +125,8 @@ def run_ld():
 
             print("linking %s: inject the following files: %s, removing %s from build" % (ofile, str(injected_objects), str(removed_objects)))
             for obj in removed_objects:
-                args.remove(obj)
+                if obj in args:
+                    args.remove(obj)
             args += injected_objects
 
         proc = subprocess.Popen(args, stderr=subprocess.PIPE)
