@@ -128,9 +128,6 @@ obj-y				+= ieee802154/
 obj-y				+= clk/
 obj-$(CONFIG_HWSPINLOCK)	+= hwspinlock/
 obj-$(CONFIG_VIBETONZ)		+= motor/
-
-obj-$(CONFIG_SENSORS_CORE)	+= sensor/
-obj-$(CONFIG_SENSORS_SSP)	+= sensorhub/
 obj-$(CONFIG_PM_DEVFREQ)	+= devfreq/
 obj-$(CONFIG_SAMSUNG_PHONE_SVNET) += svnet/
 obj-$(CONFIG_PHONE_IPC_SPI) += phone_svn/

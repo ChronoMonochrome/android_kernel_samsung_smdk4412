@@ -132,10 +132,6 @@ source "drivers/clocksource/Kconfig"
 
 source "drivers/motor/Kconfig"
 
-source "drivers/sensor/Kconfig"
-
-source "drivers/sensorhub/Kconfig"
-
 source "drivers/devfreq/Kconfig"
 
 source "drivers/phone_svn/Kconfig"
