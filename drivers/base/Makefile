@@ -15,14 +15,11 @@ obj-$(CONFIG_FW_LOADER)	+= firmware_class.o
 obj-$(CONFIG_NUMA)	+= node.o
 obj-$(CONFIG_MEMORY_HOTPLUG_SPARSE) += memory.o
 obj-$(CONFIG_SMP)	+= topology.o
-obj-$(CONFIG_IOMMU_EXYNOS4_API) += s5p-iommu.o
+obj-$(CONFIG_IOMMU_API) += iommu.o
 ifeq ($(CONFIG_SYSFS),y)
 obj-$(CONFIG_MODULES)	+= module.o
 endif
 obj-$(CONFIG_SYS_HYPERVISOR) += hypervisor.o
-
-obj-$(CONFIG_SYNC)	+= sync.o
-obj-$(CONFIG_SW_SYNC)	+= sw_sync.o
 
 ccflags-$(CONFIG_DEBUG_DRIVER) := -DDEBUG
 
