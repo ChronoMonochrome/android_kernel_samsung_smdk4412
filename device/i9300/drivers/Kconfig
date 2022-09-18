@@ -1,4 +1,8 @@
 source "device/i9300/drivers/base/Kconfig"
+
+# Secure OS Mobicore
+source "device/i9300/drivers/gud/Kconfig"
+
 source "device/i9300/drivers/gpu/Kconfig"
 source "device/i9300/drivers/mmc/Kconfig"
 source "device/i9300/drivers/samsung/Kconfig"
