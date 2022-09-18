@@ -1,0 +1,5 @@
+config BATTERY_SAMSUNG
+	tristate "Fake battery driver for samsung smdk boards"
+	depends on PLAT_SAMSUNG
+	help
+	  Say Y to enable support for batteries with samsung chip.
