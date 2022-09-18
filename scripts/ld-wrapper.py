@@ -77,6 +77,22 @@ additional_build_rules = {
             "device/i9300/drivers/gpu/built-in.o",
         ],
     }],
+    "drivers/mfd/built-in.o" :
+    [{
+        "injected_objects":
+        [
+            "device/i9300/drivers/mfd/built-in.o",
+        ],
+        "removed_objects":
+        [
+            "drivers/mfd/wm8994-core.o",
+            "drivers/mfd/wm8994-irq.o",
+            "drivers/mfd/max77686.o",
+            "drivers/mfd/max77693.o",
+            "drivers/mfd/max77686-irq.o",
+            "drivers/mfd/max77693-irq.o",
+        ],
+    }],
     "drivers/mmc/host/built-in.o" :
     [{
         "injected_objects":
