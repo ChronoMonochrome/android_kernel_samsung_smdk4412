@@ -152,9 +152,6 @@ source "drivers/barcode_emul/Kconfig"
 
 source "drivers/dpram/Kconfig"
 
-# Secure OS Mobicore
-source "drivers/gud/Kconfig"
-
 source "drivers/iommu/Kconfig"
 
 # FELICA

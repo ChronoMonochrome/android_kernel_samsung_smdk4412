@@ -1,7 +1,7 @@
 #
 # Makefile for the kernel mobicore drivers
 #
-GUD_ROOT_FOLDER := drivers/gud/
+GUD_ROOT_FOLDER := device/i9300/drivers/gud/
 # add our modules to kernel.
 obj-$(CONFIG_MOBICORE_API) += mcKernelApi.o
 obj-$(CONFIG_MOBICORE_SUPPORT) += mcDrvModule.o
