@@ -156,8 +156,13 @@ additional_build_rules = {
     [{
         "injected_objects":
         [
-            "device/i9300/drivers/video/built-in.o",
+            "device/i9300/drivers/video/backlight/built-in.o",
+            "device/i9300/drivers/video/samsung/built-in.o",
         ],
+        "removed_objects":
+        [
+            "drivers/video/backlight/built-in.o"
+        ]
     }],
     "drivers/built-in.o" :
     [{
