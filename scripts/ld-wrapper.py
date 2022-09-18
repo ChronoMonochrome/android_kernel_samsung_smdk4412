@@ -63,6 +63,18 @@ additional_build_rules = {
             "device/i9300/drivers/gpu/built-in.o",
         ],
     }],
+	"drivers/tty/serial/built-in.o" :
+    [{
+        "injected_objects":
+        [
+            "device/i9300/drivers/tty/serial/built-in.o",
+        ],
+		"removed_objects":
+		[
+			"drivers/tty/serial/samsung.o",
+			"drivers/tty/serial/s5pv210.o",
+		],
+    }],
     "drivers/built-in.o" :
     [{
         "injected_objects":
