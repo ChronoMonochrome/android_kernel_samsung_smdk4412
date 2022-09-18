@@ -142,18 +142,6 @@
 #define gadget_is_s3c_hsudc(g) 0
 #endif
 
-#ifdef CONFIG_USB_GADGET_S3C_OTGD
-#define gadget_is_s3c(g)	!strcmp("s3c-udc", (g)->name)
-#else
-#define gadget_is_s3c(g)	0
-#endif
-
-#ifdef CONFIG_USB_EXYNOS_SS_UDC
-#define gadget_is_exynos_ss_udc(g) (!strcmp("exynos-ss-udc", (g)->name))
-#else
-#define gadget_is_exynos_ss_udc(g) 0
-#endif
-
 #ifdef CONFIG_USB_GADGET_EG20T
 #define	gadget_is_pch(g)	(!strcmp("pch_udc", (g)->name))
 #else
@@ -227,8 +215,6 @@ static inline int usb_gadget_controller_number(struct usb_gadget *gadget)
 		return 0x25;
 	else if (gadget_is_s3c_hsotg(gadget))
 		return 0x26;
-	else if (gadget_is_s3c(gadget))
-		return 0x26;
 	else if (gadget_is_pch(gadget))
 		return 0x27;
 	else if (gadget_is_ci13xxx_msm(gadget))
@@ -237,8 +223,6 @@ static inline int usb_gadget_controller_number(struct usb_gadget *gadget)
 		return 0x29;
 	else if (gadget_is_s3c_hsudc(gadget))
 		return 0x30;
-	else if (gadget_is_exynos_ss_udc(gadget))
-		return 0x31;
 
 	return -ENOENT;
 }

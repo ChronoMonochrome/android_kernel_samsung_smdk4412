@@ -1,2 +1,3 @@
 source "device/i9300/drivers/gpu/Kconfig"
+source "device/i9300/drivers/usb/Kconfig"
 source "device/i9300/drivers/samsung/Kconfig"

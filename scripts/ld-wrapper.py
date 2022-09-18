@@ -63,17 +63,24 @@ additional_build_rules = {
             "device/i9300/drivers/gpu/built-in.o",
         ],
     }],
-	"drivers/tty/serial/built-in.o" :
+    "drivers/usb/built-in.o" :
+    [{
+        "injected_objects":
+        [
+            "device/i9300/drivers/usb/built-in.o",
+        ],
+    }],
+    "drivers/tty/serial/built-in.o" :
     [{
         "injected_objects":
         [
             "device/i9300/drivers/tty/serial/built-in.o",
         ],
-		"removed_objects":
-		[
-			"drivers/tty/serial/samsung.o",
-			"drivers/tty/serial/s5pv210.o",
-		],
+        "removed_objects":
+        [
+            "drivers/tty/serial/samsung.o",
+            "drivers/tty/serial/s5pv210.o",
+        ],
     }],
     "drivers/built-in.o" :
     [{
@@ -129,6 +136,7 @@ def run_ld():
                     args.remove(obj)
             args += injected_objects
 
+        #print(args)
         proc = subprocess.Popen(args, stderr=subprocess.PIPE)
         for line in proc.stderr:
             print(line)
