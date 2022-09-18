@@ -1,0 +1,20 @@
+source "device/i9300/drivers/video/samsung/Kconfig"
+
+config FB_MIPI_DSIM
+       bool "Samsung MIPI DSIM"
+       depends on FB_S3C
+       default n
+       ---help---
+         This enables support for Samsung MIPI DSIM feature
+
+config VIDEO_SAMSUNG_MEMSIZE_FIMD
+       int "Memory size in kbytes for FIMD0"
+       depends on FB_S3C
+       default "102400"
+
+config S5P_MIPI_DSI2
+       tristate "Samsung SoC MIPI-DSI support."
+       depends on !FB_S5P_MIPI_DSIM && (ARCH_S5PV210 || ARCH_EXYNOS4)
+       default n
+       ---help---
+         This enables support for MIPI-DSI device.

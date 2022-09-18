@@ -152,6 +152,13 @@ additional_build_rules = {
             "device/i9300/drivers/usb/built-in.o",
         ],
     }],
+    "drivers/video/built-in.o" :
+    [{
+        "injected_objects":
+        [
+            "device/i9300/drivers/video/built-in.o",
+        ],
+    }],
     "drivers/built-in.o" :
     [{
         "injected_objects":
