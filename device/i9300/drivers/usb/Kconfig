@@ -1,1 +1,2 @@
 source "device/i9300/drivers/usb/gadget/Kconfig"
+source "device/i9300/drivers/usb/notify/Kconfig"

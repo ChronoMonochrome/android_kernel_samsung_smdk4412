@@ -6,7 +6,6 @@
 
 obj-$(CONFIG_USB)		+= core/
 
-obj-$(CONFIG_USB_HOST_NOTIFY)	+= notify/
 obj-$(CONFIG_USB_MON)		+= mon/
 
 obj-$(CONFIG_PCI)		+= host/
