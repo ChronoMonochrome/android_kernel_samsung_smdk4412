@@ -114,6 +114,7 @@ additional_build_rules = {
         [
             "device/i9300/drivers/gud/built-in.o",
             "device/i9300/drivers/samsung/built-in.o",
+            "device/i9300/drivers/sensor/built-in.o",
         ],
     }],
 }
