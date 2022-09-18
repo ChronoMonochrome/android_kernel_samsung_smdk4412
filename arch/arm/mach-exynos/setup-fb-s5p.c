@@ -34,7 +34,7 @@
 #if defined(CONFIG_S5P_DSIM_SWITCHABLE_DUAL_LCD)
 #include <../../../drivers/video/samsung_duallcd/s3cfb.h>
 #else
-#include <../../../drivers/video/samsung/s3cfb.h>	/* should be fixed */
+#include <../../../device/i9300/drivers/video/samsung/s3cfb.h>	/* should be fixed */
 #endif
 
 struct platform_device; /* don't need the contents */

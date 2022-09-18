@@ -38,7 +38,7 @@
 #include <mach/mipi_ddi.h>
 #include <mach/dsim.h>
 #endif
-#include <../../../drivers/video/samsung/s3cfb.h>
+#include <../../../device/i9300/drivers/video/samsung/s3cfb.h>
 
 #ifdef CONFIG_FB_S5P_MDNIE
 #include <linux/mdnie.h>
