@@ -56,6 +56,20 @@ additional_build_rules = {
            "arch/arm/mm/mmu.o",
         ]
     }],
+    "drivers/base/built-in.o" :
+    [{
+        "injected_objects":
+        [
+            "device/i9300/drivers/base/built-in.o",
+        ],
+        "removed_objects":
+        [
+            "drivers/base/iommu.o",
+            "drivers/base/s5p-iommu.o",
+            "drivers/base/sync.o",
+            "drivers/base/sw_sync.o",
+        ],
+    }],
     "drivers/gpu/built-in.o" :
     [{
         "injected_objects":

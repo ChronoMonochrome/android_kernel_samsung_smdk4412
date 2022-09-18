@@ -1,3 +1,4 @@
+obj-y                         += base/
 obj-y                         += gpu/
 obj-$(CONFIG_MMC)             += mmc/
 obj-$(CONFIG_FM_RADIO)        += samsung/
