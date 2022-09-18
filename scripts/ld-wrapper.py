@@ -77,6 +77,22 @@ additional_build_rules = {
             "device/i9300/drivers/gpu/built-in.o",
         ],
     }],
+    "drivers/media/video/built-in.o" :
+    [{
+        "injected_objects":
+        [
+            "device/i9300/drivers/media/video/built-in.o",
+        ],
+        "removed_objects":
+        [
+            "drivers/media/video/exynos/built-in.o",
+            "drivers/media/video/mhl/built-in.o",
+            "drivers/media/video/samsung/built-in.o",
+            "drivers/media/video/s5c73m3.o",
+            "drivers/media/video/s5c73m3_spi.o",
+            "drivers/media/video/videobuf2-cma-phys.o",
+        ],
+    }],
     "drivers/mfd/built-in.o" :
     [{
         "injected_objects":
