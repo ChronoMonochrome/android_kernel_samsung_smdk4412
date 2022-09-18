@@ -63,11 +63,16 @@ additional_build_rules = {
             "device/i9300/drivers/gpu/built-in.o",
         ],
     }],
-    "drivers/usb/built-in.o" :
+    "drivers/mmc/host/built-in.o" :
     [{
         "injected_objects":
         [
-            "device/i9300/drivers/usb/built-in.o",
+            "device/i9300/drivers/mmc/host/built-in.o",
+        ],
+        "removed_objects":
+        [
+            "drivers/mmc/host/sdhci.o",
+            "drivers/mmc/host/sdhci-s3c.o",
         ],
     }],
     "drivers/tty/serial/built-in.o" :
@@ -80,6 +85,13 @@ additional_build_rules = {
         [
             "drivers/tty/serial/samsung.o",
             "drivers/tty/serial/s5pv210.o",
+        ],
+    }],
+    "drivers/usb/built-in.o" :
+    [{
+        "injected_objects":
+        [
+            "device/i9300/drivers/usb/built-in.o",
         ],
     }],
     "drivers/built-in.o" :
