@@ -101,6 +101,19 @@ additional_build_rules = {
             "drivers/i2c/busses/i2c-s3c2410.o",
         ],
     }],
+    "drivers/input/built-in.o" :
+    [{
+        "injected_objects":
+        [
+            "device/i9300/drivers/input/keyboard/gpio_keys.o",
+            "device/i9300/drivers/input/keyboard/cypress/built-in.o",
+            "device/i9300/drivers/input/touchscreen/built-in.o",
+        ],
+        "removed_objects":
+        [
+            "drivers/input/keyboard/gpio_keys.o",
+        ],
+    }],
     "drivers/media/video/built-in.o" :
     [{
         "injected_objects":

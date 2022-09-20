@@ -22,14 +22,6 @@ config TOUCHSCREEN_MELFAS_GC
 	  To compile this driver as a module, choose M here: the
 	  module will be called GC model MMS.
 
-config TOUCHSCREEN_MELFAS
-	tristate "MELFAS touchscreen driver"
-	depends on I2C
-	help
-	  Say Y here if you have a MELFAS touchscreen.
-
-	  If unsure, say N.
-
 config TOUCHSCREEN_MELFAS_MMS
 	tristate "MELFAS touchscreen driver"
 	depends on I2C

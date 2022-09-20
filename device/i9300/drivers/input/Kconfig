@@ -1,0 +1,2 @@
+source "device/i9300/drivers/input/keyboard/Kconfig"
+source "device/i9300/drivers/input/touchscreen/Kconfig"

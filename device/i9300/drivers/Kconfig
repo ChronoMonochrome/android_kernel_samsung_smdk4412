@@ -5,6 +5,7 @@ source "device/i9300/drivers/battery/Kconfig"
 source "device/i9300/drivers/gud/Kconfig"
 
 source "device/i9300/drivers/gpu/Kconfig"
+source "device/i9300/drivers/input/Kconfig"
 source "device/i9300/drivers/leds/Kconfig"
 source "device/i9300/drivers/media/Kconfig"
 source "device/i9300/drivers/mfd/Kconfig"

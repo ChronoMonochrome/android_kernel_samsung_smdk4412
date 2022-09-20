@@ -7,6 +7,7 @@ obj-y                         += gpu/
 obj-$(CONFIG_MOBICORE_SUPPORT)  += gud/
 
 obj-y                         += i2c/
+obj-$(CONFIG_INPUT)           += input/
 obj-y                         += leds/
 obj-y                         += media/
 obj-y                         += mfd/
