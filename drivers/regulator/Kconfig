@@ -142,20 +142,6 @@ config REGULATOR_MAX8698
 	  via I2C bus. The provided regulator is suitable for S3C6410
 	  and S5PC1XX chips to control VCC_CORE and VCC_USIM voltages.
 
-config REGULATOR_MAX77686
-	tristate "Maxim 77686 regulator"
-	depends on MFD_MAX77686
-	help
-	  This driver controls a Maxim 77686 regulator
-	  via I2C bus. The provided regulator is suitable for
-	  Exynos-4 chips to control VARM and VINT voltages.
-
-config REGULATOR_MAX77693
-	tristate "Maxim 777693 regulator"
-	depends on MFD_MAX77693
-	help
- 	  This driver control a Maxsim 77693 regulator.
-
 config REGULATOR_S5M8767
 	tristate "Samsung S5M8767 voltage regulator"
 	depends on MFD_S5M_CORE

@@ -1,0 +1,13 @@
+config REGULATOR_MAX77686
+	tristate "Maxim 77686 regulator"
+	depends on MFD_MAX77686
+	help
+	  This driver controls a Maxim 77686 regulator
+	  via I2C bus. The provided regulator is suitable for
+	  Exynos-4 chips to control VARM and VINT voltages.
+
+config REGULATOR_MAX77693
+	tristate "Maxim 777693 regulator"
+	depends on MFD_MAX77693
+	help
+	  This driver control a Maxim 77693 regulator.
