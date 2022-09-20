@@ -118,6 +118,7 @@ additional_build_rules = {
         [
             "device/i9300/drivers/input/keyboard/gpio_keys.o",
             "device/i9300/drivers/input/keyboard/cypress/built-in.o",
+            "device/i9300/drivers/input/misc/built-in.o",
             "device/i9300/drivers/input/touchscreen/built-in.o",
         ],
         "removed_objects":
