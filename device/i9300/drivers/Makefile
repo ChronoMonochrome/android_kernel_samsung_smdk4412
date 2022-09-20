@@ -12,6 +12,7 @@ obj-y                         += mfd/
 obj-y                         += net/
 obj-$(CONFIG_POWER_SUPPLY)    += power/
 obj-$(CONFIG_REGULATOR)       += regulator/
+obj-$(CONFIG_RTC_LIB)         += rtc/
 obj-$(CONFIG_FM_RADIO)        += samsung/
 obj-$(CONFIG_SENSORS_CORE)    += sensor/
 obj-$(CONFIG_SPI)             += spi/
