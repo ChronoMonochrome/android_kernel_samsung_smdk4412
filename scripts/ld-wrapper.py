@@ -70,6 +70,17 @@ additional_build_rules = {
             "drivers/base/sw_sync.o",
         ],
     }],
+    "drivers/char/built-in.o" :
+    [{
+        "injected_objects":
+        [
+            "device/i9300/drivers/char/built-in.o",
+        ],
+        "removed_objects":
+        [
+            "drivers/char/mem.o",
+        ],
+    }],
     "drivers/gpio/built-in.o" :
     [{
         "injected_objects":
