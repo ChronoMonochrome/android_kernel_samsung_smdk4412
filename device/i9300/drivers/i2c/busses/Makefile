@@ -1,0 +1,1 @@
+obj-$(CONFIG_I2C_S3C2410)	+= i2c-s3c2410.o
