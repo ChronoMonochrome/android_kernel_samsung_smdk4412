@@ -245,6 +245,7 @@ additional_build_rules = {
         [
             "device/i9300/drivers/gud/built-in.o",
             "device/i9300/drivers/leds/built-in.o",
+            "device/i9300/drivers/motor/built-in.o",
             "device/i9300/drivers/samsung/built-in.o",
             "device/i9300/drivers/sensor/built-in.o",
             "device/i9300/drivers/thermal/built-in.o",

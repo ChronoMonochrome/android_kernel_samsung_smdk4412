@@ -126,8 +126,6 @@ source "drivers/hwspinlock/Kconfig"
 
 source "drivers/clocksource/Kconfig"
 
-source "drivers/motor/Kconfig"
-
 source "drivers/devfreq/Kconfig"
 
 source "drivers/phone_svn/Kconfig"
