@@ -265,6 +265,17 @@ additional_build_rules = {
             "device/i9300/drivers/thermal/built-in.o",
         ],
     }],
+    "sound/soc/built-in.o" :
+    [{
+        "injected_objects":
+        [
+            "device/i9300/sound/soc/samsung/built-in.o",
+        ],
+        "removed_objects":
+        [
+            "sound/soc/samsung/built-in.o"
+        ]
+    }],
 }
 
 # Check if the config is enabled
