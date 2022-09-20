@@ -55,12 +55,12 @@ def interpret_warning(line):
         print "error, forbidden warning:", m.group(2)
 
         # If there is a warning, remove any object if it exists.
-        if ofile:
-            try:
-                os.remove(ofile)
-            except OSError:
-                pass
-        sys.exit(1)
+        #if ofile:
+        #    try:
+        #        os.remove(ofile)
+        #    except OSError:
+        #        pass
+        #sys.exit(1)
 
 def run_gcc():
     args = sys.argv[1:]
