@@ -1,0 +1,71 @@
+config SND_SOC_SAMSUNG_MIDAS_WM1811
+	tristate "SoC I2S Audio support for WM1811 on MIDAS"
+	depends on SND_SOC_SAMSUNG && MACH_MIDAS
+	select SND_SOC_WM8994
+	select SND_SAMSUNG_I2S
+	help
+	  Say Y if you want to add support for SoC audio on the MIDAS.
+
+config SND_SOC_SAMSUNG_I2S_SEC
+	bool "I2S operate secondary FIFO"
+        depends on SND_SAMSUNG_LP || SND_SAMSUNG_ALP
+
+choice
+	prompt "Samsung I2S Audio type"
+	depends on SND_SAMSUNG_I2S && (ARCH_EXYNOS4 || ARCH_S5PV210 || ARCH_EXYNOS5)
+	default SND_SAMSUNG_NORMAL
+
+config SND_SAMSUNG_NORMAL
+	bool "Normal Audio support"
+	help
+	  Say Y if you want to support normal audio.
+
+config SND_SAMSUNG_LP
+	bool "LP Audio support"
+	select SND_SOC_SAMSUNG_I2S_SEC
+	help
+	  Say Y if you want to support LP audio.
+
+# For support SRP audio
+source "device/i9300/sound/soc/samsung/srp_alp/Kconfig"
+source "device/i9300/sound/soc/samsung/srp_ulp/Kconfig"
+
+endchoice
+
+config AUDIO_SAMSUNG_MEMSIZE_SRP
+	int "Memory size in kbytes for Low power Audio"
+	depends on SND_SAMSUNG_RP || SND_SAMSUNG_ALP
+	default "1024"
+
+config SND_SAMSUNG_RP_DEBUG
+	bool "Enable debug message for ULP & ALP Audio"
+	depends on SND_SAMSUNG_RP || SND_SAMSUNG_ALP
+	default n
+	help
+	  Say Y if you want to add debug message for ULP & ALP Audio.
+
+config SND_DUOS_MODEM_SWITCH
+	bool "Select DUOS Modem"
+	depends on SND_SOC_SAMSUNG
+
+config SND_USE_SUB_MIC
+	bool "Use SUB_MIC"
+	depends on SND_SOC_SAMSUNG
+
+config SND_USE_THIRD_MIC
+	bool "Use THIRD_MIC"
+	depends on SND_SOC_SAMSUNG
+
+config SND_USE_STEREO_SPEAKER
+	bool "Use STEREO_SPEAKER"
+	depends on SND_SOC_SAMSUNG
+	help
+	  Support stereo speaker for Samsung's Tablet-PC device.
+
+config SND_USE_LINEOUT_SWITCH
+	bool "Use LINEOUT_SWITCH"
+	depends on SND_SOC_SAMSUNG
+
+config SND_USE_MUIC_SWITCH
+	bool "Use MUIC_SWITCH CONTROL"
+	depends on SND_SOC_SAMSUNG
