@@ -1,1 +1,6 @@
+config WIFI_CONTROL_FUNC
+	bool "Enable WiFi control function abstraction"
+	help
+	  Enables Power/Reset/Carddetect function abstraction
+
 source "device/i9300/drivers/net/wireless/bcmdhd/Kconfig"
