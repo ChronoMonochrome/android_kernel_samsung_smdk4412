@@ -556,22 +556,6 @@ config WIMAX_CMC
 	 This is powered through the max8893.
 	 This feature is enabled by default if Wimax is enabled.
 
-config SEC_DEV_JACK
-	bool "Earjack detection driver for Samsung devices"
-	depends on INPUT
-	default n
-	---help---
-	 This is Earjack detection driver for Samsung devices.
-
-config MUIC_DET_JACK
-	bool "Earjack detection driver using MUIC"
-	default n
-	help
-	 This is Earjack detection driver using MUIC.
-	 MUIC can recognize earjack device type and earkey using ADC values.
-	 Some project use muic earjack instead of 3.5phi earjack.
-	 Max77693 muic also support earjack detection.
-
 config FM34_WE395
 	bool "Forte Media 2MIC driver"
 	default n
@@ -609,35 +593,6 @@ config MUIC_MAX8997_OVPUI
 	  concept of Maxim MAX8997 PMIC. The MAX8997 MUIC OVP UI concept
 	  is used in Chinese models. When OVP is occurred, the battery UI
 	  must be changed to uncharging status.
-
-config MUIC_MAX77693_SEPARATE_MHL_PORT
-	bool "MUIC_MAX77693_SEPARATE_MHL_PORT"
-	depends on MFD_MAX77693
-	default n
-	help
-	  If you say yes here you will get support for the separated
-	  MHL port.
-
-config MUIC_MAX77693_SUPPORT_OTG_AUDIO_DOCK
-	bool "MUIC_MAX77693_SUPPORT_OTG_AUDIO_DOCK"
-	depends on MFD_MAX77693
-	default n
-	help
-	  If you say yes here you will get support for the OTG audio dock.
-
-config MUIC_MAX77693_SUPPORT_SMART_DOCK
-	bool "MUIC_MAX77693_SUPPORT_SMART_DOCK"
-	depends on MFD_MAX77693
-	default n
-	help
-	  If you say yes here you will get support for the smart dock.
-
-config MUIC_MAX77693_SUPPORT_CAR_DOCK
-	bool "MUIC_MAX77693_SUPPORT_CAR_DOCK"
-	depends on MFD_MAX77693
-	default n
-	help
-	  If you say yes here you will get support for the car dock.
 
 config USBHUB_USB3503
 	bool "USB3503 USB HUB Driver"
@@ -702,9 +657,6 @@ source "drivers/misc/lis3lv02d/Kconfig"
 source "drivers/misc/carma/Kconfig"
 source "drivers/misc/c2c/Kconfig"
 
-source "drivers/misc/modem_if/Kconfig"
-source "drivers/misc/modem_if_na/Kconfig"
-source "drivers/misc/modem_if_u1/Kconfig"
 
 config SLP_LOWMEM_NOTIFY
 	bool "Driver for SLP Low Memory Notification"

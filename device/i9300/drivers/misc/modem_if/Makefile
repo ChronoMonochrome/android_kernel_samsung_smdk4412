@@ -1,6 +1,6 @@
 # Makefile of modem_if
 
-EXTRA_CFLAGS += -Idrivers/misc/modem_if
+EXTRA_CFLAGS += -Idevice/i9300/drivers/misc/modem_if
 
 obj-y += sipc5_modem.o sipc5_io_device.o sipc5_common.o
 obj-y += sipc4_modem.o sipc4_io_device.o

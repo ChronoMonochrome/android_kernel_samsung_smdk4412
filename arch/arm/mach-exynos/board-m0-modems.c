@@ -29,7 +29,7 @@
 #include <linux/usb/ehci_def.h>
 
 #ifdef CONFIG_SEC_MODEM_M0
-#include "../../../drivers/misc/modem_if/modem.h"
+#include "../../../device/i9300/drivers/misc/modem_if/modem.h"
 #else
 #include <linux/platform_data/modem.h>
 #endif
