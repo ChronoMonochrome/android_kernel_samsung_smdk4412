@@ -64,7 +64,7 @@ obj-$(CONFIG_SBUS)		+= sbus/
 obj-$(CONFIG_ZORRO)		+= zorro/
 obj-$(CONFIG_MAC)		+= macintosh/
 obj-$(CONFIG_ATA_OVER_ETH)	+= block/aoe/
-obj-$(CONFIG_PARIDE)		+= block/paride/
+obj-$(CONFIG_PARIDE) 		+= block/paride/
 obj-$(CONFIG_TC)		+= tc/
 obj-$(CONFIG_UWB)		+= uwb/
 obj-$(CONFIG_USB_OTG_UTILS)	+= usb/
@@ -85,11 +85,7 @@ obj-$(CONFIG_HWMON)		+= hwmon/
 obj-$(CONFIG_WATCHDOG)		+= watchdog/
 obj-$(CONFIG_PHONE)		+= telephony/
 obj-$(CONFIG_MD)		+= md/
-ifeq ($(CONFIG_BT_TIZEN),y)
-obj-$(CONFIG_BT)		+= bluetooth_tizen/
-else
 obj-$(CONFIG_BT)		+= bluetooth/
-endif
 obj-$(CONFIG_ACCESSIBILITY)	+= accessibility/
 obj-$(CONFIG_ISDN)		+= isdn/
 obj-$(CONFIG_EDAC)		+= edac/
@@ -123,23 +119,5 @@ obj-y				+= platform/
 obj-y				+= ieee802154/
 #common clk code
 obj-y				+= clk/
+
 obj-$(CONFIG_HWSPINLOCK)	+= hwspinlock/
-obj-$(CONFIG_PM_DEVFREQ)	+= devfreq/
-obj-$(CONFIG_SAMSUNG_PHONE_SVNET) += svnet/
-obj-$(CONFIG_PHONE_IPC_SPI) += phone_svn/
-obj-$(CONFIG_ACCESSORY)		+= accessory/
-obj-$(CONFIG_IR_REMOCON)	+= irda/
-obj-$(CONFIG_BARCODE_EMUL)	+= barcode_emul/
-obj-$(CONFIG_EXTCON)		+= extcon/
-obj-$(CONFIG_SAMSUNG_PHONE_TTY)	+= dpram/
-
-obj-$(CONFIG_IOMMU_SUPPORT)	+= iommu/
-
-obj-$(CONFIG_FELICA) += felica/
-
-obj-$(CONFIG_AUTHENTEC_VPNCLIENT_INTERCEPTOR) += interceptor/
-
-ifeq (1, $(shell if [ -d ./drivers/exfat ]; then echo 1; fi))
-obj-y	+= exfat/
-endif
-
