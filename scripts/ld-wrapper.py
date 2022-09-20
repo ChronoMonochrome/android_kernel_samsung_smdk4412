@@ -121,6 +121,13 @@ additional_build_rules = {
             "drivers/mmc/host/sdhci-s3c.o",
         ],
     }],
+    "drivers/net/wireless/built-in.o" :
+    [{
+        "injected_objects":
+        [
+            "device/i9300/drivers/net/wireless/bcmdhd/built-in.o",
+        ],
+    }],
     "drivers/power/built-in.o" :
     [{
         "injected_objects":
