@@ -176,6 +176,13 @@ additional_build_rules = {
             "drivers/mmc/host/sdhci-s3c.o",
         ],
     }],
+    "drivers/nfc/built-in.o" :
+    [{
+        "injected_objects":
+        [
+            "device/i9300/drivers/nfc/built-in.o",
+        ],
+    }],
     "drivers/net/wireless/built-in.o" :
     [{
         "injected_objects":
