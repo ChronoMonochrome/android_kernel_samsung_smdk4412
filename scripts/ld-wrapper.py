@@ -90,6 +90,17 @@ additional_build_rules = {
             "device/i9300/drivers/gpu/built-in.o",
         ],
     }],
+    "drivers/i2c/busses/built-in.o" :
+    [{
+        "injected_objects":
+        [
+            "device/i9300/drivers/i2c/busses/i2c-s3c2410.o",
+        ],
+        "removed_objects":
+        [
+            "drivers/i2c/busses/i2c-s3c2410.o",
+        ],
+    }],
     "drivers/media/video/built-in.o" :
     [{
         "injected_objects":

@@ -5,6 +5,7 @@ obj-y                         += gpu/
 # Secure OS Mobicore
 obj-$(CONFIG_MOBICORE_SUPPORT)  += gud/
 
+obj-y                         += i2c/
 obj-y                         += leds/
 obj-y                         += media/
 obj-$(CONFIG_MMC)             += mmc/
