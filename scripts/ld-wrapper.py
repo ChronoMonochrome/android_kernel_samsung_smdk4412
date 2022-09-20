@@ -166,6 +166,18 @@ additional_build_rules = {
             "drivers/regulator/wm8994-regulator.o",
         ],
     }],
+    "drivers/rtc/built-in.o" :
+    [{
+        "injected_objects":
+        [
+            "device/i9300/drivers/rtc/rtc-max77686.o",
+            "device/i9300/drivers/rtc/rtc-s3c.o",
+        ],
+        "removed_objects":
+        [
+            "drivers/rtc/rtc-s3c.o",
+        ],
+    }],
     "drivers/spi/built-in.o" :
     [{
         "injected_objects":
