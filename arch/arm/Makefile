@@ -224,13 +224,13 @@ TEXT_OFFSET := $(textofs-y)
 
 # The first directory contains additional information for the boot setup code
 ifneq ($(machine-y),)
-MACHINE  := arch/arm/mach-$(word 1,$(machine-y))/
+MACHINE  := device/i9300/arch/arm/mach-$(word 1,$(machine-y))/
 else
 MACHINE  :=
 endif
 
-machdirs := $(patsubst %,arch/arm/mach-%/,$(machine-y))
-platdirs := $(patsubst %,arch/arm/plat-%/,$(plat-y))
+machdirs := $(patsubst %,device/i9300/arch/arm/mach-%/,$(machine-y))
+platdirs := $(patsubst %,device/i9300/arch/arm/plat-%/,$(plat-y))
 
 ifeq ($(KBUILD_SRC),)
 KBUILD_CPPFLAGS += $(patsubst %,-I%include,$(machdirs) $(platdirs))

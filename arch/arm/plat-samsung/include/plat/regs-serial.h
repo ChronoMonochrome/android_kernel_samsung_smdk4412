@@ -255,8 +255,6 @@ struct s3c24xx_uart_clksrc {
  * arch/arm/mach-s3c2410/ directory.
 */
 
-struct uart_port;
-
 struct s3c2410_uartcfg {
 	unsigned char	   hwport;	 /* hardware port number */
 	unsigned char	   unused;
@@ -271,9 +269,6 @@ struct s3c2410_uartcfg {
 
 	struct s3c24xx_uart_clksrc *clocks;
 	unsigned int		    clocks_size;
-
-	void	(*wake_peer)(struct uart_port *);
-	void	(*set_runstate)(int onoff);
 };
 
 /* s3c24xx_uart_devs
@@ -287,3 +282,4 @@ extern struct platform_device *s3c24xx_uart_devs[4];
 #endif /* __ASSEMBLY__ */
 
 #endif /* __ASM_ARM_REGS_SERIAL_H */
+

@@ -67,8 +67,7 @@ struct s3c_gpio_chip {
 	void __iomem		*base;
 	int			irq_base;
 	int			group;
-	unsigned int		eint_offset;
-	spinlock_t		lock;
+	spinlock_t		 lock;
 #ifdef CONFIG_PM
 	u32			pm_save[4];
 #endif
@@ -117,8 +116,6 @@ extern void s3c_gpiolib_add(struct s3c_gpio_chip *chip);
  */
 extern void samsung_gpiolib_add_4bit_chips(struct s3c_gpio_chip *chip,
 					   int nr_chips);
-extern void samsung_gpiolib_add_4bit_chips_no_pm(struct s3c_gpio_chip *chip,
-					   int nr_chips);
 extern void samsung_gpiolib_add_4bit2_chips(struct s3c_gpio_chip *chip,
 					    int nr_chips);
 extern void samsung_gpiolib_add_2bit_chips(struct s3c_gpio_chip *chip,
@@ -144,9 +141,9 @@ extern struct s3c_gpio_cfg s3c24xx_gpiocfg_default;
 #ifdef CONFIG_S3C_GPIO_TRACK
 extern struct s3c_gpio_chip *s3c_gpios[S3C_GPIO_END];
 
-static inline struct s3c_gpio_chip *s3c_gpiolib_getchip(unsigned int pin)
+static inline struct s3c_gpio_chip *s3c_gpiolib_getchip(unsigned int chip)
 {
-	return (pin < S3C_GPIO_END) ? s3c_gpios[pin] : NULL;
+	return (chip < S3C_GPIO_END) ? s3c_gpios[chip] : NULL;
 }
 #else
 /* machine specific code should provide s3c_gpiolib_getchip */

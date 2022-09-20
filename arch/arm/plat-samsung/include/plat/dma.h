@@ -18,9 +18,7 @@ enum s3c2410_dma_buffresult {
 
 enum s3c2410_dmasrc {
 	S3C2410_DMASRC_HW,		/* source is memory */
-	S3C2410_DMASRC_MEM,		/* source is hardware */
-	S3C_DMA_MEM2MEM,
-	S3C_DMA_MEM2MEM_SET,
+	S3C2410_DMASRC_MEM		/* source is hardware */
 };
 
 /* enum s3c2410_chan_op
@@ -98,18 +96,8 @@ extern int s3c2410_dma_free(enum dma_ch channel, struct s3c2410_dma_client *);
  * drained before the buffer is given to the DMA system.
 */
 
-#define s3c2410_dma_enqueue(id, token, addr, size)		\
-			s3c2410_dma_enqueue_ring(id, token, addr, size, 0)
-
-/* s3c2410_dma_enqueue_ring
- *
- * place the given buffer onto the queue of operations for the channel.
- * The buffer must be allocated from dma coherent memory, or the Dcache/WB
- * drained before the buffer is given to the DMA system.
-*/
-
-extern int s3c2410_dma_enqueue_ring(enum dma_ch channel, void *id,
-			       dma_addr_t data, int size, int numofblock);
+extern int s3c2410_dma_enqueue(enum dma_ch channel, void *id,
+			       dma_addr_t data, int size);
 
 /* s3c2410_dma_config
  *
