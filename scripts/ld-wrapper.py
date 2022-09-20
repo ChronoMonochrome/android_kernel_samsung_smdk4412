@@ -164,6 +164,7 @@ additional_build_rules = {
         "injected_objects":
         [
             "device/i9300/drivers/power/built-in.o",
+            "device/i9300/drivers/battery/built-in.o",
         ],
         "removed_objects":
         [
