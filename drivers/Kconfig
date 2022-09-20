@@ -60,8 +60,6 @@ source "drivers/gpio/Kconfig"
 
 source "drivers/w1/Kconfig"
 
-source "drivers/battery/Kconfig"
-
 source "drivers/power/Kconfig"
 
 source "drivers/hwmon/Kconfig"

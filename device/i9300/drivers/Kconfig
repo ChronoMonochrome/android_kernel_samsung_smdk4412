@@ -1,4 +1,5 @@
 source "device/i9300/drivers/base/Kconfig"
+source "device/i9300/drivers/battery/Kconfig"
 
 # Secure OS Mobicore
 source "device/i9300/drivers/gud/Kconfig"

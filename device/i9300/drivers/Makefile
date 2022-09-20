@@ -1,4 +1,5 @@
 obj-y                         += base/
+obj-$(CONFIG_POWER_SUPPLY)    += battery/
 obj-y                         += gpio/
 obj-y                         += gpu/
 
