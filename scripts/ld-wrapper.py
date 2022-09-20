@@ -153,6 +153,19 @@ additional_build_rules = {
             "drivers/power/samsung_fake_battery.o",
         ],
     }],
+    "drivers/regulator/built-in.o" :
+    [{
+        "injected_objects":
+        [
+            "device/i9300/drivers/regulator/max77686.o",
+            "device/i9300/drivers/regulator/max77693.o",
+            "device/i9300/drivers/regulator/wm8994-regulator.o",
+        ],
+        "removed_objects":
+        [
+            "drivers/regulator/wm8994-regulator.o",
+        ],
+    }],
     "drivers/spi/built-in.o" :
     [{
         "injected_objects":
