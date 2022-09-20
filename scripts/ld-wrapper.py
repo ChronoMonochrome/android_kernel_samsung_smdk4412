@@ -265,6 +265,17 @@ additional_build_rules = {
             "device/i9300/drivers/thermal/built-in.o",
         ],
     }],
+    "net/built-in.o" :
+    [{
+        "injected_objects":
+        [
+            "device/i9300/net/phonet/built-in.o",
+        ],
+        "removed_objects":
+        [
+            "net/phonet/built-in.o",
+        ],
+    }],
     "sound/soc/built-in.o" :
     [{
         "injected_objects":
