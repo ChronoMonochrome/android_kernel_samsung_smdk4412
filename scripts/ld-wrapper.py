@@ -133,6 +133,17 @@ additional_build_rules = {
             "drivers/power/samsung_fake_battery.o",
         ],
     }],
+    "drivers/spi/built-in.o" :
+    [{
+        "injected_objects":
+        [
+            "device/i9300/drivers/spi/spi_s3c64xx.o",
+        ],
+        "removed_objects":
+        [
+            "drivers/spi/spi_s3c64xx.o"
+        ]
+    }],
     "drivers/tty/serial/built-in.o" :
     [{
         "injected_objects":
