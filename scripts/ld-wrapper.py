@@ -70,6 +70,19 @@ additional_build_rules = {
             "drivers/base/sw_sync.o",
         ],
     }],
+    "drivers/gpio/built-in.o" :
+    [{
+        "injected_objects":
+        [
+            "device/i9300/drivers/gpio/gpio-exynos4.o",
+            "device/i9300/drivers/gpio/gpio-plat-samsung.o",
+        ],
+        "removed_objects":
+        [
+            "drivers/gpio/gpio-exynos4.o",
+            "drivers/gpio/gpio-plat-samsung.o",
+        ],
+    }],
     "drivers/gpu/built-in.o" :
     [{
         "injected_objects":

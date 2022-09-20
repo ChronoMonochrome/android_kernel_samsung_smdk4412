@@ -1,4 +1,5 @@
 obj-y                         += base/
+obj-y                         += gpio/
 obj-y                         += gpu/
 
 # Secure OS Mobicore
