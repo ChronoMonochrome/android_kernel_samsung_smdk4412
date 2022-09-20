@@ -1,2 +1,3 @@
 source "device/i9300/drivers/Kconfig"
 source "device/i9300/sound/Kconfig"
+source "device/i9300/net/Kconfig"
