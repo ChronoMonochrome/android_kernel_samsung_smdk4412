@@ -1,1 +1,3 @@
+source "device/i9300/drivers/mmc/card/Kconfig"
+source "device/i9300/drivers/mmc/core/Kconfig"
 source "device/i9300/drivers/mmc/host/Kconfig"

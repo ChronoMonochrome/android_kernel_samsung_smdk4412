@@ -1,0 +1,5 @@
+config MMC_SELECTIVE_PACKED_CMD_POLICY
+	tristate "Change the condition of Pakced command"
+	help
+	  Say Y here to change packed_cmd policy
+
