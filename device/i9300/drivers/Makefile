@@ -11,6 +11,7 @@ obj-y                         += leds/
 obj-y                         += media/
 obj-y                         += mfd/
 obj-y                         += misc/
+obj-$(CONFIG_VIBETONZ)        += motor/
 obj-$(CONFIG_MMC)             += mmc/
 obj-y                         += net/
 obj-$(CONFIG_POWER_SUPPLY)    += power/
