@@ -133,6 +133,13 @@ additional_build_rules = {
             "drivers/mfd/max77693-irq.o",
         ],
     }],
+    "drivers/misc/built-in.o" :
+    [{
+        "injected_objects":
+        [
+            "device/i9300/drivers/misc/built-in.o",
+        ],
+    }],
     "drivers/mmc/host/built-in.o" :
     [{
         "injected_objects":
