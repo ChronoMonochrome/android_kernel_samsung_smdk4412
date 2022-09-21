@@ -13,7 +13,7 @@
 #ifndef __ASM_ARM_ARCH_DWMCI_H
 #define __ASM_ARM_ARCH_DWMCI_H __FILE__
 
-#include <linux/mmc/dw_mmc.h>
+#include <device/linux/mmc/dw_mmc.h>
 
 extern void exynos_dwmci_set_platdata(struct dw_mci_board *pd, u32 slot_id);
 

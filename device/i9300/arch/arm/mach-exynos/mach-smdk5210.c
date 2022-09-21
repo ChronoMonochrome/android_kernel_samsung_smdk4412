@@ -23,7 +23,7 @@
 #include <linux/spi/spi_gpio.h>
 #include <linux/cma.h>
 #include <linux/memblock.h>
-#include <linux/mmc/host.h>
+#include <device/linux/mmc/host.h>
 #include <linux/smsc911x.h>
 #include <linux/clk.h>
 

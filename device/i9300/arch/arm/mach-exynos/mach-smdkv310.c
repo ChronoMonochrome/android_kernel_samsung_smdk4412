@@ -12,7 +12,7 @@
 #include <linux/delay.h>
 #include <linux/gpio.h>
 #include <linux/lcd.h>
-#include <linux/mmc/host.h>
+#include <device/linux/mmc/host.h>
 #include <linux/platform_device.h>
 #include <linux/smsc911x.h>
 #include <linux/io.h>

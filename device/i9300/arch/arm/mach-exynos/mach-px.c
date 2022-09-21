@@ -14,7 +14,7 @@
 #include <linux/gpio_keys.h>
 #include <linux/gpio_event.h>
 #include <linux/lcd.h>
-#include <linux/mmc/host.h>
+#include <device/linux/mmc/host.h>
 #include <linux/platform_device.h>
 #include <linux/smsc911x.h>
 #include <linux/io.h>

@@ -34,11 +34,11 @@
 #include <bcmsdbus.h>	/* bcmsdh to/from specific controller APIs */
 #include <sdiovar.h>	/* ioctl/iovars */
 
-#include <linux/mmc/core.h>
-#include <linux/mmc/host.h>
-#include <linux/mmc/card.h>
-#include <linux/mmc/sdio_func.h>
-#include <linux/mmc/sdio_ids.h>
+#include <device/linux/mmc/core.h>
+#include <device/linux/mmc/host.h>
+#include <device/linux/mmc/card.h>
+#include <device/linux/mmc/sdio_func.h>
+#include <device/linux/mmc/sdio_ids.h>
 
 #include <dngl_stats.h>
 #include <dhd.h>

@@ -18,7 +18,7 @@
 #include <linux/types.h>
 #include <linux/io.h>
 
-#include <linux/mmc/sdhci.h>
+#include <device/linux/mmc/sdhci.h>
 
 /*
  * Controller registers

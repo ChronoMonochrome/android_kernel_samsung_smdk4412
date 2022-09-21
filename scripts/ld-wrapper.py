@@ -165,16 +165,17 @@ additional_build_rules = {
             "device/i9300/drivers/misc/built-in.o",
         ],
     }],
-    "drivers/mmc/host/built-in.o" :
+    "drivers/mmc/built-in.o" :
     [{
         "injected_objects":
         [
-            "device/i9300/drivers/mmc/host/built-in.o",
+            "device/i9300/drivers/mmc/built-in.o",
         ],
         "removed_objects":
         [
-            "drivers/mmc/host/sdhci.o",
-            "drivers/mmc/host/sdhci-s3c.o",
+            "drivers/mmc/core/built-in.o",
+            "drivers/mmc/card/built-in.o",
+            "drivers/mmc/host/built-in.o",
         ],
     }],
     "drivers/nfc/built-in.o" :
