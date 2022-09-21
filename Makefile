@@ -366,7 +366,7 @@ CFLAGS_GCOV	= -fprofile-arcs -ftest-coverage
 # Use LINUXINCLUDE when you must reference the include/ directory.
 # Needed to be compatible with the O= option
 LINUXINCLUDE    := -I$(srctree)/arch/$(hdr-arch)/include \
-                   -Iarch/$(hdr-arch)/include/generated -Iinclude \
+                   -Iarch/$(hdr-arch)/include/generated -I$(srctree)/device/i9300/include -Iinclude \
                    $(if $(KBUILD_SRC), -I$(srctree)/include) \
                    -include include/generated/autoconf.h
 
