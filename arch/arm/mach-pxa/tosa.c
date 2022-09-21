@@ -20,7 +20,7 @@
 #include <linux/interrupt.h>
 #include <linux/delay.h>
 #include <linux/fb.h>
-#include <linux/mmc/host.h>
+#include <device/linux/mmc/host.h>
 #include <linux/mfd/tc6393xb.h>
 #include <linux/mfd/tmio.h>
 #include <linux/mtd/nand.h>

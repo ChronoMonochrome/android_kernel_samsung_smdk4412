@@ -18,7 +18,7 @@
 
 #include <linux/kernel.h>
 #include <linux/platform_device.h>
-#include <linux/mmc/host.h>
+#include <device/linux/mmc/host.h>
 
 #include <mach/map.h>
 #include <plat/sdhci.h>

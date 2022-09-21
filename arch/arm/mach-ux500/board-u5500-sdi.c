@@ -6,7 +6,7 @@
  */
 
 #include <linux/amba/mmci.h>
-#include <linux/mmc/host.h>
+#include <device/linux/mmc/host.h>
 #include <linux/gpio.h>
 
 #include <plat/pincfg.h>

@@ -12,11 +12,11 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  */
-#include <linux/mmc/core.h>
-#include <linux/mmc/card.h>
-#include <linux/mmc/host.h>
-#include <linux/mmc/mmc.h>
-#include <linux/mmc/sd.h>
+#include <device/linux/mmc/core.h>
+#include <device/linux/mmc/card.h>
+#include <device/linux/mmc/host.h>
+#include <device/linux/mmc/mmc.h>
+#include <device/linux/mmc/sd.h>
 
 
 #include <linux/scatterlist.h>

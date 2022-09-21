@@ -16,8 +16,8 @@
 #include <linux/dma-mapping.h>
 #include <linux/platform_device.h>
 #include <linux/interrupt.h>
-#include <linux/mmc/dw_mmc.h>
-#include <linux/mmc/host.h>
+#include <device/linux/mmc/dw_mmc.h>
+#include <device/linux/mmc/host.h>
 
 #include <plat/devs.h>
 #include <plat/cpu.h>

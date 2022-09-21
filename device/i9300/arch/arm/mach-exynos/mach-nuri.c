@@ -17,7 +17,7 @@
 #include <linux/gpio.h>
 #include <linux/regulator/machine.h>
 #include <linux/regulator/fixed.h>
-#include <linux/mmc/host.h>
+#include <device/linux/mmc/host.h>
 #include <linux/fb.h>
 #include <linux/pwm_backlight.h>
 

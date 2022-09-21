@@ -19,7 +19,7 @@
 #include <linux/mtd/mtd.h>
 #include <linux/mtd/partitions.h>
 #include <linux/mtd/physmap.h>
-#include <linux/mmc/host.h>
+#include <device/linux/mmc/host.h>
 #include <linux/delay.h>
 #include <linux/i2c/twl.h>
 #include <linux/regulator/machine.h>

@@ -20,7 +20,7 @@
 #include <linux/io.h>
 #include <linux/gpio.h>
 
-#include <linux/mmc/host.h>
+#include <device/linux/mmc/host.h>
 
 #include <plat/sdhci.h>
 #include <plat/regs-sdhci.h>

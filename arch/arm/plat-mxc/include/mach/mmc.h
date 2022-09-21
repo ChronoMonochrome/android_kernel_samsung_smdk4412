@@ -1,7 +1,7 @@
 #ifndef ASMARM_ARCH_MMC_H
 #define ASMARM_ARCH_MMC_H
 
-#include <linux/mmc/host.h>
+#include <device/linux/mmc/host.h>
 
 struct device;
 

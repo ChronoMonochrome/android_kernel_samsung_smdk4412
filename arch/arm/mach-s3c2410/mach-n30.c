@@ -26,7 +26,7 @@
 #include <linux/serial_core.h>
 #include <linux/timer.h>
 #include <linux/io.h>
-#include <linux/mmc/host.h>
+#include <device/linux/mmc/host.h>
 
 #include <mach/hardware.h>
 #include <asm/irq.h>

@@ -10,7 +10,7 @@
 
 #include <linux/gpio.h>
 #include <linux/smsc911x.h>
-#include <linux/mmc/host.h>
+#include <device/linux/mmc/host.h>
 #include <linux/delay.h>
 
 #include <plat/gpio-cfg.h>

@@ -19,7 +19,7 @@
 #include <linux/i2c-gpio.h>
 #include <linux/pwm_backlight.h>
 #include <linux/input.h>
-#include <linux/mmc/host.h>
+#include <device/linux/mmc/host.h>
 #include <linux/regulator/machine.h>
 #include <linux/regulator/max8649.h>
 #include <linux/regulator/fixed.h>

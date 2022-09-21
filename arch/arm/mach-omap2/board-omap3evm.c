@@ -33,7 +33,7 @@
 #include <linux/wl12xx.h>
 #include <linux/regulator/fixed.h>
 #include <linux/regulator/machine.h>
-#include <linux/mmc/host.h>
+#include <device/linux/mmc/host.h>
 
 #include <mach/hardware.h>
 #include <asm/mach-types.h>

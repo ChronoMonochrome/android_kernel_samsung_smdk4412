@@ -22,7 +22,7 @@
 #include <linux/io.h>
 #include <linux/gpio.h>
 
-#include <linux/mmc/host.h>
+#include <device/linux/mmc/host.h>
 
 #include <plat/gpio-cfg.h>
 #include <plat/mshci.h>

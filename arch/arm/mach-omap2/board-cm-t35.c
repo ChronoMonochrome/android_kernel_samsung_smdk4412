@@ -31,7 +31,7 @@
 #include <linux/i2c/at24.h>
 #include <linux/i2c/twl.h>
 #include <linux/regulator/machine.h>
-#include <linux/mmc/host.h>
+#include <device/linux/mmc/host.h>
 
 #include <linux/spi/spi.h>
 #include <linux/spi/tdo24m.h>
