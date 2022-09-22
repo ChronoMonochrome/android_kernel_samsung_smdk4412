@@ -18,7 +18,7 @@
 #include <linux/major.h>
 #include <linux/fs.h>
 #include <linux/interrupt.h>
-#include <device/linux/mmc/host.h>
+#include <linux/mmc/host.h>
 #include <linux/mtd/physmap.h>
 #include <linux/pm.h>
 #include <linux/gpio.h>

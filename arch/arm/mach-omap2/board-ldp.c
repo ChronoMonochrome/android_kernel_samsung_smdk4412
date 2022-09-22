@@ -26,7 +26,7 @@
 #include <linux/i2c/twl.h>
 #include <linux/io.h>
 #include <linux/smsc911x.h>
-#include <device/linux/mmc/host.h>
+#include <linux/mmc/host.h>
 
 #include <mach/hardware.h>
 #include <asm/mach-types.h>

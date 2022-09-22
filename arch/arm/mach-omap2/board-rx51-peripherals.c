@@ -22,7 +22,7 @@
 #include <linux/regulator/machine.h>
 #include <linux/gpio.h>
 #include <linux/gpio_keys.h>
-#include <device/linux/mmc/host.h>
+#include <linux/mmc/host.h>
 #include <linux/power/isp1704_charger.h>
 
 #include <plat/mcspi.h>

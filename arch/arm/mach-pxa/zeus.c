@@ -18,7 +18,7 @@
 #include <linux/gpio.h>
 #include <linux/serial_8250.h>
 #include <linux/dm9000.h>
-#include <device/linux/mmc/host.h>
+#include <linux/mmc/host.h>
 #include <linux/spi/spi.h>
 #include <linux/spi/pxa2xx_spi.h>
 #include <linux/mtd/mtd.h>

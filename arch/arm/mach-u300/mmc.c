@@ -12,7 +12,7 @@
  */
 #include <linux/device.h>
 #include <linux/amba/bus.h>
-#include <device/linux/mmc/host.h>
+#include <linux/mmc/host.h>
 #include <linux/gpio.h>
 #include <linux/dmaengine.h>
 #include <linux/amba/mmci.h>

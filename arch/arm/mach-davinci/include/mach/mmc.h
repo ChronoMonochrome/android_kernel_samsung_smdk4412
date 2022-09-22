@@ -6,7 +6,7 @@
 #define _DAVINCI_MMC_H
 
 #include <linux/types.h>
-#include <device/linux/mmc/host.h>
+#include <linux/mmc/host.h>
 
 struct davinci_mmc_config {
 	/* get_cd()/get_wp() may sleep */

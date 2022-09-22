@@ -25,12 +25,12 @@
 #include <linux/platform_device.h>
 #include <linux/delay.h>
 #include <linux/mfd/tmio.h>
-#include <device/linux/mmc/host.h>
-#include <device/linux/mmc/sh_mobile_sdhi.h>
+#include <linux/mmc/host.h>
+#include <linux/mmc/sh_mobile_sdhi.h>
 #include <linux/mtd/mtd.h>
 #include <linux/mtd/partitions.h>
 #include <linux/mtd/physmap.h>
-#include <device/linux/mmc/sh_mmcif.h>
+#include <linux/mmc/sh_mmcif.h>
 #include <linux/i2c.h>
 #include <linux/i2c/tsc2007.h>
 #include <linux/io.h>

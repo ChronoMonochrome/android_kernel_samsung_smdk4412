@@ -39,7 +39,7 @@
 #include <linux/serial_core.h>
 #include <linux/spi/spi.h>
 
-#include <device/linux/mmc/host.h>
+#include <linux/mmc/host.h>
 
 #include <linux/mtd/mtd.h>
 #include <linux/mtd/nand.h>

@@ -9,7 +9,7 @@
 #include <linux/gpio.h>
 #include <linux/amba/bus.h>
 #include <linux/amba/mmci.h>
-#include <device/linux/mmc/host.h>
+#include <linux/mmc/host.h>
 #include <linux/platform_device.h>
 
 #include <asm/mach-types.h>

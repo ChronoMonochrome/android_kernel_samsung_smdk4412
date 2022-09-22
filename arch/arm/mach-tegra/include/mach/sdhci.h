@@ -17,7 +17,7 @@
 #ifndef __ASM_ARM_ARCH_TEGRA_SDHCI_H
 #define __ASM_ARM_ARCH_TEGRA_SDHCI_H
 
-#include <device/linux/mmc/host.h>
+#include <linux/mmc/host.h>
 
 struct tegra_sdhci_platform_data {
 	int cd_gpio;

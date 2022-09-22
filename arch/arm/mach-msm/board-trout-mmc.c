@@ -6,8 +6,8 @@
 #include <linux/init.h>
 #include <linux/platform_device.h>
 #include <linux/delay.h>
-#include <device/linux/mmc/host.h>
-#include <device/linux/mmc/sdio_ids.h>
+#include <linux/mmc/host.h>
+#include <linux/mmc/sdio_ids.h>
 #include <linux/err.h>
 #include <linux/debugfs.h>
 

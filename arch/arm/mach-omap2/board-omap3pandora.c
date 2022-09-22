@@ -32,8 +32,8 @@
 #include <linux/input/matrix_keypad.h>
 #include <linux/gpio.h>
 #include <linux/gpio_keys.h>
-#include <device/linux/mmc/host.h>
-#include <device/linux/mmc/card.h>
+#include <linux/mmc/host.h>
+#include <linux/mmc/card.h>
 #include <linux/regulator/fixed.h>
 
 #include <asm/mach-types.h>

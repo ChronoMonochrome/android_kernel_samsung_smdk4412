@@ -13,7 +13,7 @@
 
 #include <linux/types.h>
 #include <linux/device.h>
-#include <device/linux/mmc/host.h>
+#include <linux/mmc/host.h>
 
 #include <plat/board.h>
 
