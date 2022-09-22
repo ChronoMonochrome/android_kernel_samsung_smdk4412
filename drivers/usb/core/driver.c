@@ -1181,6 +1181,19 @@ static int usb_suspend_both(struct usb_device *udev, pm_message_t msg)
 			udev->state == USB_STATE_SUSPENDED)
 		goto done;
 
+#ifdef CONFIG_MDM_HSIC_PM
+	/* when additional device attached at ehci hub, interface driver will
+	 * goes to suspend , but hub will not goes to suspend.
+	 * in hsic case, device modem cannot notice this change on host, so
+	 * it does not try to send packet to host
+	 *
+	 * prevent suspend_both when it's parent has more child
+	 */
+	if (udev->dev.parent) {
+		if (atomic_read(&udev->dev.parent->power.child_count) != 1)
+			return -EBUSY;
+	}
+#endif
 	/* Suspend all the interfaces and then udev itself */
 	if (udev->actconfig) {
 		n = udev->actconfig->desc.bNumInterfaces;
@@ -1332,6 +1345,9 @@ int usb_resume(struct device *dev, pm_message_t msg)
 	 * Unbind the interfaces that will need rebinding later.
 	 */
 	} else {
+		#ifdef CONFIG_MDM_HSIC_PM
+		pm_runtime_get_sync(dev->parent);
+		#endif
 		status = usb_resume_both(udev, msg);
 		if (status == 0) {
 			pm_runtime_disable(dev);
@@ -1339,6 +1355,9 @@ int usb_resume(struct device *dev, pm_message_t msg)
 			pm_runtime_enable(dev);
 			do_unbind_rebind(udev, DO_REBIND);
 		}
+		#ifdef CONFIG_MDM_HSIC_PM
+		pm_runtime_put_sync(dev->parent);
+		#endif
 	}
 
 	/* Avoid PM error messages for devices disconnected while suspended
@@ -1583,7 +1602,7 @@ int usb_autopm_get_interface_async(struct usb_interface *intf)
 	dev_vdbg(&intf->dev, "%s: cnt %d -> %d\n",
 			__func__, atomic_read(&intf->dev.power.usage_count),
 			status);
-	if (status > 0)
+	if (status > 0 || status == -EINPROGRESS)
 		status = 0;
 	return status;
 }
@@ -1668,6 +1687,11 @@ int usb_runtime_suspend(struct device *dev)
 		return -EAGAIN;
 
 	status = usb_suspend_both(udev, PMSG_AUTO_SUSPEND);
+
+	/* Allow a retry if autosuspend failed temporarily */
+	if (status == -EAGAIN || status == -EBUSY)
+		usb_mark_last_busy(udev);
+
 	/* The PM core reacts badly unless the return code is 0,
 	 * -EAGAIN, or -EBUSY, so always return -EBUSY on an error.
 	 */
