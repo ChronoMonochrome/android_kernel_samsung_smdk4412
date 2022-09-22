@@ -25,8 +25,6 @@
 
 struct max17042_platform_data {
 	bool enable_current_sense;
-
-	const char *psy_name;
 };
 
 #endif /* __MAX17042_BATTERY_H_ */

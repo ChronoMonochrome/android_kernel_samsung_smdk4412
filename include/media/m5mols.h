@@ -1,5 +1,5 @@
 /*
- * Driver for M5MOLS 8M Pixel camera sensor with ISP
+ * Driver header for M-5MOLS 8M Pixel camera sensor with ISP
  *
  * Copyright (C) 2011 Samsung Electronics Co., Ltd.
  * Author: HeungJun Kim <riverful.kim@samsung.com>
@@ -17,19 +17,19 @@
 #define MEDIA_M5MOLS_H
 
 /**
-* struct m5mols_platform_data - platform data for M5MOLS driver
-* @irq:   GPIO getting the irq pin of M5MOLS
-* @gpio_rst:  GPIO driving the reset pin of M5MOLS
- * @enable_rst:	the pin state when reset pin is enabled
-* @set_power:	an additional callback to a board setup code
+ * struct m5mols_platform_data - platform data for M-5MOLS driver
+ * @irq:	GPIO getting the irq pin of M-5MOLS
+ * @gpio_reset:	GPIO driving the reset pin of M-5MOLS
+ * @reset_polarity: active state for gpio_rst pin, 0 or 1
+ * @set_power:	an additional callback to the board setup code
  *		to be called after enabling and before disabling
-*		the sensor device supply regulators
+ *		the sensor's supply regulators
  */
 struct m5mols_platform_data {
-	int (*set_power)(struct device *dev, int on);
 	int irq;
-	int	gpio_rst;
-	bool	enable_rst;
+	int gpio_reset;
+	u8 reset_polarity;
+	int (*set_power)(struct device *dev, int on);
 };
 
 #endif	/* MEDIA_M5MOLS_H */
