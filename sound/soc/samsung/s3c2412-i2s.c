@@ -69,19 +69,15 @@ static int s3c2412_i2s_probe(struct snd_soc_dai *dai)
 	s3c2412_i2s.dma_playback = &s3c2412_i2s_pcm_stereo_out;
 
 	s3c2412_i2s.iis_cclk = clk_get(dai->dev, "i2sclk");
-	if (IS_ERR(s3c2412_i2s.iis_cclk)) {
+	if (s3c2412_i2s.iis_cclk == NULL) {
 		pr_err("failed to get i2sclk clock\n");
 		iounmap(s3c2412_i2s.regs);
-		return PTR_ERR(s3c2412_i2s.iis_cclk);
+		return -ENODEV;
 	}
 
 	/* Set MPLL as the source for IIS CLK */
 
-	if (clk_set_parent(s3c2412_i2s.iis_cclk, clk_get(NULL, "mpll"))) {
-		pr_err("unable to set parent %s of clock %s.\n",
-				"mpll", s3c2412_i2c.iis_cclk->name);
-		return -EINVAL;
-	}
+	clk_set_parent(s3c2412_i2s.iis_cclk, clk_get(NULL, "mpll"));
 	clk_enable(s3c2412_i2s.iis_cclk);
 
 	s3c2412_i2s.iis_cclk = s3c2412_i2s.iis_pclk;
