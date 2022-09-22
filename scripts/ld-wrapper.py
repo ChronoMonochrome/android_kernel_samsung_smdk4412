@@ -284,6 +284,10 @@ additional_build_rules = {
             "device/i9300/drivers/switch/built-in.o",
             "device/i9300/drivers/thermal/built-in.o",
         ],
+        "removed_objects":
+        [
+            "drivers/thermal/built-in.o"
+        ],
     }],
     "net/built-in.o" :
     [{
