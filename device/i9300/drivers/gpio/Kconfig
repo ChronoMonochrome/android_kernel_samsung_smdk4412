@@ -1,0 +1,4 @@
+config GPIO_EXYNOS4
+	def_bool y
+	depends on ARCH_EXYNOS4
+
