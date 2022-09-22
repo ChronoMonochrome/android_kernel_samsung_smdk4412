@@ -693,14 +693,10 @@ static int usbdev_open(struct inode *inode, struct file *file)
 	if (dev->state == USB_STATE_NOTATTACHED)
 		goto out_unlock_device;
 
-#if defined(CONFIG_LINK_DEVICE_HSIC) || defined(CONFIG_LINK_DEVICE_USB)
-	pr_debug("mif: modem usbdev_open, skip usb_autoresume_device\n");
-	ret = 0;
-#else
 	ret = usb_autoresume_device(dev);
 	if (ret)
 		goto out_unlock_device;
-#endif
+
 	ps->dev = dev;
 	ps->file = file;
 	spin_lock_init(&ps->lock);
@@ -749,11 +745,7 @@ static int usbdev_release(struct inode *inode, struct file *file)
 			releaseintf(ps, ifnum);
 	}
 	destroy_all_async(ps);
-#if defined(CONFIG_LINK_DEVICE_HSIC) || defined(CONFIG_LINK_DEVICE_USB)
-	pr_debug("mif: modem usbdev_open, skip usb_autosuspend_device\n");
-#else
 	usb_autosuspend_device(dev);
-#endif
 	usb_unlock_device(dev);
 	usb_put_dev(dev);
 	put_pid(ps->disc_pid);
@@ -972,11 +964,10 @@ static int proc_getdriver(struct dev_state *ps, void __user *arg)
 
 static int proc_connectinfo(struct dev_state *ps, void __user *arg)
 {
-	struct usbdevfs_connectinfo ci;
-
-	memset(&ci, 0, sizeof(ci));
-	ci.devnum = ps->dev->devnum;
-	ci.slow = ps->dev->speed == USB_SPEED_LOW;
+	struct usbdevfs_connectinfo ci = {
+		.devnum = ps->dev->devnum,
+		.slow = ps->dev->speed == USB_SPEED_LOW
+	};
 
 	if (copy_to_user(arg, &ci, sizeof(ci)))
 		return -EFAULT;
