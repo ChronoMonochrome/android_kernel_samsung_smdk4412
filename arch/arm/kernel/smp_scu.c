@@ -16,6 +16,8 @@
 
 #include <plat/cpu.h>
 
+#include <plat/cpu.h>
+
 #define SCU_CTRL		0x00
 #define SCU_CONFIG		0x04
 #define SCU_CPU_STATUS		0x08
