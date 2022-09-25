@@ -1,3 +1,5 @@
+obj-$(CONFIG_REGULATOR) += core.o dummy.o
+obj-$(CONFIG_REGULATOR_FIXED_VOLTAGE) += fixed.o
 obj-$(CONFIG_REGULATOR_MAX77686) += max77686.o
 obj-$(CONFIG_REGULATOR_MAX77693) += max77693.o
 obj-$(CONFIG_REGULATOR_WM8994) += wm8994-regulator.o
