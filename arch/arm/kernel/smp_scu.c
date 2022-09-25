@@ -14,6 +14,8 @@
 #include <asm/smp_scu.h>
 #include <asm/cacheflush.h>
 
+#include <plat/cpu.h>
+
 #define SCU_CTRL		0x00
 #define SCU_CONFIG		0x04
 #define SCU_CPU_STATUS		0x08
@@ -40,6 +42,10 @@ void __init scu_enable(void __iomem *scu_base)
 	/* already enabled? */
 	if (scu_ctrl & 1)
 		return;
+
+	if ((soc_is_exynos4412() && (samsung_rev() >= EXYNOS4412_REV_1_0)) ||
+		soc_is_exynos4210())
+		scu_ctrl |= (1<<3);
 
 	scu_ctrl |= 1;
 	__raw_writel(scu_ctrl, scu_base + SCU_CTRL);
