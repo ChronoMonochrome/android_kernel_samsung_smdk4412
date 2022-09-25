@@ -85,11 +85,13 @@ additional_build_rules = {
     [{
         "injected_objects":
         [
+            "device/i9300/drivers/gpio/gpiolib.o",
             "device/i9300/drivers/gpio/gpio-exynos4.o",
             "device/i9300/drivers/gpio/gpio-plat-samsung.o",
         ],
         "removed_objects":
         [
+            "drivers/gpio/gpiolib.o",
             "drivers/gpio/gpio-exynos4.o",
             "drivers/gpio/gpio-plat-samsung.o",
         ],
@@ -209,12 +211,18 @@ additional_build_rules = {
     [{
         "injected_objects":
         [
+            "device/i9300/drivers/regulator/core.o",
+            "device/i9300/drivers/regulator/dummy.o",
+            "device/i9300/drivers/regulator/fixed.o",
             "device/i9300/drivers/regulator/max77686.o",
             "device/i9300/drivers/regulator/max77693.o",
             "device/i9300/drivers/regulator/wm8994-regulator.o",
         ],
         "removed_objects":
         [
+            "drivers/regulator/core.o",
+            "drivers/regulator/dummy.o",
+            "drivers/regulator/fixed.o",
             "drivers/regulator/wm8994-regulator.o",
         ],
     }],
