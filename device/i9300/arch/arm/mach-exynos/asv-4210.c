@@ -16,7 +16,7 @@
 #include <linux/err.h>
 #include <linux/clk.h>
 #include <linux/io.h>
-#include <linux/regulator/consumer.h>
+#include <device/linux/regulator/consumer.h>
 
 #include <plat/cpu.h>
 #include <plat/clock.h>

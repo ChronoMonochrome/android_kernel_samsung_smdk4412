@@ -23,8 +23,8 @@
 #include <linux/switch.h>
 #include <linux/spi/spi.h>
 #include <linux/spi/spi_gpio.h>
-#include <linux/regulator/machine.h>
-#include <linux/regulator/fixed.h>
+#include <device/linux/regulator/machine.h>
+#include <device/linux/regulator/fixed.h>
 #include <linux/mfd/max8997.h>
 #include <linux/mfd/max8997-private.h>
 #include <linux/sensor/k3g.h>

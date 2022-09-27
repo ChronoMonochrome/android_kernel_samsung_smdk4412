@@ -20,7 +20,7 @@
 #include <linux/gpio.h>
 #include <linux/i2c.h>
 #include <linux/delay.h>
-#include <linux/regulator/consumer.h>
+#include <device/linux/regulator/consumer.h>
 #include <linux/lcd.h>
 
 #include <plat/devs.h>

@@ -20,7 +20,7 @@
 #ifndef __LINUX_REGULATOR_MAX8660_H
 #define __LINUX_REGULATOR_MAX8660_H
 
-#include <linux/regulator/machine.h>
+#include <device/linux/regulator/machine.h>
 
 enum {
 	MAX8660_V3,

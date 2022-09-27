@@ -31,7 +31,7 @@
 #include <linux/clk.h>
 #include <linux/io.h>
 #include <linux/gpio.h>
-#include <linux/regulator/consumer.h>
+#include <device/linux/regulator/consumer.h>
 #include <linux/dmaengine.h>
 
 #include <asm/dma.h>

@@ -15,7 +15,7 @@
 
 #include <linux/wacom_i2c.h>
 
-#include <linux/regulator/consumer.h>
+#include <device/linux/regulator/consumer.h>
 #include <plat/gpio-cfg.h>
 
 #ifdef CONFIG_CPU_FREQ_GOV_ONDEMAND_FLEXRATE

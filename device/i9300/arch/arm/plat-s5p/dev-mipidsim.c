@@ -11,7 +11,7 @@
 #include <linux/kernel.h>
 #include <linux/string.h>
 #include <linux/platform_device.h>
-#include <linux/regulator/consumer.h>
+#include <device/linux/regulator/consumer.h>
 #include <linux/fb.h>
 
 #include <mach/map.h>

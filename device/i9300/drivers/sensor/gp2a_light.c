@@ -28,7 +28,7 @@
 #include <linux/platform_device.h>
 #include <linux/sensor/gp2a.h>
 #include <linux/slab.h>
-#include <linux/regulator/consumer.h>
+#include <device/linux/regulator/consumer.h>
 #include <linux/workqueue.h>
 #include <linux/sensor/sensors_core.h>
 

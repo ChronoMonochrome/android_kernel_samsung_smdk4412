@@ -28,7 +28,7 @@
 #ifndef __LINUX_MFD_MAX77693_H
 #define __LINUX_MFD_MAX77693_H
 
-#include <linux/regulator/consumer.h>
+#include <device/linux/regulator/consumer.h>
 
 enum {
 	MAX77693_MUIC_DETACHED = 0,

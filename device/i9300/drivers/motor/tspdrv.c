@@ -47,9 +47,9 @@
 #include <mach/map.h>
 
 #if defined(CONFIG_MACH_GRANDE)
-#include <linux/regulator/consumer.h>
-#include <linux/regulator/driver.h>
-#include <linux/regulator/machine.h>
+#include <device/linux/regulator/consumer.h>
+#include <device/linux/regulator/driver.h>
+#include <device/linux/regulator/machine.h>
 #endif
 
 #include "tspdrv.h"

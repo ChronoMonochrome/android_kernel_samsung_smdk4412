@@ -21,8 +21,8 @@
 #include <linux/err.h>
 #include <linux/mutex.h>
 #include <linux/platform_device.h>
-#include <linux/regulator/driver.h>
-#include <linux/regulator/fixed.h>
+#include <device/linux/regulator/driver.h>
+#include <device/linux/regulator/fixed.h>
 #include <linux/gpio.h>
 #include <linux/delay.h>
 #include <linux/slab.h>

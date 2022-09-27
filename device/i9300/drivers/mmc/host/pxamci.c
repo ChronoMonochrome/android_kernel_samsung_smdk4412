@@ -27,7 +27,7 @@
 #include <linux/err.h>
 #include <device/linux/mmc/host.h>
 #include <linux/io.h>
-#include <linux/regulator/consumer.h>
+#include <device/linux/regulator/consumer.h>
 #include <linux/gpio.h>
 #include <linux/gfp.h>
 

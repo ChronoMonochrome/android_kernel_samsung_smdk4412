@@ -19,8 +19,8 @@
 
 #include <linux/clk.h>
 #include <linux/err.h>
-#include <linux/regulator/consumer.h>
-#include <linux/regulator/driver.h>
+#include <device/linux/regulator/consumer.h>
+#include <device/linux/regulator/driver.h>
 
 #include <asm/io.h>
 

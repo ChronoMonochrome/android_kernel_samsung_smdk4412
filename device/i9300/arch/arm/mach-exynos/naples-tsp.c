@@ -11,7 +11,7 @@
 #include <linux/i2c.h>
 #include <linux/err.h>
 #include <linux/gpio.h>
-#include <linux/regulator/consumer.h>
+#include <device/linux/regulator/consumer.h>
 #include <plat/gpio-cfg.h>
 #include <linux/delay.h>
 #include <mach/naples-tsp.h>

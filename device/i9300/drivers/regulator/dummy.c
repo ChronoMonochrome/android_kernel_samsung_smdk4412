@@ -17,8 +17,8 @@
 
 #include <linux/err.h>
 #include <linux/platform_device.h>
-#include <linux/regulator/driver.h>
-#include <linux/regulator/machine.h>
+#include <device/linux/regulator/driver.h>
+#include <device/linux/regulator/machine.h>
 
 #include "dummy.h"
 

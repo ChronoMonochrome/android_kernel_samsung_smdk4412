@@ -28,7 +28,7 @@
 #ifndef __LINUX_MFD_MAX77686_H
 #define __LINUX_MFD_MAX77686_H
 
-#include <linux/regulator/consumer.h>
+#include <device/linux/regulator/consumer.h>
 
 #define MAX77686_SMPL_ENABLE			(0x1)
 #define MAX77686_WTSR_ENABLE			(0x2)

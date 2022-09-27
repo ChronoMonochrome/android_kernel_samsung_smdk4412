@@ -20,7 +20,7 @@
  */
 
 #include <linux/i2c.h>
-#include <linux/regulator/machine.h>
+#include <device/linux/regulator/machine.h>
 #include <plat/gpio-cfg.h>
 #include <mach/gpio-midas.h>
 #include <mach/irqs.h>
@@ -30,7 +30,7 @@
 #include <linux/mfd/max77693.h>
 
 #ifdef CONFIG_REGULATOR_LP8720
-#include <linux/regulator/lp8720.h>
+#include <device/linux/regulator/lp8720.h>
 #endif
 
 #if defined(CONFIG_REGULATOR_S5M8767)

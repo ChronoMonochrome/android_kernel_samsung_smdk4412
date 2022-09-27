@@ -20,7 +20,7 @@
 #include <linux/irq.h>
 #include <linux/platform_device.h>
 #include <linux/pm_runtime.h>
-#include <linux/regulator/consumer.h>
+#include <device/linux/regulator/consumer.h>
 #include <linux/slab.h>
 
 #include <media/v4l2-subdev.h>

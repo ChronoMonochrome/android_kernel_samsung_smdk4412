@@ -16,7 +16,7 @@
 #define __LINUX_REGULATOR_DRIVER_H_
 
 #include <linux/device.h>
-#include <linux/regulator/consumer.h>
+#include <device/linux/regulator/consumer.h>
 
 struct regulator_dev;
 struct regulator_init_data;

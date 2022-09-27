@@ -20,9 +20,9 @@
 #include <linux/pwm_backlight.h>
 #include <linux/input.h>
 #include <device/linux/mmc/host.h>
-#include <linux/regulator/machine.h>
-#include <linux/regulator/max8649.h>
-#include <linux/regulator/fixed.h>
+#include <device/linux/regulator/machine.h>
+#include <device/linux/regulator/max8649.h>
+#include <device/linux/regulator/fixed.h>
 #include <linux/power_supply.h>
 #ifdef CONFIG_STMPE811_ADC
 #include <linux/stmpe811-adc.h>

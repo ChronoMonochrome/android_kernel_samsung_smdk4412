@@ -4,8 +4,8 @@
 #include <linux/platform_device.h>
 #include <linux/err.h>
 #include <linux/semaphore.h>
-#include <linux/regulator/machine.h>
-#include <linux/regulator/fixed.h>
+#include <device/linux/regulator/machine.h>
+#include <device/linux/regulator/fixed.h>
 #include <plat/gpio-cfg.h>
 #include <mach/gpio.h>
 #include <mach/usb_switch.h>

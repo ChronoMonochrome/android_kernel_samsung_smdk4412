@@ -10,7 +10,7 @@
 #include <linux/io.h>
 #include <linux/err.h>
 #include <linux/platform_device.h>
-#include <linux/regulator/consumer.h>
+#include <device/linux/regulator/consumer.h>
 #include <linux/power/charger-manager.h>
 #include <linux/hwmon.h>
 #include <linux/platform_data/ntc_thermistor.h>

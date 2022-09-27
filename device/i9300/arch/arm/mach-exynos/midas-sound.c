@@ -20,8 +20,8 @@
  */
 
 #include <linux/i2c.h>
-#include <linux/regulator/machine.h>
-#include <linux/regulator/fixed.h>
+#include <device/linux/regulator/machine.h>
+#include <device/linux/regulator/fixed.h>
 #include <linux/platform_device.h>
 #include <linux/delay.h>
 #include <linux/i2c-gpio.h>

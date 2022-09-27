@@ -30,7 +30,7 @@
 #include <linux/earlysuspend.h>
 #endif
 #ifndef CONFIG_SAMSUNG_PRODUCT_SHIP
-#include <linux/regulator/consumer.h>
+#include <device/linux/regulator/consumer.h>
 #endif
 
 #include "s5p-dsim.h"

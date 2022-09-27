@@ -22,7 +22,7 @@
 #include <linux/io.h>
 #include <linux/delay.h>
 #include <linux/memory.h>
-#include <linux/regulator/consumer.h>
+#include <device/linux/regulator/consumer.h>
 #include <linux/pm_runtime.h>
 #include <linux/videodev2.h>
 #include <media/v4l2-subdev.h>

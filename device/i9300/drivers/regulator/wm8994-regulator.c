@@ -17,7 +17,7 @@
 #include <linux/bitops.h>
 #include <linux/err.h>
 #include <linux/platform_device.h>
-#include <linux/regulator/driver.h>
+#include <device/linux/regulator/driver.h>
 #include <linux/gpio.h>
 #include <linux/slab.h>
 

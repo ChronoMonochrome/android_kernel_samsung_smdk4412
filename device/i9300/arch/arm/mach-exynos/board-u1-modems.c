@@ -19,7 +19,7 @@
 #include <linux/clk.h>
 #include <linux/err.h>
 #include <linux/delay.h>
-#include <linux/regulator/machine.h>
+#include <device/linux/regulator/machine.h>
 
 #include <plat/gpio-cfg.h>
 

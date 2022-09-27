@@ -21,7 +21,7 @@
 #ifndef __LINUX_REGULATOR_LP8720_H
 #define __LINUX_REGULATOR_LP8720_H
 
-#include <linux/regulator/machine.h>
+#include <device/linux/regulator/machine.h>
 
 /* LP8720 regulator ids */
 enum {

@@ -26,7 +26,7 @@
 #include <linux/io.h>
 #include <linux/delay.h>
 #include <linux/memory.h>
-#include <linux/regulator/consumer.h>
+#include <device/linux/regulator/consumer.h>
 #include <linux/pm_runtime.h>
 #include <linux/workqueue.h>
 #include <linux/sched.h>

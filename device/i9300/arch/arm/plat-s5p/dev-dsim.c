@@ -20,7 +20,7 @@
 #include <mach/map.h>
 #include <mach/dsim.h>
 #include <mach/mipi_ddi.h>
-#include <linux/regulator/machine.h>
+#include <device/linux/regulator/machine.h>
 
 static struct dsim_config dsim_info = {
 	.auto_flush = false,		/* main frame fifo auto flush at VSYNC pulse */

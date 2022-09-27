@@ -26,7 +26,7 @@
 #ifndef __LINUX_MFD_MAX8698_H
 #define __LINUX_MFD_MAX8698_H
 
-#include <linux/regulator/machine.h>
+#include <device/linux/regulator/machine.h>
 
 /* MAX 8698 regulator ids */
 enum {

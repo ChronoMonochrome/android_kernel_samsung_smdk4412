@@ -19,8 +19,8 @@
 #include <linux/delay.h>
 #include <linux/mfd/core.h>
 #include <linux/pm_runtime.h>
-#include <linux/regulator/consumer.h>
-#include <linux/regulator/machine.h>
+#include <device/linux/regulator/consumer.h>
+#include <device/linux/regulator/machine.h>
 
 #include <linux/mfd/wm8994/core.h>
 #include <linux/mfd/wm8994/pdata.h>

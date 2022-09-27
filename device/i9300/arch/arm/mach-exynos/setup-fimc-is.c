@@ -848,8 +848,8 @@ int exynos5_fimc_is_cfg_clk(struct platform_device *pdev)
 	return 0;
 }
 
-#include <linux/regulator/machine.h>
-#include <linux/regulator/fixed.h>
+#include <device/linux/regulator/machine.h>
+#include <device/linux/regulator/fixed.h>
 
 int exynos5_fimc_is_clk_on(struct platform_device *pdev)
 {

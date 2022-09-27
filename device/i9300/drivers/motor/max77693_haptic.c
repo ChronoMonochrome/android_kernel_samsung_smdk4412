@@ -20,7 +20,7 @@
 #include <linux/slab.h>
 #include <linux/clk.h>
 #include <linux/i2c.h>
-#include <linux/regulator/consumer.h>
+#include <device/linux/regulator/consumer.h>
 #include <linux/mfd/max77693.h>
 #include <linux/mfd/max77693-private.h>
 

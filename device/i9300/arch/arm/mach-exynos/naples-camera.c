@@ -13,7 +13,7 @@
 #include <linux/delay.h>
 #include <linux/i2c.h>
 
-#include <linux/regulator/machine.h>
+#include <device/linux/regulator/machine.h>
 
 #include <plat/devs.h>
 #include <plat/csis.h>
