@@ -618,9 +618,6 @@ static irqreturn_t gpio_keys_isr(int irq, void *dev_id)
 	else
 		schedule_work(&bdata->work);
 
-	if (button->isr_hook)
-		button->isr_hook(button->code, state);
-
 	return IRQ_HANDLED;
 }
 

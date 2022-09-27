@@ -1748,75 +1748,38 @@ static struct platform_device samsung_device_battery = {
 };
 #endif
 
-#define GPIO_KEYS(_code, _gpio, _active_low, _iswake, _hook)	\
-	{							\
-		.code = _code,					\
-		.gpio = _gpio,					\
-		.active_low = _active_low,			\
-		.type = EV_KEY,					\
-		.wakeup = _iswake,				\
-		.debounce_interval = 10,			\
-		.isr_hook = _hook,				\
-		.value = 1					\
+#define GPIO_KEYS(_code, _gpio, _active_low, _iswake)	\
+	{						\
+		.code = _code,				\
+		.gpio = _gpio,				\
+		.active_low = _active_low,		\
+		.type = EV_KEY,				\
+		.wakeup = _iswake,			\
+		.debounce_interval = 10,		\
+		.value = 1				\
 	}
 
 struct gpio_keys_button midas_buttons[] = {
-#if defined(CONFIG_MACH_GC1)
-	GPIO_KEYS(KEY_POWER, GPIO_nPOWER,
-			1, 1, sec_debug_check_crash_key),
-	GPIO_KEYS(KEY_CAMERA_FOCUS, GPIO_S1_KEY,
-			1, 1, sec_debug_check_crash_key),
-	/*KEY_CAMERA_SHUTTER*/
-	GPIO_KEYS(0x220, GPIO_S2_KEY,
-			1, 1, sec_debug_check_crash_key),
-	GPIO_KEYS(KEY_CAMERA_ZOOMIN, GPIO_TELE_KEY,
-			1, 1, sec_debug_check_crash_key),
-	GPIO_KEYS(KEY_CAMERA_ZOOMOUT, GPIO_WIDE_KEY,
-			1, 1, sec_debug_check_crash_key),
-	GPIO_KEYS(0x221, GPIO_FAST_TELE_KEY,
-			1, 1, sec_debug_check_crash_key),
-	GPIO_KEYS(0x222, GPIO_FAST_WIDE_KEY,
-			1, 1, sec_debug_check_crash_key),
-#if 0
-	GPIO_KEYS(KEY_HOMEPAGE, GPIO_OK_KEY_ANDROID,
-			1, 1, sec_debug_check_crash_key),
-	GPIO_KEYS(KEY_MENU, GPIO_MENU_KEY,
-			1, 1, sec_debug_check_crash_key),
-	GPIO_KEYS(KEY_BACK, GPIO_BACK_KEY,
-			1, 1, sec_debug_check_crash_key),
-#endif
-#else
-	GPIO_KEYS(KEY_VOLUMEUP, GPIO_VOL_UP,
-		  1, 0, sec_debug_check_crash_key),
-	GPIO_KEYS(KEY_VOLUMEDOWN, GPIO_VOL_DOWN,
-		  1, 0, sec_debug_check_crash_key),
-	GPIO_KEYS(KEY_POWER, GPIO_nPOWER,
-		  1, 1, sec_debug_check_crash_key),
-#endif
+	GPIO_KEYS(KEY_VOLUMEUP, GPIO_VOL_UP, 1, 0),
+	GPIO_KEYS(KEY_VOLUMEDOWN, GPIO_VOL_DOWN, 1, 0),
+	GPIO_KEYS(KEY_POWER, GPIO_nPOWER, 1, 1),
 };
 
 #if !defined(CONFIG_MACH_T0) && !defined(CONFIG_MACH_M3)
 struct gpio_keys_button m0_buttons[] = {
-	GPIO_KEYS(KEY_VOLUMEUP, GPIO_VOL_UP_00,
-		  1, 0, sec_debug_check_crash_key),
-	GPIO_KEYS(KEY_VOLUMEDOWN, GPIO_VOL_DOWN_00,
-		  1, 0, sec_debug_check_crash_key),
-	GPIO_KEYS(KEY_POWER, GPIO_nPOWER,
-		  1, 1, sec_debug_check_crash_key),
+	GPIO_KEYS(KEY_VOLUMEUP, GPIO_VOL_UP_00, 1, 0),
+	GPIO_KEYS(KEY_VOLUMEDOWN, GPIO_VOL_DOWN_00, 1, 0),
+	GPIO_KEYS(KEY_POWER, GPIO_nPOWER, 1, 1),
 };
 #endif
 
 #if defined(CONFIG_MACH_M0) || \
 	defined(CONFIG_MACH_C1_USA_ATT)
 struct gpio_keys_button m0_rev11_buttons[] = {
-	GPIO_KEYS(KEY_VOLUMEUP, GPIO_VOL_UP_00,
-		  1, 0, sec_debug_check_crash_key),
-	GPIO_KEYS(KEY_VOLUMEDOWN, GPIO_VOL_DOWN_00,
-		  1, 0, sec_debug_check_crash_key),
-	GPIO_KEYS(KEY_POWER, GPIO_nPOWER,
-		  1, 1, sec_debug_check_crash_key),
-	GPIO_KEYS(KEY_HOMEPAGE, GPIO_OK_KEY_ANDROID,
-		  1, 1, sec_debug_check_crash_key),
+	GPIO_KEYS(KEY_VOLUMEUP, GPIO_VOL_UP_00, 1, 0),
+	GPIO_KEYS(KEY_VOLUMEDOWN, GPIO_VOL_DOWN_00, 1, 0),
+	GPIO_KEYS(KEY_POWER, GPIO_nPOWER, 1, 1),
+	GPIO_KEYS(KEY_HOMEPAGE, GPIO_OK_KEY_ANDROID, 1, 1),
 };
 #endif
 
@@ -1824,27 +1787,19 @@ struct gpio_keys_button m0_rev11_buttons[] = {
 	(defined(CONFIG_MACH_M0) || defined(CONFIG_MACH_C1) ||\
 	defined(CONFIG_MACH_BAFFIN))
 struct gpio_keys_button c1_rev04_buttons[] = {
-	GPIO_KEYS(KEY_VOLUMEUP, GPIO_VOL_UP_00,
-		  1, 0, sec_debug_check_crash_key),
-	GPIO_KEYS(KEY_VOLUMEDOWN, GPIO_VOL_DOWN_00,
-		  1, 0, sec_debug_check_crash_key),
-	GPIO_KEYS(KEY_POWER, GPIO_nPOWER,
-		  1, 1, sec_debug_check_crash_key),
-	GPIO_KEYS(KEY_HOMEPAGE, GPIO_OK_KEY_ANDROID,
-		  1, 1, sec_debug_check_crash_key),
+	GPIO_KEYS(KEY_VOLUMEUP, GPIO_VOL_UP_00, 1, 0),
+	GPIO_KEYS(KEY_VOLUMEDOWN, GPIO_VOL_DOWN_00, 1, 0),
+	GPIO_KEYS(KEY_POWER, GPIO_nPOWER, 1, 1),
+	GPIO_KEYS(KEY_HOMEPAGE, GPIO_OK_KEY_ANDROID, 1, 1),
 };
 #endif
 
 #if defined(CONFIG_MACH_T0) || defined(CONFIG_MACH_M3)
 struct gpio_keys_button t0_buttons[] = {
-	GPIO_KEYS(KEY_VOLUMEUP, GPIO_VOL_UP,
-		  1, 0, sec_debug_check_crash_key),
-	GPIO_KEYS(KEY_VOLUMEDOWN, GPIO_VOL_DOWN,
-		  1, 0, sec_debug_check_crash_key),
-	GPIO_KEYS(KEY_POWER, GPIO_nPOWER,
-		  1, 1, sec_debug_check_crash_key),
-	GPIO_KEYS(KEY_HOMEPAGE, GPIO_OK_KEY,
-		  1, 1, sec_debug_check_crash_key),
+	GPIO_KEYS(KEY_VOLUMEUP, GPIO_VOL_UP, 1, 0),
+	GPIO_KEYS(KEY_VOLUMEDOWN, GPIO_VOL_DOWN, 1, 0),
+	GPIO_KEYS(KEY_POWER, GPIO_nPOWER, 1, 1),
+	GPIO_KEYS(KEY_HOMEPAGE, GPIO_OK_KEY, 1, 1),
 };
 #endif
 
