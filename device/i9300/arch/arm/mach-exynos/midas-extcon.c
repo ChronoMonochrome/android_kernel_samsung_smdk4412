@@ -26,7 +26,7 @@
 #include <linux/usb/gadget.h>
 #include <linux/host_notify.h>
 #include <linux/power_supply.h>
-#include <linux/regulator/machine.h>
+#include <device/linux/regulator/machine.h>
 
 #include <plat/devs.h>
 #include <plat/udc-hs.h>

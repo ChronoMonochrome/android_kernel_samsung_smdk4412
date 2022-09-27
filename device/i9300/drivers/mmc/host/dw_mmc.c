@@ -32,7 +32,7 @@
 #include <device/linux/mmc/mmc.h>
 #include <device/linux/mmc/dw_mmc.h>
 #include <linux/bitops.h>
-#include <linux/regulator/consumer.h>
+#include <device/linux/regulator/consumer.h>
 
 #include <plat/cpu.h>
 

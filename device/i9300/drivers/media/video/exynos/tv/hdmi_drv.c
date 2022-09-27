@@ -25,7 +25,7 @@
 #include <linux/bug.h>
 #include <linux/pm_runtime.h>
 #include <linux/clk.h>
-#include <linux/regulator/consumer.h>
+#include <device/linux/regulator/consumer.h>
 #include <linux/videodev2_exynos_media.h>
 #include <linux/sched.h>
 #include <plat/tvout.h>

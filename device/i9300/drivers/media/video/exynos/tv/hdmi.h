@@ -21,7 +21,7 @@
 #include <linux/io.h>
 #include <linux/clk.h>
 #include <linux/interrupt.h>
-#include <linux/regulator/consumer.h>
+#include <device/linux/regulator/consumer.h>
 
 #include <media/v4l2-subdev.h>
 #include <media/v4l2-device.h>

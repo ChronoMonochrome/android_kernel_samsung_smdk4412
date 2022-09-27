@@ -14,9 +14,9 @@
 #include <linux/gpio_keys.h>
 #include <linux/gpio.h>
 #include <linux/mfd/max8998.h>
-#include <linux/regulator/machine.h>
-#include <linux/regulator/fixed.h>
-#include <linux/regulator/max8952.h>
+#include <device/linux/regulator/machine.h>
+#include <device/linux/regulator/fixed.h>
+#include <device/linux/regulator/max8952.h>
 #include <device/linux/mmc/host.h>
 
 #include <asm/mach/arch.h>

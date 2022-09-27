@@ -13,7 +13,7 @@
 #include <linux/gpio.h>
 #include <linux/delay.h>
 #include <linux/i2c/mxt224s_grande.h>
-#include <linux/regulator/consumer.h>
+#include <device/linux/regulator/consumer.h>
 #include <plat/gpio-cfg.h>
 
 extern bool is_cable_attached;

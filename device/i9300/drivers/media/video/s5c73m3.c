@@ -37,7 +37,7 @@
 #include <linux/videodev2_exynos_camera.h>
 #endif
 
-#include <linux/regulator/machine.h>
+#include <device/linux/regulator/machine.h>
 
 #ifdef CONFIG_LEDS_AAT1290A
 #include <linux/leds-aat1290a.h>

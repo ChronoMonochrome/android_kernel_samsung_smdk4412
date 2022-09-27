@@ -18,7 +18,7 @@
 #include <linux/switch.h>
 #include <linux/i2c.h>
 #include <linux/i2c-gpio.h>
-#include <linux/regulator/machine.h>
+#include <device/linux/regulator/machine.h>
 
 #include <mach/gpio-rev00-kona.h>
 

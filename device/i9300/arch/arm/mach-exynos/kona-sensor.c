@@ -9,7 +9,7 @@
 #include <mach/regs-gpio.h>
 #include <mach/gpio.h>
 #include <mach/gpio-rev00-kona.h>
-#include <linux/regulator/consumer.h>
+#include <device/linux/regulator/consumer.h>
 #include <linux/err.h>
 #include "midas.h"
 #include <linux/sensor/sensors_core.h>

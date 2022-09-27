@@ -15,7 +15,7 @@
 #include <linux/platform_device.h>
 #include <plat/gpio-cfg.h>
 #include <plat/iic.h>
-#include <linux/regulator/consumer.h>
+#include <device/linux/regulator/consumer.h>
 
 static u32 hw_rev;
 

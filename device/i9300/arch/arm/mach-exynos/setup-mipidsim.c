@@ -25,7 +25,7 @@
 #include <linux/err.h>
 #include <linux/platform_device.h>
 #include <linux/clk.h>
-#include <linux/regulator/consumer.h>
+#include <device/linux/regulator/consumer.h>
 
 #include <mach/map.h>
 #include <mach/regs-clock.h>

@@ -21,9 +21,9 @@
 #include <linux/pwm_backlight.h>
 #include <linux/input.h>
 #include <device/linux/mmc/host.h>
-#include <linux/regulator/machine.h>
-#include <linux/regulator/max8649.h>
-#include <linux/regulator/fixed.h>
+#include <device/linux/regulator/machine.h>
+#include <device/linux/regulator/max8649.h>
+#include <device/linux/regulator/fixed.h>
 #ifdef CONFIG_MFD_MAX77693
 #include <linux/mfd/max77693.h>
 #include <linux/mfd/max77693-private.h>

@@ -13,13 +13,13 @@
 #include <linux/module.h>
 #include <linux/init.h>
 #include <linux/platform_device.h>
-#include <linux/regulator/consumer.h>
+#include <device/linux/regulator/consumer.h>
 #include <linux/mutex.h>
 #include <linux/err.h>
 #include <linux/slab.h>
 #include <linux/delay.h>
 #include <linux/rfkill.h>
-#include <linux/regulator/machine.h>
+#include <device/linux/regulator/machine.h>
 #include <asm/mach-types.h>
 #include <mach/gpio.h>
 #include <plat/gpio-cfg.h>

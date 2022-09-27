@@ -25,8 +25,8 @@
 #include <linux/clk.h>
 #include <linux/err.h>
 #include <linux/platform_device.h>
-#include <linux/regulator/consumer.h>
-#include <linux/regulator/driver.h>
+#include <device/linux/regulator/consumer.h>
+#include <device/linux/regulator/driver.h>
 
 #if MALI_PMM_RUNTIME_JOB_CONTROL_ON
 #include <plat/pd.h>

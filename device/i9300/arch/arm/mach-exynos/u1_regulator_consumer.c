@@ -15,7 +15,7 @@
 #include <linux/module.h>
 #include <linux/err.h>
 #include <linux/platform_device.h>
-#include <linux/regulator/machine.h>
+#include <device/linux/regulator/machine.h>
 
 static int u1_enable_regulator_for_usb_mipi(bool enable)
 {

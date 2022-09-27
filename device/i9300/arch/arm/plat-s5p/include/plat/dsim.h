@@ -18,7 +18,7 @@
 #include <linux/fb.h>
 #include <linux/notifier.h>
 
-#include <linux/regulator/consumer.h>
+#include <device/linux/regulator/consumer.h>
 
 #ifdef CONFIG_HAS_EARLYSUSPEND
 #include <linux/earlysuspend.h>

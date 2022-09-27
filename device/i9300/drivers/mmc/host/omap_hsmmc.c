@@ -32,7 +32,7 @@
 #include <linux/io.h>
 #include <linux/semaphore.h>
 #include <linux/gpio.h>
-#include <linux/regulator/consumer.h>
+#include <device/linux/regulator/consumer.h>
 #include <plat/dma.h>
 #include <mach/hardware.h>
 #include <plat/board.h>

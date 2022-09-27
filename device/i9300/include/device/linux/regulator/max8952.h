@@ -22,7 +22,7 @@
 #ifndef REGULATOR_MAX8952
 #define REGULATOR_MAX8952
 
-#include <linux/regulator/machine.h>
+#include <device/linux/regulator/machine.h>
 
 enum {
 	MAX8952_DVS_MODE0,

@@ -18,7 +18,7 @@
 #include <linux/err.h>
 #include <linux/delay.h>
 #include <linux/rfkill.h>
-#include <linux/regulator/machine.h>
+#include <device/linux/regulator/machine.h>
 
 #include <mach/gpio.h>
 #include <mach/bcm47511.h>

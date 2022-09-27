@@ -29,12 +29,12 @@
 #include <linux/uaccess.h>
 #include <linux/earlysuspend.h>
 #include <linux/io.h>
-#include <linux/regulator/consumer.h>
-#include <linux/regulator/driver.h>
-#include <linux/regulator/machine.h>
-#include <linux/regulator/consumer.h>
-#include <linux/regulator/driver.h>
-#include <linux/regulator/machine.h>
+#include <device/linux/regulator/consumer.h>
+#include <device/linux/regulator/driver.h>
+#include <device/linux/regulator/machine.h>
+#include <device/linux/regulator/consumer.h>
+#include <device/linux/regulator/driver.h>
+#include <device/linux/regulator/machine.h>
 
 #include "issp_extern.h"
 #ifdef CONFIG_TOUCHSCREEN_ATMEL_MXT540E

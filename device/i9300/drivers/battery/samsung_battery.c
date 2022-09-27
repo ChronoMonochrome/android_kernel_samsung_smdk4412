@@ -31,7 +31,7 @@
 #include <linux/workqueue.h>
 #include <linux/proc_fs.h>
 #include <linux/android_alarm.h>
-#include <linux/regulator/machine.h>
+#include <device/linux/regulator/machine.h>
 #include <linux/battery/samsung_battery.h>
 #include <mach/regs-pmu.h>
 #include "battery-factory.h"

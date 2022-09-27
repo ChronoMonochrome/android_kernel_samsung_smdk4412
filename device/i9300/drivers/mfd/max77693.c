@@ -28,7 +28,7 @@
 #include <linux/mfd/core.h>
 #include <linux/mfd/max77693.h>
 #include <linux/mfd/max77693-private.h>
-#include <linux/regulator/machine.h>
+#include <device/linux/regulator/machine.h>
 
 #define I2C_ADDR_PMIC	(0xCC >> 1)	/* Charger, Flash LED */
 #define I2C_ADDR_MUIC	(0x4A >> 1)

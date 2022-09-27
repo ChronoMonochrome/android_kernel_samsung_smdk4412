@@ -11,7 +11,7 @@
 #include <media/v4l2-device.h>
 #include <linux/vmalloc.h>
 #include <linux/firmware.h>
-#include <linux/regulator/machine.h>
+#include <device/linux/regulator/machine.h>
 #include <linux/init.h>
 
 #include <plat/devs.h>

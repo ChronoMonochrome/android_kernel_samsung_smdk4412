@@ -36,7 +36,7 @@
 #include <device/linux/mmc/mmc.h>
 #include <device/linux/mmc/sdio.h>
 #include <linux/gpio.h>
-#include <linux/regulator/consumer.h>
+#include <device/linux/regulator/consumer.h>
 
 #include <mach/mxs.h>
 #include <mach/common.h>

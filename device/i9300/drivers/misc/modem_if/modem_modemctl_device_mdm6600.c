@@ -26,7 +26,7 @@
 
 #include "modem.h"
 #include "modem_prj.h"
-#include <linux/regulator/consumer.h>
+#include <device/linux/regulator/consumer.h>
 
 #include <plat/gpio-cfg.h>
 

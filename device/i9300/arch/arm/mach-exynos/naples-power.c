@@ -20,7 +20,7 @@
  */
 
 #include <linux/i2c.h>
-#include <linux/regulator/machine.h>
+#include <device/linux/regulator/machine.h>
 #include <plat/gpio-cfg.h>
 #include <mach/gpio-naples.h>
 #include <mach/irqs.h>

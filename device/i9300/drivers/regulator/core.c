@@ -24,9 +24,9 @@
 #include <linux/mutex.h>
 #include <linux/suspend.h>
 #include <linux/delay.h>
-#include <linux/regulator/consumer.h>
-#include <linux/regulator/driver.h>
-#include <linux/regulator/machine.h>
+#include <device/linux/regulator/consumer.h>
+#include <device/linux/regulator/driver.h>
+#include <device/linux/regulator/machine.h>
 
 #define CREATE_TRACE_POINTS
 #include <trace/events/regulator.h>

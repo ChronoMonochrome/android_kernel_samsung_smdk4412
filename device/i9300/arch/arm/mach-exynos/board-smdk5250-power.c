@@ -10,7 +10,7 @@
 
 #include <linux/platform_device.h>
 #include <linux/i2c.h>
-#include <linux/regulator/machine.h>
+#include <device/linux/regulator/machine.h>
 #include <linux/mfd/max8997.h>
 #include <linux/mfd/max77686.h>
 #include <linux/notifier.h>

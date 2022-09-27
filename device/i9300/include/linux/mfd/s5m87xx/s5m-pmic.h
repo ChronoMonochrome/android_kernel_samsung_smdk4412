@@ -11,7 +11,7 @@
 #ifndef __LINUX_MFD_S5M_PMIC_H
 #define __LINUX_MFD_S5M_PMIC_H
 
-#include <linux/regulator/machine.h>
+#include <device/linux/regulator/machine.h>
 
 /* S5M8767 regulator ids */
 enum s5m8767_regulators {

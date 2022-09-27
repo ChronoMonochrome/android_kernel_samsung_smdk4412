@@ -14,8 +14,8 @@
 #include <linux/lcd.h>
 #include <linux/gpio.h>
 #include <linux/i2c.h>
-#include <linux/regulator/machine.h>
-#include <linux/regulator/fixed.h>
+#include <device/linux/regulator/machine.h>
+#include <device/linux/regulator/fixed.h>
 #include <linux/mfd/wm8994/pdata.h>
 #include <linux/delay.h>
 #include <linux/pwm_backlight.h>

@@ -35,7 +35,7 @@
 #include <linux/uaccess.h>
 #include <linux/sensor/gp2a.h>
 #include <linux/slab.h>
-#include <linux/regulator/consumer.h>
+#include <device/linux/regulator/consumer.h>
 #include <linux/gpio.h>
 #include <mach/gpio-midas.h>
 #include <linux/sensor/sensors_core.h>
