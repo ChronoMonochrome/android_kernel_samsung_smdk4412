@@ -22,6 +22,10 @@
 #define SCU_INVALIDATE		0x0c
 #define SCU_FPGA_REVISION	0x10
 
+#ifdef CONFIG_MACH_PX
+extern void logbuf_force_unlock(void);
+#endif
+
 /*
  * Get the number of CPU cores from the SCU configuration
  */
@@ -34,7 +38,7 @@ unsigned int __init scu_get_core_count(void __iomem *scu_base)
 /*
  * Enable the SCU
  */
-void __init scu_enable(void __iomem *scu_base)
+void scu_enable(void __iomem *scu_base)
 {
 	u32 scu_ctrl;
 
@@ -55,6 +59,10 @@ void __init scu_enable(void __iomem *scu_base)
 	 * initialised is visible to the other CPUs.
 	 */
 	flush_cache_all();
+
+#ifdef CONFIG_MACH_PX
+	logbuf_force_unlock();
+#endif
 }
 
 /*
