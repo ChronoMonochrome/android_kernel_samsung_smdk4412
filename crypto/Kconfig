@@ -23,22 +23,12 @@ comment "Crypto core or helper"
 
 config CRYPTO_FIPS
 	bool "FIPS 200 compliance"
-	depends on CRYPTO_ANSI_CPRNG
+	depends on CRYPTO_ANSI_CPRNG && !CRYPTO_MANAGER_DISABLE_TESTS
 	help
 	  This options enables the fips boot option which is
 	  required if you want to system to operate in a FIPS 200
 	  certification.  You should say no unless you know what
-	  this is. Note that CRYPTO_ANSI_CPRNG is required if this
-	  option is selected
-
-config CRYPTO_FIPS_INTEG_OFFSET
-	hex "FIPS integrity check zImage offset"
-        default 0x20000000
-        help
-          This options sets the offset from stext address where
-          zImage will be copied for integrity check if you want
-          to system to operate in FIPS mode, which enables
-	  kernel crypto module.
+	  this is.
 
 config CRYPTO_ALGAPI
 	tristate
@@ -110,13 +100,13 @@ config CRYPTO_MANAGER2
 	select CRYPTO_BLKCIPHER2
 	select CRYPTO_PCOMP2
 
-config CRYPTO_MANAGER_TESTS
-	bool "Run algolithms' self-tests"
+config CRYPTO_MANAGER_DISABLE_TESTS
+	bool "Disable run-time self tests"
 	default y
 	depends on CRYPTO_MANAGER2
 	help
-	  Run cryptomanager's tests for the new crypto algorithms being
-	  registered.
+	  Disable run-time self tests that normally take place at
+	  algorithm registration.
 
 config CRYPTO_GF128MUL
 	tristate "GF(2^128) multiplication functions (EXPERIMENTAL)"
@@ -171,6 +161,7 @@ config CRYPTO_AUTHENC
 
 config CRYPTO_TEST
 	tristate "Testing module"
+	depends on m
 	select CRYPTO_MANAGER
 	help
 	  Quick & dirty crypto test module.

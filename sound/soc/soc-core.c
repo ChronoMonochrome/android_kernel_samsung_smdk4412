@@ -131,12 +131,9 @@ static ssize_t soc_codec_reg_show(struct snd_soc_codec *codec, char *buf,
 	int len;
 	size_t total = 0;
 	loff_t p = 0;
-	int cache_size;
 
 	wordsize = min_bytes_needed(codec->driver->reg_cache_size) * 2;
 	regsize = codec->driver->reg_word_size * 2;
-	cache_size = max(codec->driver->reg_cache_size,
-			 codec->driver->max_register);
 
 	len = wordsize + regsize + 2 + 1;
 
@@ -146,7 +143,7 @@ static ssize_t soc_codec_reg_show(struct snd_soc_codec *codec, char *buf,
 	if (codec->driver->reg_cache_step)
 		step = codec->driver->reg_cache_step;
 
-	for (i = 0; i < cache_size; i += step) {
+	for (i = 0; i < codec->driver->reg_cache_size; i += step) {
 		if (codec->readable_register && !codec->readable_register(codec, i))
 			continue;
 		if (codec->driver->display_register) {
@@ -2085,11 +2082,6 @@ const struct dev_pm_ops snd_soc_pm_ops = {
 	.suspend = snd_soc_suspend,
 	.resume = snd_soc_resume,
 	.poweroff = snd_soc_poweroff,
-#ifdef CONFIG_HIBERNATION
-	.freeze = snd_soc_suspend,
-	.thaw = snd_soc_resume,
-	.restore = snd_soc_resume,
-#endif
 };
 EXPORT_SYMBOL_GPL(snd_soc_pm_ops);
 
@@ -2304,7 +2296,7 @@ EXPORT_SYMBOL_GPL(snd_soc_read);
 unsigned int snd_soc_write(struct snd_soc_codec *codec,
 			   unsigned int reg, unsigned int val)
 {
-	dev_info(codec->dev, "write %x = %x\n", reg, val);
+	dev_dbg(codec->dev, "write %x = %x\n", reg, val);
 	trace_snd_soc_reg_write(codec, reg, val);
 	return codec->write(codec, reg, val);
 }

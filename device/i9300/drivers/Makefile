@@ -3,10 +3,6 @@ obj-$(CONFIG_POWER_SUPPLY)    += battery/
 obj-y                         += char/
 obj-y                         += gpio/
 obj-y                         += gpu/
-
-# Secure OS Mobicore
-obj-$(CONFIG_MOBICORE_SUPPORT)  += gud/
-
 obj-y                         += i2c/
 obj-$(CONFIG_INPUT)           += input/
 obj-y                         += leds/

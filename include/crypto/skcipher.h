@@ -1,11 +1,11 @@
 /*
  * Symmetric key ciphers.
- *
+ * 
  * Copyright (c) 2007 Herbert Xu <herbert@gondor.apana.org.au>
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the Free
- * Software Foundation; either version 2 of the License, or (at your option)
+ * Software Foundation; either version 2 of the License, or (at your option) 
  * any later version.
  *
  */
@@ -41,10 +41,6 @@ static inline int crypto_skcipher_givencrypt(
 {
 	struct ablkcipher_tfm *crt =
 		crypto_ablkcipher_crt(skcipher_givcrypt_reqtfm(req));
-#ifdef CONFIG_CRYPTO_FIPS
-	if (unlikely(in_fips_err()))
-		return -EACCES;
-#endif
 	return crt->givencrypt(req);
 };
 
@@ -53,10 +49,6 @@ static inline int crypto_skcipher_givdecrypt(
 {
 	struct ablkcipher_tfm *crt =
 		crypto_ablkcipher_crt(skcipher_givcrypt_reqtfm(req));
-#ifdef CONFIG_CRYPTO_FIPS
-	if (unlikely(in_fips_err()))
-		return -EACCES;
-#endif
 	return crt->givdecrypt(req);
 };
 
@@ -77,11 +69,6 @@ static inline struct skcipher_givcrypt_request *skcipher_givcrypt_alloc(
 	struct crypto_ablkcipher *tfm, gfp_t gfp)
 {
 	struct skcipher_givcrypt_request *req;
-
-#ifdef CONFIG_CRYPTO_FIPS
-	if (unlikely(in_fips_err()))
-		return NULL;
-#endif
 
 	req = kmalloc(sizeof(struct skcipher_givcrypt_request) +
 		      crypto_ablkcipher_reqsize(tfm), gfp);
@@ -120,3 +107,4 @@ static inline void skcipher_givcrypt_set_giv(
 }
 
 #endif	/* _CRYPTO_SKCIPHER_H */
+
