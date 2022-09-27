@@ -29,8 +29,7 @@
 #include "i2s.h"
 #include "srp-types.h"
 
-#if defined(CONFIG_SND_SAMSUNG_RP) && \
-	(defined(CONFIG_MACH_U1) || defined(CONFIG_MACH_TRATS))
+#if defined(CONFIG_SND_SAMSUNG_RP) && defined(CONFIG_MACH_U1)
 #define USE_ALT_REG_RECOVER
 #endif
 

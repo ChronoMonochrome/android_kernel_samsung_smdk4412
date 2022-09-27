@@ -18,7 +18,6 @@
 #include <linux/cdev.h>
 #include <linux/usb/ch9.h>
 #include <linux/usb/cdc.h>
-#include <linux/wakelock.h>
 
 #define CTRL_DEV_MAX_LEN 10
 

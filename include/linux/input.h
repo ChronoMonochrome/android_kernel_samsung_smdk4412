@@ -129,9 +129,6 @@ struct input_keymap_entry {
 
 #define EVIOCGRAB		_IOW('E', 0x90, int)			/* Grab/Release device */
 
-#define EVIOCGSUSPENDBLOCK	_IOR('E', 0x91, int)			/* get suspend block enable */
-#define EVIOCSSUSPENDBLOCK	_IOW('E', 0x91, int)			/* set suspend block enable */
-
 /*
  * Device properties and quirks
  */
@@ -688,14 +685,6 @@ struct input_keymap_entry {
 #define KEY_CAMERA_DOWN		0x218
 #define KEY_CAMERA_LEFT		0x219
 #define KEY_CAMERA_RIGHT	0x21a
-
-#define KEY_DMB_ANT_DET_UP		0x21b
-#define KEY_DMB_ANT_DET_DOWN	0x21c
-
-#define KEY_PEN_PDCT		0x230 /* E-PEN PDCT flag*/
-
-#define KEY_FAKE_PWR		0x240 /* Fake Power off flag*/
-
 
 #define BTN_TRIGGER_HAPPY		0x2c0
 #define BTN_TRIGGER_HAPPY1		0x2c0

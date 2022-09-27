@@ -2340,7 +2340,7 @@ int snd_soc_update_bits(struct snd_soc_codec *codec, unsigned short reg,
 		return ret;
 
 	old = ret;
-	new = (old & ~mask) | (value & mask);
+	new = (old & ~mask) | value;
 	change = old != new;
 	if (change) {
 		ret = snd_soc_write(codec, reg, new);

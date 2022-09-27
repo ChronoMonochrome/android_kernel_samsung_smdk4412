@@ -106,15 +106,12 @@ struct wmi_data_sync_bufs {
 #define WMM_AC_VI   2		/* video */
 #define WMM_AC_VO   3		/* voice */
 
-#define WMI_VOICE_USER_PRIORITY		0x7
-
 struct wmi {
 	u16 stream_exist_for_ac[WMM_NUM_AC];
 	u8 fat_pipe_exist;
 	struct ath6kl *parent_dev;
 	u8 pwr_mode;
 	spinlock_t lock;
-	struct mutex lock_mgmt;
 	enum htc_endpoint_id ep_id;
 	struct sq_threshold_params
 	    sq_threshld[SIGNAL_QUALITY_METRICS_NUM_MAX];
@@ -975,7 +972,7 @@ struct wmi_bss_filter_cmd {
 } __packed;
 
 /* WMI_SET_PROBED_SSID_CMDID */
-#define MAX_PROBED_SSIDS   16
+#define MAX_PROBED_SSID_INDEX   9
 
 enum wmi_ssid_flag {
 	/* disables entry */
@@ -989,7 +986,7 @@ enum wmi_ssid_flag {
 };
 
 struct wmi_probed_ssid_cmd {
-	/* 0 to MAX_PROBED_SSIDS - 1 */
+	/* 0 to MAX_PROBED_SSID_INDEX */
 	u8 entry_index;
 
 	/* see, enum wmi_ssid_flg */
@@ -1490,11 +1487,7 @@ enum wmi_bi_ftype {
 	PROBEREQ_FTYPE,
 };
 
-#ifdef CONFIG_MACH_PX
-#define DEF_LRSSI_SCAN_PERIOD		( 5 * 1000 )
-#else
 #define DEF_LRSSI_SCAN_PERIOD		 5
-#endif
 #define DEF_LRSSI_ROAM_THRESHOLD	20
 #define DEF_LRSSI_ROAM_FLOOR		60
 #ifdef CONFIG_MACH_PX
@@ -2315,17 +2308,6 @@ struct wmi_p2p_probe_response_cmd {
 	u8 data[0];
 } __packed;
 
-struct wmi_set_ht_cap_cmd {
-	u8 band;
-	u8 enable;
-	u8 chan_width_40m_supported;
-	u8 short_gi_20mhz;
-	u8 short_gi_40mhz;
-	u8 intolerance_40mhz;
-	u8 max_ampdu_len_exp;
-} __packed;
-
-
 /* Extended WMI (WMIX)
  *
  * Extended WMIX commands are encapsulated in a WMI message with
@@ -2525,16 +2507,11 @@ int ath6kl_wmi_add_wow_pattern_cmd(struct wmi *wmi, u8 if_idx,
 int ath6kl_wmi_del_wow_pattern_cmd(struct wmi *wmi, u8 if_idx,
 				   u16 list_id, u16 filter_id);
 int ath6kl_wmi_set_roam_lrssi_cmd(struct wmi *wmi, u8 lrssi);
-int ath6kl_wmi_set_roam_lrssi_config_cmd(struct wmi *wmi,
-				struct low_rssi_scan_params *params);
 int ath6kl_wmi_force_roam_cmd(struct wmi *wmi, const u8 *bssid);
 int ath6kl_wmi_set_roam_mode_cmd(struct wmi *wmi, enum wmi_roam_mode mode);
 int ath6kl_wmi_mcast_filter_cmd(struct wmi *wmi, u8 if_idx, bool mc_all_on);
 int ath6kl_wmi_add_del_mcast_filter_cmd(struct wmi *wmi, u8 if_idx,
 					u8 *filter, bool add_filter);
-int ath6kl_wmi_set_ht_cap_cmd(struct wmi *wmi, u8 if_idx,
-		struct wmi_set_ht_cap_cmd *params);
-
 /* AP mode uAPSD */
 int ath6kl_wmi_ap_set_apsd(struct wmi *wmi, u8 if_idx, u8 enable);
 

@@ -54,10 +54,6 @@ config SND_SAMSUNG_RP_DEBUG
 	help
 	  Say Y if you want to add debug message for ULP & ALP Audio.
 
-config SND_DUOS_MODEM_SWITCH
-	bool "Select DUOS Modem"
-	depends on SND_SOC_SAMSUNG
-
 config SND_USE_SUB_MIC
 	bool "Use SUB_MIC"
 	depends on SND_SOC_SAMSUNG

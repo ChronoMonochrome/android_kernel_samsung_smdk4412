@@ -5,6 +5,8 @@
  *
  * Contact: Samu Onkalo <samu.p.onkalo@nokia.com>
  *
+ * Updated: Milo(Woogyom) Kim <milo.kim@ti.com>
+ *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
  * version 2 as published by the Free Software Foundation.
@@ -34,6 +36,11 @@
 #include <linux/leds-lp5521.h>
 #include <linux/workqueue.h>
 #include <linux/slab.h>
+
+#ifdef CONFIG_DEBUG_FS
+#include <linux/debugfs.h>
+#include <linux/uaccess.h>
+#endif
 
 #define LP5521_PROGRAM_LENGTH		32	/* in bytes */
 
@@ -114,6 +121,13 @@ struct lp5521_led {
 	u8			brightness;
 };
 
+#ifdef CONFIG_DEBUG_FS
+struct dbg_dentry {
+	struct dentry *dir;
+	struct dentry *reg;
+};
+#endif
+
 struct lp5521_chip {
 	struct lp5521_platform_data *pdata;
 	struct mutex		lock; /* Serialize control */
@@ -140,6 +154,8 @@ static inline struct lp5521_chip *led_to_lp5521(struct lp5521_led *led)
 	return container_of(led, struct lp5521_chip,
 			    leds[led->id]);
 }
+
+void lp5521_led_brightness(u8 channel, u8 brightness);
 
 static void lp5521_led_brightness_work(struct work_struct *work);
 
@@ -650,7 +666,11 @@ static int __devinit lp5521_probe(struct i2c_client *client,
 
 	i2c_set_clientdata(client, chip);
 	chip->client = client;
+	g_chip = chip;
 
+#ifdef LED_DEBUG
+	g_client = client;
+#endif
 	pdata = client->dev.platform_data;
 
 	if (!pdata) {
@@ -700,6 +720,7 @@ static int __devinit lp5521_probe(struct i2c_client *client,
 	chip->num_channels = pdata->num_channels;
 	chip->num_leds = 0;
 	led = 0;
+	chip->led_dev = device_create(sec_class, NULL, 0, NULL, "leds");
 	for (i = 0; i < pdata->num_channels; i++) {
 		/* Do not initialize channels that are not connected */
 		if (pdata->led_config[i].led_current == 0)
@@ -728,6 +749,10 @@ static int __devinit lp5521_probe(struct i2c_client *client,
 		dev_err(&client->dev, "registering sysfs failed\n");
 		goto fail3;
 	}
+
+	lp5521_create_pattern_nodes(chip);
+	lp5521_create_debugfs(chip);
+
 	return ret;
 fail3:
 	for (i = 0; i < chip->num_leds; i++) {
