@@ -129,48 +129,6 @@ err:
 }
 
 /**
- * Pin or unpin a buffer in vram.
- *
- * @dev_priv:  Driver private.
- * @buf:  DMA buffer to pin or unpin.
- * @pin:  Pin buffer in vram if true.
- * @interruptible:  Use interruptible wait.
- *
- * Takes the current masters ttm lock in read.
- *
- * Returns
- * -ERESTARTSYS if interrupted by a signal.
- */
-static int vmw_dmabuf_pin_in_vram(struct vmw_private *dev_priv,
-				  struct vmw_dma_buffer *buf,
-				  bool pin, bool interruptible)
-{
-	struct ttm_buffer_object *bo = &buf->base;
-	struct ttm_placement *overlay_placement = &vmw_vram_placement;
-	int ret;
-
-	ret = ttm_read_lock(&dev_priv->active_master->lock, interruptible);
-	if (unlikely(ret != 0))
-		return ret;
-
-	ret = ttm_bo_reserve(bo, interruptible, false, false, 0);
-	if (unlikely(ret != 0))
-		goto err;
-
-	if (pin)
-		overlay_placement = &vmw_vram_ne_placement;
-
-	ret = ttm_bo_validate(bo, overlay_placement, interruptible, false, false);
-
-	ttm_bo_unreserve(bo);
-
-err:
-	ttm_read_unlock(&dev_priv->active_master->lock);
-
-	return ret;
-}
-
-/**
  * Send put command to hw.
  *
  * Returns

@@ -1,7 +1,7 @@
 /*
  * wm8904.c  --  WM8904 ALSA SoC Audio driver
  *
- * Copyright 2009-12 Wolfson Microelectronics plc
+ * Copyright 2009 Wolfson Microelectronics plc
  *
  * Author: Mark Brown <broonie@opensource.wolfsonmicro.com>
  *
@@ -2236,7 +2236,7 @@ static struct snd_soc_dai_driver wm8904_dai = {
 };
 
 #ifdef CONFIG_PM
-static int wm8904_suspend(struct snd_soc_codec *codec)
+static int wm8904_suspend(struct snd_soc_codec *codec, pm_message_t state)
 {
 	wm8904_set_bias_level(codec, SND_SOC_BIAS_OFF);
 

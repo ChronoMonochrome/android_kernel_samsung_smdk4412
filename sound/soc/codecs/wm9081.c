@@ -3,7 +3,7 @@
  *
  * Author: Mark Brown
  *
- * Copyright 2009-12 Wolfson Microelectronics plc
+ * Copyright 2009 Wolfson Microelectronics plc
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 as
@@ -1269,7 +1269,7 @@ static int wm9081_remove(struct snd_soc_codec *codec)
 }
 
 #ifdef CONFIG_PM
-static int wm9081_suspend(struct snd_soc_codec *codec)
+static int wm9081_suspend(struct snd_soc_codec *codec, pm_message_t state)
 {
 	wm9081_set_bias_level(codec, SND_SOC_BIAS_OFF);
 

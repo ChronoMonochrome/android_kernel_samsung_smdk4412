@@ -126,19 +126,6 @@ struct alg_test_desc {
 
 static unsigned int IDX[8] = { IDX1, IDX2, IDX3, IDX4, IDX5, IDX6, IDX7, IDX8 };
 
-#ifdef CONFIG_CRYPTO_FIPS
-bool in_fips_err()
-{
-	return (IN_FIPS_ERROR == FIPS_ERR);
-}
-EXPORT_SYMBOL_GPL(in_fips_err);
-
-void set_in_fips_err()
-{
-	IN_FIPS_ERROR = FIPS_ERR;
-}
-#endif
-
 static void hexdump(unsigned char *buf, unsigned int len)
 {
 	print_hex_dump(KERN_CONT, "", DUMP_PREFIX_OFFSET,
@@ -1719,9 +1706,6 @@ static const struct alg_test_desc alg_test_descs[] = {
 			}
 		}
 	}, {
-		.alg = "compress_null",
-		.test = alg_test_null,
-	}, {
 		.alg = "crc32c",
 		.test = alg_test_crc32c,
 		.fips_allowed = 1,
@@ -1801,9 +1785,6 @@ static const struct alg_test_desc alg_test_descs[] = {
 				}
 			}
 		}
-	}, {
-		.alg = "digest_null",
-		.test = alg_test_null,
 	}, {
 		.alg = "ecb(__aes-aesni)",
 		.test = alg_test_null,
@@ -1925,9 +1906,6 @@ static const struct alg_test_desc alg_test_descs[] = {
 				}
 			}
 		}
-	}, {
-		.alg = "ecb(cipher_null)",
-		.test = alg_test_null,
 	}, {
 		.alg = "ecb(des)",
 		.test = alg_test_skcipher,

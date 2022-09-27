@@ -78,11 +78,7 @@ void vm_events_fold_cpu(int cpu)
  *
  * vm_stat contains the global counters
  */
-#ifndef CONFIG_DMA_CMA
 atomic_long_t vm_stat[NR_VM_ZONE_STAT_ITEMS];
-#else
-atomic_long_t vm_stat[NR_VM_ZONE_STAT_ITEMS];
-#endif
 EXPORT_SYMBOL(vm_stat);
 
 #ifdef CONFIG_SMP

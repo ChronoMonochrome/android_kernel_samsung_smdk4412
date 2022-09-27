@@ -62,6 +62,13 @@ additional_build_rules = {
            "kernel/power/built-in.o",
         ]
     }],
+    "mm/built-in.o" :
+    [{
+        "injected_objects":
+        [
+            "device/i9300/mm/built-in.o",
+        ],
+    }],
     "drivers/base/built-in.o" :
     [{
         "injected_objects":

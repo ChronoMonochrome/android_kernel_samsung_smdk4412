@@ -34,7 +34,7 @@ int gre_add_protocol(const struct gre_protocol *proto, u8 version)
 	if (gre_proto[version])
 		goto err_out_unlock;
 
-	RCU_INIT_POINTER(gre_proto[version], proto);
+	rcu_assign_pointer(gre_proto[version], proto);
 	spin_unlock(&gre_proto_lock);
 	return 0;
 
@@ -54,7 +54,7 @@ int gre_del_protocol(const struct gre_protocol *proto, u8 version)
 	if (rcu_dereference_protected(gre_proto[version],
 			lockdep_is_held(&gre_proto_lock)) != proto)
 		goto err_out_unlock;
-	RCU_INIT_POINTER(gre_proto[version], NULL);
+	rcu_assign_pointer(gre_proto[version], NULL);
 	spin_unlock(&gre_proto_lock);
 	synchronize_rcu();
 	return 0;

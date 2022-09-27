@@ -209,22 +209,6 @@ static void post_xfer(struct i2c_adapter *i2c_adap)
 	radeon_i2c_do_lock(i2c, 0);
 }
 
-static int pre_xfer(struct i2c_adapter *i2c_adap)
-{
-	struct radeon_i2c_chan *i2c = i2c_get_adapdata(i2c_adap);
-
-	radeon_i2c_do_lock(i2c, 1);
-
-	return 0;
-}
-
-static void post_xfer(struct i2c_adapter *i2c_adap)
-{
-	struct radeon_i2c_chan *i2c = i2c_get_adapdata(i2c_adap);
-
-	radeon_i2c_do_lock(i2c, 0);
-}
-
 /* hw i2c */
 
 static u32 radeon_get_i2c_prescale(struct radeon_device *rdev)

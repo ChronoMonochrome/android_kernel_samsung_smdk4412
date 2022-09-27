@@ -1241,7 +1241,7 @@ static int wm8991_set_bias_level(struct snd_soc_codec *codec,
 	return 0;
 }
 
-static int wm8991_suspend(struct snd_soc_codec *codec)
+static int wm8991_suspend(struct snd_soc_codec *codec, pm_message_t state)
 {
 	wm8991_set_bias_level(codec, SND_SOC_BIAS_OFF);
 	return 0;

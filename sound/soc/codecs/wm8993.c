@@ -1,7 +1,7 @@
 /*
  * wm8993.c -- WM8993 ALSA SoC audio driver
  *
- * Copyright 2009-12 Wolfson Microelectronics plc
+ * Copyright 2009, 2010 Wolfson Microelectronics plc
  *
  * Author: Mark Brown <broonie@opensource.wolfsonmicro.com>
  *
@@ -847,7 +847,6 @@ SND_SOC_DAPM_SUPPLY("CLK_SYS", WM8993_BUS_CONTROL_1, 1, 0, clk_sys_event,
 		    SND_SOC_DAPM_PRE_PMU | SND_SOC_DAPM_POST_PMD),
 SND_SOC_DAPM_SUPPLY("TOCLK", WM8993_CLOCKING_1, 14, 0, NULL, 0),
 SND_SOC_DAPM_SUPPLY("CLK_DSP", WM8993_CLOCKING_3, 0, 0, NULL, 0),
-SND_SOC_DAPM_SUPPLY("VMID", SND_SOC_NOPM, 0, 0, NULL, 0),
 
 SND_SOC_DAPM_ADC("ADCL", NULL, WM8993_POWER_MANAGEMENT_2, 1, 0),
 SND_SOC_DAPM_ADC("ADCR", NULL, WM8993_POWER_MANAGEMENT_2, 0, 0),
@@ -877,13 +876,10 @@ SND_SOC_DAPM_MIXER("SPKL", WM8993_POWER_MANAGEMENT_3, 8, 0,
 		   left_speaker_mixer, ARRAY_SIZE(left_speaker_mixer)),
 SND_SOC_DAPM_MIXER("SPKR", WM8993_POWER_MANAGEMENT_3, 9, 0,
 		   right_speaker_mixer, ARRAY_SIZE(right_speaker_mixer)),
-SND_SOC_DAPM_PGA("Direct Voice", SND_SOC_NOPM, 0, 0, NULL, 0),
+
 };
 
 static const struct snd_soc_dapm_route routes[] = {
-	{ "MICBIAS1", NULL, "VMID" },
-	{ "MICBIAS2", NULL, "VMID" },
-
 	{ "ADCL", NULL, "CLK_SYS" },
 	{ "ADCL", NULL, "CLK_DSP" },
 	{ "ADCR", NULL, "CLK_SYS" },
@@ -962,8 +958,6 @@ static int wm8993_set_bias_level(struct snd_soc_codec *codec,
 	struct wm8993_priv *wm8993 = snd_soc_codec_get_drvdata(codec);
 	int ret;
 
-	wm_hubs_set_bias_level(codec, level);
-
 	switch (level) {
 	case SND_SOC_BIAS_ON:
 	case SND_SOC_BIAS_PREPARE:
@@ -987,10 +981,6 @@ static int wm8993_set_bias_level(struct snd_soc_codec *codec,
 			snd_soc_write(codec, 0x44, 3);
 			snd_soc_write(codec, 0x56, 3);
 			snd_soc_write(codec, 0x44, 0);
-
-			wm_hubs_vmid_ena(codec);
-
-			wm_hubs_vmid_ena(codec);
 
 			/* Bring up VMID with fast soft start */
 			snd_soc_update_bits(codec, WM8993_ANTIPOP2,
@@ -1054,12 +1044,6 @@ static int wm8993_set_bias_level(struct snd_soc_codec *codec,
 		*/
 		codec->cache_sync = 1;
 #endif
-
-		snd_soc_update_bits(codec, WM8993_POWER_MANAGEMENT_3,
-				    WM8993_LINEOUT1N_ENA |
-				    WM8993_LINEOUT1P_ENA |
-				    WM8993_LINEOUT2N_ENA |
-				    WM8993_LINEOUT2P_ENA, 0);
 
 		regulator_bulk_disable(ARRAY_SIZE(wm8993->supplies),
 				       wm8993->supplies);
@@ -1430,7 +1414,6 @@ static struct snd_soc_dai_driver wm8993_dai = {
 		.channels_max = 2,
 		.rates = WM8993_RATES,
 		.formats = WM8993_FORMATS,
-		.sig_bits = 24,
 	},
 	.capture = {
 		 .stream_name = "Capture",
@@ -1438,7 +1421,6 @@ static struct snd_soc_dai_driver wm8993_dai = {
 		 .channels_max = 2,
 		 .rates = WM8993_RATES,
 		 .formats = WM8993_FORMATS,
-		 .sig_bits = 24,
 	 },
 	.ops = &wm8993_ops,
 	.symmetric_rates = 1,
@@ -1451,9 +1433,7 @@ static int wm8993_probe(struct snd_soc_codec *codec)
 	int ret, i, val;
 
 	wm8993->hubs_data.hp_startup_mode = 1;
-	wm8993->hubs_data.dcs_codes_l = -2;
-	wm8993->hubs_data.dcs_codes_r = -2;
-	wm8993->hubs_data.series_startup = 1;
+	wm8993->hubs_data.dcs_codes = -2;
 
 	ret = snd_soc_codec_set_cache_io(codec, 8, 16, SND_SOC_I2C);
 	if (ret != 0) {
@@ -1514,8 +1494,6 @@ static int wm8993_probe(struct snd_soc_codec *codec)
 				      wm8993->pdata.lineout2fb,
 				      wm8993->pdata.jd_scthr,
 				      wm8993->pdata.jd_thr,
-				      wm8993->pdata.micbias1_delay,
-				      wm8993->pdata.micbias2_delay,
 				      wm8993->pdata.micbias1_lvl,
 				      wm8993->pdata.micbias2_lvl);
 
@@ -1541,12 +1519,6 @@ static int wm8993_probe(struct snd_soc_codec *codec)
 	wm_hubs_add_analogue_routes(codec, wm8993->pdata.lineout1_diff,
 				    wm8993->pdata.lineout2_diff);
 
-	/* If the line outputs are differential then we aren't presenting
-	 * VMID as an output and can disable it.
-	 */
-	if (wm8993->pdata.lineout1_diff && wm8993->pdata.lineout2_diff)
-		codec->dapm.idle_bias_off = 1;
-
 	return 0;
 
 err_enable:
@@ -1566,7 +1538,7 @@ static int wm8993_remove(struct snd_soc_codec *codec)
 }
 
 #ifdef CONFIG_PM
-static int wm8993_suspend(struct snd_soc_codec *codec)
+static int wm8993_suspend(struct snd_soc_codec *codec, pm_message_t state)
 {
 	struct wm8993_priv *wm8993 = snd_soc_codec_get_drvdata(codec);
 	int fll_fout = wm8993->fll_fout;

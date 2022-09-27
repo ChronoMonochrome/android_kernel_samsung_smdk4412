@@ -1007,7 +1007,7 @@ static int sgtl5000_volatile_register(struct snd_soc_codec *codec,
 }
 
 #ifdef CONFIG_SUSPEND
-static int sgtl5000_suspend(struct snd_soc_codec *codec)
+static int sgtl5000_suspend(struct snd_soc_codec *codec, pm_message_t state)
 {
 	sgtl5000_set_bias_level(codec, SND_SOC_BIAS_OFF);
 

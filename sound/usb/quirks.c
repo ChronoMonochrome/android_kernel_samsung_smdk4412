@@ -148,30 +148,24 @@ static int create_fixed_stream_quirk(struct snd_usb_audio *chip,
 	stream = (fp->endpoint & USB_DIR_IN)
 		? SNDRV_PCM_STREAM_CAPTURE : SNDRV_PCM_STREAM_PLAYBACK;
 	err = snd_usb_add_audio_endpoint(chip, stream, fp);
-	if (err < 0)
-		goto error;
+	if (err < 0) {
+		kfree(fp);
+		kfree(rate_table);
+		return err;
+	}
 	if (fp->iface != get_iface_desc(&iface->altsetting[0])->bInterfaceNumber ||
 	    fp->altset_idx >= iface->num_altsetting) {
-		err = -EINVAL;
-		goto error;
+		kfree(fp);
+		kfree(rate_table);
+		return -EINVAL;
 	}
 	alts = &iface->altsetting[fp->altset_idx];
-	if (get_iface_desc(alts)->bNumEndpoints < 1) {
-		err = -EINVAL;
-		goto error;
-	}
-
 	fp->datainterval = snd_usb_parse_datainterval(chip, alts);
 	fp->maxpacksize = le16_to_cpu(get_endpoint(alts, 0)->wMaxPacketSize);
 	usb_set_interface(chip->dev, fp->iface, 0);
 	snd_usb_init_pitch(chip, fp->iface, alts, fp);
 	snd_usb_init_sample_rate(chip, fp->iface, alts, fp, fp->rate_max);
 	return 0;
-
- error:
-	kfree(fp);
-	kfree(rate_table);
-	return err;
 }
 
 /*

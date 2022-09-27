@@ -767,7 +767,7 @@ int __netpoll_setup(struct netpoll *np)
 	}
 
 	/* last thing to do is link it to the net device structure */
-	RCU_INIT_POINTER(ndev->npinfo, npinfo);
+	rcu_assign_pointer(ndev->npinfo, npinfo);
 
 	return 0;
 
@@ -908,7 +908,7 @@ void __netpoll_cleanup(struct netpoll *np)
 		if (ops->ndo_netpoll_cleanup)
 			ops->ndo_netpoll_cleanup(np->dev);
 
-		RCU_INIT_POINTER(np->dev->npinfo, NULL);
+		rcu_assign_pointer(np->dev->npinfo, NULL);
 
 		/* avoid racing with NAPI reading npinfo */
 		synchronize_rcu_bh();

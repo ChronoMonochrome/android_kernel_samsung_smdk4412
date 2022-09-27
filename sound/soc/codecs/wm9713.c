@@ -1,7 +1,7 @@
 /*
  * wm9713.c  --  ALSA Soc WM9713 codec support
  *
- * Copyright 2006-10 Wolfson Microelectronics PLC.
+ * Copyright 2006 Wolfson Microelectronics PLC.
  * Author: Liam Girdwood <lrg@slimlogic.co.uk>
  *
  *  This program is free software; you can redistribute  it and/or modify it
@@ -1140,7 +1140,8 @@ static int wm9713_set_bias_level(struct snd_soc_codec *codec,
 	return 0;
 }
 
-static int wm9713_soc_suspend(struct snd_soc_codec *codec)
+static int wm9713_soc_suspend(struct snd_soc_codec *codec,
+	pm_message_t state)
 {
 	u16 reg;
 

@@ -40,5 +40,4 @@ obj-$(CONFIG_XEN_BLKDEV_BACKEND)	+= xen-blkback/
 obj-$(CONFIG_BLK_DEV_DRBD)     += drbd/
 obj-$(CONFIG_BLK_DEV_RBD)     += rbd.o
 
-obj-$(CONFIG_ZRAM) += zram/
 swim_mod-y	:= swim.o swim_asm.o

@@ -1,7 +1,7 @@
 /*
  * ALSA SoC WM9090 driver
  *
- * Copyright 2009-12 Wolfson Microelectronics
+ * Copyright 2009, 2010 Wolfson Microelectronics
  *
  * Author: Mark Brown <broonie@opensource.wolfsonmicro.com>
  *
@@ -608,7 +608,7 @@ static int wm9090_probe(struct snd_soc_codec *codec)
 }
 
 #ifdef CONFIG_PM
-static int wm9090_suspend(struct snd_soc_codec *codec)
+static int wm9090_suspend(struct snd_soc_codec *codec, pm_message_t state)
 {
 	wm9090_set_bias_level(codec, SND_SOC_BIAS_OFF);
 

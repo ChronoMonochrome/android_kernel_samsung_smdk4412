@@ -1,7 +1,7 @@
 /*
  * wm8400.c  --  WM8400 ALSA Soc Audio driver
  *
- * Copyright 2008-11 Wolfson Microelectronics PLC.
+ * Copyright 2008, 2009 Wolfson Microelectronics PLC.
  * Author: Mark Brown <broonie@opensource.wolfsonmicro.com>
  *
  *  This program is free software; you can redistribute  it and/or modify it
@@ -1352,7 +1352,7 @@ static struct snd_soc_dai_driver wm8400_dai = {
 	.ops = &wm8400_dai_ops,
 };
 
-static int wm8400_suspend(struct snd_soc_codec *codec)
+static int wm8400_suspend(struct snd_soc_codec *codec, pm_message_t state)
 {
 	wm8400_set_bias_level(codec, SND_SOC_BIAS_OFF);
 

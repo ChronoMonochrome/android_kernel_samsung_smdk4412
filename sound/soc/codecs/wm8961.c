@@ -1,8 +1,6 @@
 /*
  * wm8961.c  --  WM8961 ALSA SoC Audio driver
  *
- * Copyright 2009-10 Wolfson Microelectronics, plc
- *
  * Author: Mark Brown
  *
  * This program is free software; you can redistribute it and/or modify
@@ -1039,7 +1037,7 @@ static int wm8961_remove(struct snd_soc_codec *codec)
 }
 
 #ifdef CONFIG_PM
-static int wm8961_suspend(struct snd_soc_codec *codec)
+static int wm8961_suspend(struct snd_soc_codec *codec, pm_message_t state)
 {
 	wm8961_set_bias_level(codec, SND_SOC_BIAS_OFF);
 

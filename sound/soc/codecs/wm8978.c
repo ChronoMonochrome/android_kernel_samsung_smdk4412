@@ -894,7 +894,7 @@ static struct snd_soc_dai_driver wm8978_dai = {
 	.ops = &wm8978_dai_ops,
 };
 
-static int wm8978_suspend(struct snd_soc_codec *codec)
+static int wm8978_suspend(struct snd_soc_codec *codec, pm_message_t state)
 {
 	wm8978_set_bias_level(codec, SND_SOC_BIAS_OFF);
 	/* Also switch PLL off */

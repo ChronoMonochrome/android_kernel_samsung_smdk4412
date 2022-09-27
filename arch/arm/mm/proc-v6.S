@@ -56,11 +56,6 @@ ENTRY(cpu_v6_proc_fin)
  */
 	.align	5
 ENTRY(cpu_v6_reset)
-	mrc	p15, 0, r1, c1, c0, 0		@ ctrl register
-	bic	r1, r1, #0x1			@ ...............m
-	mcr	p15, 0, r1, c1, c0, 0		@ disable MMU
-	mov	r1, #0
-	mcr	p15, 0, r1, c7, c5, 4		@ ISB
 	mov	pc, r0
 
 /*
@@ -174,7 +169,11 @@ cpu_resume_l1_flags:
 #define cpu_v6_do_resume 0
 #endif
 
-	string	cpu_v6_name, "ARMv6-compatible processor"
+
+	.type	cpu_v6_name, #object
+cpu_v6_name:
+	.asciz	"ARMv6-compatible processor"
+	.size	cpu_v6_name, . - cpu_v6_name
 
 	.align
 
@@ -240,13 +239,33 @@ v6_crval:
 
 	__INITDATA
 
-	@ define struct processor (see <asm/proc-fns.h> and proc-macros.S)
-	define_processor_functions v6, dabort=v6_early_abort, pabort=v6_pabort, suspend=1
+	.type	v6_processor_functions, #object
+ENTRY(v6_processor_functions)
+	.word	v6_early_abort
+	.word	v6_pabort
+	.word	cpu_v6_proc_init
+	.word	cpu_v6_proc_fin
+	.word	cpu_v6_reset
+	.word	cpu_v6_do_idle
+	.word	cpu_v6_dcache_clean_area
+	.word	cpu_v6_switch_mm
+	.word	cpu_v6_set_pte_ext
+	.word	cpu_v6_suspend_size
+	.word	cpu_v6_do_suspend
+	.word	cpu_v6_do_resume
+	.size	v6_processor_functions, . - v6_processor_functions
 
 	.section ".rodata"
 
-	string	cpu_arch_name, "armv6"
-	string	cpu_elf_name, "v6"
+	.type	cpu_arch_name, #object
+cpu_arch_name:
+	.asciz	"armv6"
+	.size	cpu_arch_name, . - cpu_arch_name
+
+	.type	cpu_elf_name, #object
+cpu_elf_name:
+	.asciz	"v6"
+	.size	cpu_elf_name, . - cpu_elf_name
 	.align
 
 	.section ".proc.info.init", #alloc, #execinstr

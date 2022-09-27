@@ -1,7 +1,7 @@
 /*
  * wm8753.c  --  WM8753 ALSA Soc Audio driver
  *
- * Copyright 2003-11 Wolfson Microelectronics PLC.
+ * Copyright 2003 Wolfson Microelectronics PLC.
  * Author: Liam Girdwood <lrg@slimlogic.co.uk>
  *
  *  This program is free software; you can redistribute  it and/or modify it
@@ -1388,7 +1388,7 @@ static void wm8753_work(struct work_struct *work)
 	wm8753_set_bias_level(codec, dapm->bias_level);
 }
 
-static int wm8753_suspend(struct snd_soc_codec *codec)
+static int wm8753_suspend(struct snd_soc_codec *codec, pm_message_t state)
 {
 	wm8753_set_bias_level(codec, SND_SOC_BIAS_OFF);
 	return 0;

@@ -4708,7 +4708,7 @@ snd_hdspm_proc_read_madi(struct snd_info_entry * entry,
 		insel = "Coaxial";
 		break;
 	default:
-		insel = "Unknown";
+		insel = "Unkown";
 	}
 
 	snd_iprintf(buffer,

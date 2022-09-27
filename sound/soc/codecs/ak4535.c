@@ -420,7 +420,7 @@ static struct snd_soc_dai_driver ak4535_dai = {
 	.ops = &ak4535_dai_ops,
 };
 
-static int ak4535_suspend(struct snd_soc_codec *codec)
+static int ak4535_suspend(struct snd_soc_codec *codec, pm_message_t state)
 {
 	ak4535_set_bias_level(codec, SND_SOC_BIAS_OFF);
 	return 0;

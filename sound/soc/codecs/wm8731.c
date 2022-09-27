@@ -2,7 +2,6 @@
  * wm8731.c  --  WM8731 ALSA SoC Audio driver
  *
  * Copyright 2005 Openedhand Ltd.
- * Copyright 2006-12 Wolfson Microelectronics, plc
  *
  * Author: Richard Purdie <richard@openedhand.com>
  *
@@ -501,7 +500,7 @@ static struct snd_soc_dai_driver wm8731_dai = {
 };
 
 #ifdef CONFIG_PM
-static int wm8731_suspend(struct snd_soc_codec *codec)
+static int wm8731_suspend(struct snd_soc_codec *codec, pm_message_t state)
 {
 	wm8731_set_bias_level(codec, SND_SOC_BIAS_OFF);
 

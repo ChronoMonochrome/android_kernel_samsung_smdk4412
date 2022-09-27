@@ -1,8 +1,6 @@
 /*
  * wm8960.c  --  WM8960 ALSA SoC Audio driver
  *
- * Copyright 2007-11 Wolfson Microelectronics, plc
- *
  * Author: Liam Girdwood
  *
  * This program is free software; you can redistribute it and/or modify
@@ -893,7 +891,7 @@ static struct snd_soc_dai_driver wm8960_dai = {
 	.symmetric_rates = 1,
 };
 
-static int wm8960_suspend(struct snd_soc_codec *codec)
+static int wm8960_suspend(struct snd_soc_codec *codec, pm_message_t state)
 {
 	struct wm8960_priv *wm8960 = snd_soc_codec_get_drvdata(codec);
 

@@ -159,6 +159,15 @@ static int snd_soc_tlv320aic23_get_volsw(struct snd_kcontrol *kcontrol,
 
 }
 
+#define SOC_TLV320AIC23_SINGLE_TLV(xname, reg, shift, max, invert, tlv_array) \
+{	.iface = SNDRV_CTL_ELEM_IFACE_MIXER, .name = xname, \
+	.access = SNDRV_CTL_ELEM_ACCESS_TLV_READ |\
+		 SNDRV_CTL_ELEM_ACCESS_READWRITE,\
+	.tlv.p = (tlv_array), \
+	.info = snd_soc_info_volsw, .get = snd_soc_tlv320aic23_get_volsw,\
+	.put = snd_soc_tlv320aic23_put_volsw, \
+	.private_value =  SOC_SINGLE_VALUE(reg, shift, max, invert) }
+
 static const struct snd_kcontrol_new tlv320aic23_snd_controls[] = {
 	SOC_DOUBLE_R_TLV("Digital Playback Volume", TLV320AIC23_LCHNVOL,
 			 TLV320AIC23_RCHNVOL, 0, 127, 0, out_gain_tlv),
@@ -169,9 +178,8 @@ static const struct snd_kcontrol_new tlv320aic23_snd_controls[] = {
 			 TLV320AIC23_RINVOL, 0, 31, 0, input_gain_tlv),
 	SOC_SINGLE("Mic Input Switch", TLV320AIC23_ANLG, 1, 1, 1),
 	SOC_SINGLE("Mic Booster Switch", TLV320AIC23_ANLG, 0, 1, 0),
-	SOC_SINGLE_EXT_TLV("Sidetone Volume", TLV320AIC23_ANLG, 6, 4, 0,
-			   snd_soc_tlv320aic23_get_volsw,
-			   snd_soc_tlv320aic23_put_volsw, sidetone_vol_tlv),
+	SOC_TLV320AIC23_SINGLE_TLV("Sidetone Volume", TLV320AIC23_ANLG,
+				  6, 4, 0, sidetone_vol_tlv),
 	SOC_ENUM("Playback De-emphasis", tlv320aic23_deemph),
 };
 
@@ -588,7 +596,8 @@ static struct snd_soc_dai_driver tlv320aic23_dai = {
 	.ops = &tlv320aic23_dai_ops,
 };
 
-static int tlv320aic23_suspend(struct snd_soc_codec *codec)
+static int tlv320aic23_suspend(struct snd_soc_codec *codec,
+			       pm_message_t state)
 {
 	tlv320aic23_set_bias_level(codec, SND_SOC_BIAS_OFF);
 
