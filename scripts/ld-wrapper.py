@@ -164,7 +164,11 @@ additional_build_rules = {
             "drivers/media/video/samsung/built-in.o",
             "drivers/media/video/s5c73m3.o",
             "drivers/media/video/s5c73m3_spi.o",
-            "drivers/media/video/videobuf2-cma-phys.o",
+            "drivers/media/video/videodev.o",
+            "drivers/media/video/v4l2-mem2mem.o",
+            "drivers/media/video/videobuf-core.o",
+            "drivers/media/video/videobuf2-core.o",
+            "drivers/media/video/videobuf2-dma-contig.o",
         ],
     }],
     "drivers/mfd/built-in.o" :
