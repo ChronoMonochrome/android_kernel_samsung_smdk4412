@@ -32,6 +32,7 @@
 #include <linux/bitmap.h>
 #include <linux/usb.h>
 #include <linux/i2c.h>
+#include <linux/version.h>
 #include <linux/mm.h>
 #include <linux/mutex.h>
 #include <linux/slab.h>
@@ -49,8 +50,7 @@
 		      "Sascha Sommer <saschasommer@freenet.de>"
 
 #define DRIVER_DESC         "Empia em28xx based USB video device driver"
-
-#define EM28XX_VERSION "0.1.3"
+#define EM28XX_VERSION_CODE  KERNEL_VERSION(0, 1, 2)
 
 #define em28xx_videodbg(fmt, arg...) do {\
 	if (video_debug) \
@@ -72,7 +72,6 @@ do {\
 MODULE_AUTHOR(DRIVER_AUTHOR);
 MODULE_DESCRIPTION(DRIVER_DESC);
 MODULE_LICENSE("GPL");
-MODULE_VERSION(EM28XX_VERSION);
 
 static unsigned int video_nr[] = {[0 ... (EM28XX_MAXBOARDS - 1)] = UNSET };
 static unsigned int vbi_nr[]   = {[0 ... (EM28XX_MAXBOARDS - 1)] = UNSET };
@@ -1758,6 +1757,8 @@ static int vidioc_querycap(struct file *file, void  *priv,
 	strlcpy(cap->card, em28xx_boards[dev->model].name, sizeof(cap->card));
 	usb_make_path(dev->udev, cap->bus_info, sizeof(cap->bus_info));
 
+	cap->version = EM28XX_VERSION_CODE;
+
 	cap->capabilities =
 			V4L2_CAP_SLICED_VBI_CAPTURE |
 			V4L2_CAP_VIDEO_CAPTURE |
@@ -1975,6 +1976,7 @@ static int radio_querycap(struct file *file, void  *priv,
 	strlcpy(cap->card, em28xx_boards[dev->model].name, sizeof(cap->card));
 	usb_make_path(dev->udev, cap->bus_info, sizeof(cap->bus_info));
 
+	cap->version = EM28XX_VERSION_CODE;
 	cap->capabilities = V4L2_CAP_TUNER;
 	return 0;
 }
@@ -2448,8 +2450,10 @@ int em28xx_register_analog_devices(struct em28xx *dev)
       u8 val;
 	int ret;
 
-	printk(KERN_INFO "%s: v4l2 driver version %s\n",
-		dev->name, EM28XX_VERSION);
+	printk(KERN_INFO "%s: v4l2 driver version %d.%d.%d\n",
+		dev->name,
+		(EM28XX_VERSION_CODE >> 16) & 0xff,
+		(EM28XX_VERSION_CODE >> 8) & 0xff, EM28XX_VERSION_CODE & 0xff);
 
 	/* set default norm */
 	dev->norm = em28xx_video_template.current_norm;

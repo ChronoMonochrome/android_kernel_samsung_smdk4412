@@ -314,8 +314,6 @@ static int cxd2820r_set_frontend(struct dvb_frontend *fe,
 			} else if (c->delivery_system == SYS_DVBT2) {
 				/* DVB-T => DVB-T2 */
 				ret = cxd2820r_sleep_t(fe);
-				if (ret)
-					break;
 				ret = cxd2820r_set_frontend_t2(fe, p);
 			}
 			break;
@@ -326,8 +324,6 @@ static int cxd2820r_set_frontend(struct dvb_frontend *fe,
 			} else if (c->delivery_system == SYS_DVBT) {
 				/* DVB-T2 => DVB-T */
 				ret = cxd2820r_sleep_t2(fe);
-				if (ret)
-					break;
 				ret = cxd2820r_set_frontend_t(fe, p);
 			}
 			break;
@@ -744,13 +740,12 @@ static int cxd2820r_tuner_i2c_xfer(struct i2c_adapter *i2c_adap,
 	struct i2c_msg msg[], int num)
 {
 	struct cxd2820r_priv *priv = i2c_get_adapdata(i2c_adap);
-	int ret;
-	u8 *obuf = kmalloc(msg[0].len + 2, GFP_KERNEL);
+	u8 obuf[msg[0].len + 2];
 	struct i2c_msg msg2[2] = {
 		{
 			.addr = priv->cfg.i2c_address,
 			.flags = 0,
-			.len = msg[0].len + 2,
+			.len = sizeof(obuf),
 			.buf = obuf,
 		}, {
 			.addr = priv->cfg.i2c_address,
@@ -760,24 +755,15 @@ static int cxd2820r_tuner_i2c_xfer(struct i2c_adapter *i2c_adap,
 		}
 	};
 
-	if (!obuf)
-		return -ENOMEM;
-
 	obuf[0] = 0x09;
 	obuf[1] = (msg[0].addr << 1);
 	if (num == 2) { /* I2C read */
 		obuf[1] = (msg[0].addr << 1) | I2C_M_RD; /* I2C RD flag */
-		msg2[0].len = msg[0].len + 2 - 1; /* '-1' maybe HW bug ? */
+		msg2[0].len = sizeof(obuf) - 1; /* maybe HW bug ? */
 	}
 	memcpy(&obuf[2], msg[0].buf, msg[0].len);
 
-	ret = i2c_transfer(priv->i2c, msg2, num);
-	if (ret < 0)
-		warn("tuner i2c failed ret:%d", ret);
-
-	kfree(obuf);
-
-	return ret;
+	return i2c_transfer(priv->i2c, msg2, num);
 }
 
 static struct i2c_algorithm cxd2820r_tuner_i2c_algo = {

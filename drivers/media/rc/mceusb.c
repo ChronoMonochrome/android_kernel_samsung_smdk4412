@@ -692,18 +692,20 @@ static void mce_flush_rx_buffer(struct mceusb_dev *ir, int size)
 }
 
 /* Send data out the IR blaster port(s) */
-static int mceusb_tx_ir(struct rc_dev *dev, unsigned *txbuf, unsigned count)
+static int mceusb_tx_ir(struct rc_dev *dev, int *txbuf, u32 n)
 {
 	struct mceusb_dev *ir = dev->priv;
 	int i, ret = 0;
-	int cmdcount = 0;
+	int count, cmdcount = 0;
 	unsigned char *cmdbuf; /* MCE command buffer */
 	long signal_duration = 0; /* Singnal length in us */
 	struct timeval start_time, end_time;
 
 	do_gettimeofday(&start_time);
 
-	cmdbuf = kzalloc(sizeof(unsigned) * MCE_CMDBUF_SIZE, GFP_KERNEL);
+	count = n / sizeof(int);
+
+	cmdbuf = kzalloc(sizeof(int) * MCE_CMDBUF_SIZE, GFP_KERNEL);
 	if (!cmdbuf)
 		return -ENOMEM;
 
@@ -772,7 +774,7 @@ static int mceusb_tx_ir(struct rc_dev *dev, unsigned *txbuf, unsigned count)
 
 out:
 	kfree(cmdbuf);
-	return ret ? ret : count;
+	return ret ? ret : n;
 }
 
 /* Sets active IR outputs -- mce devices typically have two */

@@ -1192,6 +1192,7 @@ static unsigned int fops_poll(struct file *file, poll_table *wait)
 {
 	struct saa7164_vbi_fh *fh = (struct saa7164_vbi_fh *)file->private_data;
 	struct saa7164_port *port = fh->port;
+	struct saa7164_user_buffer *ubuf;
 	unsigned int mask = 0;
 
 	port->last_poll_msecs_diff = port->last_poll_msecs;
@@ -1223,7 +1224,10 @@ static unsigned int fops_poll(struct file *file, poll_table *wait)
 	}
 
 	/* Pull the first buffer from the used list */
-	if (!list_empty(&port->list_buf_used.list))
+	ubuf = list_first_entry(&port->list_buf_used.list,
+		struct saa7164_user_buffer, list);
+
+	if (ubuf)
 		mask |= POLLIN | POLLRDNORM;
 
 	return mask;
