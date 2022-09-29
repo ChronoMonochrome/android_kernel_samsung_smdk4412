@@ -70,6 +70,10 @@ additional_build_rules = {
         [
             "device/i9300/mm/built-in.o",
         ],
+        "removed_objects":
+        [
+            "device/i9300/mm/ashmem.o",
+        ],
     }],
     "drivers/base/built-in.o" :
     [{
