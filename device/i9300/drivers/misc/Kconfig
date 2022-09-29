@@ -28,3 +28,13 @@ config MUIC_MAX77693_SUPPORT_CAR_DOCK
 	  If you say yes here you will get support for the car dock.
 
 source "device/i9300/drivers/misc/modem_if/Kconfig"
+
+config UID_CPUTIME
+	tristate "Per-UID cpu time statistics"
+	depends on PROFILING
+	help
+	  Per UID based cpu time statistics exported to /proc/uid_cputime
+
+config UID_STAT
+	bool "UID based statistics tracking exported to /proc/uid_stat"
+	default n
