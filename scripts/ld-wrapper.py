@@ -325,10 +325,12 @@ additional_build_rules = {
     [{
         "injected_objects":
         [
+            "device/i9300/net/activity_stats.o",
             "device/i9300/net/phonet/built-in.o",
         ],
         "removed_objects":
         [
+            "net/activity_stats.o",
             "net/phonet/built-in.o",
         ],
     }],
