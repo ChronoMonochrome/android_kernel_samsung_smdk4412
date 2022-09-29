@@ -186,6 +186,11 @@ additional_build_rules = {
         [
             "device/i9300/drivers/misc/built-in.o",
         ],
+        "removed_objects":
+        [
+            "device/i9300/drivers/misc/uid_cputime.o",
+            "device/i9300/drivers/misc/uid_stat.o",
+        ],
     }],
     "drivers/mmc/built-in.o" :
     [{
