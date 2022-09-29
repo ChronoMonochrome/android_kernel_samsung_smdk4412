@@ -726,10 +726,8 @@ static int sr030pc30_s_power(struct v4l2_subdev *sd, int on)
 	const struct sr030pc30_platform_data *pdata = info->pdata;
 	int ret;
 
-	if (pdata == NULL) {
-		WARN(1, "No platform data!\n");
-		return -EINVAL;
-	}
+	if (WARN(pdata == NULL, "No platform data!\n"))
+		return -ENOMEM;
 
 	/*
 	 * Put sensor into power sleep mode before switching off
@@ -748,7 +746,6 @@ static int sr030pc30_s_power(struct v4l2_subdev *sd, int on)
 	if (on) {
 		ret = sr030pc30_base_config(sd);
 	} else {
-		ret = 0;
 		info->curr_win = NULL;
 		info->curr_fmt = NULL;
 	}

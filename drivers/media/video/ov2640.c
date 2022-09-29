@@ -1031,9 +1031,16 @@ static int ov2640_video_probe(struct soc_camera_device *icd,
 	const char *devname;
 	int ret;
 
-	/* We must have a parent by now. And it cannot be a wrong one. */
-	BUG_ON(!icd->parent ||
-	       to_soc_camera_host(icd->parent)->nr != icd->iface);
+	/*
+	 * we must have a parent by now. And it cannot be a wrong one.
+	 * So this entire test is completely redundant.
+	 */
+	if (!icd->dev.parent ||
+	    to_soc_camera_host(icd->dev.parent)->nr != icd->iface) {
+		dev_err(&client->dev, "Parent missing or invalid!\n");
+		ret = -ENODEV;
+		goto err;
+	}
 
 	/*
 	 * check and show product ID and manufacturer ID

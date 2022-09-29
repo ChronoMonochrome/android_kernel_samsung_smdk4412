@@ -24,7 +24,6 @@
 #include <linux/signal.h>
 #include <linux/sched.h>
 #include <linux/interrupt.h>
-#include <asm/io.h>
 
 #include "dmxdev.h"
 #include "dvbdev.h"

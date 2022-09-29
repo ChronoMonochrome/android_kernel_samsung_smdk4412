@@ -16,7 +16,6 @@
 #include <linux/slab.h>
 #include <linux/types.h>
 #include <linux/kernel.h>
-#include <linux/version.h>
 
 #include <linux/videodev2.h>
 
@@ -543,12 +542,12 @@ static long __video_do_ioctl(struct file *file,
 	struct v4l2_fh *vfh = NULL;
 	struct v4l2_format f_copy;
 	int use_fh_prio = 0;
-	long ret = -ENOTTY;
+	long ret = -EINVAL;
 
 	if (ops == NULL) {
 		printk(KERN_WARNING "videodev: \"%s\" has no ioctl_ops.\n",
 				vfd->name);
-		return ret;
+		return -EINVAL;
 	}
 
 	if ((vfd->debug & V4L2_DEBUG_IOCTL) &&
@@ -606,7 +605,6 @@ static long __video_do_ioctl(struct file *file,
 		if (!ops->vidioc_querycap)
 			break;
 
-		cap->version = LINUX_VERSION_CODE;
 		ret = ops->vidioc_querycap(file, fh, cap);
 		if (!ret)
 			dbgarg(cmd, "driver=%s, card=%s, bus=%s, "
@@ -1420,9 +1418,7 @@ static long __video_do_ioctl(struct file *file,
 	{
 		struct v4l2_queryctrl *p = arg;
 
-		if (vfh && vfh->ctrl_handler)
-			ret = v4l2_queryctrl(vfh->ctrl_handler, p);
-		else if (vfd->ctrl_handler)
+		if (vfd->ctrl_handler)
 			ret = v4l2_queryctrl(vfd->ctrl_handler, p);
 		else if (ops->vidioc_queryctrl)
 			ret = ops->vidioc_queryctrl(file, fh, p);
@@ -1442,9 +1438,7 @@ static long __video_do_ioctl(struct file *file,
 	{
 		struct v4l2_control *p = arg;
 
-		if (vfh && vfh->ctrl_handler)
-			ret = v4l2_g_ctrl(vfh->ctrl_handler, p);
-		else if (vfd->ctrl_handler)
+		if (vfd->ctrl_handler)
 			ret = v4l2_g_ctrl(vfd->ctrl_handler, p);
 		else if (ops->vidioc_g_ctrl)
 			ret = ops->vidioc_g_ctrl(file, fh, p);
@@ -1476,18 +1470,14 @@ static long __video_do_ioctl(struct file *file,
 		struct v4l2_ext_controls ctrls;
 		struct v4l2_ext_control ctrl;
 
-		if (!(vfh && vfh->ctrl_handler) && !vfd->ctrl_handler &&
+		if (!vfd->ctrl_handler &&
 			!ops->vidioc_s_ctrl && !ops->vidioc_s_ext_ctrls)
 			break;
 
 		dbgarg(cmd, "id=0x%x, value=%d\n", p->id, p->value);
 
-		if (vfh && vfh->ctrl_handler) {
-			ret = v4l2_s_ctrl(vfh, vfh->ctrl_handler, p);
-			break;
-		}
 		if (vfd->ctrl_handler) {
-			ret = v4l2_s_ctrl(NULL, vfd->ctrl_handler, p);
+			ret = v4l2_s_ctrl(vfd->ctrl_handler, p);
 			break;
 		}
 		if (ops->vidioc_s_ctrl) {
@@ -1511,9 +1501,7 @@ static long __video_do_ioctl(struct file *file,
 		struct v4l2_ext_controls *p = arg;
 
 		p->error_idx = p->count;
-		if (vfh && vfh->ctrl_handler)
-			ret = v4l2_g_ext_ctrls(vfh->ctrl_handler, p);
-		else if (vfd->ctrl_handler)
+		if (vfd->ctrl_handler)
 			ret = v4l2_g_ext_ctrls(vfd->ctrl_handler, p);
 		else if (ops->vidioc_g_ext_ctrls && check_ext_ctrls(p, 0))
 			ret = ops->vidioc_g_ext_ctrls(file, fh, p);
@@ -1527,14 +1515,11 @@ static long __video_do_ioctl(struct file *file,
 		struct v4l2_ext_controls *p = arg;
 
 		p->error_idx = p->count;
-		if (!(vfh && vfh->ctrl_handler) && !vfd->ctrl_handler &&
-				!ops->vidioc_s_ext_ctrls)
+		if (!vfd->ctrl_handler && !ops->vidioc_s_ext_ctrls)
 			break;
 		v4l_print_ext_ctrls(cmd, vfd, p, 1);
-		if (vfh && vfh->ctrl_handler)
-			ret = v4l2_s_ext_ctrls(vfh, vfh->ctrl_handler, p);
-		else if (vfd->ctrl_handler)
-			ret = v4l2_s_ext_ctrls(NULL, vfd->ctrl_handler, p);
+		if (vfd->ctrl_handler)
+			ret = v4l2_s_ext_ctrls(vfd->ctrl_handler, p);
 		else if (check_ext_ctrls(p, 0))
 			ret = ops->vidioc_s_ext_ctrls(file, fh, p);
 		break;
@@ -1544,13 +1529,10 @@ static long __video_do_ioctl(struct file *file,
 		struct v4l2_ext_controls *p = arg;
 
 		p->error_idx = p->count;
-		if (!(vfh && vfh->ctrl_handler) && !vfd->ctrl_handler &&
-				!ops->vidioc_try_ext_ctrls)
+		if (!vfd->ctrl_handler && !ops->vidioc_try_ext_ctrls)
 			break;
 		v4l_print_ext_ctrls(cmd, vfd, p, 1);
-		if (vfh && vfh->ctrl_handler)
-			ret = v4l2_try_ext_ctrls(vfh->ctrl_handler, p);
-		else if (vfd->ctrl_handler)
+		if (vfd->ctrl_handler)
 			ret = v4l2_try_ext_ctrls(vfd->ctrl_handler, p);
 		else if (check_ext_ctrls(p, 0))
 			ret = ops->vidioc_try_ext_ctrls(file, fh, p);
@@ -1560,9 +1542,7 @@ static long __video_do_ioctl(struct file *file,
 	{
 		struct v4l2_querymenu *p = arg;
 
-		if (vfh && vfh->ctrl_handler)
-			ret = v4l2_querymenu(vfh->ctrl_handler, p);
-		else if (vfd->ctrl_handler)
+		if (vfd->ctrl_handler)
 			ret = v4l2_querymenu(vfd->ctrl_handler, p);
 		else if (ops->vidioc_querymenu)
 			ret = ops->vidioc_querymenu(file, fh, p);
@@ -2296,7 +2276,7 @@ static int check_array_args(unsigned int cmd, void *parg, size_t *array_size,
 				break;
 			}
 			*user_ptr = (void __user *)buf->m.planes;
-			*kernel_ptr = (void *)&buf->m.planes;
+			*kernel_ptr = (void **)&buf->m.planes;
 			*array_size = sizeof(struct v4l2_plane) * buf->length;
 			ret = 1;
 		}
@@ -2310,7 +2290,7 @@ static int check_array_args(unsigned int cmd, void *parg, size_t *array_size,
 
 		if (ctrls->count != 0) {
 			*user_ptr = (void __user *)ctrls->controls;
-			*kernel_ptr = (void *)&ctrls->controls;
+			*kernel_ptr = (void **)&ctrls->controls;
 			*array_size = sizeof(struct v4l2_ext_control)
 				    * ctrls->count;
 			ret = 1;

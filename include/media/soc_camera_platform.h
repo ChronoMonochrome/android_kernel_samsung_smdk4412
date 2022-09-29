@@ -21,7 +21,7 @@ struct soc_camera_platform_info {
 	unsigned long format_depth;
 	struct v4l2_mbus_framefmt format;
 	unsigned long bus_param;
-	struct soc_camera_device *icd;
+	struct device *dev;
 	int (*set_capture)(struct soc_camera_platform_info *info, int enable);
 };
 
@@ -30,7 +30,8 @@ static inline void soc_camera_platform_release(struct platform_device **pdev)
 	*pdev = NULL;
 }
 
-static inline int soc_camera_platform_add(struct soc_camera_device *icd,
+static inline int soc_camera_platform_add(const struct soc_camera_link *icl,
+					  struct device *dev,
 					  struct platform_device **pdev,
 					  struct soc_camera_link *plink,
 					  void (*release)(struct device *dev),
@@ -39,7 +40,7 @@ static inline int soc_camera_platform_add(struct soc_camera_device *icd,
 	struct soc_camera_platform_info *info = plink->priv;
 	int ret;
 
-	if (icd->link != plink)
+	if (icl != plink)
 		return -ENODEV;
 
 	if (*pdev)
@@ -49,7 +50,7 @@ static inline int soc_camera_platform_add(struct soc_camera_device *icd,
 	if (!*pdev)
 		return -ENOMEM;
 
-	info->icd = icd;
+	info->dev = dev;
 
 	(*pdev)->dev.platform_data = info;
 	(*pdev)->dev.release = release;
@@ -58,17 +59,17 @@ static inline int soc_camera_platform_add(struct soc_camera_device *icd,
 	if (ret < 0) {
 		platform_device_put(*pdev);
 		*pdev = NULL;
-		info->icd = NULL;
+		info->dev = NULL;
 	}
 
 	return ret;
 }
 
-static inline void soc_camera_platform_del(const struct soc_camera_device *icd,
+static inline void soc_camera_platform_del(const struct soc_camera_link *icl,
 					   struct platform_device *pdev,
 					   const struct soc_camera_link *plink)
 {
-	if (icd->link != plink || !pdev)
+	if (icl != plink || !pdev)
 		return;
 
 	platform_device_unregister(pdev);
