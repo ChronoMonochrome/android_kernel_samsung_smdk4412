@@ -3,3 +3,4 @@ obj-y += kernel/
 obj-y += drivers/
 obj-y += mm/
 obj-y += net/
+obj-y += sound/
