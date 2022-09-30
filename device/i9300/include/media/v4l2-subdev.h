@@ -268,6 +268,12 @@ struct v4l2_subdev_audio_ops {
    try_mbus_fmt: try to set a pixel format on a video data source
 
    s_mbus_fmt: set a pixel format on a video data source
+
+   g_mbus_config: get supported mediabus configurations
+
+   s_mbus_config: set a certain mediabus configuration. This operation is added
+	for compatibility with soc-camera drivers and should not be used by new
+	software.
  */
 struct v4l2_subdev_video_ops {
 	int (*s_routing)(struct v4l2_subdev *sd, u32 input, u32 output, u32 config);
@@ -311,6 +317,10 @@ struct v4l2_subdev_video_ops {
 			    struct v4l2_mbus_framefmt *fmt);
 	int (*s_mbus_fmt)(struct v4l2_subdev *sd,
 			  struct v4l2_mbus_framefmt *fmt);
+	int (*g_mbus_config)(struct v4l2_subdev *sd,
+			     struct v4l2_mbus_config *cfg);
+	int (*s_mbus_config)(struct v4l2_subdev *sd,
+			     const struct v4l2_mbus_config *cfg);
 };
 
 /*
@@ -526,8 +536,6 @@ struct v4l2_subdev {
 	void *host_priv;
 	/* subdev device node */
 	struct video_device devnode;
-	/* number of events to be allocated on open */
-	unsigned int nevents;
 };
 
 #define media_entity_to_v4l2_subdev(ent) \

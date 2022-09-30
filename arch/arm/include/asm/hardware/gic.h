@@ -44,6 +44,11 @@ void gic_enable_ppi(unsigned int);
 
 #define gic_secondary_init(n)	gic_secondary_init_base((n), NULL, NULL)
 
+struct gic_chip_data {
+	unsigned int irq_offset;
+	void __iomem *dist_base;
+	void __iomem *cpu_base;
+};
 #endif
 
 #endif
