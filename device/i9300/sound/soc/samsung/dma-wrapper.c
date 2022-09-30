@@ -148,13 +148,13 @@ static void asoc_platform_free_dma_buffers(struct snd_pcm *pcm)
 		platform->pcm_free(pcm);
 }
 
-static int asoc_platform_new(struct snd_card *card,
-				struct snd_soc_dai *dai, struct snd_pcm *pcm)
+static int asoc_platform_new(struct snd_soc_pcm_runtime *rtd)
 {
+	struct snd_pcm *pcm = rtd->pcm;
 	struct snd_soc_platform_driver *platform = asoc_get_platform(pcm);
 
 	if (platform->pcm_new)
-		platform->pcm_new(card, dai, pcm);
+		platform->pcm_new(rtd);
 
 	return 0;
 }
