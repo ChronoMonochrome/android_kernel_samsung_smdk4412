@@ -217,6 +217,10 @@ config ARM_PATCH_PHYS_VIRT
 config ARCH_HIBERNATION_POSSIBLE
 	def_bool y
 
+config GENERIC_BUG
+	def_bool y
+	depends on BUG
+
 source "init/Kconfig"
 
 source "kernel/Kconfig.freezer"
