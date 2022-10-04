@@ -21,8 +21,8 @@
 
 #include <mach/usbdiag.h>
 
-#include <linux/usb/composite.h>
-#include <linux/usb/gadget.h>
+#include <device/linux/usb/composite.h>
+#include <device/linux/usb/gadget.h>
 #include <linux/workqueue.h>
 #include <linux/debugfs.h>
 

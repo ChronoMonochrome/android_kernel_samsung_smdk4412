@@ -14,8 +14,8 @@
 #include <linux/kernel.h>
 #include <linux/device.h>
 #include <linux/errno.h>
-#include <linux/usb/ch9.h>
-#include <linux/usb/gadget.h>
+#include <device/linux/usb/ch9.h>
+#include <device/linux/usb/gadget.h>
 
 #include <media/v4l2-dev.h>
 

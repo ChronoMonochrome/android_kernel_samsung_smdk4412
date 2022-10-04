@@ -61,9 +61,9 @@
 #include <linux/kernel.h>
 #include <linux/slab.h>
 #include <linux/pm_runtime.h>
-#include <linux/usb/ch9.h>
-#include <linux/usb/gadget.h>
-#include <linux/usb/otg.h>
+#include <device/linux/usb/ch9.h>
+#include <device/linux/usb/gadget.h>
+#include <device/linux/usb/otg.h>
 
 #include "ci13xxx_udc.h"
 

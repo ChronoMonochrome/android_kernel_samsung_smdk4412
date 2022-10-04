@@ -23,7 +23,7 @@
 
 #include <linux/kernel.h>
 #include <linux/device.h>
-#include <linux/usb/composite.h>
+#include <device/linux/usb/composite.h>
 
 /*
  * Debugging macro and defines

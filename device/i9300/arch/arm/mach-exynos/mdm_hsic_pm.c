@@ -21,7 +21,7 @@
 #include <linux/irq.h>
 #include <linux/delay.h>
 #include <linux/clk.h>
-#include <linux/usb.h>
+#include <device/linux/usb.h>
 #include <linux/pm_runtime.h>
 #include <plat/gpio-cfg.h>
 #include <linux/mdm_hsic_pm.h>
@@ -32,15 +32,15 @@
 #include <linux/msm_charm.h>
 #include "mdm_private.h"
 #include <linux/wakelock.h>
-#include <linux/usb.h>
-#include <linux/usb/hcd.h>
-#include <linux/usb/ehci_def.h>
+#include <device/linux/usb.h>
+#include <device/linux/usb/hcd.h>
+#include <device/linux/usb/ehci_def.h>
 
 #ifdef CONFIG_CPU_FREQ_TETHERING
 #include <linux/kernel.h>
 #include <linux/netdevice.h>
 #include <mach/mdm2.h>
-#include <linux/usb/android_composite.h>
+#include <device/linux/usb/android_composite.h>
 #endif
 #ifdef CONFIG_USBIRQ_BALANCING_LTE_HIGHTP
 #include <mach/mdm2.h>

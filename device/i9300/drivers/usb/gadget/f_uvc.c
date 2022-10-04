@@ -17,9 +17,9 @@
 #include <linux/fs.h>
 #include <linux/list.h>
 #include <linux/mutex.h>
-#include <linux/usb/ch9.h>
-#include <linux/usb/gadget.h>
-#include <linux/usb/video.h>
+#include <device/linux/usb/ch9.h>
+#include <device/linux/usb/gadget.h>
+#include <device/linux/usb/video.h>
 #include <linux/vmalloc.h>
 #include <linux/wait.h>
 

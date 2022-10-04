@@ -12,7 +12,7 @@
  */
 #include <linux/kernel.h>
 #include <linux/device.h>
-#include <linux/usb/video.h>
+#include <device/linux/usb/video.h>
 
 #include "f_uvc.h"
 

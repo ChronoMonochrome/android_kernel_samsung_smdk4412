@@ -15,7 +15,7 @@
  */
 
 #include <linux/device.h>
-#include <linux/usb/audio.h>
+#include <device/linux/usb/audio.h>
 #include <linux/wait.h>
 #include <sound/core.h>
 #include <sound/initval.h>

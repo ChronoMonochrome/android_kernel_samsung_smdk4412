@@ -37,7 +37,7 @@
 #include <plat/udc-hs.h>
 #include <linux/wakelock.h>
 #ifdef CONFIG_USBHUB_USB3803
-#include <linux/usb3803.h>
+#include <device/linux/usb3803.h>
 #endif
 #include <linux/delay.h>
 #include <linux/extcon.h>

@@ -27,8 +27,8 @@
 #include <linux/platform_device.h>
 #include <linux/slab.h>
 #include <linux/err.h>
-#include <linux/usb/ch9.h>
-#include <linux/usb/gadget.h>
+#include <device/linux/usb/ch9.h>
+#include <device/linux/usb/gadget.h>
 
 #include "m66592-udc.h"
 

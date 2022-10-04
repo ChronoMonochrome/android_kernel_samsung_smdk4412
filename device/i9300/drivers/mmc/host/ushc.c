@@ -17,7 +17,7 @@
  *   [USHC] USB SD Host Controller specification (CS-118793-SP)
  */
 #include <linux/module.h>
-#include <linux/usb.h>
+#include <device/linux/usb.h>
 #include <linux/kernel.h>
 #include <linux/slab.h>
 #include <linux/dma-mapping.h>

@@ -29,8 +29,8 @@
 #include <linux/err.h>
 #include <linux/slab.h>
 
-#include <linux/usb/ch9.h>
-#include <linux/usb/gadget.h>
+#include <device/linux/usb/ch9.h>
+#include <device/linux/usb/gadget.h>
 
 #include "r8a66597-udc.h"
 

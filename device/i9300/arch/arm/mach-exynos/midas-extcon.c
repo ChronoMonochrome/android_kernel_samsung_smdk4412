@@ -22,8 +22,8 @@
 #include <linux/pm_runtime.h>
 #include <linux/err.h>
 #include <linux/extcon.h>
-#include <linux/usb/ch9.h>
-#include <linux/usb/gadget.h>
+#include <device/linux/usb/ch9.h>
+#include <device/linux/usb/gadget.h>
 #include <linux/host_notify.h>
 #include <linux/power_supply.h>
 #include <device/linux/regulator/machine.h>

@@ -22,8 +22,8 @@
 #include <linux/poll.h>
 #include <linux/gpio.h>
 #include <linux/if_arp.h>
-#include <linux/usb.h>
-#include <linux/usb/cdc.h>
+#include <device/linux/usb.h>
+#include <device/linux/usb/cdc.h>
 #include <linux/pm_runtime.h>
 #include <linux/cdev.h>
 #include <linux/platform_device.h>

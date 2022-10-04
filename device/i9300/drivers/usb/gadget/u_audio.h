@@ -14,8 +14,8 @@
 
 #include <linux/device.h>
 #include <linux/err.h>
-#include <linux/usb/audio.h>
-#include <linux/usb/composite.h>
+#include <device/linux/usb/audio.h>
+#include <device/linux/usb/composite.h>
 
 #include <sound/core.h>
 #include <sound/pcm.h>

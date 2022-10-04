@@ -29,9 +29,9 @@
 #include <linux/if_phonet.h>
 #include <linux/if_arp.h>
 
-#include <linux/usb/ch9.h>
-#include <linux/usb/cdc.h>
-#include <linux/usb/composite.h>
+#include <device/linux/usb/ch9.h>
+#include <device/linux/usb/cdc.h>
+#include <device/linux/usb/composite.h>
 
 #include "u_phonet.h"
 

@@ -25,8 +25,8 @@
 
 #include <linux/err.h>
 #include <linux/if_ether.h>
-#include <linux/usb/composite.h>
-#include <linux/usb/cdc.h>
+#include <device/linux/usb/composite.h>
+#include <device/linux/usb/cdc.h>
 
 #include "gadget_chips.h"
 

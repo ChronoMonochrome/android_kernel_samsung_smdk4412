@@ -17,9 +17,9 @@
 #include <linux/dma-mapping.h>
 #include <linux/list.h>
 #include <linux/platform_device.h>
-#include <linux/usb/ch9.h>
-#include <linux/usb/gadget.h>
-#include <linux/usb/atmel_usba_udc.h>
+#include <device/linux/usb/ch9.h>
+#include <device/linux/usb/gadget.h>
+#include <device/linux/usb/atmel_usba_udc.h>
 #include <linux/delay.h>
 
 #include <asm/gpio.h>

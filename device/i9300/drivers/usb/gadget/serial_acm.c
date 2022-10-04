@@ -22,7 +22,7 @@
 #include <linux/sched.h>
 #include <linux/wait.h>
 #include <linux/poll.h>
-#include <linux/usb/cdc.h>
+#include <device/linux/usb/cdc.h>
 
 static int acm_notify(void *dev, u16 state);
 

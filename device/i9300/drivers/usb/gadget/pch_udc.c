@@ -22,8 +22,8 @@
 #include <linux/errno.h>
 #include <linux/list.h>
 #include <linux/interrupt.h>
-#include <linux/usb/ch9.h>
-#include <linux/usb/gadget.h>
+#include <device/linux/usb/ch9.h>
+#include <device/linux/usb/gadget.h>
 
 /* Address offset of Registers */
 #define UDC_EP_REG_SHIFT	0x20	/* Offset to next EP */

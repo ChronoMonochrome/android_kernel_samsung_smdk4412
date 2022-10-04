@@ -47,9 +47,9 @@
 #include <linux/uaccess.h>
 #include <asm/unaligned.h>
 
-#include <linux/usb/ch9.h>
-#include <linux/usb/gadget.h>
-#include <linux/usb/g_printer.h>
+#include <device/linux/usb/ch9.h>
+#include <device/linux/usb/gadget.h>
+#include <device/linux/usb/g_printer.h>
 
 #include "gadget_chips.h"
 

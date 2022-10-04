@@ -12,8 +12,8 @@
 #ifndef __U_SERIAL_H
 #define __U_SERIAL_H
 
-#include <linux/usb/composite.h>
-#include <linux/usb/cdc.h>
+#include <device/linux/usb/composite.h>
+#include <device/linux/usb/cdc.h>
 
 /*
  * One non-multiplexed "serial" I/O port ... there can be several of these

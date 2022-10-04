@@ -53,7 +53,7 @@
  */
 
 
-#include <linux/usb/storage.h>
+#include <device/linux/usb/storage.h>
 #include <scsi/scsi.h>
 #include <asm/unaligned.h>
 

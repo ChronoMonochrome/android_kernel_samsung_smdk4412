@@ -18,8 +18,8 @@
 #include <linux/mfd/max77693.h>
 #include <linux/mfd/max77693-private.h>
 #include <linux/mfd/max77686.h>
-#include <linux/usb/ch9.h>
-#include <linux/usb/gadget.h>
+#include <device/linux/usb/ch9.h>
+#include <device/linux/usb/gadget.h>
 #include <linux/gpio.h>
 
 #include <linux/power_supply.h>
@@ -34,8 +34,8 @@
 #include <linux/host_notify.h>
 #endif
 #include <linux/pm_runtime.h>
-#include <linux/usb.h>
-#include <linux/usb/hcd.h>
+#include <device/linux/usb.h>
+#include <device/linux/usb/hcd.h>
 
 #ifdef CONFIG_JACK_MON
 #include <linux/jack.h>

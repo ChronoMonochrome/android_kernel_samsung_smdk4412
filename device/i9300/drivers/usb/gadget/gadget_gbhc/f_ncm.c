@@ -29,7 +29,7 @@
 #include <linux/etherdevice.h>
 #include <linux/crc32.h>
 
-#include <linux/usb/cdc.h>
+#include <device/linux/usb/cdc.h>
 
 #include "u_ether.h"
 

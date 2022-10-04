@@ -42,7 +42,7 @@
 #include <linux/module.h>
 #include <linux/kref.h>
 #include <linux/uaccess.h>
-#include <linux/usb.h>
+#include <device/linux/usb.h>
 #include <linux/mutex.h>
 #include <device/linux/mmc/host.h>
 #include <device/linux/mmc/card.h>

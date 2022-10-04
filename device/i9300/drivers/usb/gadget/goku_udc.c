@@ -36,8 +36,8 @@
 #include <linux/interrupt.h>
 #include <linux/proc_fs.h>
 #include <linux/device.h>
-#include <linux/usb/ch9.h>
-#include <linux/usb/gadget.h>
+#include <device/linux/usb/ch9.h>
+#include <device/linux/usb/gadget.h>
 #include <linux/prefetch.h>
 
 #include <asm/byteorder.h>

@@ -14,8 +14,8 @@
 #ifndef _F_UVC_H_
 #define _F_UVC_H_
 
-#include <linux/usb/composite.h>
-#include <linux/usb/video.h>
+#include <device/linux/usb/composite.h>
+#include <device/linux/usb/video.h>
 
 extern int uvc_bind_config(struct usb_configuration *c,
 			   const struct uvc_descriptor_header * const *control,

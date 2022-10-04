@@ -31,8 +31,8 @@
 #include <linux/pagemap.h>
 #include <asm/unaligned.h>
 
-#include <linux/usb/composite.h>
-#include <linux/usb/functionfs.h>
+#include <device/linux/usb/composite.h>
+#include <device/linux/usb/functionfs.h>
 
 
 #define FUNCTIONFS_MAGIC	0xa647361 /* Chosen by a honest dice roll ;) */

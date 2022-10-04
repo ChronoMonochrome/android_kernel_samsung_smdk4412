@@ -27,7 +27,7 @@
 #include <linux/clk.h>
 #endif
 
-#include <linux/usb/m66592.h>
+#include <device/linux/usb/m66592.h>
 
 #define M66592_SYSCFG		0x00
 #define M66592_XTAL		0xC000	/* b15-14: Crystal selection */

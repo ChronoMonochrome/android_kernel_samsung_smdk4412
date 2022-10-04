@@ -24,8 +24,8 @@
 #include <linux/io.h>
 #include <linux/slab.h>
 #include <linux/clk.h>
-#include <linux/usb/ch9.h>
-#include <linux/usb/gadget.h>
+#include <device/linux/usb/ch9.h>
+#include <device/linux/usb/gadget.h>
 #include <linux/prefetch.h>
 
 #include <mach/regs-s3c2443-clock.h>

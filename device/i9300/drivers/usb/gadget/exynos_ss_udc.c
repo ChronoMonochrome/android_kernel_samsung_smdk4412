@@ -21,10 +21,10 @@
 #include <linux/slab.h>
 #include <linux/clk.h>
 
-#include <linux/usb/ch9.h>
-#include <linux/usb/gadget.h>
-#include <linux/usb/composite.h>
-#include <linux/usb/exynos_usb3_drd.h>
+#include <device/linux/usb/ch9.h>
+#include <device/linux/usb/gadget.h>
+#include <device/linux/usb/composite.h>
+#include <device/linux/usb/exynos_usb3_drd.h>
 
 #include <linux/platform_data/exynos_usb3_drd.h>
 

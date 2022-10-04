@@ -24,9 +24,9 @@
 #include <linux/clk.h>
 #include <linux/err.h>
 #include <linux/delay.h>
-#include <linux/usb.h>
-#include <linux/usb/hcd.h>
-#include <linux/usb/ehci_def.h>
+#include <device/linux/usb.h>
+#include <device/linux/usb/hcd.h>
+#include <device/linux/usb/ehci_def.h>
 
 #ifdef CONFIG_SEC_MODEM_M0
 #include "../../../device/i9300/drivers/misc/modem_if/modem.h"

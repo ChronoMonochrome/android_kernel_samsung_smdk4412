@@ -28,8 +28,8 @@
 #include <linux/slab.h>
 #include <linux/clk.h>
 
-#include <linux/usb/ch9.h>
-#include <linux/usb/gadget.h>
+#include <device/linux/usb/ch9.h>
+#include <device/linux/usb/gadget.h>
 
 #include <mach/map.h>
 
