@@ -42,8 +42,6 @@
 #include <asm/localtimer.h>
 #include <asm/smp_plat.h>
 
-#include <mach/sec_debug.h>
-
 /*
  * as from 2.5, kernels no longer have an init_tasks structure
  * so we need some other way of telling a new secondary core
@@ -286,20 +284,6 @@ static void __cpuinit smp_store_cpu_info(unsigned int cpuid)
 }
 
 /*
- * Skip the secondary calibration on architectures sharing clock
- * with primary cpu. Archs can use ARCH_SKIP_SECONDARY_CALIBRATE
- * for this.
- */
-static inline int skip_secondary_calibrate(void)
-{
-#ifdef CONFIG_ARCH_SKIP_SECONDARY_CALIBRATE
-	return 0;
-#else
-	return -ENXIO;
-#endif
-}
-
-/*
  * This is the secondary CPU boot entry.  We're using this CPUs
  * idle thread stack, but a set of temporary page tables.
  */
@@ -332,10 +316,19 @@ asmlinkage void __cpuinit secondary_start_kernel(void)
 	 */
 	platform_secondary_init(cpu);
 
+	/*
+	 * Enable local interrupts.
+	 */
 	notify_cpu_starting(cpu);
+	local_irq_enable();
+	local_fiq_enable();
 
-	if (skip_secondary_calibrate())
-		calibrate_delay();
+	/*
+	 * Setup the percpu timer for this CPU.
+	 */
+	percpu_timer_setup();
+
+	calibrate_delay();
 
 	smp_store_cpu_info(cpu);
 
@@ -354,6 +347,9 @@ asmlinkage void __cpuinit secondary_start_kernel(void)
 
 	local_irq_enable();
 	local_fiq_enable();
+
+	while (!cpu_active(cpu))
+		cpu_relax();
 
 	/*
 	 * OK, it's off to the idle thread for us
@@ -484,7 +480,9 @@ static DEFINE_PER_CPU(struct clock_event_device, percpu_clockevent);
 static void ipi_timer(void)
 {
 	struct clock_event_device *evt = &__get_cpu_var(percpu_clockevent);
+	irq_enter();
 	evt->event_handler(evt);
+	irq_exit();
 }
 
 #ifdef CONFIG_LOCAL_TIMERS
@@ -500,13 +498,8 @@ void handle_local_timer(struct pt_regs *regs)
 
 	if (local_timer_ack()) {
 		__inc_irq_stat(cpu, local_timer_irqs);
-		sec_debug_irq_log(0, do_local_timer, 1);
-		irq_enter();
 		ipi_timer();
-		irq_exit();
-		sec_debug_irq_log(0, do_local_timer, 2);
-	} else
-		sec_debug_irq_log(0, do_local_timer, 3);
+	}
 
 	set_irq_regs(old_regs);
 }
@@ -673,13 +666,9 @@ void handle_IPI(int ipinr, struct pt_regs *regs)
 	if (ipinr >= IPI_TIMER && ipinr < IPI_TIMER + NR_IPI)
 		__inc_irq_stat(cpu, ipi_irqs[ipinr - IPI_TIMER]);
 
-	sec_debug_irq_log(ipinr, do_IPI, 1);
-
 	switch (ipinr) {
 	case IPI_TIMER:
-		irq_enter();
 		ipi_timer();
-		irq_exit();
 		break;
 
 	case IPI_RESCHEDULE:
@@ -687,23 +676,15 @@ void handle_IPI(int ipinr, struct pt_regs *regs)
 		break;
 
 	case IPI_CALL_FUNC:
-		irq_enter();
 		generic_smp_call_function_interrupt();
-		irq_exit();
 		break;
 
 	case IPI_CALL_FUNC_SINGLE:
-		irq_enter();
 		generic_smp_call_function_single_interrupt();
-		irq_exit();
 		break;
 
 	case IPI_CPU_STOP:
-		irq_enter();
 		ipi_cpu_stop(cpu);
-		irq_exit();
-		break;
-
 	case IPI_CPU_BACKTRACE:
 		ipi_cpu_backtrace(cpu, regs);
 		break;
@@ -713,9 +694,6 @@ void handle_IPI(int ipinr, struct pt_regs *regs)
 		       cpu, ipinr);
 		break;
 	}
-
-	sec_debug_irq_log(ipinr, do_IPI, 2);
-
 	set_irq_regs(old_regs);
 }
 
