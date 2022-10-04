@@ -14,8 +14,8 @@
 #include <linux/device.h>
 #include <linux/init.h>
 
-#include <linux/usb/ch9.h>
-#include <linux/usb/gadget.h>
+#include <device/linux/usb/ch9.h>
+#include <device/linux/usb/gadget.h>
 
 #include <asm/unaligned.h>
 

@@ -10,8 +10,8 @@
 /* verbose messages */
 #include <linux/kernel.h>
 #include <linux/device.h>
-#include <linux/usb/ch9.h>
-#include <linux/usb/gadget.h>
+#include <device/linux/usb/ch9.h>
+#include <device/linux/usb/gadget.h>
 
 /* See comments in "zero.c" */
 #include "epautoconf.c"

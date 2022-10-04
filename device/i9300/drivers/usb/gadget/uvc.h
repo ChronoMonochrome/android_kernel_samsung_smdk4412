@@ -16,7 +16,7 @@
 
 #include <linux/ioctl.h>
 #include <linux/types.h>
-#include <linux/usb/ch9.h>
+#include <device/linux/usb/ch9.h>
 
 #define UVC_EVENT_FIRST			(V4L2_EVENT_PRIVATE_START + 0)
 #define UVC_EVENT_CONNECT		(V4L2_EVENT_PRIVATE_START + 0)
@@ -53,8 +53,8 @@ struct uvc_event
 
 #ifdef __KERNEL__
 
-#include <linux/usb.h>	/* For usb_endpoint_* */
-#include <linux/usb/gadget.h>
+#include <device/linux/usb.h>	/* For usb_endpoint_* */
+#include <device/linux/usb/gadget.h>
 #include <linux/videodev2.h>
 #include <media/v4l2-fh.h>
 

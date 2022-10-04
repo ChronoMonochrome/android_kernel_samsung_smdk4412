@@ -30,7 +30,7 @@
 #include <linux/device.h>
 #include <linux/miscdevice.h>
 
-#include <linux/usb/android_composite.h>
+#include <device/linux/usb/android_composite.h>
 
 #define BULK_BUFFER_SIZE           4096
 

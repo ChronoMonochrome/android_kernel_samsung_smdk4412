@@ -899,11 +899,8 @@ static void ohci_stop (struct usb_hcd *hcd)
 	if (quirk_nec(ohci))
 		flush_work_sync(&ohci->nec_work);
 
-	ohci_writel (ohci, OHCI_INTR_MIE, &ohci->regs->intrdisable);
 	ohci_usb_reset (ohci);
-	
-	// flush those writes
-	(void) ohci_readl (ohci, &ohci->regs->intrdisable);
+	ohci_writel (ohci, OHCI_INTR_MIE, &ohci->regs->intrdisable);
 	free_irq(hcd->irq, hcd);
 	hcd->irq = -1;
 
@@ -1009,11 +1006,6 @@ MODULE_LICENSE ("GPL");
 #if defined(CONFIG_ARCH_S3C2410) || defined(CONFIG_ARCH_S3C64XX)
 #include "ohci-s3c2410.c"
 #define PLATFORM_DRIVER		ohci_hcd_s3c2410_driver
-#endif
-
-#ifdef CONFIG_USB_OHCI_S5P
-#include "ohci-s5p.c"
-#define PLATFORM_DRIVER		ohci_hcd_s5p_driver
 #endif
 
 #ifdef CONFIG_USB_OHCI_HCD_OMAP1
@@ -1132,7 +1124,7 @@ MODULE_LICENSE ("GPL");
 	!defined(SM501_OHCI_DRIVER) && \
 	!defined(TMIO_OHCI_DRIVER) && \
 	!defined(SSB_OHCI_DRIVER)
-#error "missing bus glue for ohci-hcd"
+//#error "missing bus glue for ohci-hcd"
 #endif
 
 static int __init ohci_hcd_mod_init(void)

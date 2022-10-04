@@ -4913,7 +4913,7 @@ static void __init smdkc210_usbgadget_init(void)
 #endif
 
 #ifdef CONFIG_USB_G_SLP
-#include <linux/usb/slp_multi.h>
+#include <device/linux/usb/slp_multi.h>
 static struct slp_multi_func_data midas_slp_multi_funcs[] = {
 	{
 		.name = "mtp",

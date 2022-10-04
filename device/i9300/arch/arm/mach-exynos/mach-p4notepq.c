@@ -144,8 +144,8 @@ struct s3cfb_extdsp_lcd {
 #ifdef CONFIG_USB_HOST_NOTIFY
 #include <linux/host_notify.h>
 #include <linux/pm_runtime.h>
-#include <linux/usb.h>
-#include <linux/usb/hcd.h>
+#include <device/linux/usb.h>
+#include <device/linux/usb/hcd.h>
 #include <mach/usb_switch.h>
 #endif
 
@@ -655,7 +655,7 @@ static void __init smdk4212_ohci_init(void)
 #ifdef CONFIG_USB_GADGET
 static struct s5p_usbgadget_platdata smdk4212_usbgadget_pdata;
 
-#include <linux/usb/android_composite.h>
+#include <device/linux/usb/android_composite.h>
 static void __init smdk4212_usbgadget_init(void)
 {
 	struct s5p_usbgadget_platdata *pdata = &smdk4212_usbgadget_pdata;

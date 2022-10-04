@@ -26,7 +26,7 @@
 #include <linux/device.h>
 #include <linux/utsname.h>
 
-#include <linux/usb/composite.h>
+#include <device/linux/usb/composite.h>
 #include <asm/unaligned.h>
 
 #include "multi_config.h"

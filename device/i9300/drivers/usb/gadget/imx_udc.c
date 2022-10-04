@@ -32,8 +32,8 @@
 #include <linux/slab.h>
 #include <linux/prefetch.h>
 
-#include <linux/usb/ch9.h>
-#include <linux/usb/gadget.h>
+#include <device/linux/usb/ch9.h>
+#include <device/linux/usb/gadget.h>
 
 #include <mach/usb.h>
 #include <mach/hardware.h>

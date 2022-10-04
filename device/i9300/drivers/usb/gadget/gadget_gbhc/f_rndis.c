@@ -28,7 +28,7 @@
 #include <linux/kernel.h>
 #include <linux/platform_device.h>
 #include <linux/etherdevice.h>
-#include <linux/usb/android_composite.h>
+#include <device/linux/usb/android_composite.h>
 
 #include <asm/atomic.h>
 

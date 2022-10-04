@@ -16,7 +16,7 @@
 #ifndef __MODEM_LINK_DEVICE_USB_H__
 #define __MODEM_LINK_DEVICE_USB_H__
 
-#include <linux/usb.h>
+#include <device/linux/usb.h>
 #include <linux/wakelock.h>
 
 #define IF_USB_DEVNUM_MAX	3

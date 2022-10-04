@@ -27,10 +27,10 @@
 #include <linux/utsname.h>
 #include <linux/platform_device.h>
 
-#include <linux/usb/android_composite.h>
-#include <linux/usb/ch9.h>
-#include <linux/usb/composite.h>
-#include <linux/usb/gadget.h>
+#include <device/linux/usb/android_composite.h>
+#include <device/linux/usb/ch9.h>
+#include <device/linux/usb/composite.h>
+#include <device/linux/usb/gadget.h>
 
 #include "gadget_chips.h"
 

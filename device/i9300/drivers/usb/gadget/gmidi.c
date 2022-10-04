@@ -29,10 +29,10 @@
 #include <sound/initval.h>
 #include <sound/rawmidi.h>
 
-#include <linux/usb/ch9.h>
-#include <linux/usb/gadget.h>
-#include <linux/usb/audio.h>
-#include <linux/usb/midi.h>
+#include <device/linux/usb/ch9.h>
+#include <device/linux/usb/gadget.h>
+#include <device/linux/usb/audio.h>
+#include <device/linux/usb/midi.h>
 
 #include "gadget_chips.h"
 

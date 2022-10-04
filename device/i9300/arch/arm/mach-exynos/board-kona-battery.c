@@ -30,7 +30,7 @@
 #include <plat/gpio-cfg.h>
 #include <linux/stmpe811-adc.h>
 
-#include <linux/usb/android_composite.h>
+#include <device/linux/usb/android_composite.h>
 #include <plat/devs.h>
 
 #include <mach/usb_switch.h>

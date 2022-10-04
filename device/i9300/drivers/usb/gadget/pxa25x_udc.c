@@ -55,9 +55,9 @@
 #include <asm/mach-types.h>
 #include <asm/unaligned.h>
 
-#include <linux/usb/ch9.h>
-#include <linux/usb/gadget.h>
-#include <linux/usb/otg.h>
+#include <device/linux/usb/ch9.h>
+#include <device/linux/usb/gadget.h>
+#include <device/linux/usb/otg.h>
 
 /*
  * This driver is PXA25x only.  Grab the right register definitions.

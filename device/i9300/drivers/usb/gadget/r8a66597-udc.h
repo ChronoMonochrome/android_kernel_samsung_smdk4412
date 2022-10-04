@@ -27,7 +27,7 @@
 #include <linux/clk.h>
 #endif
 
-#include <linux/usb/r8a66597.h>
+#include <device/linux/usb/r8a66597.h>
 
 #define R8A66597_MAX_SAMPLING	10
 

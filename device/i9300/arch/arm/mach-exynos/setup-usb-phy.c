@@ -27,9 +27,9 @@
 
 #ifdef CONFIG_USB_OHCI_S5P
    #include <plat/devs.h>
-   #include <linux/usb.h>
-   #include <linux/usb/otg.h>
-   #include <linux/usb/hcd.h>
+   #include <device/linux/usb.h>
+   #include <device/linux/usb/otg.h>
+   #include <device/linux/usb/hcd.h>
 #endif
 
 #define ETC6PUD		(S5P_VA_GPIO2 + 0x228)

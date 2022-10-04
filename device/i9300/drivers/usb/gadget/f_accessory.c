@@ -35,9 +35,9 @@
 
 #include <linux/hid.h>
 #include <linux/hiddev.h>
-#include <linux/usb.h>
-#include <linux/usb/ch9.h>
-#include <linux/usb/f_accessory.h>
+#include <device/linux/usb.h>
+#include <device/linux/usb/ch9.h>
+#include <device/linux/usb/f_accessory.h>
 
 #define BULK_BUFFER_SIZE    16384
 #define ACC_STRING_SIZE     256

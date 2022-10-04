@@ -17,8 +17,8 @@
  *
  */
 
-#include <linux/usb/langwell_udc.h>
-#include <linux/usb/langwell_otg.h>
+#include <device/linux/usb/langwell_udc.h>
+#include <device/linux/usb/langwell_otg.h>
 
 /*-------------------------------------------------------------------------*/
 

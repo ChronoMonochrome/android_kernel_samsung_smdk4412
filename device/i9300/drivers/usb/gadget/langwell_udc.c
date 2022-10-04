@@ -41,9 +41,9 @@
 #include <linux/interrupt.h>
 #include <linux/moduleparam.h>
 #include <linux/device.h>
-#include <linux/usb/ch9.h>
-#include <linux/usb/gadget.h>
-#include <linux/usb/otg.h>
+#include <device/linux/usb/ch9.h>
+#include <device/linux/usb/gadget.h>
+#include <device/linux/usb/otg.h>
 #include <linux/pm.h>
 #include <linux/io.h>
 #include <linux/irq.h>

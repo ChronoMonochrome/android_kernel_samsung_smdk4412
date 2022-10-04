@@ -67,8 +67,8 @@
 #include <asm/unaligned.h>
 
 /* gadget stack */
-#include <linux/usb/ch9.h>
-#include <linux/usb/gadget.h>
+#include <device/linux/usb/ch9.h>
+#include <device/linux/usb/gadget.h>
 
 /* udc specific */
 #include "amd5536udc.h"

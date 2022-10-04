@@ -291,9 +291,9 @@
 #include <linux/freezer.h>
 #include <linux/utsname.h>
 
-#include <linux/usb/ch9.h>
-#include <linux/usb/gadget.h>
-#include <linux/usb/composite.h>
+#include <device/linux/usb/ch9.h>
+#include <device/linux/usb/gadget.h>
+#include <device/linux/usb/composite.h>
 
 #include "gadget_chips.h"
 

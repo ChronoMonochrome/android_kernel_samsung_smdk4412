@@ -220,8 +220,8 @@ static struct wacom_g5_callbacks *wacom_callbacks;
 #endif /* CONFIG_EPEN_WACOM_G5SP */
 
 #ifdef CONFIG_USBHUB_USB3503_OTG_CONN
-#include <linux/usb.h>
-#include <linux/usb/hcd.h>
+#include <device/linux/usb.h>
+#include <device/linux/usb/hcd.h>
 #include <linux/platform_data/usb3503_otg_conn.h>
 #endif
 
@@ -5938,7 +5938,7 @@ static void __init smdkc210_ohci_init(void)
 #ifdef CONFIG_USB_GADGET
 static struct s5p_usbgadget_platdata smdkc210_usbgadget_pdata;
 
-#include <linux/usb/android_composite.h>
+#include <device/linux/usb/android_composite.h>
 static void __init smdkc210_usbgadget_init(void)
 {
 	struct s5p_usbgadget_platdata *pdata = &smdkc210_usbgadget_pdata;

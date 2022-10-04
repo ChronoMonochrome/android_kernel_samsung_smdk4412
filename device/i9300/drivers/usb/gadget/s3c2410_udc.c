@@ -41,8 +41,8 @@
 #include <linux/debugfs.h>
 #include <linux/seq_file.h>
 
-#include <linux/usb.h>
-#include <linux/usb/gadget.h>
+#include <device/linux/usb.h>
+#include <device/linux/usb/gadget.h>
 
 #include <asm/byteorder.h>
 #include <asm/io.h>

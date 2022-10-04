@@ -31,10 +31,10 @@
 #include <linux/device.h>
 #include <linux/miscdevice.h>
 
-#include <linux/usb.h>
-#include <linux/usb_usual.h>
-#include <linux/usb/ch9.h>
-#include <linux/usb/f_mtp.h>
+#include <device/linux/usb.h>
+#include <device/linux/usb_usual.h>
+#include <device/linux/usb/ch9.h>
+#include <device/linux/usb/f_mtp.h>
 
 #define MTP_BULK_BUFFER_SIZE       16384
 #define INTR_BUFFER_SIZE           28

@@ -13,7 +13,7 @@
 #include <linux/interrupt.h>
 #include <linux/platform_device.h>
 #if defined(CONFIG_USB_ANDROID) || defined(CONFIG_USB_G_ANDROID)
-#include <linux/usb/android_composite.h>
+#include <device/linux/usb/android_composite.h>
 #endif
 
 #include <mach/map.h>

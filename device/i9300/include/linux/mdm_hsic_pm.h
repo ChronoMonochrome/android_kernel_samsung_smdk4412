@@ -1,6 +1,6 @@
 #ifndef __MDM_HSIC_PM_H__
 #define __MDM_HSIC_PM_H__
-#include <linux/usb.h>
+#include <device/linux/usb.h>
 
 enum pwr_stat {
 	POWER_OFF,

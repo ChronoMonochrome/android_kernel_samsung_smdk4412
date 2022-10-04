@@ -15,7 +15,7 @@
 #define __LINUX_USB_BRIDGE_H__
 
 #include <linux/netdevice.h>
-#include <linux/usb.h>
+#include <device/linux/usb.h>
 
 /* bridge device 0: DUN
  * bridge device 1 : Tethered RMNET

@@ -37,8 +37,8 @@
 #include <linux/device.h>
 #include <linux/moduleparam.h>
 
-#include <linux/usb/gadgetfs.h>
-#include <linux/usb/gadget.h>
+#include <device/linux/usb/gadgetfs.h>
+#include <device/linux/usb/gadget.h>
 
 
 /*
