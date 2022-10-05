@@ -30,7 +30,7 @@
 #include <media/v4l2-subdev.h>
 #include <media/exynos_fimc_is.h>
 #include <linux/videodev2_exynos_camera.h>
-#include <linux/gpio.h>
+#include <device/linux/gpio.h>
 #include <plat/gpio-cfg.h>
 #include <mach/map.h>
 #include <mach/regs-clock.h>

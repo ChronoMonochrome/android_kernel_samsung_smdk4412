@@ -47,7 +47,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <linux/delay.h>
 #include <linux/platform_device.h>
 #include <linux/input.h>
-#include <linux/gpio.h>
+#include <device/linux/gpio.h>
 #include <linux/miscdevice.h>
 #include <linux/uaccess.h>
 #include <linux/earlysuspend.h>

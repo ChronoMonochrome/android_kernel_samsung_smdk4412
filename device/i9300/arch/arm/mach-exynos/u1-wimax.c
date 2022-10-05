@@ -1,5 +1,5 @@
 #include <linux/delay.h>
-#include <linux/gpio.h>
+#include <device/linux/gpio.h>
 #include <linux/skbuff.h>
 #include <linux/wimax/samsung/wimax732.h>
 

@@ -18,7 +18,7 @@
 #include <linux/jiffies.h>
 #include <linux/platform_device.h>
 #include <linux/clk.h>
-#include <linux/gpio.h>
+#include <device/linux/gpio.h>
 
 #include <mach/hardware.h>
 #include <asm/io.h>

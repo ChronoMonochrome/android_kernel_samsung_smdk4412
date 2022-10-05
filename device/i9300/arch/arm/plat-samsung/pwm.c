@@ -19,7 +19,7 @@
 #include <linux/clk.h>
 #include <linux/io.h>
 #include <linux/pwm.h>
-#include <linux/gpio.h>
+#include <device/linux/gpio.h>
 
 #include <mach/map.h>
 

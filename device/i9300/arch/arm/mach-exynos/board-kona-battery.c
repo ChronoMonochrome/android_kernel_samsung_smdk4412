@@ -13,7 +13,7 @@
  */
 
 #include <linux/err.h>
-#include <linux/gpio.h>
+#include <device/linux/gpio.h>
 #include <linux/kernel.h>
 #include <linux/switch.h>
 #include <linux/i2c.h>
@@ -25,8 +25,8 @@
 #include <linux/battery/sec_battery.h>
 #include <linux/battery/sec_fuelgauge.h>
 #include <linux/battery/sec_charger.h>
-#include <linux/gpio.h>
-#include <linux/gpio_event.h>
+#include <device/linux/gpio.h>
+#include <device/linux/gpio_event.h>
 #include <plat/gpio-cfg.h>
 #include <linux/stmpe811-adc.h>
 

@@ -23,7 +23,7 @@
 #include <linux/slab.h>
 #include <linux/switch.h>
 #include <linux/workqueue.h>
-#include <linux/gpio.h>
+#include <device/linux/gpio.h>
 
 struct gpio_switch_data {
 	struct switch_dev sdev;

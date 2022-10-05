@@ -1,9 +1,9 @@
 #include <linux/platform_device.h>
 #include <linux/spi/spi.h>
 #include <linux/spi/spi_gpio.h>
-#include <linux/gpio.h>
+#include <device/linux/gpio.h>
 #include <linux/gpio_keys.h>
-#include <linux/gpio_event.h>
+#include <device/linux/gpio_event.h>
 #include <plat/devs.h>
 #include <plat/gpio-cfg.h>
 #include <linux/i2c.h>

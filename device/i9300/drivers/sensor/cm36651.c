@@ -22,7 +22,7 @@
 #include <linux/i2c.h>
 #include <linux/errno.h>
 #include <linux/device.h>
-#include <linux/gpio.h>
+#include <device/linux/gpio.h>
 #include <linux/wakelock.h>
 #include <linux/input.h>
 #include <linux/workqueue.h>

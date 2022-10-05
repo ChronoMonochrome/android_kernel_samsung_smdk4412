@@ -8,7 +8,7 @@
  * published by the Free Software Foundation.
 */
 
-#include <linux/gpio.h>
+#include <device/linux/gpio.h>
 #include <linux/pwm_backlight.h>
 #include <linux/fb.h>
 #include <linux/delay.h>

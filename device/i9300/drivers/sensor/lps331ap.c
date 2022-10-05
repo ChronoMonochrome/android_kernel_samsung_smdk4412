@@ -76,7 +76,7 @@
 #include <linux/i2c.h>
 #include <linux/input.h>
 #include <linux/workqueue.h>
-#include <linux/gpio.h>
+#include <device/linux/gpio.h>
 #include <linux/device.h>
 #include <linux/slab.h>
 #include <linux/kernel.h>

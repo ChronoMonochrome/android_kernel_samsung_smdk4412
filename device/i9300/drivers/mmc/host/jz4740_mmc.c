@@ -25,7 +25,7 @@
 #include <linux/clk.h>
 
 #include <linux/bitops.h>
-#include <linux/gpio.h>
+#include <device/linux/gpio.h>
 #include <asm/mach-jz4740/gpio.h>
 #include <asm/cacheflush.h>
 #include <linux/dma-mapping.h>

@@ -14,8 +14,8 @@
  */
 
 #include <linux/kernel.h>
-#include <linux/gpio.h>
-#include <linux/gpio_event.h>
+#include <device/linux/gpio.h>
+#include <device/linux/gpio_event.h>
 #include <linux/interrupt.h>
 #include <linux/slab.h>
 

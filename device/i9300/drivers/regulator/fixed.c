@@ -23,7 +23,7 @@
 #include <linux/platform_device.h>
 #include <device/linux/regulator/driver.h>
 #include <device/linux/regulator/fixed.h>
-#include <linux/gpio.h>
+#include <device/linux/gpio.h>
 #include <linux/delay.h>
 #include <linux/slab.h>
 

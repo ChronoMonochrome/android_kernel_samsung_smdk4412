@@ -11,7 +11,7 @@
 #include <linux/platform_device.h>
 #include <linux/clk.h>
 #include <linux/io.h>
-#include <linux/gpio.h>
+#include <device/linux/gpio.h>
 #include <linux/delay.h>
 #include <linux/slab.h>
 #include <linux/workqueue.h>

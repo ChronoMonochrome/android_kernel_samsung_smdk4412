@@ -10,8 +10,8 @@
 
 #include <linux/serial_core.h>
 #include <linux/delay.h>
-#include <linux/gpio.h>
-#include <linux/gpio_event.h>
+#include <device/linux/gpio.h>
+#include <device/linux/gpio_event.h>
 #include <linux/lcd.h>
 #include <device/linux/mmc/host.h>
 #include <linux/platform_device.h>

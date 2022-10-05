@@ -11,7 +11,7 @@
 #include <linux/i2c.h>
 
 #include <linux/err.h>
-#include <linux/gpio.h>
+#include <device/linux/gpio.h>
 #if defined(CONFIG_TOUCHSCREEN_ATMEL_MXT224_U1)
 #include <linux/delay.h>
 #include <linux/i2c/mxt224_u1.h>

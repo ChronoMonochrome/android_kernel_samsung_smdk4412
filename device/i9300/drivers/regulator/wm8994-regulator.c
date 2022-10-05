@@ -18,7 +18,7 @@
 #include <linux/err.h>
 #include <linux/platform_device.h>
 #include <device/linux/regulator/driver.h>
-#include <linux/gpio.h>
+#include <device/linux/gpio.h>
 #include <linux/slab.h>
 
 #include <linux/mfd/wm8994/core.h>

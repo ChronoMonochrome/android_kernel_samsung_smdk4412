@@ -25,7 +25,7 @@
 #include <plat/regs-dsim.h>
 #include <linux/clk.h>
 #include <linux/err.h>
-#include <linux/gpio.h>
+#include <device/linux/gpio.h>
 #include <linux/platform_device.h>
 #include <linux/types.h>
 #include <plat/clock.h>

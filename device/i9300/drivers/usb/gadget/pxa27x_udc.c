@@ -30,7 +30,7 @@
 #include <linux/proc_fs.h>
 #include <linux/clk.h>
 #include <linux/irq.h>
-#include <linux/gpio.h>
+#include <device/linux/gpio.h>
 #include <linux/slab.h>
 #include <linux/prefetch.h>
 

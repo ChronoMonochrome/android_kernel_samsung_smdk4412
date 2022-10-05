@@ -23,7 +23,7 @@
 #include <linux/unistd.h>
 
 #include <plat/gpio-cfg.h>
-#include <linux/gpio.h>
+#include <device/linux/gpio.h>
 
 #define S5C73M3_BUSFREQ_OPP
 

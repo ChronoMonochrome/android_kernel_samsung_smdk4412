@@ -28,8 +28,8 @@
 #include <media/v4l2-subdev.h>
 #include <linux/videodev2.h>
 #include <linux/videodev2_exynos_camera.h>
-#include <linux/gpio.h>
-#include <linux/gpio_event.h>
+#include <device/linux/gpio.h>
+#include <device/linux/gpio_event.h>
 #include <plat/gpio-cfg.h>
 #include <plat/cpu.h>
 

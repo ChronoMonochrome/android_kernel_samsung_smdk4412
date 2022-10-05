@@ -27,7 +27,7 @@
 #include <linux/miscdevice.h>
 #include <linux/platform_device.h>
 #include <linux/leds.h>
-#include <linux/gpio.h>
+#include <device/linux/gpio.h>
 #include <mach/hardware.h>
 #include <linux/wakelock.h>
 #include <linux/input.h>
@@ -36,7 +36,7 @@
 #include <linux/sensor/gp2a.h>
 #include <linux/slab.h>
 #include <device/linux/regulator/consumer.h>
-#include <linux/gpio.h>
+#include <device/linux/gpio.h>
 #include <mach/gpio-midas.h>
 #include <linux/sensor/sensors_core.h>
 #include <linux/printk.h>

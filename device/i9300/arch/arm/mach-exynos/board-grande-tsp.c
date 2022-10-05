@@ -10,7 +10,7 @@
 
 #include <linux/i2c.h>
 #include <linux/err.h>
-#include <linux/gpio.h>
+#include <device/linux/gpio.h>
 #include <linux/delay.h>
 #include <linux/i2c/mxt224s_grande.h>
 #include <device/linux/regulator/consumer.h>

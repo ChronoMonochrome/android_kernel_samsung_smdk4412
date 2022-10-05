@@ -24,7 +24,7 @@
 #include <linux/amba/bus.h>
 #include <linux/clk.h>
 #include <linux/scatterlist.h>
-#include <linux/gpio.h>
+#include <device/linux/gpio.h>
 #include <device/linux/regulator/consumer.h>
 #include <linux/dmaengine.h>
 #include <linux/dma-mapping.h>

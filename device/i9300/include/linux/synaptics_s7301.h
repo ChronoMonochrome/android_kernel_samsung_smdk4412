@@ -19,7 +19,7 @@
 
 #include <linux/module.h>
 #include <linux/delay.h>
-#include <linux/gpio.h>
+#include <device/linux/gpio.h>
 #include <linux/earlysuspend.h>
 #include <linux/i2c.h>
 #include <linux/input.h>

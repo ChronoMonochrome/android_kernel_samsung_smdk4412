@@ -15,7 +15,7 @@
 
 #include <linux/hrtimer.h>
 #include <linux/err.h>
-#include <linux/gpio.h>
+#include <device/linux/gpio.h>
 #include <linux/pwm.h>
 #include <linux/wakelock.h>
 #include <linux/mutex.h>

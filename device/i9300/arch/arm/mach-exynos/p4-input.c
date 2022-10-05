@@ -10,7 +10,7 @@
 
 #include <linux/i2c.h>
 #include <linux/err.h>
-#include <linux/gpio.h>
+#include <device/linux/gpio.h>
 #include <linux/delay.h>
 #include <linux/platform_device.h>
 #include <plat/gpio-cfg.h>

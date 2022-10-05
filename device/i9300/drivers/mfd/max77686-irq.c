@@ -24,7 +24,7 @@
 #include <linux/err.h>
 #include <linux/irq.h>
 #include <linux/interrupt.h>
-#include <linux/gpio.h>
+#include <device/linux/gpio.h>
 #include <linux/mfd/max77686.h>
 #include <linux/mfd/max77686-private.h>
 

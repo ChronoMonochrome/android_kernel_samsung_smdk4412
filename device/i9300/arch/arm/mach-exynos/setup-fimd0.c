@@ -13,7 +13,7 @@
 #include <linux/kernel.h>
 #include <linux/types.h>
 #include <linux/fb.h>
-#include <linux/gpio.h>
+#include <device/linux/gpio.h>
 #include <linux/clk.h>
 
 #include <plat/fb.h>

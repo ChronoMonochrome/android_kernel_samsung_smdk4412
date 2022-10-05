@@ -28,7 +28,7 @@
 #include <device/linux/mmc/host.h>
 #include <linux/io.h>
 #include <device/linux/regulator/consumer.h>
-#include <linux/gpio.h>
+#include <device/linux/gpio.h>
 #include <linux/gfp.h>
 
 #include <asm/sizes.h>

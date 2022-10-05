@@ -1,5 +1,5 @@
 #include <linux/platform_device.h>
-#include <linux/gpio.h>
+#include <device/linux/gpio.h>
 #include <linux/i2c.h>
 #include <linux/i2c-gpio.h>
 #include <linux/irq.h>

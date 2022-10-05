@@ -13,7 +13,7 @@
  */
 
 #include <linux/irq.h>
-#include <linux/gpio.h>
+#include <device/linux/gpio.h>
 #include <linux/time.h>
 #include <linux/interrupt.h>
 #include <linux/timer.h>

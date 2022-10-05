@@ -14,7 +14,7 @@
 #include <linux/i2c.h>
 #include <linux/i2c/atmel_mxt_ts.h>
 #include <linux/gpio_keys.h>
-#include <linux/gpio.h>
+#include <device/linux/gpio.h>
 #include <device/linux/regulator/machine.h>
 #include <device/linux/regulator/fixed.h>
 #include <device/linux/mmc/host.h>

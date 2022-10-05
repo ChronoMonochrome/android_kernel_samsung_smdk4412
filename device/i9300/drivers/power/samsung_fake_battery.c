@@ -18,7 +18,7 @@
 #include <linux/delay.h>
 #include <linux/spinlock.h>
 #include <linux/interrupt.h>
-#include <linux/gpio.h>
+#include <device/linux/gpio.h>
 #include <linux/platform_device.h>
 #include <linux/timer.h>
 #include <linux/jiffies.h>

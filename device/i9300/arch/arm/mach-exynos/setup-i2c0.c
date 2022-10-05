@@ -15,7 +15,7 @@
 
 struct platform_device; /* don't need the contents */
 
-#include <linux/gpio.h>
+#include <device/linux/gpio.h>
 #include <plat/iic.h>
 #include <plat/gpio-cfg.h>
 #include <plat/cpu.h>

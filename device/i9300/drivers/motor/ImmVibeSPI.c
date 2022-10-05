@@ -29,7 +29,7 @@
 #include <linux/pwm.h>
 #include <plat/gpio-cfg.h>
 #include <linux/delay.h>
-#include <linux/gpio.h>
+#include <device/linux/gpio.h>
 #include <linux/mfd/max8997.h>
 #include <linux/mfd/max8997-private.h>
 

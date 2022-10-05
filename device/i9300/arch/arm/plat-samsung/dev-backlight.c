@@ -10,7 +10,7 @@
  * published by the Free Software Foundation.
  */
 
-#include <linux/gpio.h>
+#include <device/linux/gpio.h>
 #include <linux/platform_device.h>
 #include <linux/io.h>
 #include <linux/pwm_backlight.h>

@@ -1,6 +1,6 @@
 #include <linux/kernel.h>
 #include <linux/platform_device.h>
-#include <linux/gpio.h>
+#include <device/linux/gpio.h>
 #include <mach/gpio-exynos4.h>
 #include <plat/gpio-cfg.h>
 #include <plat/devs.h>

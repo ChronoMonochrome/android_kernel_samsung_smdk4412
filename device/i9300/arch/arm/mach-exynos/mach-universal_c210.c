@@ -12,7 +12,7 @@
 #include <linux/input.h>
 #include <linux/i2c.h>
 #include <linux/gpio_keys.h>
-#include <linux/gpio.h>
+#include <device/linux/gpio.h>
 #include <linux/mfd/max8998.h>
 #include <device/linux/regulator/machine.h>
 #include <device/linux/regulator/fixed.h>

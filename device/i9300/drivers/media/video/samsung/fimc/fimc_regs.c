@@ -11,7 +11,7 @@
 */
 
 #include <linux/delay.h>
-#include <linux/gpio.h>
+#include <device/linux/gpio.h>
 #include <linux/videodev2.h>
 #include <linux/videodev2_exynos_media.h>
 #include <linux/videodev2_exynos_camera.h>

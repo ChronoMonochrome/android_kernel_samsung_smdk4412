@@ -20,7 +20,7 @@
 #include <linux/sched.h>
 #include <linux/irq.h>
 #include <linux/poll.h>
-#include <linux/gpio.h>
+#include <device/linux/gpio.h>
 #include <linux/if_arp.h>
 #include <linux/platform_device.h>
 #include <linux/suspend.h>

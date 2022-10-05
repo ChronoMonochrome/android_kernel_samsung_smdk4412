@@ -19,7 +19,7 @@
 #include <linux/dma-mapping.h>
 #include <linux/scatterlist.h>
 #include <linux/irq.h>
-#include <linux/gpio.h>
+#include <device/linux/gpio.h>
 #include <device/linux/mmc/host.h>
 
 #include <asm/sizes.h>

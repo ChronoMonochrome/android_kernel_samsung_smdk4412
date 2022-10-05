@@ -8,7 +8,7 @@
  * published by the Free Software Foundation.
  */
 
-#include <linux/gpio.h>
+#include <device/linux/gpio.h>
 #include <plat/gpio-cfg.h>
 #include <plat/camport.h>
 

@@ -17,7 +17,7 @@
     => KONA 3g : GT-N5100_REV0.8_IF_PMIC_0201_1700.pdf
  */
 
-#include <linux/gpio.h>
+#include <device/linux/gpio.h>
 #include <linux/serial_core.h>
 #include <plat/devs.h>
 #include <plat/gpio-cfg.h>
