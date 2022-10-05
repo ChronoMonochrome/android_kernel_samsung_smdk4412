@@ -170,6 +170,7 @@ struct mt9m111 {
 	enum mt9m111_context context;
 	struct v4l2_rect rect;
 	const struct mt9m111_datafmt *fmt;
+	int lastpage;	/* PageMap cache value */
 	unsigned int gain;
 	unsigned char autoexposure;
 	unsigned char datawidth;
@@ -192,17 +193,17 @@ static int reg_page_map_set(struct i2c_client *client, const u16 reg)
 {
 	int ret;
 	u16 page;
-	static int lastpage = -1;	/* PageMap cache value */
+	struct mt9m111 *mt9m111 = to_mt9m111(client);
 
 	page = (reg >> 8);
-	if (page == lastpage)
+	if (page == mt9m111->lastpage)
 		return 0;
 	if (page > 2)
 		return -EINVAL;
 
 	ret = i2c_smbus_write_word_data(client, MT9M111_PAGE_MAP, swab16(page));
 	if (!ret)
-		lastpage = page;
+		mt9m111->lastpage = page;
 	return ret;
 }
 
@@ -978,6 +979,8 @@ static int mt9m111_video_probe(struct soc_camera_device *icd,
 	if (!icd->dev.parent ||
 	    to_soc_camera_host(icd->dev.parent)->nr != icd->iface)
 		return -ENODEV;
+
+	mt9m111->lastpage = -1;
 
 	mt9m111->autoexposure = 1;
 	mt9m111->autowhitebalance = 1;

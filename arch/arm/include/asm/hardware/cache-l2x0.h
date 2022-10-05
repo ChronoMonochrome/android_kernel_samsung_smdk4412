@@ -100,7 +100,14 @@
 
 #ifndef __ASSEMBLY__
 extern void __init l2x0_init(void __iomem *base, __u32 aux_val, __u32 aux_mask);
+#if defined(CONFIG_CACHE_L2X0) && defined(CONFIG_OF)
 extern int l2x0_of_init(__u32 aux_val, __u32 aux_mask);
+#else
+static inline int l2x0_of_init(__u32 aux_val, __u32 aux_mask)
+{
+	return -ENODEV;
+}
+#endif
 
 struct l2x0_regs {
 	unsigned long phy_base;
@@ -119,6 +126,6 @@ struct l2x0_regs {
 
 extern struct l2x0_regs l2x0_saved_regs;
 
-#endif
+#endif /* __ASSEMBLY__ */
 
 #endif

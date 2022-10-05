@@ -195,19 +195,12 @@ struct redrat3_dev {
 	dma_addr_t dma_in;
 	dma_addr_t dma_out;
 
-	/* true if write urb is busy */
-	bool write_busy;
-	/* wait for the write to finish */
-	struct completion write_finished;
-
 	/* locks this structure */
 	struct mutex lock;
 
 	/* rx signal timeout timer */
 	struct timer_list rx_timeout;
 
-	/* Is the device currently receiving? */
-	bool recv_in_progress;
 	/* is the detector enabled*/
 	bool det_enabled;
 	/* Is the device currently transmitting?*/

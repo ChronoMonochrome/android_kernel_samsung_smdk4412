@@ -3403,12 +3403,12 @@ static int nic_send_packet(struct et131x_adapter *adapter, struct tcb *tcb)
 			 * returned by dma_map_page() is always 32-bit
 			 * addressable (as defined by the pci/dma subsystem)
 			 */
-			desc[frag++].addr_lo =
-			    dma_map_page(&adapter->pdev->dev,
-					 frags[i - 1].page,
-					 frags[i - 1].page_offset,
-					 frags[i - 1].size,
-					 DMA_TO_DEVICE);
+			desc[frag++].addr_lo = skb_frag_dma_map(
+							&adapter->pdev->dev,
+							&frags[i - 1],
+							0,
+							frags[i - 1].size,
+							DMA_TO_DEVICE);
 		}
 	}
 
@@ -5233,7 +5233,7 @@ static const struct net_device_ops et131x_netdev_ops = {
 	.ndo_open		= et131x_open,
 	.ndo_stop		= et131x_close,
 	.ndo_start_xmit		= et131x_tx,
-	.ndo_set_multicast_list	= et131x_multicast,
+	.ndo_set_rx_mode	= et131x_multicast,
 	.ndo_tx_timeout		= et131x_tx_timeout,
 	.ndo_change_mtu		= et131x_change_mtu,
 	.ndo_set_mac_address	= et131x_set_mac_addr,

@@ -890,10 +890,15 @@ static int ReadIFAgc(struct drxd_state *state, u32 * pValue)
 			u32 R2 = state->if_agc_cfg.R2;
 			u32 R3 = state->if_agc_cfg.R3;
 
-			u32 Vmax = (3300 * R2) / (R1 + R2);
-			u32 Rpar = (R2 * R3) / (R3 + R2);
-			u32 Vmin = (3300 * Rpar) / (R1 + Rpar);
-			u32 Vout = Vmin + ((Vmax - Vmin) * Value) / 1024;
+			u32 Vmax, Rpar, Vmin, Vout;
+
+			if (R2 == 0 && (R1 == 0 || R3 == 0))
+				return 0;
+
+			Vmax = (3300 * R2) / (R1 + R2);
+			Rpar = (R2 * R3) / (R3 + R2);
+			Vmin = (3300 * Rpar) / (R1 + Rpar);
+			Vout = Vmin + ((Vmax - Vmin) * Value) / 1024;
 
 			*pValue = Vout;
 		}
@@ -925,16 +930,15 @@ static int DownloadMicrocode(struct drxd_state *state,
 			     const u8 *pMCImage, u32 Length)
 {
 	u8 *pSrc;
-	u16 Flags;
 	u32 Address;
 	u16 nBlocks;
 	u16 BlockSize;
-	u16 BlockCRC;
 	u32 offset = 0;
 	int i, status = 0;
 
 	pSrc = (u8 *) pMCImage;
-	Flags = (pSrc[0] << 8) | pSrc[1];
+	/* We're not using Flags */
+	/* Flags = (pSrc[0] << 8) | pSrc[1]; */
 	pSrc += sizeof(u16);
 	offset += sizeof(u16);
 	nBlocks = (pSrc[0] << 8) | pSrc[1];
@@ -951,11 +955,13 @@ static int DownloadMicrocode(struct drxd_state *state,
 		pSrc += sizeof(u16);
 		offset += sizeof(u16);
 
-		Flags = (pSrc[0] << 8) | pSrc[1];
+		/* We're not using Flags */
+		/* u16 Flags = (pSrc[0] << 8) | pSrc[1]; */
 		pSrc += sizeof(u16);
 		offset += sizeof(u16);
 
-		BlockCRC = (pSrc[0] << 8) | pSrc[1];
+		/* We're not using BlockCRC */
+		/* u16 BlockCRC = (pSrc[0] << 8) | pSrc[1]; */
 		pSrc += sizeof(u16);
 		offset += sizeof(u16);
 

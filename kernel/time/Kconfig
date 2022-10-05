@@ -31,3 +31,6 @@ config GENERIC_CLOCKEVENTS_BUILD
 # sched_clock
 config HAVE_CLKSRC_SCHED_CLOCK
        bool
+
+config GENERIC_CLOCKEVENTS_MIN_ADJUST
+	bool

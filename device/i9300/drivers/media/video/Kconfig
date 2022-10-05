@@ -80,13 +80,6 @@ config USE_V4L2_MFC
 
 endchoice
 
-config VIDEO_SAMSUNG_S5P_MFC
-       bool
-       depends on USE_V4L2_MFC
-       select VIDEOBUF2_CORE
-       ---help---
-         MFC driver for V4L2.
-
 choice
        prompt "MFC V4L2 Driver"
        default S5P_MFC_V5
