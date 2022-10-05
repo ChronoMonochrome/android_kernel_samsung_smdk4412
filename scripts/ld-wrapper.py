@@ -51,6 +51,7 @@ additional_build_rules = {
         "removed_objects":
         [
            "arch/arm/kernel/sleep.o",
+           "arch/arm/kernel/suspend.o",
         ]
     }],
     "kernel/built-in.o" :
