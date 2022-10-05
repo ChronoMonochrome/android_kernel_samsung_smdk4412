@@ -2,6 +2,7 @@
  * camera class init
  */
 
+#include <linux/module.h>
 #include <device/linux/gpio.h>
 #include <linux/err.h>
 #include <linux/delay.h>

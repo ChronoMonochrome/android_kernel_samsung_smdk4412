@@ -14,6 +14,7 @@
  *
  */
 
+#include <linux/module.h>
 #include <linux/device.h>
 #include <linux/file.h>
 #include <linux/fs.h>

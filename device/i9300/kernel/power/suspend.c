@@ -8,6 +8,7 @@
  * This file is released under the GPLv2.
  */
 
+#include <linux/module.h>
 #include <linux/string.h>
 #include <linux/delay.h>
 #include <linux/errno.h>

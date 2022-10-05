@@ -8,6 +8,7 @@
  * published by the Free Software Foundation.
 */
 
+#include <linux/module.h>
 #include <linux/io.h>
 #include <media/exynos_flite.h>
 #include <mach/map.h>

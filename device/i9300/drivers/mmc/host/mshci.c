@@ -14,6 +14,7 @@
 *
 */
 
+#include <linux/module.h>
 #include <linux/delay.h>
 #include <linux/highmem.h>
 #include <linux/io.h>

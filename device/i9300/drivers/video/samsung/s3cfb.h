@@ -14,6 +14,7 @@
 #define _S3CFB_H __FILE__
 
 #ifdef __KERNEL__
+#include <linux/module.h>
 #include <linux/mutex.h>
 #include <linux/fb.h>
 #ifdef CONFIG_HAS_WAKELOCK

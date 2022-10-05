@@ -1,5 +1,6 @@
 #include <linux/init.h>
 #include <linux/err.h>
+#include <linux/module.h>
 #include <linux/kernel.h>
 #include <linux/platform_device.h>
 #include <mach/gpio.h>

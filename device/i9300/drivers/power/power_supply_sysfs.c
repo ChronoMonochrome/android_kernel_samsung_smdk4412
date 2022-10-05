@@ -11,6 +11,7 @@
  *  You may use this code as per GPL version 2
  */
 
+#include <linux/module.h>
 #include <linux/ctype.h>
 #include <linux/power_supply.h>
 #include <linux/slab.h>

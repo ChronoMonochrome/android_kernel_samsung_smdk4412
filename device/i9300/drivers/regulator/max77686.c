@@ -21,6 +21,7 @@
  * This driver is based on max8997.c
  */
 
+#include <linux/module.h>
 #include <linux/bug.h>
 #include <linux/delay.h>
 #include <linux/err.h>

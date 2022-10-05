@@ -10,6 +10,7 @@
  * published by the Free Software Foundation.
 */
 
+#include <linux/module.h>
 #include <linux/slab.h>
 #include <linux/bootmem.h>
 #include <linux/string.h>

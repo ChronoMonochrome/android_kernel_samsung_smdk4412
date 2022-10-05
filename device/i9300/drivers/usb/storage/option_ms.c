@@ -20,6 +20,7 @@
  * 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
+#include <linux/module.h>
 #include <device/linux/usb.h>
 #include <linux/slab.h>
 

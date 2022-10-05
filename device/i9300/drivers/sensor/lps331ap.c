@@ -70,6 +70,7 @@
 	changes Resolution settings for 25Hz to TEMP AVG=128 and PRES AVG=384.
 ******************************************************************************/
 
+#include <linux/module.h>
 #include <linux/err.h>
 #include <linux/errno.h>
 #include <linux/delay.h>

@@ -16,6 +16,7 @@
  */
 
 #include <linux/err.h>
+#include <linux/module.h>
 #include <linux/platform_device.h>
 #include <device/linux/regulator/driver.h>
 #include <device/linux/regulator/machine.h>

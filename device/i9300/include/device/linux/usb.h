@@ -1,6 +1,7 @@
 #ifndef __LINUX_USB_H
 #define __LINUX_USB_H
 
+#include <linux/export.h>
 #include <linux/mod_devicetable.h>
 #include <device/linux/usb/ch9.h>
 

@@ -10,6 +10,7 @@
  * published by the Free Software Foundation.
 */
 
+#include <linux/module.h>
 #include <linux/fb.h>
 #include <linux/dma-mapping.h>
 #include <linux/uaccess.h>

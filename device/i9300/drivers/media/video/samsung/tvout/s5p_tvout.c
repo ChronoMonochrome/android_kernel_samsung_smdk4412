@@ -13,6 +13,7 @@
 #include <linux/clk.h>
 #include <linux/io.h>
 #include <linux/mm.h>
+#include <linux/module.h>
 #include <linux/delay.h>
 
 #if defined(CONFIG_S5P_SYSMMU_TV)
