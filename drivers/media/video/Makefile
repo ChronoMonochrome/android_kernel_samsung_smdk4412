@@ -15,7 +15,7 @@ videodev-objs	:=	v4l2-dev.o v4l2-ioctl.o v4l2-device.o v4l2-fh.o \
 
 # V4L2 core modules
 
-obj-$(CONFIG_VIDEO_DEV) += videodev.o v4l2-int-device.o
+obj-$(CONFIG_VIDEO_DEV) += v4l2-int-device.o
 ifeq ($(CONFIG_COMPAT),y)
   obj-$(CONFIG_VIDEO_DEV) += v4l2-compat-ioctl32.o
 endif
@@ -111,14 +111,14 @@ obj-$(CONFIG_VIDEO_HEXIUM_ORION) += hexium_orion.o
 obj-$(CONFIG_VIDEO_HEXIUM_GEMINI) += hexium_gemini.o
 obj-$(CONFIG_VIDEO_TIMBERDALE)	+= timblogiw.o
 
-obj-$(CONFIG_VIDEOBUF_GEN) += videobuf-core.o
+#obj-$(CONFIG_VIDEOBUF_GEN) += videobuf-core.o
 obj-$(CONFIG_VIDEOBUF_DMA_SG) += videobuf-dma-sg.o
-obj-$(CONFIG_VIDEOBUF_DMA_CONTIG) += videobuf-dma-contig.o
+#obj-$(CONFIG_VIDEOBUF_DMA_CONTIG) += videobuf-dma-contig.o
 obj-$(CONFIG_VIDEOBUF_VMALLOC) += videobuf-vmalloc.o
 obj-$(CONFIG_VIDEOBUF_DVB) += videobuf-dvb.o
 obj-$(CONFIG_VIDEO_BTCX)  += btcx-risc.o
 
-obj-$(CONFIG_VIDEOBUF2_CORE)		+= videobuf2-core.o
+#obj-$(CONFIG_VIDEOBUF2_CORE)		+= videobuf2-core.o
 obj-$(CONFIG_VIDEOBUF2_MEMOPS)		+= videobuf2-memops.o
 obj-$(CONFIG_VIDEOBUF2_VMALLOC)		+= videobuf2-vmalloc.o
 obj-$(CONFIG_VIDEOBUF2_DMA_CONTIG)	+= videobuf2-dma-contig.o
