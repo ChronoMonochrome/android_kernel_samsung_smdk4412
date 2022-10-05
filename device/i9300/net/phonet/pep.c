@@ -22,6 +22,7 @@
  * 02110-1301 USA
  */
 
+#include <linux/module.h>
 #include <linux/kernel.h>
 #include <linux/slab.h>
 #include <linux/socket.h>

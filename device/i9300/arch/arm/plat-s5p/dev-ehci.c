@@ -9,6 +9,7 @@
  *
  */
 
+#include <linux/module.h>
 #include <linux/platform_device.h>
 #include <mach/irqs.h>
 #include <mach/map.h>

@@ -13,6 +13,7 @@
  * for more details.
  */
 
+#include <linux/module.h>
 #include <linux/i2c.h>
 #include <linux/init.h>
 #include <media/v4l2-device.h>

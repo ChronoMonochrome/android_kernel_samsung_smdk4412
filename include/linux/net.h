@@ -18,6 +18,7 @@
 #ifndef _LINUX_NET_H
 #define _LINUX_NET_H
 
+#include <linux/module.h>
 #include <linux/socket.h>
 #include <asm/socket.h>
 

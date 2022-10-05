@@ -21,6 +21,7 @@
  * This driver is based on max8997.c
  */
 
+#include <linux/module.h>
 #include <linux/slab.h>
 #include <linux/i2c.h>
 #include <linux/pm_runtime.h>

@@ -8,6 +8,7 @@
  * published by the Free Software Foundation.
  */
 
+#include <linux/module.h>
 #include <linux/leds-aat1290a.h>
 int *aat1290a_ctrl;
 struct aat1290a_led_platform_data *led_pdata;

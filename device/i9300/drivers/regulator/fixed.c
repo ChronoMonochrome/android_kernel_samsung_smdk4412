@@ -19,6 +19,7 @@
  */
 
 #include <linux/err.h>
+#include <linux/module.h>
 #include <linux/mutex.h>
 #include <linux/platform_device.h>
 #include <device/linux/regulator/driver.h>

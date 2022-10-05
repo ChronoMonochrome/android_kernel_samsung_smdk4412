@@ -15,6 +15,7 @@
  *
  */
 
+#include <linux/module.h>
 #include "battery-factory.h"
 
 /* prototype */

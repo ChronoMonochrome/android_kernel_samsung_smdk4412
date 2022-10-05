@@ -14,6 +14,7 @@
  * published by the Free Software Foundation.
  */
 
+#include <linux/module.h>
 #include <linux/kernel.h>
 #include <linux/irq.h>
 #include <linux/io.h>
