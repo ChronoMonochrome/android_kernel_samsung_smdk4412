@@ -8,7 +8,7 @@
  */
 
 #include <linux/platform_device.h>
-#include <linux/gpio.h>
+#include <device/linux/gpio.h>
 #include <plat/gpio-cfg.h>
 
 void s5p_hdmi_cfg_hpd(bool enable)

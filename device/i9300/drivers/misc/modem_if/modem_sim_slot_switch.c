@@ -1,5 +1,5 @@
 #include <linux/i2c.h>
-#include <linux/gpio.h>
+#include <device/linux/gpio.h>
 #include <linux/delay.h>
 #include <linux/err.h>
 

@@ -14,8 +14,8 @@
  */
 
 #include <linux/kernel.h>
-#include <linux/gpio.h>
-#include <linux/gpio_event.h>
+#include <device/linux/gpio.h>
+#include <device/linux/gpio_event.h>
 
 int gpio_event_output_event(
 	struct gpio_event_input_devs *input_devs, struct gpio_event_info *info,

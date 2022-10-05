@@ -15,7 +15,7 @@
 #include <linux/irq.h>
 #include <linux/io.h>
 #include <linux/sysdev.h>
-#include <linux/gpio.h>
+#include <device/linux/gpio.h>
 
 #include <asm/mach/irq.h>
 

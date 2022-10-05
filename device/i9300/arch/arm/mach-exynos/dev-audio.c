@@ -13,7 +13,7 @@
 
 #include <linux/platform_device.h>
 #include <linux/dma-mapping.h>
-#include <linux/gpio.h>
+#include <device/linux/gpio.h>
 
 #include <plat/gpio-cfg.h>
 #include <plat/audio.h>

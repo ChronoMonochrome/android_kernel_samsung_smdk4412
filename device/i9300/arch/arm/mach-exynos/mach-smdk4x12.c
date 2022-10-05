@@ -14,8 +14,8 @@
 #include <linux/spi/spi_gpio.h>
 #include <linux/clk.h>
 #include <linux/lcd.h>
-#include <linux/gpio.h>
-#include <linux/gpio_event.h>
+#include <device/linux/gpio.h>
+#include <device/linux/gpio_event.h>
 #include <linux/i2c.h>
 #include <linux/pwm_backlight.h>
 #include <linux/input.h>

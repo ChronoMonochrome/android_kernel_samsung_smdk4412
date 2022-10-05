@@ -17,7 +17,7 @@
 #include <linux/sysdev.h>
 #include <linux/init.h>
 #include <linux/io.h>
-#include <linux/gpio.h>
+#include <device/linux/gpio.h>
 
 #include <plat/gpio-core.h>
 #include <plat/pm.h>

@@ -30,7 +30,7 @@
 #include <linux/delay.h>
 #include <linux/earlysuspend.h>
 #include <linux/firmware.h>
-#include <linux/gpio.h>
+#include <device/linux/gpio.h>
 #include <linux/i2c.h>
 #include <linux/init.h>
 #include <linux/input.h>

@@ -21,7 +21,7 @@
  */
 
 #include <linux/delay.h>
-#include <linux/gpio.h>
+#include <device/linux/gpio.h>
 #include <linux/hrtimer.h>
 #include <linux/init.h>
 #include <linux/interrupt.h>

@@ -22,7 +22,7 @@
 #include <linux/module.h>
 #include <linux/reboot.h>
 #include <linux/i2c.h>
-#include <linux/gpio.h>
+#include <device/linux/gpio.h>
 #include <plat/gpio-cfg.h>
 #include <linux/slab.h>
 #include <linux/interrupt.h>

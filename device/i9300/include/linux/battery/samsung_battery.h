@@ -15,7 +15,7 @@
 #ifndef __MACH_SAMSUNG_BATTERY_H
 #define __MACH_SAMSUNG_BATTERY_H __FILE__
 
-#include <linux/gpio.h>
+#include <device/linux/gpio.h>
 #include <linux/delay.h>
 #include <linux/power_supply.h>
 #include <linux/android_alarm.h>

@@ -9,7 +9,7 @@
 */
 
 #include <linux/platform_device.h>
-#include <linux/gpio.h>
+#include <device/linux/gpio.h>
 #include <linux/platform_data/exynos_usb3_drd.h>
 
 #include <plat/gpio-cfg.h>

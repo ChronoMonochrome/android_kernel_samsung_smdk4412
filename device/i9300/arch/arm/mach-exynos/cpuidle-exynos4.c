@@ -15,7 +15,7 @@
 #include <linux/io.h>
 #include <linux/suspend.h>
 #include <linux/platform_device.h>
-#include <linux/gpio.h>
+#include <device/linux/gpio.h>
 #include <linux/cpufreq.h>
 
 #include <asm/proc-fns.h>

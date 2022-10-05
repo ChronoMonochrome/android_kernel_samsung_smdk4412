@@ -1,4 +1,4 @@
-#include <linux/gpio.h>
+#include <device/linux/gpio.h>
 #include <linux/serial_core.h>
 #include <plat/devs.h>
 #include <plat/gpio-cfg.h>

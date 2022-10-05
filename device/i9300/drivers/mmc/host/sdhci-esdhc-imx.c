@@ -15,7 +15,7 @@
 #include <linux/delay.h>
 #include <linux/err.h>
 #include <linux/clk.h>
-#include <linux/gpio.h>
+#include <device/linux/gpio.h>
 #include <linux/slab.h>
 #include <device/linux/mmc/host.h>
 #include <device/linux/mmc/sdhci-pltfm.h>

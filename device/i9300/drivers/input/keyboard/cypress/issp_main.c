@@ -359,7 +359,7 @@ date      revision  author  description
 #include <linux/proc_fs.h>
 #include <linux/delay.h>
 #include <linux/input.h>
-#include <linux/gpio.h>
+#include <device/linux/gpio.h>
 #include <linux/uaccess.h>
 #include <linux/io.h>
 /*

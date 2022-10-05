@@ -23,7 +23,7 @@
 #include <linux/device.h>
 #include <linux/delay.h>
 #include <linux/miscdevice.h>
-#include <linux/gpio.h>
+#include <device/linux/gpio.h>
 #include <linux/wakelock.h>
 #include <linux/slab.h>
 #include <linux/input.h>

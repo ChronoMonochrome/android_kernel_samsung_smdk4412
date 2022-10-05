@@ -11,7 +11,7 @@
 #include <linux/i2c.h>
 
 #include <linux/err.h>
-#include <linux/gpio.h>
+#include <device/linux/gpio.h>
 
 #include <linux/wacom_i2c.h>
 

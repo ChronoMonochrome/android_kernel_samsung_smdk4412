@@ -16,7 +16,7 @@
 #include <linux/device.h>
 #include <linux/slab.h>
 #include <linux/irq.h>
-#include <linux/gpio.h>
+#include <device/linux/gpio.h>
 #include <linux/of.h>
 #include <linux/of_gpio.h>
 #include <linux/of_irq.h>

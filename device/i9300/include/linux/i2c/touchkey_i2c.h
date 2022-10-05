@@ -9,7 +9,7 @@
 #include <linux/interrupt.h>
 #include <linux/slab.h>
 #include <linux/hrtimer.h>
-#include <linux/gpio.h>
+#include <device/linux/gpio.h>
 #include <linux/irq.h>
 #include <linux/delay.h>
 

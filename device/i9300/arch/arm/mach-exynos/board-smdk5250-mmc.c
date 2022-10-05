@@ -8,7 +8,7 @@
  * published by the Free Software Foundation.
 */
 
-#include <linux/gpio.h>
+#include <device/linux/gpio.h>
 #include <linux/smsc911x.h>
 #include <device/linux/mmc/host.h>
 #include <linux/delay.h>

@@ -8,7 +8,7 @@
  * published by the Free Software Foundation.
 */
 
-#include <linux/gpio.h>
+#include <device/linux/gpio.h>
 #include <linux/i2c.h>
 #include <device/linux/regulator/machine.h>
 #include <device/linux/regulator/fixed.h>

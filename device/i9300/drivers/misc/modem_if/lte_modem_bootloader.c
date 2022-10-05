@@ -26,7 +26,7 @@
 #include <linux/slab.h>
 #include <linux/mutex.h>
 #include <linux/irq.h>
-#include <linux/gpio.h>
+#include <device/linux/gpio.h>
 #include <linux/wakelock.h>
 #include <linux/delay.h>
 #include <linux/spi/spi.h>

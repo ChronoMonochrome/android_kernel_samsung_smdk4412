@@ -24,7 +24,7 @@
 #include <linux/input.h>
 #include <mach/regs-gpio.h>
 #include <plat/gpio-cfg.h>
-#include <linux/gpio.h>
+#include <device/linux/gpio.h>
 #include <linux/miscdevice.h>
 #include <linux/uaccess.h>
 #include <linux/earlysuspend.h>

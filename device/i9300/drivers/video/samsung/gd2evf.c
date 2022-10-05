@@ -13,7 +13,7 @@
 #include <linux/wait.h>
 #include <linux/fb.h>
 #include <linux/delay.h>
-#include <linux/gpio.h>
+#include <device/linux/gpio.h>
 #include <linux/spi/spi.h>
 #include <linux/irq.h>
 #include <linux/interrupt.h>

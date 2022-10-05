@@ -11,7 +11,7 @@
 
 /* includes */
 #include <linux/platform_device.h>
-#include <linux/gpio.h>
+#include <device/linux/gpio.h>
 #include <device/linux/usb.h>
 #include <msp_usb.h>
 

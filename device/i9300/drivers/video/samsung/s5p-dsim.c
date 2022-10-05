@@ -32,7 +32,7 @@
 #include <linux/kthread.h>
 #include <linux/workqueue.h>
 #include <device/linux/regulator/consumer.h>
-#include <linux/gpio.h>
+#include <device/linux/gpio.h>
 #include <plat/clock.h>
 #include <plat/regs-dsim.h>
 #include <plat/gpio-cfg.h>

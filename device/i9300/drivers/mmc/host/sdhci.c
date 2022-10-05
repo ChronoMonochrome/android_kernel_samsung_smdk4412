@@ -29,7 +29,7 @@
 
 #include "sdhci.h"
 
-#include <linux/gpio.h>
+#include <device/linux/gpio.h>
 
 #define DRIVER_NAME "sdhci"
 

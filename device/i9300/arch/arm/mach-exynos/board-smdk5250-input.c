@@ -8,8 +8,8 @@
  * published by the Free Software Foundation.
 */
 
-#include <linux/gpio.h>
-#include <linux/gpio_event.h>
+#include <device/linux/gpio.h>
+#include <device/linux/gpio_event.h>
 #include <linux/i2c.h>
 #include <linux/input.h>
 

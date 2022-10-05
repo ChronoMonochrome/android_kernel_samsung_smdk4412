@@ -16,7 +16,7 @@
 #include <linux/earlysuspend.h>
 #include <linux/module.h>
 #include <linux/input.h>
-#include <linux/gpio_event.h>
+#include <device/linux/gpio_event.h>
 #include <linux/hrtimer.h>
 #include <linux/platform_device.h>
 #include <linux/slab.h>

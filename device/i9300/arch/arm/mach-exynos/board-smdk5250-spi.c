@@ -11,7 +11,7 @@
 #include <linux/clk.h>
 #include <linux/spi/spi.h>
 #include <linux/spi/spi_gpio.h>
-#include <linux/gpio.h>
+#include <device/linux/gpio.h>
 #include <linux/err.h>
 
 #include <plat/gpio-cfg.h>

@@ -11,7 +11,7 @@
  * published by the Free Software Foundation.
  */
 
-#include <linux/gpio.h>
+#include <device/linux/gpio.h>
 #include <linux/serial_core.h>
 #include <plat/cpu.h>
 #include <plat/devs.h>

@@ -16,7 +16,7 @@
 #include <linux/errno.h>
 #include <linux/wait.h>
 #include <linux/delay.h>
-#include <linux/gpio.h>
+#include <device/linux/gpio.h>
 #include <linux/platform_device.h>
 #include <linux/lcd.h>
 #include <plat/gpio-cfg.h>

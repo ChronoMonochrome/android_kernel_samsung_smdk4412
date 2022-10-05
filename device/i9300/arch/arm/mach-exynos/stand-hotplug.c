@@ -26,7 +26,7 @@
 #include <linux/sched.h>
 #include <linux/suspend.h>
 #include <linux/reboot.h>
-#include <linux/gpio.h>
+#include <device/linux/gpio.h>
 #include <linux/cpufreq.h>
 
 #include <plat/map-base.h>

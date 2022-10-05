@@ -24,7 +24,7 @@
 #include <linux/bug.h>
 #include <linux/delay.h>
 #include <linux/err.h>
-#include <linux/gpio.h>
+#include <device/linux/gpio.h>
 #include <linux/slab.h>
 #include <linux/platform_device.h>
 #include <device/linux/regulator/driver.h>

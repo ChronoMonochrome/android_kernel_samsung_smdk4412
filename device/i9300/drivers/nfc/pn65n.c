@@ -31,7 +31,7 @@
 #include <linux/interrupt.h>
 #include <linux/io.h>
 #include <linux/platform_device.h>
-#include <linux/gpio.h>
+#include <device/linux/gpio.h>
 #include <linux/miscdevice.h>
 #include <linux/spinlock.h>
 #include <linux/nfc/pn65n.h>

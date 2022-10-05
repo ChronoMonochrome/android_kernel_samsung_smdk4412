@@ -18,7 +18,7 @@
 #include <linux/delay.h>
 #include <linux/irq.h>
 #include <linux/interrupt.h>
-#include <linux/gpio.h>
+#include <device/linux/gpio.h>
 #include <linux/workqueue.h>
 #include <linux/backlight.h>
 #include <linux/lcd.h>

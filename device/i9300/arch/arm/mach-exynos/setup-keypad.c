@@ -10,7 +10,7 @@
  * published by the Free Software Foundation.
 */
 
-#include <linux/gpio.h>
+#include <device/linux/gpio.h>
 #include <plat/gpio-cfg.h>
 
 void samsung_keypad_cfg_gpio(unsigned int rows, unsigned int cols)

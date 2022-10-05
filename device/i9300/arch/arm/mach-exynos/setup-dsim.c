@@ -15,7 +15,7 @@
 #include <linux/io.h>
 #include <linux/platform_device.h>
 #include <linux/clk.h>
-#include <linux/gpio.h>
+#include <device/linux/gpio.h>
 #include <plat/clock.h>
 #include <plat/regs-dsim.h>
 #include <plat/gpio-cfg.h>

@@ -31,7 +31,7 @@
 #include <device/linux/mmc/mmc.h>
 #include <linux/io.h>
 #include <linux/semaphore.h>
-#include <linux/gpio.h>
+#include <device/linux/gpio.h>
 #include <device/linux/regulator/consumer.h>
 #include <plat/dma.h>
 #include <mach/hardware.h>

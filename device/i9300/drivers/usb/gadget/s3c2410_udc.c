@@ -35,7 +35,7 @@
 #include <linux/interrupt.h>
 #include <linux/platform_device.h>
 #include <linux/clk.h>
-#include <linux/gpio.h>
+#include <device/linux/gpio.h>
 #include <linux/prefetch.h>
 
 #include <linux/debugfs.h>

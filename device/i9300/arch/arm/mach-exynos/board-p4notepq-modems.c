@@ -18,7 +18,7 @@
 #include <linux/platform_device.h>
 #include <linux/irq.h>
 #include <linux/interrupt.h>
-#include <linux/gpio.h>
+#include <device/linux/gpio.h>
 #include <mach/gpio-exynos4.h>
 #include <plat/gpio-cfg.h>
 #include <linux/clk.h>

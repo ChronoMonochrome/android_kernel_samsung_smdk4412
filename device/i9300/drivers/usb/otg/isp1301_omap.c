@@ -25,7 +25,7 @@
 #include <linux/slab.h>
 #include <linux/interrupt.h>
 #include <linux/platform_device.h>
-#include <linux/gpio.h>
+#include <device/linux/gpio.h>
 #include <device/linux/usb/ch9.h>
 #include <device/linux/usb/gadget.h>
 #include <device/linux/usb.h>

@@ -23,7 +23,7 @@
 #include <linux/delay.h>
 #include <linux/power_supply.h>
 #include <linux/battery/samsung_battery.h>
-#include <linux/gpio.h>
+#include <device/linux/gpio.h>
 #include <linux/irq.h>
 #include <linux/interrupt.h>
 #include <linux/slab.h>

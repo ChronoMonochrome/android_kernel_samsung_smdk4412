@@ -17,7 +17,7 @@
 #include <linux/platform_device.h>
 #include <linux/clk.h>
 #include <linux/io.h>
-#include <linux/gpio.h>
+#include <device/linux/gpio.h>
 #include <device/linux/mmc/card.h>
 #include <device/linux/mmc/host.h>
 

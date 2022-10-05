@@ -14,7 +14,7 @@
 #include <linux/kernel.h>
 #include <linux/init.h>
 #include <linux/io.h>
-#include <linux/gpio.h>
+#include <device/linux/gpio.h>
 #include <linux/spinlock.h>
 
 #include <plat/gpio-core.h>

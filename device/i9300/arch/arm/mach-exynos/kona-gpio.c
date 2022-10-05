@@ -18,7 +18,7 @@
     => KONA LTE : GT-N5120_REV0.3_EUR_SMD_121211.pdf
  */
 
-#include <linux/gpio.h>
+#include <device/linux/gpio.h>
 #include <linux/serial_core.h>
 #include <plat/devs.h>
 #include <plat/gpio-cfg.h>

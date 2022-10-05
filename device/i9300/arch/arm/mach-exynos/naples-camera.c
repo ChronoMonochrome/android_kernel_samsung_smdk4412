@@ -8,7 +8,7 @@
  * published by the Free Software Foundation.
  */
 
-#include <linux/gpio.h>
+#include <device/linux/gpio.h>
 #include <linux/err.h>
 #include <linux/delay.h>
 #include <linux/i2c.h>

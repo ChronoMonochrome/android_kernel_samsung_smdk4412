@@ -32,7 +32,7 @@
 
 #include <mach/regs-gpio.h>
 #include <mach/regs-irq.h>
-#include <linux/gpio.h>
+#include <device/linux/gpio.h>
 #include <linux/cpufreq.h>
 
 #define CPUMON 1

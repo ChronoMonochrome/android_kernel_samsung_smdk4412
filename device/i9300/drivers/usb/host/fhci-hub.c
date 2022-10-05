@@ -23,7 +23,7 @@
 #include <linux/io.h>
 #include <device/linux/usb.h>
 #include <device/linux/usb/hcd.h>
-#include <linux/gpio.h>
+#include <device/linux/gpio.h>
 #include <asm/qe.h>
 #include "fhci.h"
 
