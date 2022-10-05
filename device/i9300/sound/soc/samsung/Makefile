@@ -1,3 +1,4 @@
+snd-soc-s3c24xx-objs := dma.o
 snd-soc-idma-objs := idma.o
 snd-soc-dma-wrapper-objs := dma-wrapper.o
 snd-soc-audss-objs := audss.o

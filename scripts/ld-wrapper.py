@@ -349,6 +349,7 @@ additional_build_rules = {
         ],
         "removed_objects":
         [
+            "sound/soc/samsung/snd-soc-dma.o",
             "sound/soc/samsung/snd-soc-i2s.o",
             "sound/soc/samsung/snd-soc-idma.o",
         ]
