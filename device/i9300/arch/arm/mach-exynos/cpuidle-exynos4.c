@@ -777,9 +777,11 @@ early_wakeup:
 }
 
 static int exynos4_enter_idle(struct cpuidle_device *dev,
+			      struct cpuidle_driver *drv,
 			      int index);
 
 static int exynos4_enter_lowpower(struct cpuidle_device *dev,
+			          struct cpuidle_driver *drv,
 				  int index);
 
 static struct cpuidle_state exynos4_cpuidle_set[] = {
@@ -815,6 +817,7 @@ static unsigned int old_div;
 static DEFINE_SPINLOCK(idle_lock);
 
 static int exynos4_enter_idle(struct cpuidle_device *dev,
+			      struct cpuidle_driver *drv,
 			      int index)
 {
 	struct timeval before, after;
@@ -902,6 +905,7 @@ struct cpuidle_state *last_state;
 struct cpuidle_state *safe_state;
 
 static int exynos4_enter_lowpower(struct cpuidle_device *dev,
+			          struct cpuidle_driver *drv,
 				  int index)
 {
 	struct cpuidle_state *new_state = &exynos4_cpuidle_set[index];
@@ -929,11 +933,11 @@ static int exynos4_enter_lowpower(struct cpuidle_device *dev,
 	}
 
 	if (new_index == 0)
-		return exynos4_enter_idle(dev, new_index);
+		return exynos4_enter_idle(dev, drv, new_index);
 
 	enter_mode = exynos4_check_entermode();
 	if (!enter_mode)
-		return exynos4_enter_idle(dev, new_index);
+		return exynos4_enter_idle(dev, drv, new_index);
 	else {
 #ifdef CONFIG_CORESIGHT_ETM
 		etm_disable(0);
@@ -1136,6 +1140,19 @@ static int __init exynos4_init_cpuidle(void)
 	struct platform_device *pdev;
 	struct resource *res;
 
+	struct cpuidle_driver *drv = &exynos4_idle_driver;
+
+	/* Setup cpuidle driver */
+	drv->state_count = (sizeof(exynos4_cpuidle_set) /
+				sizeof(struct cpuidle_state));
+	max_cpuidle_state = drv->state_count;
+	for (i = 0; i < max_cpuidle_state; i++) {
+		memcpy(&drv->states[i], &exynos4_cpuidle_set[i],
+		sizeof(struct cpuidle_state));
+	}
+
+	safe_state = &drv->states[0];
+
 	if (soc_is_exynos4210())
 		use_clock_down = SW_CLK_DWN;
 	else
@@ -1156,19 +1173,7 @@ static int __init exynos4_init_cpuidle(void)
 		device = &per_cpu(exynos4_cpuidle_device, cpu_id);
 		device->cpu = cpu_id;
 
-		if (cpu_id == 0)
-			device->state_count = ARRAY_SIZE(exynos4_cpuidle_set);
-		else
-			device->state_count = 1;	/* Support IDLE only */
-
-		max_cpuidle_state = device->state_count;
-
-		for (i = 0; i < max_cpuidle_state; i++) {
-			memcpy(&device->states[i], &exynos4_cpuidle_set[i],
-					sizeof(struct cpuidle_state));
-		}
-
-		safe_state = &device->states[0];
+		device->state_count = drv->state_count;
 
 		if (cpuidle_register_device(device)) {
 			cpuidle_unregister_driver(&exynos4_idle_driver);
