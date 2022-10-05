@@ -104,7 +104,9 @@ static void __pm_clk_remove(struct pm_clock_entry *ce)
 			clk_put(ce->clk);
 	}
 
-	kfree(ce->con_id);
+	if (ce->con_id)
+		kfree(ce->con_id);
+
 	kfree(ce);
 }
 
