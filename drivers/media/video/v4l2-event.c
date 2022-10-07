@@ -26,6 +26,7 @@
 #include <media/v4l2-fh.h>
 #include <media/v4l2-event.h>
 
+#include <linux/module.h>
 #include <linux/sched.h>
 #include <linux/slab.h>
 

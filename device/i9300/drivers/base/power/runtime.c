@@ -7,6 +7,7 @@
  * This file is released under the GPLv2.
  */
 
+#include <linux/module.h>
 #include <linux/sched.h>
 #include <linux/pm_runtime.h>
 #include "power.h"

@@ -10,6 +10,8 @@
  * published by the Free Software Foundation.
  */
 
+#include <linux/module.h>
+
 #include <linux/io.h>
 #include <linux/delay.h>
 
