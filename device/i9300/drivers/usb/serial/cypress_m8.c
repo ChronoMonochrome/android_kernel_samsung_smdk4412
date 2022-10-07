@@ -72,7 +72,7 @@
 #include "cypress_m8.h"
 
 
-static int debug;
+static bool debug;
 static int stats;
 static int interval;
 static int unstable_bauds;

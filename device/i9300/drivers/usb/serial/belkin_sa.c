@@ -80,7 +80,7 @@
 #include <device/linux/usb/serial.h>
 #include "belkin_sa.h"
 
-static int debug;
+static bool debug;
 
 /*
  * Version Information

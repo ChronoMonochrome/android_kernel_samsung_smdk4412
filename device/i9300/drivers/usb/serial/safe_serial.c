@@ -81,7 +81,7 @@
 #define CONFIG_USB_SERIAL_SAFE_PADDED 0
 #endif
 
-static int debug;
+static bool debug;
 static int safe = 1;
 static int padded = CONFIG_USB_SERIAL_SAFE_PADDED;
 
