@@ -30,6 +30,7 @@
 #include <linux/uaccess.h>
 #include <linux/random.h>
 #include <linux/hw_breakpoint.h>
+#include <linux/console.h>
 #include <linux/cpuidle.h>
 
 #include <asm/cacheflush.h>
