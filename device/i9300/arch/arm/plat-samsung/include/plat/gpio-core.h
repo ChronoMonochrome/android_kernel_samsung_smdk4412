@@ -14,6 +14,8 @@
 #define GPIOCON_OFF	(0x00)
 #define GPIODAT_OFF	(0x04)
 
+#include <linux/spinlock_types.h>
+
 #define con_4bit_shift(__off) ((__off) * 4)
 
 /* Define the core gpiolib support functions that the s3c platforms may
