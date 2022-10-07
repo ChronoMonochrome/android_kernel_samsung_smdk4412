@@ -12,6 +12,7 @@
 #include <linux/delay.h>
 
 #include <asm/mach/map.h>
+#include <asm/mmu-legacy.h>
 #include <asm/mach/irq.h>
 
 #include <asm/proc-fns.h>
@@ -232,18 +233,18 @@ static void exynos4_idle(void)
  */
 void __init exynos4_map_io(void)
 {
-	iotable_init(exynos4_iodesc, ARRAY_SIZE(exynos4_iodesc));
+	iotable_init_legacy(exynos4_iodesc, ARRAY_SIZE(exynos4_iodesc));
 
 	if (soc_is_exynos4210()) {
-		iotable_init(exynos4210_iodesc, ARRAY_SIZE(exynos4210_iodesc));
+		iotable_init_legacy(exynos4210_iodesc, ARRAY_SIZE(exynos4210_iodesc));
 		if (samsung_rev() == EXYNOS4210_REV_0)
-			iotable_init(exynos4210_iodesc_rev_0,
+			iotable_init_legacy(exynos4210_iodesc_rev_0,
 				ARRAY_SIZE(exynos4210_iodesc_rev_0));
 		else
-			iotable_init(exynos4210_iodesc_rev_1,
+			iotable_init_legacy(exynos4210_iodesc_rev_1,
 				ARRAY_SIZE(exynos4210_iodesc_rev_1));
 	} else {
-		iotable_init(exynos4212_iodesc, ARRAY_SIZE(exynos4212_iodesc));
+		iotable_init_legacy(exynos4212_iodesc, ARRAY_SIZE(exynos4212_iodesc));
 	}
 
 #ifdef CONFIG_S3C_DEV_HSMMC
