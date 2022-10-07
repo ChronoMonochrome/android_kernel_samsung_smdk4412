@@ -28,6 +28,7 @@ struct events_stats {
 	u64 total_lost;
 	u64 total_invalid_chains;
 	u32 nr_events[PERF_RECORD_HEADER_MAX];
+	u32 nr_lost_warned;
 	u32 nr_unknown_events;
 	u32 nr_invalid_chains;
 	u32 nr_unknown_id;
@@ -61,8 +62,6 @@ struct hists {
 	/* Best would be to reuse the session callchain cursor */
 	struct callchain_cursor	callchain_cursor;
 };
-
-void hists__init(struct hists *hists);
 
 struct hist_entry *__hists__add_entry(struct hists *self,
 				      struct addr_location *al,

@@ -1,5 +1,6 @@
 #define _FILE_OFFSET_BITS 64
 
+#include "util.h"
 #include <sys/types.h>
 #include <byteswap.h>
 #include <unistd.h>
@@ -11,7 +12,6 @@
 
 #include "evlist.h"
 #include "evsel.h"
-#include "util.h"
 #include "header.h"
 #include "../perf.h"
 #include "trace-event.h"
@@ -388,7 +388,7 @@ static int write_event_desc(int fd, struct perf_header *h __used,
 		/*
 		 * write event string as passed on cmdline
 		 */
-		ret = do_write_string(fd, attr->name);
+		ret = do_write_string(fd, event_name(attr));
 		if (ret < 0)
 			return ret;
 		/*

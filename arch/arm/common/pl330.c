@@ -221,17 +221,6 @@
  */
 #define MCODE_BUFF_PER_REQ	256
 
-/*
- * Mark a _pl330_req as free.
- * We do it by writing DMAEND as the first instruction
- * because no valid request is going to have DMAEND as
- * its first instruction to execute.
- */
-#define MARK_FREE(req)	do { \
-				_emit_END(0, (req)->mc_cpu); \
-				(req)->mc_len = 0; \
-			} while (0)
-
 /* If the _pl330_req is available to the client */
 #define IS_FREE(req)	(*((u8 *)((req)->mc_cpu)) == CMD_DMAEND)
 
@@ -301,8 +290,10 @@ struct pl330_thread {
 	struct pl330_dmac *dmac;
 	/* Only two at a time */
 	struct _pl330_req req[2];
-	/* Index of the last submitted request */
+	/* Index of the last enqueued request */
 	unsigned lstenq;
+	/* Index of the last submitted request or -1 if the DMA is stopped */
+	int req_running;
 };
 
 enum pl330_dmac_state {
@@ -778,6 +769,22 @@ static inline void _execute_DBGINSN(struct pl330_thread *thrd,
 	writel(0, regs + DBGCMD);
 }
 
+/*
+ * Mark a _pl330_req as free.
+ * We do it by writing DMAEND as the first instruction
+ * because no valid request is going to have DMAEND as
+ * its first instruction to execute.
+ */
+static void mark_free(struct pl330_thread *thrd, int idx)
+{
+	struct _pl330_req *req = &thrd->req[idx];
+
+	_emit_END(0, req->mc_cpu);
+	req->mc_len = 0;
+
+	thrd->req_running = -1;
+}
+
 static inline u32 _state(struct pl330_thread *thrd)
 {
 	void __iomem *regs = thrd->dmac->pinfo->base;
@@ -836,31 +843,6 @@ static inline u32 _state(struct pl330_thread *thrd)
 	}
 }
 
-/* If the request 'req' of thread 'thrd' is currently active */
-static inline bool _req_active(struct pl330_thread *thrd,
-		struct _pl330_req *req)
-{
-	void __iomem *regs = thrd->dmac->pinfo->base;
-	u32 buf = req->mc_bus, pc = readl(regs + CPC(thrd->id));
-
-	if (IS_FREE(req))
-		return false;
-
-	return (pc >= buf && pc <= buf + req->mc_len) ? true : false;
-}
-
-/* Returns 0 if the thread is inactive, ID of active req + 1 otherwise */
-static inline unsigned _thrd_active(struct pl330_thread *thrd)
-{
-	if (_req_active(thrd, &thrd->req[0]))
-		return 1; /* First req active */
-
-	if (_req_active(thrd, &thrd->req[1]))
-		return 2; /* Second req active */
-
-	return 0;
-}
-
 static void _stop(struct pl330_thread *thrd)
 {
 	void __iomem *regs = thrd->dmac->pinfo->base;
@@ -892,17 +874,22 @@ static bool _trigger(struct pl330_thread *thrd)
 	struct _arg_GO go;
 	unsigned ns;
 	u8 insn[6] = {0, 0, 0, 0, 0, 0};
+	int idx;
 
 	/* Return if already ACTIVE */
 	if (_state(thrd) != PL330_STATE_STOPPED)
 		return true;
 
-	if (!IS_FREE(&thrd->req[1 - thrd->lstenq]))
-		req = &thrd->req[1 - thrd->lstenq];
-	else if (!IS_FREE(&thrd->req[thrd->lstenq]))
-		req = &thrd->req[thrd->lstenq];
-	else
-		req = NULL;
+	idx = 1 - thrd->lstenq;
+	if (!IS_FREE(&thrd->req[idx]))
+		req = &thrd->req[idx];
+	else {
+		idx = thrd->lstenq;
+		if (!IS_FREE(&thrd->req[idx]))
+			req = &thrd->req[idx];
+		else
+			req = NULL;
+	}
 
 	/* Return if no request */
 	if (!req || !req->r)
@@ -932,6 +919,8 @@ static bool _trigger(struct pl330_thread *thrd)
 
 	/* Only manager can execute GO */
 	_execute_DBGINSN(thrd, insn, true);
+
+	thrd->req_running = idx;
 
 	return true;
 }
@@ -1116,54 +1105,6 @@ static inline int _loop(unsigned dry_run, u8 buf[],
 	return off;
 }
 
-/* Returns bytes consumed and updates bursts */
-static inline int _loop_infiniteloop(unsigned dry_run, u8 buf[],
-		unsigned long bursts, const struct _xfer_spec *pxs, int ev)
-{
-	int cyc, off;
-	unsigned lcnt0, lcnt1, ljmp0, ljmp1, ljmpfe;
-	struct _arg_LPEND lpend;
-
-	off = 0;
-	ljmpfe = off;
-	lcnt0 = pxs->r->infiniteloop;
-	lcnt1 = 256;
-	cyc = bursts/256;
-
-	/* forever loop */
-	off += _emit_MOV(dry_run, &buf[off], SAR, pxs->x->src_addr);
-	off += _emit_MOV(dry_run, &buf[off], DAR, pxs->x->dst_addr);
-
-	/* loop0 */
-	off += _emit_LP(dry_run, &buf[off], 0,  lcnt0);
-	ljmp0 = off;
-
-	/* loop1 */
-	off += _emit_LP(dry_run, &buf[off], 1, lcnt1);
-	ljmp1 = off;
-	off += _bursts(dry_run, &buf[off], pxs, cyc);
-	lpend.cond = ALWAYS;
-	lpend.forever = false;
-	lpend.loop = 1;
-	lpend.bjump = off - ljmp1;
-	off += _emit_LPEND(dry_run, &buf[off], &lpend);
-	off += _emit_SEV(dry_run, &buf[off], ev);
-
-	lpend.cond = ALWAYS;
-	lpend.forever = false;
-	lpend.loop = 0;
-	lpend.bjump = off - ljmp0;
-	off += _emit_LPEND(dry_run, &buf[off], &lpend);
-
-	lpend.cond = ALWAYS;
-	lpend.forever = true;
-	lpend.loop = 1;
-	lpend.bjump = off - ljmpfe;
-	off +=  _emit_LPEND(dry_run, &buf[off], &lpend);
-
-	return off;
-}
-
 static inline int _setup_loops(unsigned dry_run, u8 buf[],
 		const struct _xfer_spec *pxs)
 {
@@ -1198,20 +1139,6 @@ static inline int _setup_xfer(unsigned dry_run, u8 buf[],
 	return off;
 }
 
-static inline int _setup_xfer_infiniteloop(unsigned dry_run, u8 buf[],
-		const struct _xfer_spec *pxs, int ev)
-{
-	struct pl330_xfer *x = pxs->x;
-	u32 ccr = pxs->ccr;
-	unsigned long bursts = BYTE_TO_BURST(x->bytes, ccr);
-	int off = 0;
-
-	/* Setup Loop(s) */
-	off += _loop_infiniteloop(dry_run, &buf[off], bursts, pxs, ev);
-
-	return off;
-}
-
 /*
  * A req is a sequence of one or more xfer units.
  * Returns the number of bytes taken to setup the MC for the req.
@@ -1230,33 +1157,22 @@ static int _setup_req(unsigned dry_run, struct pl330_thread *thrd,
 	off += _emit_MOV(dry_run, &buf[off], CCR, pxs->ccr);
 
 	x = pxs->r->x;
-
-	if (!pxs->r->infiniteloop) {
-		do {
-			/* Error if xfer length is not aligned at burst size */
-			if (x->bytes % (BRST_SIZE(pxs->ccr)
-						* BRST_LEN(pxs->ccr)))
-				return -EINVAL;
-
-			pxs->x = x;
-			off += _setup_xfer(dry_run, &buf[off], pxs);
-
-			x = x->next;
-		} while (x);
-
-		/* DMASEV peripheral/event */
-		off += _emit_SEV(dry_run, &buf[off], thrd->ev);
-		/* DMAEND */
-		off += _emit_END(dry_run, &buf[off]);
-	} else {
+	do {
 		/* Error if xfer length is not aligned at burst size */
 		if (x->bytes % (BRST_SIZE(pxs->ccr) * BRST_LEN(pxs->ccr)))
 			return -EINVAL;
 
 		pxs->x = x;
-		off += _setup_xfer_infiniteloop
-				(dry_run, &buf[off], pxs, thrd->ev);
-	}
+		off += _setup_xfer(dry_run, &buf[off], pxs);
+
+		x = x->next;
+	} while (x);
+
+	/* DMASEV peripheral/event */
+	off += _emit_SEV(dry_run, &buf[off], thrd->ev);
+	/* DMAEND */
+	off += _emit_END(dry_run, &buf[off]);
+
 	return off;
 }
 
@@ -1284,8 +1200,8 @@ static inline u32 _prepare_ccr(const struct pl330_reqcfg *rqc)
 	ccr |= (rqc->brst_size << CC_SRCBRSTSIZE_SHFT);
 	ccr |= (rqc->brst_size << CC_DSTBRSTSIZE_SHFT);
 
-	ccr |= (rqc->dcctl << CC_SRCCCTRL_SHFT);
-	ccr |= (rqc->scctl << CC_DSTCCTRL_SHFT);
+	ccr |= (rqc->scctl << CC_SRCCCTRL_SHFT);
+	ccr |= (rqc->dcctl << CC_DSTCCTRL_SHFT);
 
 	ccr |= (rqc->swap << CC_SWAP_SHFT);
 
@@ -1354,17 +1270,17 @@ int pl330_submit_req(void *ch_id, struct pl330_req *r)
 		goto xfer_exit;
 	}
 
+	/* Prefer Secure Channel */
+	if (!_manager_ns(thrd))
+		r->cfg->nonsecure = 0;
+	else
+		r->cfg->nonsecure = 1;
+
 	/* Use last settings, if not provided */
-	if (r->cfg) {
-		/* Prefer Secure Channel */
-		if (!_manager_ns(thrd))
-			r->cfg->nonsecure = 0;
-		else
-			r->cfg->nonsecure = 1;
+	if (r->cfg)
 		ccr = _prepare_ccr(r->cfg);
-	} else {
+	else
 		ccr = readl(regs + CC(thrd->id));
-	}
 
 	/* If this req doesn't have valid xfer settings */
 	if (!_is_valid(ccr)) {
@@ -1455,8 +1371,8 @@ static void pl330_dotask(unsigned long data)
 
 			thrd->req[0].r = NULL;
 			thrd->req[1].r = NULL;
-			MARK_FREE(&thrd->req[0]);
-			MARK_FREE(&thrd->req[1]);
+			mark_free(thrd, 0);
+			mark_free(thrd, 1);
 
 			/* Clear the reset flag */
 			pl330->dmac_tbd.reset_chan &= ~(1 << i);
@@ -1532,25 +1448,17 @@ int pl330_update(const struct pl330_info *pi)
 
 			id = pl330->events[ev];
 
-			if (id == -1) /* Released? */
-				continue;
-
 			thrd = &pl330->channels[id];
 
-			active = _thrd_active(thrd);
-			if (!active) /* Aborted */
+			active = thrd->req_running;
+			if (active == -1) /* Aborted */
 				continue;
 
-			active -= 1;
-
 			rqdone = &thrd->req[active];
+			mark_free(thrd, active);
 
-			if (!rqdone->r->infiniteloop) {
-				MARK_FREE(rqdone);
-
-				/* Get going again ASAP */
-				_start(thrd);
-			}
+			/* Get going again ASAP */
+			_start(thrd);
 
 			/* For now, just make a list of callbacks to be done */
 			list_add_tail(&rqdone->rqd, &pl330->req_done);
@@ -1588,7 +1496,7 @@ int pl330_chan_ctrl(void *ch_id, enum pl330_chan_op op)
 	struct pl330_thread *thrd = ch_id;
 	struct pl330_dmac *pl330;
 	unsigned long flags;
-	int ret = 0, active;
+	int ret = 0, active = thrd->req_running;
 
 	if (!thrd || thrd->free || thrd->dmac->state == DYING)
 		return -EINVAL;
@@ -1604,28 +1512,24 @@ int pl330_chan_ctrl(void *ch_id, enum pl330_chan_op op)
 
 		thrd->req[0].r = NULL;
 		thrd->req[1].r = NULL;
-		MARK_FREE(&thrd->req[0]);
-		MARK_FREE(&thrd->req[1]);
+		mark_free(thrd, 0);
+		mark_free(thrd, 1);
 		break;
 
 	case PL330_OP_ABORT:
-		active = _thrd_active(thrd);
-
 		/* Make sure the channel is stopped */
 		_stop(thrd);
 
 		/* ABORT is only for the active req */
-		if (!active)
+		if (active == -1)
 			break;
 
-		active--;
-
 		thrd->req[active].r = NULL;
-		MARK_FREE(&thrd->req[active]);
+		mark_free(thrd, active);
 
 		/* Start the next */
 	case PL330_OP_START:
-		if (!_thrd_active(thrd) && !_start(thrd))
+		if ((active == -1) && !_start(thrd))
 			ret = -EIO;
 		break;
 
@@ -1666,14 +1570,13 @@ int pl330_chan_status(void *ch_id, struct pl330_chanstatus *pstatus)
 	else
 		pstatus->faulting = false;
 
-	active = _thrd_active(thrd);
+	active = thrd->req_running;
 
-	if (!active) {
+	if (active == -1) {
 		/* Indicate that the thread is not running */
 		pstatus->top_req = NULL;
 		pstatus->wait_req = NULL;
 	} else {
-		active--;
 		pstatus->top_req = thrd->req[active].r;
 		pstatus->wait_req = !IS_FREE(&thrd->req[1 - active])
 					? thrd->req[1 - active].r : NULL;
@@ -1702,6 +1605,11 @@ static inline int _alloc_event(struct pl330_thread *thrd)
 	return -1;
 }
 
+static bool _chan_ns(const struct pl330_info *pi, int i)
+{
+	return pi->pcfg.irq_ns & (1 << i);
+}
+
 /* Upon success, returns IdentityToken for the
  * allocated channel, NULL otherwise.
  */
@@ -1726,15 +1634,16 @@ void *pl330_request_channel(const struct pl330_info *pi)
 
 	for (i = 0; i < chans; i++) {
 		thrd = &pl330->channels[i];
-		if (thrd->free) {
+		if ((thrd->free) && (!_manager_ns(thrd) ||
+					_chan_ns(pi, i))) {
 			thrd->ev = _alloc_event(thrd);
 			if (thrd->ev >= 0) {
 				thrd->free = false;
 				thrd->lstenq = 1;
 				thrd->req[0].r = NULL;
-				MARK_FREE(&thrd->req[0]);
+				mark_free(thrd, 0);
 				thrd->req[1].r = NULL;
-				MARK_FREE(&thrd->req[1]);
+				mark_free(thrd, 1);
 				break;
 			}
 		}
@@ -1840,14 +1749,14 @@ static inline void _reset_thread(struct pl330_thread *thrd)
 	thrd->req[0].mc_bus = pl330->mcode_bus
 				+ (thrd->id * pi->mcbufsz);
 	thrd->req[0].r = NULL;
-	MARK_FREE(&thrd->req[0]);
+	mark_free(thrd, 0);
 
 	thrd->req[1].mc_cpu = thrd->req[0].mc_cpu
 				+ pi->mcbufsz / 2;
 	thrd->req[1].mc_bus = thrd->req[0].mc_bus
 				+ pi->mcbufsz / 2;
 	thrd->req[1].r = NULL;
-	MARK_FREE(&thrd->req[1]);
+	mark_free(thrd, 1);
 }
 
 static int dmac_alloc_threads(struct pl330_dmac *pl330)
