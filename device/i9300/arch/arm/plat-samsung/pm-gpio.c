@@ -14,7 +14,6 @@
 */
 
 #include <linux/kernel.h>
-#include <linux/sysdev.h>
 #include <linux/init.h>
 #include <linux/io.h>
 #include <device/linux/gpio.h>
