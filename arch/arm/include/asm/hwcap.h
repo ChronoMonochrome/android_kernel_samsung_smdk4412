@@ -26,13 +26,15 @@
 #define HWCAP_VFPD32	(1 << 19)  /* set if VFP has 32 regs (not 16) */
 #define HWCAP_IDIV	(HWCAP_IDIVA | HWCAP_IDIVT)
 
-#if defined(__KERNEL__) && !defined(__ASSEMBLY__)
+#if defined(__KERNEL__)
+#if !defined(__ASSEMBLY__)
 /*
  * This yields a mask that user programs can use to figure out what
  * instruction set this cpu supports.
  */
 #define ELF_HWCAP	(elf_hwcap)
 extern unsigned int elf_hwcap;
+#endif
 #endif
 
 #endif

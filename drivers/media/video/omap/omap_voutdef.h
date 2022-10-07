@@ -24,7 +24,7 @@
 #define MAC_VRFB_CTXS	4
 #define MAX_VOUT_DEV	2
 #define MAX_OVLS	3
-#define MAX_DISPLAYS	3
+#define MAX_DISPLAYS	10
 #define MAX_MANAGERS	3
 
 /* Enum for Rotation

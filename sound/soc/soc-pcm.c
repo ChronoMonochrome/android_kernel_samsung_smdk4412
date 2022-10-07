@@ -19,6 +19,7 @@
 #include <linux/kernel.h>
 #include <linux/init.h>
 #include <linux/delay.h>
+#include <linux/pm_runtime.h>
 #include <linux/slab.h>
 #include <linux/workqueue.h>
 #include <sound/core.h>
@@ -76,6 +77,10 @@ static int soc_pcm_open(struct snd_pcm_substream *substream)
 	struct snd_soc_dai_driver *cpu_dai_drv = cpu_dai->driver;
 	struct snd_soc_dai_driver *codec_dai_drv = codec_dai->driver;
 	int ret = 0;
+
+	pm_runtime_get_sync(cpu_dai->dev);
+	pm_runtime_get_sync(codec_dai->dev);
+	pm_runtime_get_sync(platform->dev);
 
 	mutex_lock_nested(&rtd->pcm_mutex, rtd->pcm_subclass);
 
@@ -233,6 +238,11 @@ platform_err:
 		cpu_dai->driver->ops->shutdown(substream, cpu_dai);
 out:
 	mutex_unlock(&rtd->pcm_mutex);
+
+	pm_runtime_put(platform->dev);
+	pm_runtime_put(codec_dai->dev);
+	pm_runtime_put(cpu_dai->dev);
+
 	return ret;
 }
 
@@ -319,7 +329,8 @@ static int soc_pcm_close(struct snd_pcm_substream *substream)
 	cpu_dai->runtime = NULL;
 
 	if (substream->stream == SNDRV_PCM_STREAM_PLAYBACK) {
-		if (unlikely(codec->ignore_pmdown_time)) {
+		if (codec->ignore_pmdown_time ||
+		    rtd->dai_link->ignore_pmdown_time) {
 			/* powered down playback stream now */
 			snd_soc_dapm_stream_event(rtd,
 				codec_dai->driver->playback.stream_name,
@@ -338,6 +349,11 @@ static int soc_pcm_close(struct snd_pcm_substream *substream)
 	}
 
 	mutex_unlock(&rtd->pcm_mutex);
+
+	pm_runtime_put(platform->dev);
+	pm_runtime_put(codec_dai->dev);
+	pm_runtime_put(cpu_dai->dev);
+
 	return 0;
 }
 
@@ -594,13 +610,13 @@ int soc_new_pcm(struct snd_soc_pcm_runtime *rtd, int num)
 	char new_name[64];
 	int ret = 0, playback = 0, capture = 0;
 
-	soc_pcm_ops->open       = soc_pcm_open;
-	soc_pcm_ops->close      = soc_pcm_close;
-	soc_pcm_ops->hw_params  = soc_pcm_hw_params;
-	soc_pcm_ops->hw_free    = soc_pcm_hw_free;
-	soc_pcm_ops->prepare    = soc_pcm_prepare;
-	soc_pcm_ops->trigger    = soc_pcm_trigger;
-	soc_pcm_ops->pointer    = soc_pcm_pointer;
+	soc_pcm_ops->open	= soc_pcm_open;
+	soc_pcm_ops->close	= soc_pcm_close;
+	soc_pcm_ops->hw_params	= soc_pcm_hw_params;
+	soc_pcm_ops->hw_free	= soc_pcm_hw_free;
+	soc_pcm_ops->prepare	= soc_pcm_prepare;
+	soc_pcm_ops->trigger	= soc_pcm_trigger;
+	soc_pcm_ops->pointer	= soc_pcm_pointer;
 
 	/* check client and interface hw capabilities */
 	snprintf(new_name, sizeof(new_name), "%s %s-%d",

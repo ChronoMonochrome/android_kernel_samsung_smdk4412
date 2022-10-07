@@ -489,7 +489,7 @@ static int mx1_camera_set_crop(struct soc_camera_device *icd,
 	return v4l2_subdev_call(sd, video, s_crop, a);
 }
 
-static int mx1_camera_set_bus_param(struct soc_camera_device *icd, __u32 pixfmt)
+static int mx1_camera_set_bus_param(struct soc_camera_device *icd)
 {
 	struct soc_camera_host *ici = to_soc_camera_host(icd->dev.parent);
 	struct mx1_camera_dev *pcdev = ici->priv;

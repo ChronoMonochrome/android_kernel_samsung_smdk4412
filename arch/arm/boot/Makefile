@@ -63,9 +63,11 @@ endif
 
 endif
 
+targets += $(dtb-y)
+
 # Rule to build device tree blobs
-$(obj)/%.dtb: $(src)/dts/%.dts
-	$(call cmd,dtc)
+$(obj)/%.dtb: $(src)/dts/%.dts FORCE
+	$(call if_changed_dep,dtc)
 
 $(obj)/dtbs: $(addprefix $(obj)/, $(dtb-y))
 

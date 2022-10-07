@@ -36,21 +36,20 @@
 #include <linux/irqdomain.h>
 struct device_node;
 
-extern void __iomem *gic_cpu_base_addr;
 extern struct irq_chip gic_arch_extn;
 
-void gic_init(unsigned int, int, void __iomem *, void __iomem *);
+void gic_init_bases(unsigned int, int, void __iomem *, void __iomem *,
+		    u32 offset);
 int gic_of_init(struct device_node *node, struct device_node *parent);
-void gic_secondary_init_base(unsigned int, void __iomem *, void __iomem *);
+void gic_secondary_init(unsigned int);
+void gic_handle_irq(struct pt_regs *regs);
 void gic_cascade_irq(unsigned int gic_nr, unsigned int irq);
 void gic_raise_softirq(const struct cpumask *mask, unsigned int irq);
 
-#define gic_secondary_init(n)	gic_secondary_init_base((n), NULL, NULL)
-
 struct gic_chip_data {
 	unsigned int irq_offset;
-	void __percpu __iomem **dist_base;
-	void __percpu __iomem **cpu_base;
+	void __iomem *dist_base;
+	void __iomem *cpu_base;
 #ifdef CONFIG_CPU_PM
 	u32 saved_spi_enable[DIV_ROUND_UP(1020, 32)];
 	u32 saved_spi_conf[DIV_ROUND_UP(1020, 16)];
@@ -63,6 +62,13 @@ struct gic_chip_data {
 #endif
 	unsigned int gic_irqs;
 };
+
+static inline void gic_init(unsigned int nr, int start,
+			    void __iomem *dist , void __iomem *cpu)
+{
+	gic_init_bases(nr, start, dist, cpu, 0);
+}
+
 #endif
 
 #endif
