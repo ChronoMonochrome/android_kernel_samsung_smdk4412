@@ -12,6 +12,7 @@
  *  MMC host class device management
  */
 
+#include <linux/module.h>
 #include <linux/device.h>
 #include <linux/err.h>
 #include <linux/idr.h>

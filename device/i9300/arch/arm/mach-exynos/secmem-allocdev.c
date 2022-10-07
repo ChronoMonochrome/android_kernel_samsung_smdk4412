@@ -9,6 +9,7 @@
  * published by the Free Software Foundation.
  */
 
+#include <linux/module.h>
 #include <linux/device.h>
 #include <linux/cma.h>
 #include <linux/uaccess.h>

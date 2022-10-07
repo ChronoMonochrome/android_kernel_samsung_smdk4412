@@ -9,6 +9,7 @@
  * your option) any later version.
  */
 
+#include <linux/module.h>
 #include <device/linux/mmc/host.h>
 #include <device/linux/mmc/card.h>
 #include <device/linux/mmc/sdio.h>

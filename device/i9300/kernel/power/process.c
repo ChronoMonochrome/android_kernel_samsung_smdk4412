@@ -8,6 +8,7 @@
 
 #undef DEBUG
 
+#include <linux/module.h>
 #include <linux/interrupt.h>
 #include <linux/oom.h>
 #include <linux/suspend.h>

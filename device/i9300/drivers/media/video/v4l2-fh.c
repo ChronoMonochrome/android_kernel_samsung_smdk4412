@@ -22,6 +22,7 @@
  * 02110-1301 USA
  */
 
+#include <linux/module.h>
 #include <linux/bitops.h>
 #include <linux/slab.h>
 #include <media/v4l2-dev.h>
