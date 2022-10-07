@@ -366,8 +366,7 @@ static void isp_stat_bufs_free(struct ispstat *stat)
 				dma_unmap_sg(isp->dev, buf->iovm->sgt->sgl,
 					     buf->iovm->sgt->nents,
 					     DMA_FROM_DEVICE);
-			omap_iommu_vfree(isp->domain, isp->iommu,
-							buf->iommu_addr);
+			iommu_vfree(isp->iommu, buf->iommu_addr);
 		} else {
 			if (!buf->virt_addr)
 				continue;
@@ -400,8 +399,8 @@ static int isp_stat_bufs_alloc_iommu(struct ispstat *stat, unsigned int size)
 		struct iovm_struct *iovm;
 
 		WARN_ON(buf->dma_addr);
-		buf->iommu_addr = omap_iommu_vmalloc(isp->domain, isp->iommu, 0,
-							size, IOMMU_FLAG);
+		buf->iommu_addr = iommu_vmalloc(isp->iommu, 0, size,
+						IOMMU_FLAG);
 		if (IS_ERR((void *)buf->iommu_addr)) {
 			dev_err(stat->isp->dev,
 				 "%s: Can't acquire memory for "
@@ -410,7 +409,7 @@ static int isp_stat_bufs_alloc_iommu(struct ispstat *stat, unsigned int size)
 			return -ENOMEM;
 		}
 
-		iovm = omap_find_iovm_area(isp->iommu, buf->iommu_addr);
+		iovm = find_iovm_area(isp->iommu, buf->iommu_addr);
 		if (!iovm ||
 		    !dma_map_sg(isp->dev, iovm->sgt->sgl, iovm->sgt->nents,
 				DMA_FROM_DEVICE)) {
@@ -419,7 +418,7 @@ static int isp_stat_bufs_alloc_iommu(struct ispstat *stat, unsigned int size)
 		}
 		buf->iovm = iovm;
 
-		buf->virt_addr = omap_da_to_va(stat->isp->iommu,
+		buf->virt_addr = da_to_va(stat->isp->iommu,
 					  (u32)buf->iommu_addr);
 		buf->empty = 1;
 		dev_dbg(stat->isp->dev, "%s: buffer[%d] allocated."
