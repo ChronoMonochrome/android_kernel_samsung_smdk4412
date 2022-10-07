@@ -351,7 +351,7 @@ additional_build_rules = {
             "net/phonet/built-in.o",
         ],
     }],
-    "sound/soc/samsung/built-in.o" :
+    "sound/soc/built-in.o" :
     [{
         "injected_objects":
         [
@@ -359,9 +359,7 @@ additional_build_rules = {
         ],
         "removed_objects":
         [
-            "sound/soc/samsung/snd-soc-dma.o",
-            "sound/soc/samsung/snd-soc-i2s.o",
-            "sound/soc/samsung/snd-soc-idma.o",
+            "sound/soc/samsung/built-in.o",
         ]
     }],
 }

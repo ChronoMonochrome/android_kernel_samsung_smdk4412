@@ -14,6 +14,7 @@
  *  option) any later version.
  */
 
+#include <linux/module.h>
 #include <linux/slab.h>
 #include <linux/dma-mapping.h>
 
