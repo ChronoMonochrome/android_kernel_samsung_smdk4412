@@ -15,6 +15,7 @@
 
 #include <asm/mach/arch.h>
 #include <asm/mach/map.h>
+#include <asm/mmu-legacy.h>
 
 #include <mach/map.h>
 #include <mach/regs-clock.h>
@@ -159,9 +160,9 @@ void __init s5p_init_io(struct map_desc *mach_desc,
 			int size, void __iomem *cpuid_addr)
 {
 	/* initialize the io descriptors we need for initialization */
-	iotable_init(s5p_iodesc, ARRAY_SIZE(s5p_iodesc));
+	iotable_init_legacy(s5p_iodesc, ARRAY_SIZE(s5p_iodesc));
 	if (mach_desc)
-		iotable_init(mach_desc, size);
+		iotable_init_legacy(mach_desc, size);
 
 	/* detect cpu id and rev. */
 	s5p_init_cpu(cpuid_addr);

@@ -10,6 +10,7 @@
 #include <plat/map-base.h>
 #include <plat/map-s5p.h>
 #include <asm/mach/map.h>
+#include <asm/mmu-legacy.h>
 
 /*
  * Example usage: sec_log=256K@0x45000000
@@ -73,7 +74,7 @@ static int __init sec_log_setup(char *str)
 #ifdef CONFIG_SEC_LOG_NONCACHED
 	log_buf_iodesc[0].pfn = __phys_to_pfn((unsigned long)base - 0x100000);
 	log_buf_iodesc[0].length = (unsigned long)(size + 0x100000);
-	iotable_init(log_buf_iodesc, ARRAY_SIZE(log_buf_iodesc));
+	iotable_init_legacy(log_buf_iodesc, ARRAY_SIZE(log_buf_iodesc));
 	sec_log_mag = (S3C_VA_KLOG_BUF + 0x100000) - 8;
 	sec_log_ptr = (S3C_VA_KLOG_BUF + 0x100000) - 4;
 	sec_log_buf = S3C_VA_KLOG_BUF + 0x100000;
