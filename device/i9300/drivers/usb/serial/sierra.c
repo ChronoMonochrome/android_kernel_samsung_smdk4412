@@ -46,7 +46,7 @@
    allocations > PAGE_SIZE and the number of packets in a page
    is an integer 512 is the largest possible packet on EHCI */
 
-static int debug;
+static bool debug;
 static int nmea;
 
 /* Used in interface blacklisting */

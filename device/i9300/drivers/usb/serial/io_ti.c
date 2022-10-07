@@ -217,7 +217,7 @@ static unsigned char OperationalMajorVersion;
 static unsigned char OperationalMinorVersion;
 static unsigned short OperationalBuildNumber;
 
-static int debug;
+static bool debug;
 
 static int closing_wait = EDGE_CLOSING_WAIT;
 static int ignore_cpu_rev;

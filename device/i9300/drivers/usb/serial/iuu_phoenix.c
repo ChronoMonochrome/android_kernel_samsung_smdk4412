@@ -36,7 +36,7 @@
 #ifdef CONFIG_USB_SERIAL_DEBUG
 static int debug = 1;
 #else
-static int debug;
+static bool debug;
 #endif
 
 /*

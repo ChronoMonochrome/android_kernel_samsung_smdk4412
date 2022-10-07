@@ -24,7 +24,7 @@
 #include <linux/kfifo.h>
 #include <linux/serial.h>
 
-static int debug;
+static bool debug;
 
 #ifdef CONFIG_USB_SERIAL_GENERIC
 
