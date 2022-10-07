@@ -25,6 +25,7 @@
 #include <asm/hardware/gic.h>
 #include <asm/smp_scu.h>
 #include <asm/smp_plat.h>
+#include <asm/unified.h>
 
 #include <mach/hardware.h>
 #include <mach/regs-clock.h>
@@ -92,7 +93,7 @@ void __cpuinit platform_secondary_init(unsigned int cpu)
 	 * core (e.g. timer irq), then they will not have been enabled
 	 * for us: do so
 	 */
-	gic_secondary_init_base(0, dist_base, cpu_base);
+	gic_secondary_init(0);
 
 	/*
 	 * let the primary processor know we're out of the
@@ -181,7 +182,7 @@ int __cpuinit boot_secondary(unsigned int cpu, struct task_struct *idle)
 	while (time_before(jiffies, timeout)) {
 		smp_rmb();
 
-		__raw_writel(virt_to_phys(exynos_secondary_startup),
+		__raw_writel(BSYM(virt_to_phys(exynos_secondary_startup)),
 			cpu_boot_info[cpu].boot_base);
 
 #ifdef CONFIG_ARM_TRUSTZONE
