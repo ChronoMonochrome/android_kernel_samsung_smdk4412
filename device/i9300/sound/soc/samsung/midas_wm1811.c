@@ -1689,7 +1689,7 @@ static int midas_card_suspend_pre(struct snd_soc_card *card)
 	struct wm8994_priv *wm8994 = snd_soc_codec_get_drvdata(codec);
 
 #ifdef CONFIG_SEC_DEV_JACK
-	snd_soc_dapm_disable_pin(&codec->dapm, "AIF1CLK");
+	//snd_soc_dapm_disable_pin(&codec->dapm, "AIF1CLK");
 #endif
 
 	return 0;
