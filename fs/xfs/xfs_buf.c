@@ -32,7 +32,7 @@
 #include <linux/kthread.h>
 #include <linux/migrate.h>
 #include <linux/backing-dev.h>
-#include <linux/freezer.h>
+#include <device/linux/freezer.h>
 
 #include "xfs_sb.h"
 #include "xfs_inum.h"

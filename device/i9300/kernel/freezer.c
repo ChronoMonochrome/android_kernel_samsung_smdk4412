@@ -7,6 +7,7 @@
 #include <linux/interrupt.h>
 #include <linux/suspend.h>
 #include <linux/export.h>
+#include <device/linux/sched.h>
 #include <linux/syscalls.h>
 #include <device/linux/freezer.h>
 

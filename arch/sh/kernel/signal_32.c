@@ -22,7 +22,7 @@
 #include <linux/elf.h>
 #include <linux/personality.h>
 #include <linux/binfmts.h>
-#include <linux/freezer.h>
+#include <device/linux/freezer.h>
 #include <linux/io.h>
 #include <linux/tracehook.h>
 #include <asm/ucontext.h>

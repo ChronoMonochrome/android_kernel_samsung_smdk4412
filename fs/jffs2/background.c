@@ -17,7 +17,7 @@
 #include <linux/mtd/mtd.h>
 #include <linux/completion.h>
 #include <linux/sched.h>
-#include <linux/freezer.h>
+#include <device/linux/freezer.h>
 #include <linux/kthread.h>
 #include "nodelist.h"
 

@@ -5,7 +5,7 @@
 #include <linux/romfs_fs.h>
 #include <linux/initrd.h>
 #include <linux/sched.h>
-#include <linux/freezer.h>
+#include <device/linux/freezer.h>
 
 #include "do_mounts.h"
 

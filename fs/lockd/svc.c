@@ -24,7 +24,7 @@
 #include <linux/smp.h>
 #include <linux/mutex.h>
 #include <linux/kthread.h>
-#include <linux/freezer.h>
+#include <device/linux/freezer.h>
 
 #include <linux/sunrpc/types.h>
 #include <linux/sunrpc/stats.h>
