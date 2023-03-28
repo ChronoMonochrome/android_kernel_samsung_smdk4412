@@ -10,7 +10,7 @@
 #include <linux/tty.h>
 #include <linux/personality.h>
 #include <linux/binfmts.h>
-#include <linux/freezer.h>
+#include <device/linux/freezer.h>
 #include <linux/uaccess.h>
 #include <linux/tracehook.h>
 

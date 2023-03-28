@@ -21,7 +21,7 @@
 #include <linux/file.h>
 #include <linux/slab.h>
 
-#include <linux/freezer.h>
+#include <device/linux/freezer.h>
 
 #include <media/videobuf-core.h>
 #include <media/videobuf-dvb.h>

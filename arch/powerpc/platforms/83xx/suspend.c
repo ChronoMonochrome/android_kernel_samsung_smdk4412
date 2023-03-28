@@ -17,7 +17,7 @@
 #include <linux/interrupt.h>
 #include <linux/wait.h>
 #include <linux/kthread.h>
-#include <linux/freezer.h>
+#include <device/linux/freezer.h>
 #include <linux/suspend.h>
 #include <linux/fsl_devices.h>
 #include <linux/of_platform.h>

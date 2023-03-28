@@ -39,7 +39,7 @@
 #include <linux/export.h>
 #include <linux/moduleloader.h>
 #include <linux/kallsyms.h>
-#include <linux/freezer.h>
+#include <device/linux/freezer.h>
 #include <linux/seq_file.h>
 #include <linux/debugfs.h>
 #include <linux/sysctl.h>

@@ -53,7 +53,7 @@
 #include <linux/completion.h>
 #include <linux/mutex.h>
 #include <linux/kthread.h>
-#include <linux/freezer.h>
+#include <device/linux/freezer.h>
 
 #include <mach/hardware.h>
 #include <asm/io.h>

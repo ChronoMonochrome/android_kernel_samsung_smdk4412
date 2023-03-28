@@ -52,7 +52,7 @@
 #include <linux/mutex.h>
 #include <linux/crc32.h>
 #include <linux/kthread.h>
-#include <linux/freezer.h>
+#include <device/linux/freezer.h>
 
 #include <media/tuner.h>
 #include <media/tveeprom.h>

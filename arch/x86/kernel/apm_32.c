@@ -221,7 +221,7 @@
 #include <linux/capability.h>
 #include <linux/device.h>
 #include <linux/kernel.h>
-#include <linux/freezer.h>
+#include <device/linux/freezer.h>
 #include <linux/smp.h>
 #include <linux/dmi.h>
 #include <linux/suspend.h>

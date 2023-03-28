@@ -34,7 +34,7 @@
 #include <linux/mempool.h>
 #include <linux/delay.h>
 #include <linux/kthread.h>
-#include <linux/freezer.h>
+#include <device/linux/freezer.h>
 #include <linux/namei.h>
 #include <net/ipv6.h>
 #include "cifsfs.h"

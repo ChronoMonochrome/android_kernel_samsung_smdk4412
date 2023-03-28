@@ -26,7 +26,7 @@
 #include <linux/console.h>
 #include <linux/ioctl.h>
 #include <linux/kthread.h>
-#include <linux/freezer.h>
+#include <device/linux/freezer.h>
 #include <linux/uaccess.h>
 #include <linux/fb.h>
 #include <linux/init.h>

@@ -20,7 +20,7 @@
 #include <linux/slab.h>
 #include <linux/list.h>
 #include <linux/spinlock.h>
-#include <linux/freezer.h>
+#include <device/linux/freezer.h>
 #include "async-thread.h"
 
 #define WORK_QUEUED_BIT 0

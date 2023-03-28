@@ -10,7 +10,7 @@
 #include <linux/delay.h>
 #include <linux/dma-mapping.h>
 #include <linux/dmaengine.h>
-#include <linux/freezer.h>
+#include <device/linux/freezer.h>
 #include <linux/init.h>
 #include <linux/kthread.h>
 #include <linux/module.h>

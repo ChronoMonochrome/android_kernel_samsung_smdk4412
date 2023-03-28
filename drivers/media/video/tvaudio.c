@@ -30,7 +30,7 @@
 #include <linux/i2c.h>
 #include <linux/init.h>
 #include <linux/kthread.h>
-#include <linux/freezer.h>
+#include <device/linux/freezer.h>
 
 #include <media/tvaudio.h>
 #include <media/v4l2-device.h>

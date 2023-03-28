@@ -20,7 +20,7 @@
 #include <linux/slab.h>
 #include <linux/delay.h>
 
-#include <linux/freezer.h>
+#include <device/linux/freezer.h>
 #include <linux/wait.h>
 #include <linux/msm_mdp.h>
 #include <linux/io.h>

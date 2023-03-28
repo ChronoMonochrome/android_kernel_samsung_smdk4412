@@ -7,7 +7,7 @@
 #include <linux/reboot.h>
 #include <linux/sysrq.h>
 #include <linux/stop_machine.h>
-#include <linux/freezer.h>
+#include <device/linux/freezer.h>
 #include <linux/syscore_ops.h>
 #include <linux/export.h>
 

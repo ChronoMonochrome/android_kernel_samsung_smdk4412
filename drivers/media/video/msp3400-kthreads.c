@@ -23,7 +23,7 @@
 #include <linux/kernel.h>
 #include <linux/module.h>
 #include <linux/i2c.h>
-#include <linux/freezer.h>
+#include <device/linux/freezer.h>
 #include <linux/videodev2.h>
 #include <media/v4l2-common.h>
 #include <media/msp3400.h>

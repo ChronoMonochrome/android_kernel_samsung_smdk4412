@@ -26,7 +26,7 @@
 #include <linux/kernel.h>
 #include <linux/kthread.h>
 #include <linux/delay.h>
-#include <linux/freezer.h>
+#include <device/linux/freezer.h>
 #include <asm/div64.h>
 
 #include "saa7134-reg.h"

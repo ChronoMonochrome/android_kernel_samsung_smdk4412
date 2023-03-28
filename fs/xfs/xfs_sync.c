@@ -38,7 +38,7 @@
 #include "xfs_fsops.h"
 
 #include <linux/kthread.h>
-#include <linux/freezer.h>
+#include <device/linux/freezer.h>
 
 struct workqueue_struct	*xfs_syncd_wq;	/* sync workqueue */
 

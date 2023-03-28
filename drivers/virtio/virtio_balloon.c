@@ -23,7 +23,7 @@
 #include <linux/virtio_balloon.h>
 #include <linux/swap.h>
 #include <linux/kthread.h>
-#include <linux/freezer.h>
+#include <device/linux/freezer.h>
 #include <linux/delay.h>
 #include <linux/slab.h>
 #include <linux/module.h>

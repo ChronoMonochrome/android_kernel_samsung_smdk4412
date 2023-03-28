@@ -9,7 +9,7 @@
 
 #include <linux/kernel.h>
 #include <linux/module.h>
-#include <linux/freezer.h>
+#include <device/linux/freezer.h>
 #include <linux/jiffies.h>
 #include <linux/interrupt.h>
 #include <linux/pci.h>

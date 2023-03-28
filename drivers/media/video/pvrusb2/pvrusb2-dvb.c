@@ -19,7 +19,7 @@
  */
 
 #include <linux/kthread.h>
-#include <linux/freezer.h>
+#include <device/linux/freezer.h>
 #include <linux/slab.h>
 #include <linux/mm.h>
 #include "dvbdev.h"

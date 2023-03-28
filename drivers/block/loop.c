@@ -66,7 +66,7 @@
 #include <linux/loop.h>
 #include <linux/compat.h>
 #include <linux/suspend.h>
-#include <linux/freezer.h>
+#include <device/linux/freezer.h>
 #include <linux/mutex.h>
 #include <linux/writeback.h>
 #include <linux/completion.h>

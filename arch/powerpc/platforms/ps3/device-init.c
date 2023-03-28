@@ -19,7 +19,7 @@
  */
 
 #include <linux/delay.h>
-#include <linux/freezer.h>
+#include <device/linux/freezer.h>
 #include <linux/kernel.h>
 #include <linux/kthread.h>
 #include <linux/init.h>
