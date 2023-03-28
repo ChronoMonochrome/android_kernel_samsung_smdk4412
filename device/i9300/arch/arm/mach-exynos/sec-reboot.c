@@ -117,6 +117,7 @@ static void sec_reboot(char str, const char *cmd)
 		writel(REBOOT_MODE_PREFIX | REBOOT_MODE_NONE, S5P_INFORM3);
 	} else {
 		unsigned long value;
+#if 0
 		if (!strcmp(cmd, "fota"))
 			writel(REBOOT_MODE_PREFIX | REBOOT_MODE_FOTA,
 			       S5P_INFORM3);
@@ -124,8 +125,10 @@ static void sec_reboot(char str, const char *cmd)
 			writel(REBOOT_MODE_PREFIX | REBOOT_MODE_FOTA_BL,
 			       S5P_INFORM3);
 		else if (!strcmp(cmd, "recovery"))
+#endif
 			writel(REBOOT_MODE_PREFIX | REBOOT_MODE_RECOVERY,
 			       S5P_INFORM3);
+#if 0
 		else if (!strcmp(cmd, "bootloader"))
 			writel(REBOOT_MODE_PREFIX | REBOOT_MODE_DOWNLOAD,
 			       S5P_INFORM3);
@@ -152,6 +155,7 @@ static void sec_reboot(char str, const char *cmd)
 		else
 			writel(REBOOT_MODE_PREFIX | REBOOT_MODE_NONE,
 			       S5P_INFORM3);
+#endif
 	}
 
 	flush_cache_all();
