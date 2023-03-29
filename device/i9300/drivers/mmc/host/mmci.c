@@ -21,14 +21,14 @@
 #include <linux/log2.h>
 #include <device/linux/mmc/host.h>
 #include <device/linux/mmc/card.h>
-#include <linux/amba/bus.h>
+#include <device/linux/amba/bus.h>
 #include <linux/clk.h>
 #include <linux/scatterlist.h>
 #include <device/linux/gpio.h>
 #include <device/linux/regulator/consumer.h>
 #include <linux/dmaengine.h>
 #include <linux/dma-mapping.h>
-#include <linux/amba/mmci.h>
+#include <device/linux/amba/mmci.h>
 
 #include <asm/div64.h>
 #include <asm/io.h>

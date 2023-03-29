@@ -327,6 +327,7 @@ additional_build_rules = {
     [{
         "injected_objects":
         [
+            "device/i9300/drivers/amba/built-in.o",
             "device/i9300/drivers/leds/built-in.o",
             "device/i9300/drivers/motor/built-in.o",
             "device/i9300/drivers/samsung/built-in.o",
@@ -336,6 +337,7 @@ additional_build_rules = {
         ],
         "removed_objects":
         [
+            "drivers/amba/built-in.o",
             "drivers/thermal/built-in.o"
         ],
     }],
