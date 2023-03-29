@@ -50,7 +50,7 @@ struct restart_block {
 extern long do_no_restart_syscall(struct restart_block *parm);
 
 #include <linux/bitops.h>
-#include <asm/thread_info.h>
+#include <device/asm/thread_info.h>
 
 #ifdef __KERNEL__
 
