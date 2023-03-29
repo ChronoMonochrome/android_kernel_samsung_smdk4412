@@ -19,8 +19,8 @@
 #include <linux/workqueue.h>
 #include <linux/gpio.h>
 #include <linux/device.h>
-#include <linux/amba/bus.h>
-#include <linux/amba/pl061.h>
+#include <device/linux/amba/bus.h>
+#include <device/linux/amba/pl061.h>
 #include <linux/slab.h>
 #include <linux/pm.h>
 #include <asm/mach/irq.h>

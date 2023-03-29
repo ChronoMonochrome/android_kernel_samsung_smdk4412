@@ -13,7 +13,7 @@
 #include <linux/kernel.h>
 #include <linux/init.h>
 #include <linux/platform_device.h>
-#include <linux/amba/bus.h>
+#include <device/linux/amba/bus.h>
 #include <linux/interrupt.h>
 #include <linux/gpio.h>
 #include <linux/mtd/mtd.h>

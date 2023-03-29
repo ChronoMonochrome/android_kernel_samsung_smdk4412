@@ -17,8 +17,8 @@
 #include <linux/mm.h>
 #include <linux/termios.h>
 #include <linux/dmaengine.h>
-#include <linux/amba/bus.h>
-#include <linux/amba/serial.h>
+#include <device/linux/amba/bus.h>
+#include <device/linux/amba/serial.h>
 #include <linux/platform_device.h>
 #include <linux/gpio.h>
 #include <linux/clk.h>

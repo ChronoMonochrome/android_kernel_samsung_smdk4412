@@ -11,10 +11,10 @@
  * Author: Jonas Aaberg <jonas.aberg@stericsson.com>
  */
 #include <linux/device.h>
-#include <linux/amba/bus.h>
+#include <device/linux/amba/bus.h>
 #include <linux/mmc/host.h>
 #include <linux/dmaengine.h>
-#include <linux/amba/mmci.h>
+#include <device/linux/amba/mmci.h>
 #include <linux/slab.h>
 #include <mach/coh901318.h>
 #include <mach/dma_channels.h>

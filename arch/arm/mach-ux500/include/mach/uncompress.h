@@ -21,7 +21,7 @@
 #include <asm/setup.h>
 #include <asm/mach-types.h>
 #include <linux/io.h>
-#include <linux/amba/serial.h>
+#include <device/linux/amba/serial.h>
 #include <mach/hardware.h>
 
 u32 ux500_uart_base;

@@ -17,7 +17,7 @@
 #include <linux/pm.h>
 #include <linux/pm_runtime.h>
 #include <linux/err.h>
-#include <linux/amba/bus.h>
+#include <device/linux/amba/bus.h>
 
 #include <plat/ste_dma40.h>
 

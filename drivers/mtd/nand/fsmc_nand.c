@@ -31,7 +31,7 @@
 #include <linux/io.h>
 #include <linux/slab.h>
 #include <linux/mtd/fsmc.h>
-#include <linux/amba/bus.h>
+#include <device/linux/amba/bus.h>
 #include <mtd/mtd-abi.h>
 
 static struct nand_ecclayout fsmc_ecc1_layout = {

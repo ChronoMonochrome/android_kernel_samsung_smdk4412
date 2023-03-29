@@ -6,7 +6,7 @@
  */
 
 #include <linux/platform_device.h>
-#include <linux/amba/bus.h>
+#include <device/linux/amba/bus.h>
 #include <linux/io.h>
 #include <linux/irq.h>
 

@@ -9,7 +9,7 @@
 #include <linux/kernel.h>
 #include <linux/platform_device.h>
 #include <linux/init.h>
-#include <linux/amba/bus.h>
+#include <device/linux/amba/bus.h>
 
 extern struct device mxs_apbh_bus;
 

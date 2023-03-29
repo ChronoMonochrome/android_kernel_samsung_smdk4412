@@ -11,7 +11,7 @@
 #include <linux/irq.h>
 #include <linux/slab.h>
 #include <linux/platform_device.h>
-#include <linux/amba/bus.h>
+#include <device/linux/amba/bus.h>
 
 #include <plat/gpio-nomadik.h>
 

@@ -13,7 +13,7 @@
 
 #include <linux/device.h>
 #include <linux/resource.h>
-#include <linux/amba/bus.h>
+#include <device/linux/amba/bus.h>
 #include <linux/bitops.h>
 #include <linux/clk.h>
 #include <linux/fs.h>

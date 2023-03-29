@@ -19,8 +19,8 @@
 #include <linux/delay.h>
 #include <linux/slab.h>
 #include <linux/err.h>
-#include <linux/amba/bus.h>
-#include <linux/amba/kmi.h>
+#include <device/linux/amba/bus.h>
+#include <device/linux/amba/kmi.h>
 #include <linux/clk.h>
 
 #include <asm/io.h>

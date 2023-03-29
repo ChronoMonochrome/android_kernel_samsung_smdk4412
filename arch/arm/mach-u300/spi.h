@@ -8,7 +8,7 @@
  */
 #ifndef SPI_H
 #define SPI_H
-#include <linux/amba/bus.h>
+#include <device/linux/amba/bus.h>
 
 #ifdef CONFIG_SPI_PL022
 void __init u300_spi_init(struct amba_device *adev);

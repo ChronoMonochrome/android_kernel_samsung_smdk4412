@@ -23,12 +23,12 @@
 #include <linux/dma-mapping.h>
 #include <linux/device.h>
 #include <linux/interrupt.h>
-#include <linux/amba/bus.h>
-#include <linux/amba/clcd.h>
+#include <device/linux/amba/bus.h>
+#include <device/linux/amba/clcd.h>
 #include <linux/io.h>
 #include <linux/smsc911x.h>
 #include <linux/ata_platform.h>
-#include <linux/amba/mmci.h>
+#include <device/linux/amba/mmci.h>
 #include <linux/gfp.h>
 #include <linux/clkdev.h>
 #include <linux/mtd/physmap.h>

@@ -27,8 +27,8 @@
 #include <linux/gpio.h>
 #include <linux/leds.h>
 #include <linux/termios.h>
-#include <linux/amba/bus.h>
-#include <linux/amba/serial.h>
+#include <device/linux/amba/bus.h>
+#include <device/linux/amba/serial.h>
 #include <linux/mtd/physmap.h>
 #include <linux/i2c.h>
 #include <linux/i2c-gpio.h>

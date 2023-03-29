@@ -22,7 +22,7 @@
 #ifndef __ASM_ARCH_REALVIEW_H
 #define __ASM_ARCH_REALVIEW_H
 
-#include <linux/amba/bus.h>
+#include <device/linux/amba/bus.h>
 #include <linux/io.h>
 
 #include <asm/setup.h>

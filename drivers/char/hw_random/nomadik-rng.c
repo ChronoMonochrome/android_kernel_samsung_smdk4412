@@ -12,7 +12,7 @@
 #include <linux/module.h>
 #include <linux/init.h>
 #include <linux/device.h>
-#include <linux/amba/bus.h>
+#include <device/linux/amba/bus.h>
 #include <linux/hw_random.h>
 #include <linux/io.h>
 #include <linux/clk.h>

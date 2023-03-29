@@ -22,8 +22,8 @@
 #include <linux/interrupt.h>
 #include <linux/mtd/plat-ram.h>
 #include <linux/platform_device.h>
-#include <linux/amba/bus.h>
-#include <linux/amba/clcd.h>
+#include <device/linux/amba/bus.h>
+#include <device/linux/amba/clcd.h>
 
 #include <mach/hardware.h>
 #include <asm/mach-types.h>

@@ -15,8 +15,8 @@
 #include <linux/module.h>
 #include <linux/dmaengine.h>
 #include <linux/interrupt.h>
-#include <linux/amba/bus.h>
-#include <linux/amba/pl330.h>
+#include <device/linux/amba/bus.h>
+#include <device/linux/amba/pl330.h>
 #include <linux/pm_runtime.h>
 #include <linux/scatterlist.h>
 #include <linux/of.h>

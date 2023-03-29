@@ -10,8 +10,8 @@
 #include <linux/interrupt.h>
 #include <linux/io.h>
 #include <linux/gpio.h>
-#include <linux/amba/bus.h>
-#include <linux/amba/pl022.h>
+#include <device/linux/amba/bus.h>
+#include <device/linux/amba/pl022.h>
 
 #include <plat/ste_dma40.h>
 

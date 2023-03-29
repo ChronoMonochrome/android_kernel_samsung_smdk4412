@@ -9,7 +9,7 @@
 #include <linux/platform_device.h>
 #include <linux/interrupt.h>
 #include <linux/io.h>
-#include <linux/amba/bus.h>
+#include <device/linux/amba/bus.h>
 
 #include <mach/hardware.h>
 #include <mach/setup.h>

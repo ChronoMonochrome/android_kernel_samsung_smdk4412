@@ -1,7 +1,7 @@
 #include <linux/device.h>
 #include <linux/dma-mapping.h>
-#include <linux/amba/bus.h>
-#include <linux/amba/clcd.h>
+#include <device/linux/amba/bus.h>
+#include <device/linux/amba/clcd.h>
 #include <plat/clcd.h>
 
 static struct clcd_panel vga = {

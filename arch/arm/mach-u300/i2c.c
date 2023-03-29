@@ -11,7 +11,7 @@
 #include <linux/i2c.h>
 #include <linux/mfd/abx500.h>
 #include <linux/regulator/machine.h>
-#include <linux/amba/bus.h>
+#include <device/linux/amba/bus.h>
 #include <mach/irqs.h>
 
 /*

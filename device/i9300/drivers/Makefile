@@ -1,3 +1,4 @@
+obj-y                         += amba/
 obj-y                         += base/
 obj-$(CONFIG_POWER_SUPPLY)    += battery/
 obj-y                         += char/

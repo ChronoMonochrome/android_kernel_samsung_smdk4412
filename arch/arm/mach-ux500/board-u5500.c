@@ -7,7 +7,7 @@
 
 #include <linux/init.h>
 #include <linux/platform_device.h>
-#include <linux/amba/bus.h>
+#include <device/linux/amba/bus.h>
 #include <linux/irq.h>
 #include <linux/i2c.h>
 #include <linux/mfd/abx500/ab5500.h>

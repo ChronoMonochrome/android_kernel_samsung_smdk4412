@@ -21,8 +21,8 @@
 #include <linux/init.h>
 #include <linux/ioport.h>
 #include <linux/list.h>
-#include <linux/amba/bus.h>
-#include <linux/amba/clcd.h>
+#include <device/linux/amba/bus.h>
+#include <device/linux/amba/clcd.h>
 #include <linux/clk.h>
 #include <linux/hardirq.h>
 

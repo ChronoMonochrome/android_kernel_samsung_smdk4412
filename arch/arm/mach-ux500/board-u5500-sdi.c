@@ -5,7 +5,7 @@
  * License terms: GNU General Public License (GPL) version 2
  */
 
-#include <linux/amba/mmci.h>
+#include <device/linux/amba/mmci.h>
 #include <linux/mmc/host.h>
 
 #include <plat/pincfg.h>

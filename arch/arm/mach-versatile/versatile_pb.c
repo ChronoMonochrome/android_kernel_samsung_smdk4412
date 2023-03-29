@@ -21,9 +21,9 @@
 
 #include <linux/init.h>
 #include <linux/device.h>
-#include <linux/amba/bus.h>
-#include <linux/amba/pl061.h>
-#include <linux/amba/mmci.h>
+#include <device/linux/amba/bus.h>
+#include <device/linux/amba/pl061.h>
+#include <device/linux/amba/mmci.h>
 #include <linux/io.h>
 
 #include <mach/hardware.h>

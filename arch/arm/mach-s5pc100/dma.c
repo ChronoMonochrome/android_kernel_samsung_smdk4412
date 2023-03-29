@@ -22,8 +22,8 @@
  */
 
 #include <linux/dma-mapping.h>
-#include <linux/amba/bus.h>
-#include <linux/amba/pl330.h>
+#include <device/linux/amba/bus.h>
+#include <device/linux/amba/pl330.h>
 
 #include <asm/irq.h>
 #include <plat/devs.h>
