@@ -252,22 +252,3 @@ void pm_generic_complete(struct device *dev)
 	pm_runtime_idle(dev);
 }
 #endif /* CONFIG_PM_SLEEP */
-
-struct dev_pm_ops generic_subsys_pm_ops = {
-#ifdef CONFIG_PM_SLEEP
-	.prepare = pm_generic_prepare,
-	.suspend = pm_generic_suspend,
-	.resume = pm_generic_resume,
-	.freeze = pm_generic_freeze,
-	.thaw = pm_generic_thaw,
-	.poweroff = pm_generic_poweroff,
-	.restore = pm_generic_restore,
-	.complete = pm_generic_complete,
-#endif
-#ifdef CONFIG_PM_RUNTIME
-	.runtime_suspend = pm_generic_runtime_suspend,
-	.runtime_resume = pm_generic_runtime_resume,
-	.runtime_idle = pm_generic_runtime_idle,
-#endif
-};
-EXPORT_SYMBOL_GPL(generic_subsys_pm_ops);
