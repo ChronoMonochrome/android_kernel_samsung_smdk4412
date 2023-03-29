@@ -23,7 +23,7 @@ CFLAGS_REMOVE_irq_work.o = -pg
 endif
 
 obj-y += sched/
-obj-y += power/
+#obj-y += power/
 
 #obj-$(CONFIG_FREEZER) += freezer.o
 obj-$(CONFIG_PROFILING) += profile.o
