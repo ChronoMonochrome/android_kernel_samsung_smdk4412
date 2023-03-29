@@ -98,6 +98,7 @@ additional_build_rules = {
             "drivers/base/s5p-iommu.o",
             "drivers/base/sync.o",
             "drivers/base/sw_sync.o",
+            "drivers/base/platform.o",
             "drivers/base/power/built-in.o",
         ],
     }],
