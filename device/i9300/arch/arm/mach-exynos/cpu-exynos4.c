@@ -319,7 +319,7 @@ void __init exynos4_init_irq(void)
 
 	gic_bank_offset = soc_is_exynos4412() ? 0x4000 : 0x8000;
 
-	gic_init_bases(0, IRQ_MCT_LOCALTIMER, S5P_VA_GIC_DIST, S5P_VA_GIC_CPU, gic_bank_offset);
+	gic_init_bases(0, IRQ_MCT_LOCALTIMER, S5P_VA_GIC_DIST, S5P_VA_GIC_CPU, gic_bank_offset, NULL);
 	gic_arch_extn.irq_set_wake = s3c_irq_wake;
 
 	for (irq = 0; irq < COMMON_COMBINER_NR; irq++) {
