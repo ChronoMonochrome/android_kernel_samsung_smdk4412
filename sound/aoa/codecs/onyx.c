@@ -1132,4 +1132,15 @@ static struct i2c_driver onyx_driver = {
 	.id_table = onyx_i2c_id,
 };
 
-module_i2c_driver(onyx_driver);
+static int __init onyx_init(void)
+{
+	return i2c_add_driver(&onyx_driver);
+}
+
+static void __exit onyx_exit(void)
+{
+	i2c_del_driver(&onyx_driver);
+}
+
+module_init(onyx_init);
+module_exit(onyx_exit);

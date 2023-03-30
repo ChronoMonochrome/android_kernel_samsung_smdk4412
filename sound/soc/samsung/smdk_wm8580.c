@@ -2,7 +2,7 @@
  *  smdk_wm8580.c
  *
  *  Copyright (c) 2009 Samsung Electronics Co. Ltd
- *  Author: Jaswinder Singh <jassisinghbrar@gmail.com>
+ *  Author: Jaswinder Singh <jassi.brar@samsung.com>
  *
  *  This program is free software; you can redistribute  it and/or modify it
  *  under  the terms of  the GNU General  Public License as published by the
@@ -253,6 +253,6 @@ static void __exit smdk_audio_exit(void)
 }
 module_exit(smdk_audio_exit);
 
-MODULE_AUTHOR("Jaswinder Singh, jassisinghbrar@gmail.com");
+MODULE_AUTHOR("Jaswinder Singh, jassi.brar@samsung.com");
 MODULE_DESCRIPTION("ALSA SoC SMDK WM8580");
 MODULE_LICENSE("GPL");

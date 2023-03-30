@@ -1002,8 +1002,8 @@ static int snd_soc_put_twl4030_opmode_enum_double(struct snd_kcontrol *kcontrol,
 	unsigned short mask, bitmask;
 
 	if (twl4030->configured) {
-		dev_err(codec->dev,
-			"operation mode cannot be changed on-the-fly\n");
+		printk(KERN_ERR "twl4030 operation mode cannot be "
+			"changed on-the-fly\n");
 		return -EBUSY;
 	}
 
@@ -1689,6 +1689,7 @@ static int twl4030_startup(struct snd_pcm_substream *substream,
 	struct snd_soc_codec *codec = rtd->codec;
 	struct twl4030_priv *twl4030 = snd_soc_codec_get_drvdata(codec);
 
+	snd_pcm_hw_constraint_msbits(substream->runtime, 0, 32, 24);
 	if (twl4030->master_substream) {
 		twl4030->slave_substream = substream;
 		/* The DAI has one configuration for playback and capture, so
@@ -1800,7 +1801,7 @@ static int twl4030_hw_params(struct snd_pcm_substream *substream,
 		mode |= TWL4030_APLL_RATE_96000;
 		break;
 	default:
-		dev_err(codec->dev, "%s: unknown rate %d\n", __func__,
+		printk(KERN_ERR "TWL4030 hw params: unknown rate %d\n",
 			params_rate(params));
 		return -EINVAL;
 	}
@@ -1817,7 +1818,7 @@ static int twl4030_hw_params(struct snd_pcm_substream *substream,
 		format |= TWL4030_DATA_WIDTH_32S_24W;
 		break;
 	default:
-		dev_err(codec->dev, "%s: unknown format %d\n", __func__,
+		printk(KERN_ERR "TWL4030 hw params: unknown format %d\n",
 			params_format(params));
 		return -EINVAL;
 	}
@@ -1867,13 +1868,13 @@ static int twl4030_set_dai_sysclk(struct snd_soc_dai *codec_dai,
 	case 38400000:
 		break;
 	default:
-		dev_err(codec->dev, "Unsupported HFCLKIN: %u\n", freq);
+		dev_err(codec->dev, "Unsupported APLL mclk: %u\n", freq);
 		return -EINVAL;
 	}
 
 	if ((freq / 1000) != twl4030->sysclk) {
 		dev_err(codec->dev,
-			"Mismatch in HFCLKIN: %u (configured: %u)\n",
+			"Mismatch in APLL mclk: %u (configured: %u)\n",
 			freq, twl4030->sysclk * 1000);
 		return -EINVAL;
 	}
@@ -1983,9 +1984,9 @@ static int twl4030_voice_startup(struct snd_pcm_substream *substream,
 	 * not available.
 	 */
 	if (twl4030->sysclk != 26000) {
-		dev_err(codec->dev,
-			"%s: HFCLKIN is %u KHz, voice interface needs 26MHz\n",
-			__func__, twl4030->sysclk);
+		dev_err(codec->dev, "The board is configured for %u Hz, while"
+			"the Voice interface needs 26MHz APLL mclk\n",
+			twl4030->sysclk * 1000);
 		return -EINVAL;
 	}
 
@@ -1996,8 +1997,8 @@ static int twl4030_voice_startup(struct snd_pcm_substream *substream,
 		& TWL4030_OPT_MODE;
 
 	if (mode != TWL4030_OPTION_2) {
-		dev_err(codec->dev, "%s: the codec mode is not option2\n",
-			__func__);
+		printk(KERN_ERR "TWL4030 voice startup: "
+			"the codec mode is not option2\n");
 		return -EINVAL;
 	}
 
@@ -2038,7 +2039,7 @@ static int twl4030_voice_hw_params(struct snd_pcm_substream *substream,
 		mode |= TWL4030_SEL_16K;
 		break;
 	default:
-		dev_err(codec->dev, "%s: unknown rate %d\n", __func__,
+		printk(KERN_ERR "TWL4030 voice hw params: unknown rate %d\n",
 			params_rate(params));
 		return -EINVAL;
 	}
@@ -2067,14 +2068,13 @@ static int twl4030_voice_set_dai_sysclk(struct snd_soc_dai *codec_dai,
 	struct twl4030_priv *twl4030 = snd_soc_codec_get_drvdata(codec);
 
 	if (freq != 26000000) {
-		dev_err(codec->dev,
-			"%s: HFCLKIN is %u KHz, voice interface needs 26MHz\n",
-			__func__, freq / 1000);
+		dev_err(codec->dev, "Unsupported APLL mclk: %u, the Voice"
+			"interface needs 26MHz APLL mclk\n", freq);
 		return -EINVAL;
 	}
 	if ((freq / 1000) != twl4030->sysclk) {
 		dev_err(codec->dev,
-			"Mismatch in HFCLKIN: %u (configured: %u)\n",
+			"Mismatch in APLL mclk: %u (configured: %u)\n",
 			freq, twl4030->sysclk * 1000);
 		return -EINVAL;
 	}
@@ -2175,15 +2175,13 @@ static struct snd_soc_dai_driver twl4030_dai[] = {
 		.channels_min = 2,
 		.channels_max = 4,
 		.rates = TWL4030_RATES | SNDRV_PCM_RATE_96000,
-		.formats = TWL4030_FORMATS,
-		.sig_bits = 24,},
+		.formats = TWL4030_FORMATS,},
 	.capture = {
 		.stream_name = "Capture",
 		.channels_min = 2,
 		.channels_max = 4,
 		.rates = TWL4030_RATES,
-		.formats = TWL4030_FORMATS,
-		.sig_bits = 24,},
+		.formats = TWL4030_FORMATS,},
 	.ops = &twl4030_dai_hifi_ops,
 },
 {
@@ -2222,12 +2220,13 @@ static int twl4030_soc_probe(struct snd_soc_codec *codec)
 
 	twl4030 = kzalloc(sizeof(struct twl4030_priv), GFP_KERNEL);
 	if (twl4030 == NULL) {
-		dev_err(codec->dev, "Can not allocate memory\n");
+		printk("Can not allocate memroy\n");
 		return -ENOMEM;
 	}
 	snd_soc_codec_set_drvdata(codec, twl4030);
 	/* Set the defaults, and power up the codec */
 	twl4030->sysclk = twl4030_audio_get_mclk() / 1000;
+	codec->dapm.idle_bias_off = 1;
 
 	twl4030_init_chip(codec);
 
@@ -2253,7 +2252,6 @@ static struct snd_soc_codec_driver soc_codec_dev_twl4030 = {
 	.read = twl4030_read_reg_cache,
 	.write = twl4030_write,
 	.set_bias_level = twl4030_set_bias_level,
-	.idle_bias_off = true,
 	.reg_cache_size = sizeof(twl4030_reg),
 	.reg_word_size = sizeof(u8),
 	.reg_cache_default = twl4030_reg,

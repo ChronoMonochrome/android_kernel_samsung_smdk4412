@@ -24,7 +24,6 @@
 #include <linux/slab.h>
 #include <linux/time.h>
 #include <linux/mutex.h>
-#include <linux/device.h>
 #include <linux/module.h>
 #include <linux/string.h>
 #include <sound/core.h>

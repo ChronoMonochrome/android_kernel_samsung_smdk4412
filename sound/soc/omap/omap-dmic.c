@@ -113,10 +113,12 @@ static int omap_dmic_dai_startup(struct snd_pcm_substream *substream,
 
 	mutex_lock(&dmic->mutex);
 
-	if (!dai->active)
+	if (!dai->active) {
+		snd_pcm_hw_constraint_msbits(substream->runtime, 0, 32, 24);
 		dmic->active = 1;
-	else
+	} else {
 		ret = -EBUSY;
+	}
 
 	mutex_unlock(&dmic->mutex);
 
@@ -443,7 +445,6 @@ static struct snd_soc_dai_driver omap_dmic_dai = {
 		.channels_max = 6,
 		.rates = SNDRV_PCM_RATE_96000 | SNDRV_PCM_RATE_192000,
 		.formats = SNDRV_PCM_FMTBIT_S32_LE,
-		.sig_bits = 24,
 	},
 	.ops = &omap_dmic_dai_ops,
 };

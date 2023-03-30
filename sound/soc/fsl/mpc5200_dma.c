@@ -8,7 +8,6 @@
 
 #include <linux/module.h>
 #include <linux/of_device.h>
-#include <linux/dma-mapping.h>
 #include <linux/slab.h>
 #include <linux/of_platform.h>
 
@@ -299,7 +298,7 @@ static struct snd_pcm_ops psc_dma_ops = {
 	.hw_params	= psc_dma_hw_params,
 };
 
-static u64 psc_dma_dmamask = DMA_BIT_MASK(32);
+static u64 psc_dma_dmamask = 0xffffffff;
 static int psc_dma_new(struct snd_soc_pcm_runtime *rtd)
 {
 	struct snd_card *card = rtd->card->snd_card;
@@ -315,18 +314,18 @@ static int psc_dma_new(struct snd_soc_pcm_runtime *rtd)
 	if (!card->dev->dma_mask)
 		card->dev->dma_mask = &psc_dma_dmamask;
 	if (!card->dev->coherent_dma_mask)
-		card->dev->coherent_dma_mask = DMA_BIT_MASK(32);
+		card->dev->coherent_dma_mask = 0xffffffff;
 
-	if (pcm->streams[SNDRV_PCM_STREAM_PLAYBACK].substream) {
+	if (pcm->streams[0].substream) {
 		rc = snd_dma_alloc_pages(SNDRV_DMA_TYPE_DEV, pcm->card->dev,
-				size, &pcm->streams[SNDRV_PCM_STREAM_PLAYBACK].substream->dma_buffer);
+				size, &pcm->streams[0].substream->dma_buffer);
 		if (rc)
 			goto playback_alloc_err;
 	}
 
-	if (pcm->streams[SNDRV_PCM_STREAM_CAPTURE].substream) {
+	if (pcm->streams[1].substream) {
 		rc = snd_dma_alloc_pages(SNDRV_DMA_TYPE_DEV, pcm->card->dev,
-				size, &pcm->streams[SNDRV_PCM_STREAM_CAPTURE].substream->dma_buffer);
+				size, &pcm->streams[1].substream->dma_buffer);
 		if (rc)
 			goto capture_alloc_err;
 	}
@@ -337,8 +336,8 @@ static int psc_dma_new(struct snd_soc_pcm_runtime *rtd)
 	return 0;
 
  capture_alloc_err:
-	if (pcm->streams[SNDRV_PCM_STREAM_PLAYBACK].substream)
-		snd_dma_free_pages(&pcm->streams[SNDRV_PCM_STREAM_PLAYBACK].substream->dma_buffer);
+	if (pcm->streams[0].substream)
+		snd_dma_free_pages(&pcm->streams[0].substream->dma_buffer);
 
  playback_alloc_err:
 	dev_err(card->dev, "Cannot allocate buffer(s)\n");

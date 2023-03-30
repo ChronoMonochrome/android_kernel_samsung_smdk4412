@@ -556,7 +556,7 @@ static int midas_wm1811_init_paiftx(struct snd_soc_pcm_runtime *rtd)
 	rtd->codec_dai->driver->playback.channels_max =
 				rtd->cpu_dai->driver->playback.channels_max;
 
-	ret = snd_soc_add_codec_controls(codec, midas_controls,
+	ret = snd_soc_add_controls(codec, midas_controls,
 					ARRAY_SIZE(midas_controls));
 
 	ret = snd_soc_dapm_new_controls(&codec->dapm, midas_dapm_widgets,

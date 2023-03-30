@@ -757,6 +757,8 @@ static void hdmi_intrinsic_event(struct hda_codec *codec, unsigned int res)
 	struct hdmi_spec *spec = codec->spec;
 	int tag = res >> AC_UNSOL_RES_TAG_SHIFT;
 	int pin_nid;
+	int pd = !!(res & AC_UNSOL_RES_PD);
+	int eldv = !!(res & AC_UNSOL_RES_ELDV);
 	int pin_idx;
 	struct hda_jack_tbl *jack;
 
@@ -766,10 +768,9 @@ static void hdmi_intrinsic_event(struct hda_codec *codec, unsigned int res)
 	pin_nid = jack->nid;
 	jack->jack_dirty = 1;
 
-	_snd_printd(SND_PR_VERBOSE,
+	printk(KERN_INFO
 		"HDMI hot plug event: Codec=%d Pin=%d Presence_Detect=%d ELD_Valid=%d\n",
-		codec->addr, pin_nid,
-		!!(res & AC_UNSOL_RES_PD), !!(res & AC_UNSOL_RES_ELDV));
+		codec->addr, pin_nid, pd, eldv);
 
 	pin_idx = pin_nid_to_pin_index(spec, pin_nid);
 	if (pin_idx < 0)
@@ -991,7 +992,7 @@ static void hdmi_present_sense(struct hdmi_spec_per_pin *per_pin, int repoll)
 	if (eld->monitor_present)
 		eld_valid	= !!(present & AC_PINSENSE_ELDV);
 
-	_snd_printd(SND_PR_VERBOSE,
+	printk(KERN_INFO
 		"HDMI status: Codec=%d Pin=%d Presence_Detect=%d ELD_Valid=%d\n",
 		codec->addr, pin_nid, eld->monitor_present, eld_valid);
 
@@ -1911,7 +1912,6 @@ static const struct hda_codec_preset snd_hda_preset_hdmi[] = {
 { .id = 0x80862804, .name = "IbexPeak HDMI",	.patch = patch_generic_hdmi },
 { .id = 0x80862805, .name = "CougarPoint HDMI",	.patch = patch_generic_hdmi },
 { .id = 0x80862806, .name = "PantherPoint HDMI", .patch = patch_generic_hdmi },
-{ .id = 0x80862880, .name = "CedarTrail HDMI",	.patch = patch_generic_hdmi },
 { .id = 0x808629fb, .name = "Crestline HDMI",	.patch = patch_generic_hdmi },
 {} /* terminator */
 };
@@ -1958,7 +1958,6 @@ MODULE_ALIAS("snd-hda-codec-id:80862803");
 MODULE_ALIAS("snd-hda-codec-id:80862804");
 MODULE_ALIAS("snd-hda-codec-id:80862805");
 MODULE_ALIAS("snd-hda-codec-id:80862806");
-MODULE_ALIAS("snd-hda-codec-id:80862880");
 MODULE_ALIAS("snd-hda-codec-id:808629fb");
 
 MODULE_LICENSE("GPL");
