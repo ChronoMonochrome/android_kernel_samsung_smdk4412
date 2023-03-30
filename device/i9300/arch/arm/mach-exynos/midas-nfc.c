@@ -7,6 +7,8 @@
 #include <mach/gpio.h>
 #include "midas.h"
 
+#include <asm/system_info.h>
+
 /* GPIO_LEVEL_NONE = 2, GPIO_LEVEL_LOW = 0 */
 static unsigned int nfc_gpio_table[][4] = {
 	{GPIO_NFC_IRQ, S3C_GPIO_INPUT, 2, S3C_GPIO_PULL_DOWN},
