@@ -12,6 +12,7 @@
 #define _PLATFORM_DEVICE_H_
 
 #include <device/linux/platform_device.h>
+#include <asm/system_info.h>
 
 #endif /* _PLATFORM_DEVICE_H_ */
 
