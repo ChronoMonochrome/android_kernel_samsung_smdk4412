@@ -2,9 +2,9 @@
 #include <linux/threads.h>
 #include <asm/asm-offsets.h>
 #include <asm/assembler.h>
+#include <asm/cp15.h>
 #include <asm/glue-cache.h>
 #include <asm/glue-proc.h>
-#include <asm/system.h>
 	.text
 
 .globl cpu_v7_do_resume_legacy
