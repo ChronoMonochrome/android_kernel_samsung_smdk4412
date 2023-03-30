@@ -783,8 +783,12 @@ void __init iotable_init(struct map_desc *io_desc, int nr)
 	}
 }
 
+#ifndef CONFIG_ARCH_EXYNOS
 static void * __initdata vmalloc_min =
 	(void *)(VMALLOC_END - (240 << 20) - VMALLOC_OFFSET);
+#else
+static void * __initdata vmalloc_min = (void *)(VMALLOC_END - SZ_128M);
+#endif
 
 /*
  * vmalloc=size forces the vmalloc area to be exactly 'size'
@@ -957,7 +961,11 @@ static inline void prepare_page_table(void)
 	 * memory bank, up to the vmalloc region.
 	 */
 	for (addr = __phys_to_virt(end);
+#ifndef CONFIG_ARCH_EXYNOS
 	     addr < VMALLOC_START; addr += PMD_SIZE)
+#else
+	     addr < VMALLOC_END; addr += PMD_SIZE)
+#endif
 		pmd_clear(pmd_off_k(addr));
 }
 
@@ -1009,7 +1017,11 @@ static void __init devicemaps_init(struct machine_desc *mdesc)
 
 	early_trap_init(vectors);
 
+#ifndef CONFIG_ARCH_EXYNOS
 	for (addr = VMALLOC_START; addr; addr += PMD_SIZE)
+#else
+	for (addr = VMALLOC_END; addr; addr += PMD_SIZE)
+#endif
 		pmd_clear(pmd_off_k(addr));
 
 	/*
