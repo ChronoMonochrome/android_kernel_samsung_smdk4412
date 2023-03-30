@@ -203,7 +203,7 @@ enum exynos4212_gpio_number {
 #define ARCH_NR_GPIOS		(EXYNOS4XXX_GPIO_END +			\
 				CONFIG_SAMSUNG_GPIO_EXTRA)
 
-#include <asm-generic/gpio.h>
+#include <device/asm/gpio.h>
 #if defined(CONFIG_MACH_MIDAS) || defined(CONFIG_MACH_SLP_MIDAS) \
 				|| defined(CONFIG_MACH_SLP_PQ) \
 				|| defined(CONFIG_MACH_SLP_PQ_LTE)\
