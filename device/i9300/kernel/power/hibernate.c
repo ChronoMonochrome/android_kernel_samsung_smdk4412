@@ -264,7 +264,7 @@ static int create_image(int platform_mode)
 {
 	int error;
 
-	error = dpm_suspend_noirq(PMSG_FREEZE);
+	error = dpm_suspend_end(PMSG_FREEZE);
 	if (error) {
 		printk(KERN_ERR "PM: Some devices failed to power down, "
 			"aborting hibernation\n");
@@ -317,7 +317,7 @@ static int create_image(int platform_mode)
  Platform_finish:
 	platform_finish(platform_mode);
 
-	dpm_resume_noirq(in_suspend ?
+	dpm_resume_start(in_suspend ?
 		(error ? PMSG_RECOVER : PMSG_THAW) : PMSG_RESTORE);
 
 	return error;
@@ -400,7 +400,7 @@ static int resume_target_kernel(bool platform_mode)
 {
 	int error;
 
-	error = dpm_suspend_noirq(PMSG_QUIESCE);
+	error = dpm_suspend_end(PMSG_QUIESCE);
 	if (error) {
 		printk(KERN_ERR "PM: Some devices failed to power down, "
 			"aborting resume\n");
@@ -457,7 +457,7 @@ static int resume_target_kernel(bool platform_mode)
  Cleanup:
 	platform_restore_cleanup(platform_mode);
 
-	dpm_resume_noirq(PMSG_RECOVER);
+	dpm_resume_start(PMSG_RECOVER);
 
 	return error;
 }
@@ -515,7 +515,7 @@ int hibernation_platform_enter(void)
 		goto Resume_devices;
 	}
 
-	error = dpm_suspend_noirq(PMSG_HIBERNATE);
+	error = dpm_suspend_end(PMSG_HIBERNATE);
 	if (error)
 		goto Resume_devices;
 
@@ -546,7 +546,7 @@ int hibernation_platform_enter(void)
  Platform_finish:
 	hibernation_ops->finish();
 
-	dpm_resume_noirq(PMSG_RESTORE);
+	dpm_resume_start(PMSG_RESTORE);
 
  Resume_devices:
 	entering_platform_hibernation = false;
