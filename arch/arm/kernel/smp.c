@@ -241,6 +241,8 @@ static void __cpuinit smp_store_cpu_info(unsigned int cpuid)
 	store_cpu_topology(cpuid);
 }
 
+static void percpu_timer_setup(void);
+
 /*
  * This is the secondary CPU boot entry.  We're using this CPUs
  * idle thread stack, but a set of temporary page tables.
@@ -249,8 +251,6 @@ asmlinkage void __cpuinit secondary_start_kernel(void)
 {
 	struct mm_struct *mm = &init_mm;
 	unsigned int cpu = smp_processor_id();
-
-	printk("CPU%u: Booted secondary processor\n", cpu);
 
 	/*
 	 * All kernel threads share the same mm context; grab a
@@ -293,13 +293,6 @@ asmlinkage void __cpuinit secondary_start_kernel(void)
 	 */
 	percpu_timer_setup();
 
-	while (!cpu_active(cpu))
-		cpu_relax();
-
-	/*
-	 * cpu_active bit is set, so it's safe to enalbe interrupts
-	 * now.
-	 */
 	local_irq_enable();
 	local_fiq_enable();
 
@@ -357,7 +350,7 @@ void __init smp_prepare_cpus(unsigned int max_cpus)
 		 * re-initialize the map in platform_smp_prepare_cpus() if
 		 * present != possible (e.g. physical hotplug).
 		 */
-		init_cpu_present(&cpu_possible_map);
+		init_cpu_present(cpu_possible_mask);
 
 		/*
 		 * Initialise the SCU if there are more than one CPU
@@ -458,7 +451,20 @@ static void __cpuinit broadcast_timer_setup(struct clock_event_device *evt)
 	clockevents_register_device(evt);
 }
 
-void __cpuinit percpu_timer_setup(void)
+static struct local_timer_ops *lt_ops;
+
+#ifdef CONFIG_LOCAL_TIMERS
+int local_timer_register(struct local_timer_ops *ops)
+{
+	if (lt_ops)
+		return -EBUSY;
+
+	lt_ops = ops;
+	return 0;
+}
+#endif
+
+static void __cpuinit percpu_timer_setup(void)
 {
 	unsigned int cpu = smp_processor_id();
 	struct clock_event_device *evt = &per_cpu(percpu_clockevent, cpu);
@@ -466,7 +472,7 @@ void __cpuinit percpu_timer_setup(void)
 	evt->cpumask = cpumask_of(cpu);
 	evt->broadcast = smp_timer_broadcast;
 
-	if (local_timer_setup(evt))
+	if (!lt_ops || lt_ops->setup(evt))
 		broadcast_timer_setup(evt);
 }
 
@@ -481,7 +487,8 @@ static void percpu_timer_stop(void)
 	unsigned int cpu = smp_processor_id();
 	struct clock_event_device *evt = &per_cpu(percpu_clockevent, cpu);
 
-	local_timer_stop(evt);
+	if (lt_ops)
+		lt_ops->stop(evt);
 }
 #endif
 
@@ -627,16 +634,25 @@ void smp_send_reschedule(int cpu)
 	smp_cross_call(cpumask_of(cpu), IPI_RESCHEDULE);
 }
 
+#ifdef CONFIG_HOTPLUG_CPU
+static void smp_kill_cpus(cpumask_t *mask)
+{
+	unsigned int cpu;
+	for_each_cpu(cpu, mask)
+		platform_cpu_kill(cpu);
+}
+#else
+static void smp_kill_cpus(cpumask_t *mask) { }
+#endif
+
 void smp_send_stop(void)
 {
 	unsigned long timeout;
+	struct cpumask mask;
 
-	if (num_online_cpus() > 1) {
-		cpumask_t mask = cpu_online_map;
-		cpu_clear(smp_processor_id(), mask);
-
-		smp_cross_call(&mask, IPI_CPU_STOP);
-	}
+	cpumask_copy(&mask, cpu_online_mask);
+	cpumask_clear_cpu(smp_processor_id(), &mask);
+	smp_cross_call(&mask, IPI_CPU_STOP);
 
 	/* Wait up to one second for other CPUs to stop */
 	timeout = USEC_PER_SEC;
@@ -645,6 +661,8 @@ void smp_send_stop(void)
 
 	if (num_online_cpus() > 1)
 		pr_warning("SMP: failed to stop secondary CPUs\n");
+
+	smp_kill_cpus(&mask);
 }
 
 /*

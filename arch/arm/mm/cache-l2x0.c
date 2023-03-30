@@ -29,12 +29,13 @@
 #define CACHE_LINE_SIZE		32
 
 static void __iomem *l2x0_base;
-static DEFINE_SPINLOCK(l2x0_lock);
-static uint32_t l2x0_way_mask;	/* Bitmask of active ways */
-static uint32_t l2x0_size;
+static DEFINE_RAW_SPINLOCK(l2x0_lock);
+static u32 l2x0_way_mask;	/* Bitmask of active ways */
+static u32 l2x0_size;
 static u32 l2x0_cache_id;
 static unsigned int l2x0_sets;
 static unsigned int l2x0_ways;
+static unsigned long sync_reg_offset = L2X0_CACHE_SYNC;
 
 static inline bool is_pl310_rev(int rev)
 {
@@ -46,7 +47,7 @@ static inline bool is_pl310_rev(int rev)
 struct l2x0_regs l2x0_saved_regs;
 
 struct l2x0_of_data {
-	void (*setup)(const struct device_node *, __u32 *, __u32 *);
+	void (*setup)(const struct device_node *, u32 *, u32 *);
 	void (*save)(void);
 	void (*resume)(void);
 };
@@ -71,12 +72,7 @@ static inline void cache_sync(void)
 {
 	void __iomem *base = l2x0_base;
 
-#ifdef CONFIG_PL310_ERRATA_753970
-	/* write to an unmmapped register */
-	writel_relaxed(0, base + L2X0_DUMMY_REG);
-#else
-	writel_relaxed(0, base + L2X0_CACHE_SYNC);
-#endif
+	writel_relaxed(0, base + sync_reg_offset);
 	cache_wait(base + L2X0_CACHE_SYNC, 1);
 }
 
@@ -95,10 +91,13 @@ static inline void l2x0_inv_line(unsigned long addr)
 }
 
 #if defined(CONFIG_PL310_ERRATA_588369) || defined(CONFIG_PL310_ERRATA_727915)
+static inline void debug_writel(unsigned long val)
+{
+	if (outer_cache.set_debug)
+		outer_cache.set_debug(val);
+}
 
-#define debug_writel(val)	outer_cache.set_debug(val)
-
-static void l2x0_set_debug(unsigned long val)
+static void pl310_set_debug(unsigned long val)
 {
 	writel_relaxed(val, l2x0_base + L2X0_DEBUG_CTRL);
 }
@@ -108,7 +107,7 @@ static inline void debug_writel(unsigned long val)
 {
 }
 
-#define l2x0_set_debug	NULL
+#define pl310_set_debug	NULL
 #endif
 
 #ifdef CONFIG_PL310_ERRATA_588369
@@ -328,13 +327,34 @@ static void l2x0_disable(void)
 	__l2x0_flush_all();
 	writel_relaxed(0, l2x0_base + L2X0_CTRL);
 	dsb();
-	spin_unlock_irqrestore(&l2x0_lock, flags);
+	raw_spin_unlock_irqrestore(&l2x0_lock, flags);
 }
 
-void __init l2x0_init(void __iomem *base, __u32 aux_val, __u32 aux_mask)
+static void l2x0_unlock(u32 cache_id)
 {
-	__u32 aux;
-	__u32 way_size = 0;
+	int lockregs;
+	int i;
+
+	if (cache_id == L2X0_CACHE_ID_PART_L310)
+		lockregs = 8;
+	else
+		/* L210 and unknown types */
+		lockregs = 1;
+
+	for (i = 0; i < lockregs; i++) {
+		writel_relaxed(0x0, l2x0_base + L2X0_LOCKDOWN_WAY_D_BASE +
+			       i * L2X0_LOCKDOWN_STRIDE);
+		writel_relaxed(0x0, l2x0_base + L2X0_LOCKDOWN_WAY_I_BASE +
+			       i * L2X0_LOCKDOWN_STRIDE);
+	}
+}
+
+void __init l2x0_init(void __iomem *base, u32 aux_val, u32 aux_mask)
+{
+	u32 aux;
+	u32 cache_id;
+	u32 way_size = 0;
+	int ways;
 	const char *type;
 
 	l2x0_base = base;
@@ -353,6 +373,11 @@ void __init l2x0_init(void __iomem *base, __u32 aux_val, __u32 aux_mask)
 		else
 			l2x0_ways = 8;
 		type = "L310";
+#ifdef CONFIG_PL310_ERRATA_753970
+		/* Unmapped register. */
+		sync_reg_offset = L2X0_DUMMY_REG;
+#endif
+		outer_cache.set_debug = pl310_set_debug;
 		break;
 	case L2X0_CACHE_ID_PART_L210:
 		l2x0_ways = (aux >> 13) & 0xf;
@@ -401,7 +426,6 @@ void __init l2x0_init(void __iomem *base, __u32 aux_val, __u32 aux_mask)
 	outer_cache.inv_all = l2x0_inv_all;
 	outer_cache.clean_all = l2x0_clean_all;
 	outer_cache.disable = l2x0_disable;
-	outer_cache.set_debug = l2x0_set_debug;
 
 	printk(KERN_INFO "%s cache controller enabled\n", type);
 	printk(KERN_INFO "l2x0: %d ways, CACHE_ID 0x%08x, AUX_CTRL 0x%08x, Cache size: %d B\n",
@@ -410,7 +434,7 @@ void __init l2x0_init(void __iomem *base, __u32 aux_val, __u32 aux_mask)
 
 #ifdef CONFIG_OF
 static void __init l2x0_of_setup(const struct device_node *np,
-				 __u32 *aux_val, __u32 *aux_mask)
+				 u32 *aux_val, u32 *aux_mask)
 {
 	u32 data[2] = { 0, 0 };
 	u32 tag = 0;
@@ -444,7 +468,7 @@ static void __init l2x0_of_setup(const struct device_node *np,
 }
 
 static void __init pl310_of_setup(const struct device_node *np,
-				  __u32 *aux_val, __u32 *aux_mask)
+				  u32 *aux_val, u32 *aux_mask)
 {
 	u32 data[3] = { 0, 0, 0 };
 	u32 tag[3] = { 0, 0, 0 };
@@ -570,7 +594,7 @@ static const struct of_device_id l2x0_ids[] __initconst = {
 	{}
 };
 
-int __init l2x0_of_init(__u32 aux_val, __u32 aux_mask)
+int __init l2x0_of_init(u32 aux_val, u32 aux_mask)
 {
 	struct device_node *np;
 	struct l2x0_of_data *data;
