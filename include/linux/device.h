@@ -690,7 +690,7 @@ struct device {
 };
 
 /* Get the wakeup routines, which depend on struct device */
-#include <linux/pm_wakeup.h>
+#include <device/linux/pm_wakeup.h>
 
 static inline const char *dev_name(const struct device *dev)
 {
