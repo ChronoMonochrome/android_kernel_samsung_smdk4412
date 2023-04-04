@@ -46,7 +46,7 @@
 #endif
 
 #ifdef CONFIG_PM_RUNTIME
-#include <linux/pm_runtime.h>
+#include <device/linux/pm_runtime.h>
 #endif
 
 #include "jpeg_core.h"
