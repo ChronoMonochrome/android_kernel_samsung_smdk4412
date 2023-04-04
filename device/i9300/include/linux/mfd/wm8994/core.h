@@ -25,6 +25,7 @@ enum wm8994_type {
 
 struct regulator_dev;
 struct regulator_bulk_data;
+struct regmap;
 
 #define WM8994_NUM_GPIO_REGS 11
 #define WM8994_NUM_LDO_REGS   2
@@ -66,6 +67,7 @@ struct wm8994 {
 			 int bytes, const void *src);
 
 	void *control_data;
+	struct regmap *regmap;
 
 	bool ldo_ena_always_driven;
 
