@@ -43,7 +43,7 @@
 #include <dhd.h>
 
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 27)) && defined(CONFIG_PM_SLEEP)
-#include <linux/suspend.h>
+#include <device/linux/suspend.h>
 extern volatile bool dhd_mmc_suspend;
 #endif
 #include "bcmsdh_sdmmc.h"

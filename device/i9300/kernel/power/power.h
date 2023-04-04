@@ -1,4 +1,4 @@
-#include <linux/suspend.h>
+#include <device/linux/suspend.h>
 #include <linux/suspend_ioctls.h>
 #include <linux/utsname.h>
 #include <device/linux/freezer.h>

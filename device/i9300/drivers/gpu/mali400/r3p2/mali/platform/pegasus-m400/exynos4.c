@@ -17,7 +17,7 @@
 #include <linux/platform_device.h>
 #include <linux/version.h>
 #include <linux/pm.h>
-#include <linux/suspend.h>
+#include <device/linux/suspend.h>
 
 #ifdef CONFIG_PM_RUNTIME
 #include <linux/pm_runtime.h>
