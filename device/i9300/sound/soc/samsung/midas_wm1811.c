@@ -19,7 +19,7 @@
 #include <linux/workqueue.h>
 #include <linux/input.h>
 #include <linux/wakelock.h>
-#include <linux/suspend.h>
+#include <device/linux/suspend.h>
 
 #include <sound/soc.h>
 #include <sound/soc-dapm.h>

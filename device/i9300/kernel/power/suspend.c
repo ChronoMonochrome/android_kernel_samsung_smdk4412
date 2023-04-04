@@ -22,7 +22,7 @@
 #include <linux/list.h>
 #include <linux/mm.h>
 #include <linux/slab.h>
-#include <linux/suspend.h>
+#include <device/linux/suspend.h>
 #include <linux/syscore_ops.h>
 #include <trace/events/power.h>
 
