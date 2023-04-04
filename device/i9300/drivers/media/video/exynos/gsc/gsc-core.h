@@ -20,7 +20,7 @@
 #include <linux/videodev2.h>
 #include <linux/videodev2_exynos_media.h>
 #include <linux/io.h>
-#include <linux/pm_runtime.h>
+#include <device/linux/pm_runtime.h>
 #include <mach/videonode.h>
 #include <media/videobuf2-core.h>
 #include <media/v4l2-ctrls.h>

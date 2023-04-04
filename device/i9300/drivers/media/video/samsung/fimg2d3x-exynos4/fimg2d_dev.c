@@ -47,7 +47,7 @@
 #include <plat/s5p-sysmmu.h>
 
 #if defined(CONFIG_EXYNOS_DEV_PD)
-#include <linux/pm_runtime.h>
+#include <device/linux/pm_runtime.h>
 #endif 
 
 #include "fimg2d.h"

@@ -26,7 +26,7 @@
 #include <linux/memory.h>
 #include <linux/ctype.h>
 #include <linux/workqueue.h>
-#include <linux/pm_runtime.h>
+#include <device/linux/pm_runtime.h>
 #include <media/v4l2-device.h>
 #include <linux/videodev2_exynos_media.h>
 #include <linux/videodev2_exynos_camera.h>

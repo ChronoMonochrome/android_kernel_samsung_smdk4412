@@ -19,7 +19,7 @@
 #include <linux/irq.h>
 #include <linux/fb.h>
 #include <linux/delay.h>
-#include <linux/pm_runtime.h>
+#include <device/linux/pm_runtime.h>
 #include <linux/clk.h>
 #include <linux/kernel.h>
 #include <linux/videodev2_exynos_media.h>

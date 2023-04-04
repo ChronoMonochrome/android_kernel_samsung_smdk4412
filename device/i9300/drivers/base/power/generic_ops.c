@@ -7,8 +7,8 @@
  */
 
 #include <linux/module.h>
-#include <linux/pm.h>
-#include <linux/pm_runtime.h>
+#include <device/linux/pm.h>
+#include <device/linux/pm_runtime.h>
 
 #ifdef CONFIG_PM_RUNTIME
 /**
