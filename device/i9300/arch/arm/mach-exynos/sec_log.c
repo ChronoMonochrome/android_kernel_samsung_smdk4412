@@ -36,7 +36,7 @@ static inline void sec_log_save_old(void)
 }
 #endif
 
-extern void register_log_char_hook(void (*f) (char c));
+//extern void register_log_char_hook(void (*f) (char c));
 
 #ifdef CONFIG_SEC_LOG_NONCACHED
 static struct map_desc log_buf_iodesc[] __initdata = {
@@ -96,7 +96,7 @@ static int __init sec_log_setup(char *str)
 	} else
 		sec_log_save_old();
 
-	register_log_char_hook(emit_sec_log_char);
+	//register_log_char_hook(emit_sec_log_char);
 
 	sec_getlog_supply_kloginfo(phys_to_virt(base));
 
