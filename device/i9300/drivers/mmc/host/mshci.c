@@ -473,20 +473,8 @@ static int mshci_mdma_table_pre(struct mshci_host *host,
 		direction = DMA_TO_DEVICE;
 
 	if (!data->host_cookie) {
-		if (host->ops->dma_map_sg && data->blocks >= 2048) {
-			/* if transfer size is bigger than 1MiB */
-			host->sg_count = host->ops->dma_map_sg(host,
-				mmc_dev(host->mmc),
-				data->sg, data->sg_len, direction, 2);
-		} else if (host->ops->dma_map_sg && data->blocks >= 128) {
-			/* if transfer size is bigger than 64KiB */
-			host->sg_count = host->ops->dma_map_sg(host,
-				mmc_dev(host->mmc),
-				data->sg, data->sg_len, direction, 1);
-		} else {
-			host->sg_count = dma_map_sg(mmc_dev(host->mmc),
-				data->sg, data->sg_len, direction);
-		}
+		host->sg_count = dma_map_sg(mmc_dev(host->mmc),
+			data->sg, data->sg_len, direction);
 
 		if (host->sg_count == 0)
 			goto fail;
@@ -545,18 +533,8 @@ static int mshci_mdma_table_pre(struct mshci_host *host,
 	return 0;
 
 unmap_entries:
-	if (host->ops->dma_unmap_sg && data->blocks >= 2048) {
-		/* if transfer size is bigger than 1MiB */
-		host->ops->dma_unmap_sg(host, mmc_dev(host->mmc),
-			data->sg, data->sg_len, direction, 2);
-	} else if (host->ops->dma_unmap_sg && data->blocks >= 128) {
-		/* if transfer size is bigger than 64KiB */
-		host->ops->dma_unmap_sg(host, mmc_dev(host->mmc),
-			data->sg, data->sg_len, direction, 1);
-	} else {
-		dma_unmap_sg(mmc_dev(host->mmc),
-			data->sg, data->sg_len, direction);
-	}
+	dma_unmap_sg(mmc_dev(host->mmc),
+		data->sg, data->sg_len, direction);
 fail:
 	return -EINVAL;
 }
@@ -577,18 +555,8 @@ static void mshci_idma_table_post(struct mshci_host *host,
 				DMA_TO_DEVICE);
 
 	if (!host->mmc->ops->post_req || !data->host_cookie) {
-		if (host->ops->dma_unmap_sg && data->blocks >= 2048) {
-			/* if transfer size is bigger than 1MiB */
-			host->ops->dma_unmap_sg(host, mmc_dev(host->mmc),
-				data->sg, data->sg_len, direction, 2);
-		} else if (host->ops->dma_unmap_sg && data->blocks >= 128) {
-			/* if transfer size is bigger than 64KiB */
-			host->ops->dma_unmap_sg(host, mmc_dev(host->mmc),
-				data->sg, data->sg_len, direction, 1);
-		} else {
-			dma_unmap_sg(mmc_dev(host->mmc),
-				data->sg, data->sg_len, direction);
-		}
+		dma_unmap_sg(mmc_dev(host->mmc),
+			data->sg, data->sg_len, direction);
 	}
 }
 
@@ -1407,20 +1375,8 @@ static void mshci_pre_req(struct mmc_host *mmc, struct mmc_request *mrq,
 	else
 		direction = DMA_TO_DEVICE;
 
-	if (host->ops->dma_map_sg && data->blocks >= 2048) {
-		/* if transfer size is bigger than 1MiB */
-		sg_count = host->ops->dma_map_sg(host,
-			mmc_dev(host->mmc),
-			data->sg, data->sg_len, direction, 2);
-	} else if (host->ops->dma_map_sg && data->blocks >= 128) {
-		/* if transfer size is bigger than 64KiB */
-		sg_count = host->ops->dma_map_sg(host,
-			mmc_dev(host->mmc),
-			data->sg, data->sg_len, direction, 1);
-	} else {
-		sg_count = dma_map_sg(mmc_dev(host->mmc),
-			data->sg, data->sg_len, direction);
-	}
+	sg_count = dma_map_sg(mmc_dev(host->mmc),
+		data->sg, data->sg_len, direction);
 
 	if (sg_count == 0)
 		data->host_cookie = 0;
@@ -1449,20 +1405,8 @@ static void mshci_post_req(struct mmc_host *mmc, struct mmc_request *mrq,
 	else
 		direction = DMA_TO_DEVICE;
 
-	if ((host->ops->dma_unmap_sg && data->blocks >= 2048 &&
-		data->host_cookie)) {
-		/* if transfer size is bigger than 1MiB */
-		host->ops->dma_unmap_sg(host, mmc_dev(host->mmc),
-			data->sg, data->sg_len, direction, 2);
-	} else if ((host->ops->dma_unmap_sg && data->blocks >= 128 &&
-		data->host_cookie)) {
-		/* if transfer size is bigger than 64KiB */
-		host->ops->dma_unmap_sg(host, mmc_dev(host->mmc),
-			data->sg, data->sg_len, direction, 1);
-	} else if (data->host_cookie) {
-		dma_unmap_sg(mmc_dev(host->mmc),
-			data->sg, data->sg_len, direction);
-	}
+	dma_unmap_sg(mmc_dev(host->mmc),
+		data->sg, data->sg_len, direction);
 out:
 	spin_unlock_irqrestore(&host->lock, host->sl_flags);
 	return;
