@@ -7,7 +7,7 @@ obj-y			:= core.o bus.o dd.o syscore.o \
 			   topology.o
 obj-$(CONFIG_DEVTMPFS)	+= devtmpfs.o
 obj-$(CONFIG_CMA) += dma-contiguous.o
-obj-y			+= power/
+#obj-y			+= power/
 obj-$(CONFIG_HAS_DMA)	+= dma-mapping.o
 obj-$(CONFIG_HAVE_GENERIC_DMA_COHERENT) += dma-coherent.o
 obj-$(CONFIG_DMA_SHARED_BUFFER) += dma-buf.o
