@@ -43,7 +43,6 @@
 #include <linux/rculist.h>
 
 #include <asm/uaccess.h>
-#include <mach/sec_debug.h>
 
 #define CREATE_TRACE_POINTS
 #include <trace/events/printk.h>
@@ -293,61 +292,6 @@ static inline void boot_delay_msec(void)
 {
 }
 #endif
-
-/*
- * Return the number of unread characters in the log buffer.
- */
-static int log_buf_get_len(void)
-{
-	return logged_chars;
-}
-
-/*
- * Clears the ring-buffer
- */
-void log_buf_clear(void)
-{
-	logged_chars = 0;
-}
-
-/*
- * Copy a range of characters from the log buffer.
- */
-int log_buf_copy(char *dest, int idx, int len)
-{
-	int ret, max;
-	bool took_lock = false;
-
-	if (!oops_in_progress) {
-#ifdef CONFIG_MACH_PX
-		sec_debug_aux_log(SEC_DEBUG_AUXLOG_LOGBUF_LOCK_CHANGE,
-			"+ %s: spin_lock_irq logbuf_lock", __func__);
-#endif
-		raw_spin_lock_irq(&logbuf_lock);
-#ifdef CONFIG_MACH_PX
-		sec_debug_aux_log(SEC_DEBUG_AUXLOG_LOGBUF_LOCK_CHANGE,
-			"- %s: spin_lock_irq logbuf_lock", __func__);
-#endif
-		took_lock = true;
-	}
-
-	max = log_buf_get_len();
-	if (idx < 0 || idx >= max) {
-		ret = -1;
-	} else {
-		if (len > max - idx)
-			len = max - idx;
-		ret = len;
-		idx += (log_end - max);
-		while (len-- > 0)
-			dest[len] = LOG_BUF(idx + len);
-	}
-
-	if (took_lock)
-		raw_spin_unlock_irq(&logbuf_lock);
-
-	return ret;
-}
 
 #ifdef CONFIG_SECURITY_DMESG_RESTRICT
 int dmesg_restrict = 1;
@@ -722,35 +666,6 @@ static void call_console_drivers(unsigned start, unsigned end)
 	_call_console_drivers(start_print, end, msg_level);
 }
 
-#ifdef CONFIG_SEC_LOG
-static void (*log_char_hook)(char c);
-
-void register_log_char_hook(void (*f) (char c))
-{
-	unsigned start;
-	unsigned long flags;
-
-#ifdef CONFIG_MACH_PX
-	sec_debug_aux_log(SEC_DEBUG_AUXLOG_LOGBUF_LOCK_CHANGE,
-		"+ %s: spin_lock_irqsave logbuf_lock", __func__);
-#endif
-	raw_spin_lock_irqsave(&logbuf_lock, flags);
-#ifdef CONFIG_MACH_PX
-	sec_debug_aux_log(SEC_DEBUG_AUXLOG_LOGBUF_LOCK_CHANGE,
-		"- %s: spin_lock_irqsave logbuf_lock", __func__);
-#endif
-
-	start = min(con_start, log_start);
-	while (start != log_end)
-		f(__log_buf[start++ & (__LOG_BUF_LEN - 1)]);
-
-	log_char_hook = f;
-
-	raw_spin_unlock_irqrestore(&logbuf_lock, flags);
-}
-EXPORT_SYMBOL(register_log_char_hook);
-#endif
-
 static void emit_log_char(char c)
 {
 	LOG_BUF(log_end) = c;
@@ -761,11 +676,6 @@ static void emit_log_char(char c)
 		con_start = log_end - log_buf_len;
 	if (logged_chars < log_buf_len)
 		logged_chars++;
-
-#ifdef CONFIG_SEC_LOG
-	if (log_char_hook)
-		log_char_hook(c);
-#endif
 }
 
 /*
@@ -1233,12 +1143,6 @@ void resume_console(void)
 	console_suspended = 0;
 	console_unlock();
 }
-
-int get_console_suspended(void)
-{
-	return console_suspended;
-}
-EXPORT_SYMBOL(get_console_suspended);
 
 /**
  * console_cpu_notify - print deferred console messages after CPU hotplug
@@ -1900,12 +1804,4 @@ void kmsg_dump(enum kmsg_dump_reason reason)
 		dumper->dump(dumper, reason, s1, l1, s2, l2);
 	rcu_read_unlock();
 }
-#endif
-
-#ifdef CONFIG_MACH_PX
-void logbuf_force_unlock(void)
-{
-	logbuf_lock = __SPIN_LOCK_UNLOCKED(logbuf_lock);
-}
-EXPORT_SYMBOL(logbuf_force_unlock);
 #endif
