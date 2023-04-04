@@ -14,7 +14,7 @@
  * published by the Free Software Foundation.
 */
 
-#include <linux/suspend.h>
+#include <device/linux/suspend.h>
 #include <plat/pm.h>
 
 #define PFX "s5p pm: "

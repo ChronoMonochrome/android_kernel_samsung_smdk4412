@@ -23,7 +23,7 @@
 #include <linux/platform_device.h>
 #include <linux/version.h>
 #include <asm/current.h>
-#include <linux/suspend.h>
+#include <device/linux/suspend.h>
 
 #include <plat/cpu.h>
 #include <plat/pd.h>

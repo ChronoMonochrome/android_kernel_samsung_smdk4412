@@ -16,7 +16,7 @@
 #include <linux/module.h>
 #include <linux/platform_device.h>
 #include <linux/rtc.h>
-#include <linux/suspend.h>
+#include <device/linux/suspend.h>
 #include <linux/syscalls.h> /* sys_sync */
 #include <linux/wakelock.h>
 #ifdef CONFIG_WAKELOCK_STAT
