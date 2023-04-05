@@ -544,6 +544,8 @@ static struct snd_soc_dai_driver midas_ext_dai[] = {
 static int midas_wm1811_init_paiftx(struct snd_soc_pcm_runtime *rtd)
 {
 	struct snd_soc_codec *codec = rtd->codec;
+	struct snd_soc_card *card = rtd->card;
+
 	struct wm1811_machine_priv *wm1811
 		= snd_soc_card_get_drvdata(codec->card);
 	struct snd_soc_dai *aif1_dai = rtd->codec_dai;
@@ -556,7 +558,7 @@ static int midas_wm1811_init_paiftx(struct snd_soc_pcm_runtime *rtd)
 	rtd->codec_dai->driver->playback.channels_max =
 				rtd->cpu_dai->driver->playback.channels_max;
 
-	ret = snd_soc_add_codec_controls(codec, midas_controls,
+	ret = snd_soc_add_card_controls(card, midas_controls,
 					ARRAY_SIZE(midas_controls));
 
 	ret = snd_soc_dapm_new_controls(&codec->dapm, midas_dapm_widgets,
