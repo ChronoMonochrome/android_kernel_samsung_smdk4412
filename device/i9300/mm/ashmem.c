@@ -21,7 +21,7 @@
 #include <linux/fs.h>
 #include <linux/miscdevice.h>
 #include <linux/security.h>
-#include <linux/mm.h>
+#include <device/linux/mm.h>
 #include <linux/mman.h>
 #include <linux/uaccess.h>
 #include <linux/personality.h>

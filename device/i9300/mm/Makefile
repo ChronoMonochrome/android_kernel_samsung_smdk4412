@@ -1,4 +1,4 @@
-obj-y += page_alloc.o
+obj-y += page_alloc.o truncate.o
 
 obj-$(CONFIG_MMU) += mmap.o
 obj-$(CONFIG_ASHMEM) += ashmem.o
