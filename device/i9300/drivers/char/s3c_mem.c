@@ -142,7 +142,7 @@ long s3c_mem_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 			return -EFAULT;
 		}
 		flag = MEM_ALLOC;
-		param.vir_addr = do_mmap(file, 0, param.size,
+		param.vir_addr = do_mmap_pgoff(file, 0, param.size,
 				(PROT_READ|PROT_WRITE), MAP_SHARED, 0);
 		DEBUG("param.vir_addr = %08x, %d\n",
 						param.vir_addr, __LINE__);
@@ -235,7 +235,7 @@ long s3c_mem_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 			}
 
 			param.vir_addr =
-			    do_mmap(file, 0, param.size,
+			    do_mmap_pgoff(file, 0, param.size,
 				    (PROT_READ | PROT_WRITE), MAP_SHARED, 0);
 			DEBUG("param.vir_addr = %08x, %d\n", param.vir_addr,
 			      __LINE__);
@@ -291,7 +291,7 @@ long s3c_mem_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 			return -EFAULT;
 		}
 		flag = MEM_ALLOC_CACHEABLE;
-		param.vir_addr = do_mmap(file, 0, param.size,
+		param.vir_addr = do_mmap_pgoff(file, 0, param.size,
 				(PROT_READ|PROT_WRITE), MAP_SHARED, 0);
 		DEBUG("param.vir_addr = %08x, %d\n",
 				param.vir_addr, __LINE__);
@@ -337,7 +337,7 @@ long s3c_mem_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 		physical_address = param.phy_addr;
 		DEBUG("param.phy_addr = %08x, %d\n",
 		      physical_address, __LINE__);
-		param.vir_addr = do_mmap(file, 0, param.size,
+		param.vir_addr = do_mmap_pgoff(file, 0, param.size,
 				(PROT_READ|PROT_WRITE), MAP_SHARED, 0);
 		DEBUG("param.vir_addr = %08x, %d\n",
 				param.vir_addr, __LINE__);
@@ -382,7 +382,7 @@ long s3c_mem_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 		physical_address = param.phy_addr;
 		DEBUG("param.phy_addr = %08x, %d\n",
 		      physical_address, __LINE__);
-		param.vir_addr = do_mmap(file, 0, param.size,
+		param.vir_addr = do_mmap_pgoff(file, 0, param.size,
 				(PROT_READ|PROT_WRITE), MAP_SHARED, 0);
 		DEBUG("param.vir_addr = %08x, %d\n",
 				param.vir_addr, __LINE__);
