@@ -1635,7 +1635,7 @@ int fimc_outdev_overlay_buf(struct file *filp,
 		ctx->overlay.req_idx = i;
 		buf->size[i] = ctx->dst[i].length[0];
 		buf->phy_addr[i] = ctx->dst[i].base[0];
-		buf->vir_addr[i] = do_mmap(filp, 0, buf->size[i],
+		buf->vir_addr[i] = do_mmap_pgoff(filp, 0, buf->size[i],
 					PROT_READ|PROT_WRITE, MAP_SHARED, 0);
 		if (buf->vir_addr[i] == -EINVAL) {
 			fimc_err("%s: fail\n", __func__);
