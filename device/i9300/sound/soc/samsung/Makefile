@@ -5,7 +5,7 @@ snd-soc-audss-objs := audss.o
 snd-soc-pcm-objs := pcm.o
 snd-soc-i2s-objs := i2s.o
 
-obj-$(CONFIG_SND_SOC_SAMSUNG) += snd-soc-s3c24xx.o
+obj-$(CONFIG_SND_SOC_SAMSUNG_LEGACY) += snd-soc-s3c24xx.o
 obj-$(CONFIG_SND_SAMSUNG_PCM) += snd-soc-pcm.o
 obj-$(CONFIG_SND_SAMSUNG_I2S) += snd-soc-i2s.o
 obj-$(CONFIG_SND_SAMSUNG_I2S) += snd-soc-idma.o
