@@ -268,8 +268,10 @@ static int __init consistent_init(void)
 	unsigned long base = consistent_base;
 	unsigned long num_ptes = (CONSISTENT_END - base) >> PMD_SHIFT;
 
-	if (IS_ENABLED(CONFIG_CMA) && !IS_ENABLED(CONFIG_ARM_DMA_USE_IOMMU))
+#ifndef CONFIG_ARM_DMA_USE_IOMMU
+	if (cpu_architecture() >= CPU_ARCH_ARMv6)
 		return 0;
+#endif
 
 	consistent_pte = kmalloc(num_ptes * sizeof(pte_t), GFP_KERNEL);
 	if (!consistent_pte) {
@@ -340,7 +342,7 @@ static int __init coherent_init(void)
 	struct page *page;
 	void *ptr;
 
-	if (!IS_ENABLED(CONFIG_CMA))
+	if (cpu_architecture() < CPU_ARCH_ARMv6)
 		return 0;
 
 	ptr = __alloc_from_contiguous(NULL, size, prot, &page);
@@ -702,7 +704,7 @@ static void *__dma_alloc(struct device *dev, size_t size, dma_addr_t *handle,
 
 	if (arch_is_coherent() || nommu())
 		addr = __alloc_simple_buffer(dev, size, gfp, &page);
-	else if (!IS_ENABLED(CONFIG_CMA))
+	else if (cpu_architecture() < CPU_ARCH_ARMv6)
 		addr = __alloc_remap_buffer(dev, size, gfp, prot, &page, caller);
 	else if (gfp & GFP_ATOMIC)
 		addr = __alloc_from_pool(dev, size, &page, caller);
@@ -771,7 +773,7 @@ void arm_dma_free(struct device *dev, size_t size, void *cpu_addr,
 
 	if (arch_is_coherent() || nommu()) {
 		__dma_free_buffer(page, size);
-	} else if (!IS_ENABLED(CONFIG_CMA)) {
+	} else if (cpu_architecture() < CPU_ARCH_ARMv6) {
 		__dma_free_remap(cpu_addr, size);
 		__dma_free_buffer(page, size);
 	} else {
