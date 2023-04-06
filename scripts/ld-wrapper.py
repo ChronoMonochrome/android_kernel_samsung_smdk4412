@@ -351,10 +351,12 @@ additional_build_rules = {
     [{
         "injected_objects":
         [
+            "device/i9300/sound/soc/codecs/built-in.o",
             "device/i9300/sound/soc/samsung/built-in.o",
         ],
         "removed_objects":
         [
+            "sound/soc/codecs/built-in.o",
             "sound/soc/samsung/built-in.o",
         ]
     }],
