@@ -28,37 +28,24 @@
 #define WM8994_FLL1 1
 #define WM8994_FLL2 2
 
-#define WM8994_FLL_SRC_MCLK1    1
-#define WM8994_FLL_SRC_MCLK2    2
-#define WM8994_FLL_SRC_LRCLK    3
-#define WM8994_FLL_SRC_BCLK     4
-#define WM8994_FLL_SRC_INTERNAL 5
+#define WM8994_FLL_SRC_MCLK1  1
+#define WM8994_FLL_SRC_MCLK2  2
+#define WM8994_FLL_SRC_LRCLK  3
+#define WM8994_FLL_SRC_BCLK   4
 
 enum wm8994_vmid_mode {
 	WM8994_VMID_NORMAL,
 	WM8994_VMID_FORCE,
 };
 
-typedef void (*wm1811_micdet_cb)(void *data);
-typedef void (*wm1811_mic_id_cb)(void *data, u16 status);
+typedef void (*wm8958_micdet_cb)(u16 status, void *data);
 
 int wm8994_mic_detect(struct snd_soc_codec *codec, struct snd_soc_jack *jack,
 		      int micbias);
 int wm8958_mic_detect(struct snd_soc_codec *codec, struct snd_soc_jack *jack,
-		      wm1811_micdet_cb cb, void *det_cb_data,
-		      wm1811_mic_id_cb id_cb, void *id_cb_data);
+		      wm8958_micdet_cb cb, void *cb_data);
 
 int wm8994_vmid_mode(struct snd_soc_codec *codec, enum wm8994_vmid_mode mode);
-
-#define WM8994_CACHE_SIZE 1570
-
-struct wm8994_access_mask {
-	unsigned short readable;   /* Mask of readable bits */
-	unsigned short writable;   /* Mask of writable bits */
-};
-
-extern const struct wm8994_access_mask wm8994_access_masks[WM8994_CACHE_SIZE];
-extern const u16 wm8994_reg_defaults[WM8994_CACHE_SIZE];
 
 int wm8958_aif_ev(struct snd_soc_dapm_widget *w,
 		  struct snd_kcontrol *kcontrol, int event);
@@ -90,13 +77,10 @@ struct wm8994_priv {
 	int sysclk_rate[2];
 	int mclk[2];
 	int aifclk[2];
-	int aifdiv[2];
-	int channels[2];
 	struct wm8994_fll_config fll[2], fll_suspend[2];
 	struct completion fll_locked[2];
 	bool fll_locked_irq;
 	bool fll_byp;
-	bool clk_has_run;
 
 	int vmid_refcount;
 	int active_refcount;
@@ -150,13 +134,10 @@ struct wm8994_priv {
 	int btn_mask;
 	bool jackdet;
 	int jackdet_mode;
-	struct delayed_work jackdet_bootstrap;
 
+	wm8958_micdet_cb jack_cb;
+	void *jack_cb_data;
 	int micdet_irq;
-	wm1811_micdet_cb micd_cb;
-	void *micd_cb_data;
-	wm1811_mic_id_cb mic_id_cb;
-	void *mic_id_cb_data;
 
 	int revision;
 	struct wm8994_pdata *pdata;

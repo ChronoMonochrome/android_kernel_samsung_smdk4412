@@ -1,6 +1,16 @@
+config SND_SOC_SAMSUNG_LEGACY
+	tristate "ASoC support for Samsung"
+	depends on ARCH_S3C24XX || ARCH_S3C64XX || ARCH_S5PC100 || ARCH_S5PV210 || ARCH_S5P64X0 || ARCH_EXYNOS4
+	select S3C64XX_DMA if ARCH_S3C64XX
+	select S3C2410_DMA if ARCH_S3C24XX
+	help
+	  Say Y or M if you want to add support for codecs attached to
+	  the Samsung SoCs' Audio interfaces. You will also need to
+	  select the audio interfaces to support below.
+
 config SND_SOC_SAMSUNG_MIDAS_WM1811
 	tristate "SoC I2S Audio support for WM1811 on MIDAS"
-	depends on SND_SOC_SAMSUNG && MACH_MIDAS
+	depends on SND_SOC_SAMSUNG_LEGACY && MACH_MIDAS
 	select SND_SOC_WM8994
 	select SND_SAMSUNG_I2S
 	help
@@ -46,26 +56,26 @@ config SND_SAMSUNG_RP_DEBUG
 
 config SND_DUOS_MODEM_SWITCH
 	bool "Select DUOS Modem"
-	depends on SND_SOC_SAMSUNG
+	depends on SND_SOC_SAMSUNG_LEGACY
 
 config SND_USE_SUB_MIC
 	bool "Use SUB_MIC"
-	depends on SND_SOC_SAMSUNG
+	depends on SND_SOC_SAMSUNG_LEGACY
 
 config SND_USE_THIRD_MIC
 	bool "Use THIRD_MIC"
-	depends on SND_SOC_SAMSUNG
+	depends on SND_SOC_SAMSUNG_LEGACY
 
 config SND_USE_STEREO_SPEAKER
 	bool "Use STEREO_SPEAKER"
-	depends on SND_SOC_SAMSUNG
+	depends on SND_SOC_SAMSUNG_LEGACY
 	help
 	  Support stereo speaker for Samsung's Tablet-PC device.
 
 config SND_USE_LINEOUT_SWITCH
 	bool "Use LINEOUT_SWITCH"
-	depends on SND_SOC_SAMSUNG
+	depends on SND_SOC_SAMSUNG_LEGACY
 
 config SND_USE_MUIC_SWITCH
 	bool "Use MUIC_SWITCH CONTROL"
-	depends on SND_SOC_SAMSUNG
+	depends on SND_SOC_SAMSUNG_LEGACY
