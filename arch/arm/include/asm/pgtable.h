@@ -22,9 +22,6 @@
 
 #include <asm-generic/pgtable-nopud.h>
 #include <asm/memory.h>
-#ifdef CONFIG_ARCH_EXYNOS
-#include <mach/vmalloc.h>
-#endif
 #include <asm/pgtable-hwdef.h>
 
 #ifdef CONFIG_ARM_LPAE
@@ -43,10 +40,7 @@
  */
 #define VMALLOC_OFFSET		(8*1024*1024)
 #define VMALLOC_START		(((unsigned long)high_memory + VMALLOC_OFFSET) & ~(VMALLOC_OFFSET-1))
-#ifndef CONFIG_ARCH_EXYNOS
 #define VMALLOC_END		0xff000000UL
-#endif
-
 
 #define LIBRARY_TEXT_START	0x0c000000
 
