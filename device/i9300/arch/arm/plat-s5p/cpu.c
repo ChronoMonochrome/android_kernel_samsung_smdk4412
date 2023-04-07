@@ -141,11 +141,6 @@ static struct map_desc s5p_iodesc[] __initdata = {
 		.length		= SZ_4K,
 		.type		= MT_DEVICE,
 	}, {
-		.virtual	= (unsigned long)S5P_VA_SROMC,
-		.pfn		= __phys_to_pfn(S5P_PA_SROMC),
-		.length		= SZ_4K,
-		.type		= MT_DEVICE,
-	}, {
 		.virtual	= (unsigned long)S3C_VA_HSPHY,
 		.pfn		= __phys_to_pfn(S5P_PA_HSPHY),
 		.length		= SZ_4K,
@@ -160,9 +155,9 @@ void __init s5p_init_io(struct map_desc *mach_desc,
 			int size, void __iomem *cpuid_addr)
 {
 	/* initialize the io descriptors we need for initialization */
-	iotable_init_legacy(s5p_iodesc, ARRAY_SIZE(s5p_iodesc));
+	iotable_init(s5p_iodesc, ARRAY_SIZE(s5p_iodesc));
 	if (mach_desc)
-		iotable_init_legacy(mach_desc, size);
+		iotable_init(mach_desc, size);
 
 	/* detect cpu id and rev. */
 	s5p_init_cpu(cpuid_addr);
