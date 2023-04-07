@@ -53,13 +53,6 @@ additional_build_rules = {
            "arch/arm/kernel/suspend.o",
         ]
     }],
-    "arch/arm/mm/built-in.o" :
-    [{
-        "injected_objects":
-        [
-            "device/i9300/arch/arm/mm/mmu-legacy.o",
-        ],
-    }],
     "kernel/built-in.o" :
     [{
         "injected_objects":
