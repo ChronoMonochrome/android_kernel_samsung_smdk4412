@@ -14,7 +14,7 @@
 #include <device/linux/suspend.h>
 #include <linux/module.h>
 #include <linux/syscalls.h>
-#include <device/linux/freezer.h>
+#include <linux/freezer.h>
 #include <linux/delay.h>
 #include <linux/workqueue.h>
 #include <linux/wakelock.h>

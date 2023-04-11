@@ -13,7 +13,7 @@
 #include <linux/sunrpc/svcsock.h>
 #include <linux/nfs_fs.h>
 #include <linux/mutex.h>
-#include <device/linux/freezer.h>
+#include <linux/freezer.h>
 #include <linux/kthread.h>
 #include <linux/sunrpc/svcauth_gss.h>
 #include <linux/sunrpc/bc_xprt.h>

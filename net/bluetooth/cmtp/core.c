@@ -29,7 +29,7 @@
 #include <linux/slab.h>
 #include <linux/poll.h>
 #include <linux/fcntl.h>
-#include <device/linux/freezer.h>
+#include <linux/freezer.h>
 #include <linux/skbuff.h>
 #include <linux/socket.h>
 #include <linux/ioctl.h>
