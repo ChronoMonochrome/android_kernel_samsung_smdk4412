@@ -17,7 +17,7 @@
 #include <linux/mutex.h>
 #include <linux/kmod.h>
 #include <linux/sched.h>
-#include <device/linux/freezer.h>
+#include <linux/freezer.h>
 #include "rc-core-priv.h"
 
 /* Define the max number of pulse/space transitions to buffer */

@@ -38,7 +38,7 @@
 #include <linux/kthread.h>
 #include <linux/list.h>
 #include <linux/delay.h>
-#include <device/linux/freezer.h>
+#include <linux/freezer.h>
 
 #include <xen/events.h>
 #include <xen/page.h>

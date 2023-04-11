@@ -41,7 +41,7 @@
 #include <linux/interrupt.h>
 #include <linux/device.h>
 #include <linux/syscore_ops.h>
-#include <device/linux/freezer.h>
+#include <linux/freezer.h>
 #include <linux/syscalls.h>
 #include <linux/suspend.h>
 #include <linux/cpu.h>

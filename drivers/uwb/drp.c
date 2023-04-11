@@ -19,7 +19,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include <linux/kthread.h>
-#include <device/linux/freezer.h>
+#include <linux/freezer.h>
 #include <linux/slab.h>
 #include <linux/delay.h>
 #include "uwb-internal.h"

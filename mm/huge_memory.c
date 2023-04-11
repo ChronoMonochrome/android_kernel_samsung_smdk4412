@@ -15,7 +15,7 @@
 #include <linux/mm_inline.h>
 #include <linux/kthread.h>
 #include <linux/khugepaged.h>
-#include <device/linux/freezer.h>
+#include <linux/freezer.h>
 #include <linux/mman.h>
 #include <asm/tlb.h>
 #include <asm/pgalloc.h>

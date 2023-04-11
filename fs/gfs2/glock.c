@@ -23,7 +23,7 @@
 #include <linux/seq_file.h>
 #include <linux/debugfs.h>
 #include <linux/kthread.h>
-#include <device/linux/freezer.h>
+#include <linux/freezer.h>
 #include <linux/workqueue.h>
 #include <linux/jiffies.h>
 #include <linux/rcupdate.h>

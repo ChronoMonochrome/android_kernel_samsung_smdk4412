@@ -60,7 +60,7 @@
 #include <linux/dmi.h>
 #include <linux/delay.h>
 #include <linux/acpi.h>
-#include <device/linux/freezer.h>
+#include <linux/freezer.h>
 #include <linux/kthread.h>
 
 #include <asm/page.h>

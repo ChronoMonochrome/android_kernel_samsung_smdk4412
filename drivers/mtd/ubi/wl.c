@@ -101,7 +101,7 @@
 
 #include <linux/slab.h>
 #include <linux/crc32.h>
-#include <device/linux/freezer.h>
+#include <linux/freezer.h>
 #include <linux/kthread.h>
 #include "ubi.h"
 

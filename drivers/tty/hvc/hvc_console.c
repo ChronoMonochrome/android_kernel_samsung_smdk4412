@@ -37,7 +37,7 @@
 #include <linux/sched.h>
 #include <linux/spinlock.h>
 #include <linux/delay.h>
-#include <device/linux/freezer.h>
+#include <linux/freezer.h>
 #include <linux/slab.h>
 #include <linux/serial_core.h>
 

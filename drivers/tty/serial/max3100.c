@@ -47,7 +47,7 @@
 #include <linux/serial_core.h>
 #include <linux/serial.h>
 #include <linux/spi/spi.h>
-#include <device/linux/freezer.h>
+#include <linux/freezer.h>
 #include <linux/tty.h>
 #include <linux/tty_flip.h>
 

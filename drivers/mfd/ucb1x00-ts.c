@@ -28,7 +28,7 @@
 #include <linux/string.h>
 #include <linux/input.h>
 #include <linux/device.h>
-#include <device/linux/freezer.h>
+#include <linux/freezer.h>
 #include <linux/slab.h>
 #include <linux/kthread.h>
 #include <linux/mfd/ucb1x00.h>

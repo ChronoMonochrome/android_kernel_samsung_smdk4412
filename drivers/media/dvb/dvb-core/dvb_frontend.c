@@ -37,7 +37,7 @@
 #include <linux/semaphore.h>
 #include <linux/module.h>
 #include <linux/list.h>
-#include <device/linux/freezer.h>
+#include <linux/freezer.h>
 #include <linux/jiffies.h>
 #include <linux/kthread.h>
 #include <asm/processor.h>

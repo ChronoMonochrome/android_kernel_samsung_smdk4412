@@ -47,7 +47,7 @@
 #include <linux/pci.h>
 #include <asm/uaccess.h>
 #include <linux/kthread.h>
-#include <device/linux/freezer.h>
+#include <linux/freezer.h>
 
 #include <linux/ieee80211.h>
 #include <net/iw_handler.h>

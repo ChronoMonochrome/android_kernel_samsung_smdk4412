@@ -25,7 +25,7 @@
 #include <linux/ratelimit.h>
 #include <linux/tracehook.h>
 #include <linux/capability.h>
-#include <device/linux/freezer.h>
+#include <linux/freezer.h>
 #include <linux/pid_namespace.h>
 #include <linux/nsproxy.h>
 #include <linux/user_namespace.h>

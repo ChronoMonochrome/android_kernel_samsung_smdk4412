@@ -10,7 +10,7 @@
 #include <linux/nmi.h>
 #include <linux/init.h>
 #include <linux/delay.h>
-#include <device/linux/freezer.h>
+#include <linux/freezer.h>
 #include <linux/kthread.h>
 #include <linux/lockdep.h>
 #include <linux/export.h>

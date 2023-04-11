@@ -23,7 +23,7 @@
 #include <linux/suspend.h>
 #include <linux/kthread.h>
 #include <linux/moduleparam.h>
-#include <device/linux/freezer.h>
+#include <linux/freezer.h>
 #include <linux/of_platform.h>
 
 #include <asm/prom.h>

@@ -7,7 +7,7 @@
  */
 
 #include <linux/sched.h>
-#include <device/linux/freezer.h>
+#include <linux/freezer.h>
 #include <linux/module.h>
 #include <linux/fs_struct.h>
 #include <linux/swap.h>
