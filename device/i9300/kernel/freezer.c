@@ -12,6 +12,33 @@
 #include <linux/freezer.h>
 #include <linux/kthread.h>
 
+/* total number of freezing conditions in effect */
+atomic_t system_freezing_cnt = ATOMIC_INIT(0);
+EXPORT_SYMBOL(system_freezing_cnt);
+
+/* indicate whether PM freezing is in effect, protected by pm_mutex */
+bool pm_freezing;
+bool pm_nosig_freezing;
+
+/* protects freezing and frozen transitions */
+static DEFINE_SPINLOCK(freezer_lock);
+
+/**
+ * freezing_slow_path - slow path for testing whether a task needs to be frozen
+ * @p: task to be tested
+ *
+ * This function is called by freezing() if system_freezing_cnt isn't zero
+ * and tests whether @p needs to enter and stay in frozen state.  Can be
+ * called under any context.  The freezers are responsible for ensuring the
+ * target tasks see the updated state.
+ */
+bool freezing_slow_path(struct task_struct *p)
+{
+	BUG();
+	return false;
+}
+EXPORT_SYMBOL(freezing_slow_path);
+
 /*
  * freezing is complete, mark current process as frozen
  */

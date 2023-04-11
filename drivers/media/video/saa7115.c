@@ -757,8 +757,8 @@ static int saa711x_g_volatile_ctrl(struct v4l2_ctrl *ctrl)
 	switch (ctrl->id) {
 	case V4L2_CID_CHROMA_AGC:
 		/* chroma gain cluster */
-		if (state->agc->cur.val)
-			state->gain->cur.val =
+		if (state->agc->val)
+			state->gain->val =
 				saa711x_read(sd, R_0F_CHROMA_GAIN_CNTL) & 0x7f;
 		break;
 	}
@@ -1724,15 +1724,4 @@ static struct i2c_driver saa711x_driver = {
 	.id_table	= saa711x_id,
 };
 
-static __init int init_saa711x(void)
-{
-	return i2c_add_driver(&saa711x_driver);
-}
-
-static __exit void exit_saa711x(void)
-{
-	i2c_del_driver(&saa711x_driver);
-}
-
-module_init(init_saa711x);
-module_exit(exit_saa711x);
+module_i2c_driver(saa711x_driver);

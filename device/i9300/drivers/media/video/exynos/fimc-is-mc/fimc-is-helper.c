@@ -24,13 +24,13 @@
 #include <linux/memory.h>
 #include <device/linux/regulator/consumer.h>
 #include <device/linux/pm_runtime.h>
-#include <linux/videodev2.h>
-#include <media/v4l2-subdev.h>
-#include <linux/videodev2.h>
-#include <linux/videodev2_exynos_camera.h>
+#include <device/linux/videodev2.h>
+#include <device/media/v4l2-subdev.h>
+#include <device/linux/videodev2.h>
+#include <device/linux/videodev2_exynos_camera.h>
 #include <device/linux/gpio.h>
 #include <plat/gpio-cfg.h>
-#include <media/exynos_fimc_is.h>
+#include <device/media/exynos_fimc_is.h>
 
 
 #include "fimc-is-core.h"

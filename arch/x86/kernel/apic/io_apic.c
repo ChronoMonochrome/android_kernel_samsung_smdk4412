@@ -33,7 +33,7 @@
 #include <linux/syscore_ops.h>
 #include <linux/msi.h>
 #include <linux/htirq.h>
-#include <device/linux/freezer.h>
+#include <linux/freezer.h>
 #include <linux/kthread.h>
 #include <linux/jiffies.h>	/* time_after() */
 #include <linux/slab.h>

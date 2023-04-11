@@ -24,7 +24,7 @@
 #include <device/linux/regulator/machine.h>
 #include <device/linux/regulator/max8649.h>
 #include <device/linux/regulator/fixed.h>
-#ifdef CONFIG_MFD_MAX77693
+#ifdef CONFIG_MFD_MAX77693_LEGACY
 #include <linux/mfd/max77693.h>
 #include <linux/mfd/max77693-private.h>
 #include <linux/leds-max77693.h>
@@ -41,7 +41,7 @@
 #ifdef CONFIG_STMPE811_ADC
 #include <linux/stmpe811-adc.h>
 #endif
-#include <linux/v4l2-mediabus.h>
+#include <device/linux/v4l2-mediabus.h>
 #include <linux/memblock.h>
 #include <linux/delay.h>
 #include <linux/bootmem.h>
@@ -71,7 +71,7 @@
 #include <plat/csis.h>
 #include <plat/media.h>
 #include <plat/adc.h>
-#include <media/exynos_fimc_is.h>
+#include <device/media/exynos_fimc_is.h>
 #include <mach/exynos-ion.h>
 
 #include <mach/map.h>
@@ -425,7 +425,7 @@ static void __init smdk4212_usbgadget_init(void)
 }
 #endif
 
-#ifdef CONFIG_MFD_MAX77693
+#ifdef CONFIG_MFD_MAX77693_LEGACY
 #ifdef CONFIG_VIBETONZ
 static struct max77693_haptic_platform_data max77693_haptic_pdata = {
 	.max_timeout = 10000,
@@ -520,7 +520,7 @@ static struct i2c_board_info i2c_devs1[] __initdata = {
 };
 
 #ifdef CONFIG_S3C_DEV_I2C4
-#ifdef CONFIG_MFD_MAX77693
+#ifdef CONFIG_MFD_MAX77693_LEGACY
 static struct i2c_board_info i2c_devs4_max77693[] __initdata = {
 	{
 		I2C_BOARD_INFO("max77693", (0xCC >> 1)),
@@ -648,7 +648,7 @@ struct platform_device s3c_device_i2c17 = {
 
 /* I2C17 */
 static struct i2c_board_info i2c_devs17_emul[] __initdata = {
-#ifdef CONFIG_MFD_MAX77693
+#ifdef CONFIG_MFD_MAX77693_LEGACY
 	{
 		I2C_BOARD_INFO("max77693", (0xCC >> 1)),
 		.platform_data	= &exynos4_max77693_info,
@@ -1286,7 +1286,7 @@ static struct platform_device *midas_devices[] __initdata = {
 #ifdef CONFIG_ION_EXYNOS
 	&exynos_device_ion,
 #endif
-#ifdef CONFIG_VIDEO_EXYNOS_FIMC_LITE
+#ifdef CONFIG_VIDEO_EXYNOS_FIMC_LITE_LEGACY
 	&exynos_device_flite0,
 	&exynos_device_flite1,
 #endif

@@ -15,7 +15,7 @@
 #include <linux/platform_device.h>
 #include <linux/interrupt.h>
 #include <linux/ioport.h>
-#include <media/exynos_gscaler.h>
+#include <device/media/exynos_gscaler.h>
 #include <plat/devs.h>
 #include <mach/map.h>
 

@@ -24,7 +24,7 @@
 #ifndef __CPU_COOLING_H__
 #define __CPU_COOLING_H__
 
-#include <linux/thermal.h>
+#include <device/linux/thermal.h>
 
 struct freq_pctg_table {
 	unsigned int freq_clip_pctg[NR_CPUS];

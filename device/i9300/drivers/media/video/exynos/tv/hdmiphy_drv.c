@@ -20,7 +20,7 @@
 #include <linux/irq.h>
 #include <linux/err.h>
 
-#include <media/v4l2-subdev.h>
+#include <device/media/v4l2-subdev.h>
 
 MODULE_AUTHOR("Tomasz Stanislawski <t.stanislaws@samsung.com>");
 MODULE_DESCRIPTION("Samsung HDMI Physical interface driver");

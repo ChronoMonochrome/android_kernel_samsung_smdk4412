@@ -25,8 +25,8 @@
 #include <linux/slab.h>
 #include <linux/string.h>
 #include <linux/syscore_ops.h>
-#include <device/linux/amba/bus.h>
-#include <device/linux/amba/kmi.h>
+#include <linux/amba/bus.h>
+#include <linux/amba/kmi.h>
 #include <linux/clocksource.h>
 #include <linux/clockchips.h>
 #include <linux/interrupt.h>

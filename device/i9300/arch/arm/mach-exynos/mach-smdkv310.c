@@ -27,7 +27,7 @@
 #include <device/linux/regulator/fixed.h>
 #include <linux/mfd/wm8994/pdata.h>
 #include <linux/mfd/max8997.h>
-#include <linux/v4l2-mediabus.h>
+#include <device/linux/v4l2-mediabus.h>
 #include <linux/memblock.h>
 #if defined(CONFIG_CMA)
 #include <linux/cma.h>
@@ -51,7 +51,7 @@
 #include <plat/fimc.h>
 #endif
 #ifdef CONFIG_VIDEO_SAMSUNG_S5P_FIMC
-#include <media/s5p_fimc.h>
+#include <device/media/s5p_fimc.h>
 #include <plat/fimc-core.h>
 #endif
 #ifdef CONFIG_VIDEO_FIMC_MIPI
@@ -100,10 +100,10 @@
 #endif
 #include <mach/dev.h>
 
-#include <media/s5k4ba_platform.h>
-#include <media/s5k4ea_platform.h>
-#include <media/m5mo_platform.h>
-#include <media/m5mols.h>
+#include <device/media/s5k4ba_platform.h>
+#include <device/media/s5k4ea_platform.h>
+#include <device/media/m5mo_platform.h>
+#include <device/media/m5mols.h>
 
 #if defined(CONFIG_EXYNOS4_SETUP_THERMAL)
 #include <plat/s5p-tmu.h>

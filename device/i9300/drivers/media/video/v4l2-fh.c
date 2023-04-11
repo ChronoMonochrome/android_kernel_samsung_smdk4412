@@ -25,10 +25,10 @@
 #include <linux/module.h>
 #include <linux/bitops.h>
 #include <linux/slab.h>
-#include <media/v4l2-dev.h>
-#include <media/v4l2-fh.h>
-#include <media/v4l2-event.h>
-#include <media/v4l2-ioctl.h>
+#include <device/media/v4l2-dev.h>
+#include <device/media/v4l2-fh.h>
+#include <device/media/v4l2-event.h>
+#include <device/media/v4l2-ioctl.h>
 
 int v4l2_fh_init(struct v4l2_fh *fh, struct video_device *vdev)
 {

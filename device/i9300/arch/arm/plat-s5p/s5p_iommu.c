@@ -16,7 +16,7 @@
 #include <linux/mm.h>
 #include <linux/platform_device.h>
 #include <linux/slab.h>
-#include <linux/iommu.h>
+#include <device/linux/iommu.h>
 #include <linux/errno.h>
 #include <linux/list.h>
 

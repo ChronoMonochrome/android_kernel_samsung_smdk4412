@@ -23,8 +23,8 @@
 #include <linux/vmalloc.h>
 #include <linux/wait.h>
 
-#include <media/v4l2-dev.h>
-#include <media/v4l2-event.h>
+#include <device/media/v4l2-dev.h>
+#include <device/media/v4l2-event.h>
 
 #include "uvc.h"
 

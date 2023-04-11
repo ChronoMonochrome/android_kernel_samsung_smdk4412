@@ -121,16 +121,16 @@
 #endif
 
 #ifdef CONFIG_VIDEO_M5MO
-#include <media/m5mo_platform.h>
+#include <device/media/m5mo_platform.h>
 #endif
 #ifdef CONFIG_VIDEO_S5K5CCGX_COMMON
-#include <media/s5k5ccgx_platform.h>
+#include <device/media/s5k5ccgx_platform.h>
 #endif
 #ifdef CONFIG_VIDEO_S5K5BAFX
-#include <media/s5k5bafx_platform.h>
+#include <device/media/s5k5bafx_platform.h>
 #endif
 #ifdef CONFIG_VIDEO_SR200PC20
-#include <media/sr200pc20_platform.h>
+#include <device/media/sr200pc20_platform.h>
 #endif
 
 #if defined(CONFIG_EXYNOS4_SETUP_THERMAL)

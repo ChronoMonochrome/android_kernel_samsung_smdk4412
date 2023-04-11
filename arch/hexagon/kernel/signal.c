@@ -20,7 +20,7 @@
 
 #include <linux/linkage.h>
 #include <linux/syscalls.h>
-#include <device/linux/freezer.h>
+#include <linux/freezer.h>
 #include <linux/tracehook.h>
 #include <asm/registers.h>
 #include <asm/thread_info.h>

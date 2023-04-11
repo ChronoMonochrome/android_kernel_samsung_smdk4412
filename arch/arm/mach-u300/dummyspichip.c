@@ -23,7 +23,7 @@
  * different settings on the loopback device. Normal chip configs
  * shall be STATIC and not altered by the driver!
  */
-#include <device/linux/amba/pl022.h>
+#include <linux/amba/pl022.h>
 
 struct dummy {
 	struct device *dev;

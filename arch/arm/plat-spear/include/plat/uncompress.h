@@ -12,7 +12,7 @@
  */
 
 #include <linux/io.h>
-#include <device/linux/amba/serial.h>
+#include <linux/amba/serial.h>
 #include <mach/hardware.h>
 
 #ifndef __PLAT_UNCOMPRESS_H

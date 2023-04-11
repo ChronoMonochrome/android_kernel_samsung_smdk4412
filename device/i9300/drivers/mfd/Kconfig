@@ -1,4 +1,4 @@
-config MFD_MAX77686
+config MFD_MAX77686_LEGACY
 	bool "Maxim Semiconductor MAX77686 PMIC Support"
 	depends on I2C=y && GENERIC_HARDIRQS
 	select MFD_CORE
@@ -9,7 +9,7 @@ config MFD_MAX77686
 	  additional drivers must be enabled in order to use the functionality
 	  of the device.
 
-config MFD_MAX77693
+config MFD_MAX77693_LEGACY
 	bool "Maxim Semiconductor MAX77693 PMIC Support"
 	depends on I2C=y && GENERIC_HARDIRQS
 	select MFD_CORE
@@ -19,3 +19,18 @@ config MFD_MAX77693
 	  MUIC controls on chip.
 	  This driver provides common support for accessing the device;
 	  additional drivers
+
+config MFD_WM8994_LEGACY
+	bool "Support Wolfson Microelectronics WM8994"
+	select MFD_CORE
+	select REGMAP_I2C
+	select REGMAP_IRQ
+	depends on I2C=y && GENERIC_HARDIRQS
+	help
+	  The WM8994 is a highly integrated hi-fi CODEC designed for
+	  smartphone applicatiosn.  As well as audio functionality it
+	  has on board GPIO and regulator functionality which is
+	  supported via the relevant subsystems.  This driver provides
+	  core support for the WM8994, in order to use the actual
+	  functionaltiy of the device other drivers must be enabled.
+

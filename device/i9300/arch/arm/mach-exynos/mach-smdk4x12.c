@@ -26,7 +26,7 @@
 #include <linux/mfd/wm8994/pdata.h>
 #include <linux/mfd/max8997.h>
 #include <linux/mfd/max77686.h>
-#include <linux/v4l2-mediabus.h>
+#include <device/linux/v4l2-mediabus.h>
 #include <linux/memblock.h>
 #include <linux/delay.h>
 #include <linux/smsc911x.h>
@@ -62,7 +62,7 @@
 #include <plat/fimc.h>
 #elif defined(CONFIG_VIDEO_SAMSUNG_S5P_FIMC)
 #include <plat/fimc-core.h>
-#include <media/s5p_fimc.h>
+#include <device/media/s5p_fimc.h>
 #endif
 #if defined(CONFIG_VIDEO_FIMC_MIPI)
 #include <plat/csis.h>
@@ -78,13 +78,13 @@
 #include <plat/s5p-mfc.h>
 #endif
 
-#include <media/s5k4ba_platform.h>
-#include <media/s5k4ea_platform.h>
-#include <media/exynos_flite.h>
-#include <media/exynos_fimc_is.h>
+#include <device/media/s5k4ba_platform.h>
+#include <device/media/s5k4ea_platform.h>
+#include <device/media/exynos_flite.h>
+#include <device/media/exynos_fimc_is.h>
 #include <video/platform_lcd.h>
-#include <media/m5mo_platform.h>
-#include <media/m5mols.h>
+#include <device/media/m5mo_platform.h>
+#include <device/media/m5mols.h>
 #include <mach/board_rev.h>
 #include <mach/map.h>
 #include <mach/spi-clocks.h>
@@ -118,7 +118,7 @@ struct s3cfb_extdsp_lcd {
 
 #ifdef CONFIG_VIDEO_SAMSUNG_S5P_FIMC
 #include <plat/fimc-core.h>
-#include <media/s5p_fimc.h>
+#include <device/media/s5p_fimc.h>
 #endif
 
 #ifdef CONFIG_VIDEO_JPEG_V2X
@@ -895,7 +895,7 @@ static struct i2c_board_info s5k6a3_sensor_info = {
 };
 #endif
 #endif
-#ifdef CONFIG_VIDEO_EXYNOS_FIMC_LITE
+#ifdef CONFIG_VIDEO_EXYNOS_FIMC_LITE_LEGACY
 /* This is for platdata of fimc-lite */
 #ifdef CONFIG_VIDEO_S5K3H2
 static struct s3c_platform_camera s5k3h2 = {
@@ -3131,7 +3131,7 @@ static struct platform_device *smdk4x12_devices[] __initdata = {
 #ifdef CONFIG_ION_EXYNOS
 	&exynos_device_ion,
 #endif
-#ifdef CONFIG_VIDEO_EXYNOS_FIMC_LITE
+#ifdef CONFIG_VIDEO_EXYNOS_FIMC_LITE_LEGACY
 	&exynos_device_flite0,
 	&exynos_device_flite1,
 #endif
@@ -3456,7 +3456,7 @@ static void __init smdk4x12_camera_config(void)
 }
 #endif /* CONFIG_VIDEO_SAMSUNG_S5P_FIMC */
 
-#ifdef CONFIG_VIDEO_EXYNOS_FIMC_LITE
+#ifdef CONFIG_VIDEO_EXYNOS_FIMC_LITE_LEGACY
 static void __set_flite_camera_config(struct exynos_platform_flite *data,
 					u32 active_index, u32 max_cam)
 {
@@ -4075,7 +4075,7 @@ static void __init smdk4x12_machine_init(void)
 	s5p_hdmi_cec_set_platdata(&hdmi_cec_data);
 #endif
 #endif
-#ifdef CONFIG_VIDEO_EXYNOS_FIMC_LITE
+#ifdef CONFIG_VIDEO_EXYNOS_FIMC_LITE_LEGACY
 	smdk4x12_set_camera_flite_platdata();
 	s3c_set_platdata(&exynos_flite0_default_data,
 			sizeof(exynos_flite0_default_data), &exynos_device_flite0);

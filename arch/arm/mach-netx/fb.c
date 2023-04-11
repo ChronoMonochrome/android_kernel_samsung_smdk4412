@@ -20,8 +20,8 @@
 #include <linux/device.h>
 #include <linux/init.h>
 #include <linux/dma-mapping.h>
-#include <device/linux/amba/bus.h>
-#include <device/linux/amba/clcd.h>
+#include <linux/amba/bus.h>
+#include <linux/amba/clcd.h>
 #include <linux/err.h>
 #include <linux/gfp.h>
 

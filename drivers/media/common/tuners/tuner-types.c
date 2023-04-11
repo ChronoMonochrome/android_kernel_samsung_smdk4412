@@ -1806,6 +1806,10 @@ struct tunertype tuners[] = {
 		.name   = "Xceive 5000 tuner",
 		/* see xc5000.c for details */
 	},
+	[TUNER_XC4000] = { /* Xceive 4000 */
+		.name   = "Xceive 4000 tuner",
+		/* see xc4000.c for details */
+	},
 	[TUNER_TCL_MF02GIP_5N] = { /* TCL tuner MF02GIP-5N-E */
 		.name   = "TCL tuner MF02GIP-5N-E",
 		.params = tuner_tcl_mf02gip_5n_params,
@@ -1863,6 +1867,10 @@ struct tunertype tuners[] = {
 		.name   = "Tena TNF5337 MFD",
 		.params = tuner_tena_tnf_5337_params,
 		.count  = ARRAY_SIZE(tuner_tena_tnf_5337_params),
+	},
+	[TUNER_XC5000C] = { /* Xceive 5000C */
+		.name   = "Xceive 5000C tuner",
+		/* see xc5000.c for details */
 	},
 };
 EXPORT_SYMBOL(tuners);

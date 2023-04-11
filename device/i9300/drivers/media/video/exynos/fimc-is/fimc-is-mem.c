@@ -19,11 +19,11 @@
 #include <linux/cma.h>
 #include <asm/cacheflush.h>
 #include <asm/pgtable.h>
-#include <media/videobuf2-core.h>
+#include <device/media/videobuf2-core.h>
 #include <asm/cacheflush.h>
-#include <media/videobuf2-cma-phys.h>
+#include <device/media/videobuf2-cma-phys.h>
 #if defined(CONFIG_VIDEOBUF2_ION)
-#include <media/videobuf2-ion.h>
+#include <device/media/videobuf2-ion.h>
 #endif
 #include "fimc-is-core.h"
 #include "fimc-is-param.h"

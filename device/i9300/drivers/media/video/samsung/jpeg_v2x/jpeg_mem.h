@@ -22,8 +22,8 @@
 #include <linux/dma-mapping.h>
 #include <linux/io.h>
 
-#include <media/videobuf2-core.h>
-#include <media/videobuf2-memops.h>
+#include <device/media/videobuf2-core.h>
+#include <device/media/videobuf2-memops.h>
 
 #include <asm/cacheflush.h>
 

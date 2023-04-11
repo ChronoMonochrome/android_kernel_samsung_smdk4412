@@ -582,13 +582,13 @@ static int __devinit sdhci_s3c_probe(struct platform_device *pdev)
 	host->quirks |= SDHCI_QUIRK_NO_ENDATTR_IN_NOPDESC;
 	host->quirks |= SDHCI_QUIRK_NO_HISPD_BIT;
 
-#ifndef CONFIG_MMC_SDHCI_S3C_DMA
+#ifndef CONFIG_MMC_SDHCI_S3C_LEGACY_DMA
 
 	/* we currently see overruns on errors, so disable the SDMA
 	 * support as well. */
 	host->quirks |= SDHCI_QUIRK_BROKEN_DMA;
 
-#endif /* CONFIG_MMC_SDHCI_S3C_DMA */
+#endif /* CONFIG_MMC_SDHCI_S3C_LEGACY_DMA */
 
 	/* It seems we do not get an DATA transfer complete on non-busy
 	 * transfers, not sure if this is a problem with this specific

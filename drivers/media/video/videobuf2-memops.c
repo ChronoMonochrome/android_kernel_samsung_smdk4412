@@ -18,7 +18,6 @@
 #include <linux/mm.h>
 #include <linux/sched.h>
 #include <linux/file.h>
-#include <linux/slab.h>
 
 #include <media/videobuf2-core.h>
 #include <media/videobuf2-memops.h>
@@ -56,6 +55,7 @@ struct vm_area_struct *vb2_get_vma(struct vm_area_struct *vma)
 
 	return vma_copy;
 }
+EXPORT_SYMBOL_GPL(vb2_get_vma);
 
 /**
  * vb2_put_userptr() - release a userspace virtual memory area
@@ -169,7 +169,7 @@ int vb2_mmap_pfn_range(struct vm_area_struct *vma, unsigned long paddr,
 
 	vma->vm_ops->open(vma);
 
-	printk(KERN_DEBUG "%s: mapped paddr 0x%08lx at 0x%08lx, size %ld\n",
+	pr_debug("%s: mapped paddr 0x%08lx at 0x%08lx, size %ld\n",
 			__func__, paddr, vma->vm_start, size);
 
 	return 0;
@@ -187,7 +187,7 @@ static void vb2_common_vm_open(struct vm_area_struct *vma)
 {
 	struct vb2_vmarea_handler *h = vma->vm_private_data;
 
-	printk(KERN_DEBUG "%s: %p, refcount: %d, vma: %08lx-%08lx\n",
+	pr_debug("%s: %p, refcount: %d, vma: %08lx-%08lx\n",
 	       __func__, h, atomic_read(h->refcount), vma->vm_start,
 	       vma->vm_end);
 
@@ -205,7 +205,7 @@ static void vb2_common_vm_close(struct vm_area_struct *vma)
 {
 	struct vb2_vmarea_handler *h = vma->vm_private_data;
 
-	printk(KERN_DEBUG "%s: %p, refcount: %d, vma: %08lx-%08lx\n",
+	pr_debug("%s: %p, refcount: %d, vma: %08lx-%08lx\n",
 	       __func__, h, atomic_read(h->refcount), vma->vm_start,
 	       vma->vm_end);
 

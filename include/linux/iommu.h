@@ -38,11 +38,9 @@ typedef int (*iommu_fault_handler_t)(struct iommu_domain *,
 				struct device *, unsigned long, int);
 
 struct iommu_domain {
-	void *priv;
-#if defined(CONFIG_ARCH_EXYNOS5)
 	struct iommu_ops *ops;
+	void *priv;
 	iommu_fault_handler_t handler;
-#endif
 };
 
 #define IOMMU_CAP_CACHE_COHERENCY	0x1
@@ -138,51 +136,6 @@ static inline int report_iommu_fault(struct iommu_domain *domain,
 
 	return ret;
 }
-#elif defined(CONFIG_IOMMU_EXYNOS4_API)
-/**
- * struct iommu_ops - iommu ops and capabilities
- * @domain_init: init iommu domain
- * @domain_destroy: destroy iommu domain
- * @attach_dev: attach device to an iommu domain
- * @detach_dev: detach device from an iommu domain
- * @map: map a physically contiguous memory region to an iommu domain
- * @unmap: unmap a physically contiguous memory region from an iommu domain
- * @iova_to_phys: translate iova to physical address
- * @domain_has_cap: domain capabilities query
- * @commit: commit iommu domain
- * @pgsize_bitmap: bitmap of supported page sizes
- */
-struct iommu_ops {
-	int (*domain_init)(struct iommu_domain *domain);
-	void (*domain_destroy)(struct iommu_domain *domain);
-	int (*attach_dev)(struct iommu_domain *domain, struct device *dev);
-	void (*detach_dev)(struct iommu_domain *domain, struct device *dev);
-	int (*map)(struct iommu_domain *domain, unsigned long iova,
-		   phys_addr_t paddr, int gfp_order, int prot);
-	int (*unmap)(struct iommu_domain *domain, unsigned long iova,
-		    int gfp_order);
-	phys_addr_t (*iova_to_phys)(struct iommu_domain *domain,
-				    unsigned long iova);
-	int (*domain_has_cap)(struct iommu_domain *domain,
-			      unsigned long cap);
-};
-
-extern void register_iommu(struct iommu_ops *ops);
-extern bool iommu_found(void);
-extern struct iommu_domain *iommu_domain_alloc(void);
-extern void iommu_domain_free(struct iommu_domain *domain);
-extern int iommu_attach_device(struct iommu_domain *domain,
-			       struct device *dev);
-extern void iommu_detach_device(struct iommu_domain *domain,
-				struct device *dev);
-extern int iommu_map(struct iommu_domain *domain, unsigned long iova,
-		     phys_addr_t paddr, int gfp_order, int prot);
-extern int iommu_unmap(struct iommu_domain *domain, unsigned long iova,
-		       int gfp_order);
-extern phys_addr_t iommu_iova_to_phys(struct iommu_domain *domain,
-				      unsigned long iova);
-extern int iommu_domain_has_cap(struct iommu_domain *domain,
-				unsigned long cap);
 
 #else /* CONFIG_IOMMU_API */
 

@@ -16,11 +16,11 @@
 #include <linux/module.h>
 #include <linux/i2c.h>
 #include <linux/init.h>
-#include <media/v4l2-device.h>
+#include <device/media/v4l2-device.h>
 #include <linux/delay.h>
 #include <linux/vmalloc.h>
 #include <linux/firmware.h>
-#include <linux/videodev2.h>
+#include <device/linux/videodev2.h>
 #include <linux/unistd.h>
 
 #include <plat/gpio-cfg.h>
@@ -34,8 +34,8 @@
 #endif
 
 #ifdef CONFIG_VIDEO_SAMSUNG_V4L2
-#include <linux/videodev2_exynos_media.h>
-#include <linux/videodev2_exynos_camera.h>
+#include <device/linux/videodev2_exynos_media.h>
+#include <device/linux/videodev2_exynos_camera.h>
 #endif
 
 #include <device/linux/regulator/machine.h>
@@ -44,7 +44,7 @@
 #include <linux/leds-aat1290a.h>
 #endif
 
-#include <media/s5c73m3_platform.h>
+#include <device/media/s5c73m3_platform.h>
 #include "s5c73m3.h"
 
 #define S5C73M3_DRIVER_NAME	"S5C73M3"

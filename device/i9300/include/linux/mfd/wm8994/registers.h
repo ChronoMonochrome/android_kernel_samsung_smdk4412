@@ -12,8 +12,8 @@
  *
  */
 
-#ifndef __MFD_WM8994_REGISTERS_H__
-#define __MFD_WM8994_REGISTERS_H__
+#ifndef __MFD_WM8994_LEGACY_REGISTERS_H__
+#define __MFD_WM8994_LEGACY_REGISTERS_H__
 
 /*
  * Register values.

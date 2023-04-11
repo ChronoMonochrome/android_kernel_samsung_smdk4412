@@ -2232,3 +2232,4 @@ module_platform_driver(omap3isp_driver);
 MODULE_AUTHOR("Nokia Corporation");
 MODULE_DESCRIPTION("TI OMAP3 ISP driver");
 MODULE_LICENSE("GPL");
+MODULE_VERSION(ISP_VIDEO_DRIVER_VERSION);

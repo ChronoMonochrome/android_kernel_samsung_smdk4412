@@ -12,8 +12,8 @@
  *
  */
 
-#ifndef __MFD_WM8994_GPIO_H__
-#define __MFD_WM8994_GPIO_H__
+#ifndef __MFD_WM8994_LEGACY_GPIO_H__
+#define __MFD_WM8994_LEGACY_GPIO_H__
 
 #define WM8994_GPIO_MAX 11
 

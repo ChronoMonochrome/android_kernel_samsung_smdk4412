@@ -15,9 +15,9 @@
 #include <linux/io.h>
 #include <linux/i2c.h>
 #include <linux/gpio.h>
-#include <device/linux/amba/bus.h>
-#include <device/linux/amba/pl022.h>
-#include <device/linux/amba/serial.h>
+#include <linux/amba/bus.h>
+#include <linux/amba/pl022.h>
+#include <linux/amba/serial.h>
 #include <linux/spi/spi.h>
 #include <linux/mfd/abx500/ab8500.h>
 #include <linux/regulator/ab8500.h>

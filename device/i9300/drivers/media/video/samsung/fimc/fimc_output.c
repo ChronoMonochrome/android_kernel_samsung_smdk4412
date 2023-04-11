@@ -15,10 +15,10 @@
 #include <linux/string.h>
 #include <linux/platform_device.h>
 #include <linux/mm.h>
-#include <linux/videodev2.h>
-#include <linux/videodev2_exynos_media.h>
-#include <linux/videodev2_exynos_camera.h>
-#include <media/videobuf-core.h>
+#include <device/linux/videodev2.h>
+#include <device/linux/videodev2_exynos_media.h>
+#include <device/linux/videodev2_exynos_camera.h>
+#include <device/media/videobuf-core.h>
 #include <linux/io.h>
 #include <linux/uaccess.h>
 #include <linux/mman.h>

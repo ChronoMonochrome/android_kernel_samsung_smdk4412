@@ -55,8 +55,8 @@ struct uvc_event
 
 #include <device/linux/usb.h>	/* For usb_endpoint_* */
 #include <device/linux/usb/gadget.h>
-#include <linux/videodev2.h>
-#include <media/v4l2-fh.h>
+#include <device/linux/videodev2.h>
+#include <device/media/v4l2-fh.h>
 
 #include "uvc_queue.h"
 

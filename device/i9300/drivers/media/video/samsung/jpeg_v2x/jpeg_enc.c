@@ -39,7 +39,7 @@
 #include <plat/regs_jpeg_v2_x.h>
 #include <mach/irqs.h>
 
-#include <media/v4l2-ioctl.h>
+#include <device/media/v4l2-ioctl.h>
 
 #include "jpeg_core.h"
 #include "jpeg_dev.h"

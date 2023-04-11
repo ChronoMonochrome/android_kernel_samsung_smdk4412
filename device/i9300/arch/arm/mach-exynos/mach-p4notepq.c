@@ -27,7 +27,7 @@
 #include <linux/leds-aat1290a.h>
 #endif
 
-#ifdef CONFIG_MFD_MAX77693
+#ifdef CONFIG_MFD_MAX77693_LEGACY
 #include <linux/mfd/max77693.h>
 #include <linux/mfd/max77693-private.h>
 #include <linux/leds-max77693.h>
@@ -51,7 +51,7 @@
 #ifdef CONFIG_STMPE811_ADC
 #include <linux/stmpe811-adc.h>
 #endif
-#include <linux/v4l2-mediabus.h>
+#include <device/linux/v4l2-mediabus.h>
 #include <linux/memblock.h>
 #include <linux/delay.h>
 #include <linux/bootmem.h>
@@ -81,7 +81,7 @@
 #include <plat/csis.h>
 #include <plat/media.h>
 #include <plat/adc.h>
-#include <media/exynos_fimc_is.h>
+#include <device/media/exynos_fimc_is.h>
 #include <mach/exynos-ion.h>
 
 #if defined(CONFIG_TDMB) || defined(CONFIG_TDMB_MODULE)
@@ -1989,7 +1989,7 @@ static struct platform_device *midas_devices[] __initdata = {
 #ifdef CONFIG_ION_EXYNOS
 	&exynos_device_ion,
 #endif
-#ifdef CONFIG_VIDEO_EXYNOS_FIMC_LITE
+#ifdef CONFIG_VIDEO_EXYNOS_FIMC_LITE_LEGACY
 	&exynos_device_flite0,
 	&exynos_device_flite1,
 #endif

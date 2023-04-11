@@ -16,19 +16,19 @@
 #include <linux/sched.h>
 #include <linux/spinlock.h>
 #include <linux/types.h>
-#include <linux/videodev2.h>
+#include <device/linux/videodev2.h>
 #include <linux/io.h>
-#include <media/videobuf2-core.h>
-#include <media/v4l2-ctrls.h>
-#include <media/v4l2-device.h>
-#include <media/v4l2-mem2mem.h>
+#include <device/media/videobuf2-core.h>
+#include <device/media/v4l2-ctrls.h>
+#include <device/media/v4l2-device.h>
+#include <device/media/v4l2-mem2mem.h>
 
 #include "rotator-regs.h"
 
 #if defined(CONFIG_VIDEOBUF2_CMA_PHYS)
-#include <media/videobuf2-cma-phys.h>
+#include <device/media/videobuf2-cma-phys.h>
 #elif defined(CONFIG_VIDEOBUF2_ION)
-#include <media/videobuf2-ion.h>
+#include <device/media/videobuf2-ion.h>
 #endif
 
 extern int log_level;

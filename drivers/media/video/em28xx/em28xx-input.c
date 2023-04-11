@@ -374,6 +374,7 @@ int em28xx_ir_change_protocol(struct rc_dev *rc_dev, u64 rc_type)
 		break;
 	case CHIP_ID_EM2884:
 	case CHIP_ID_EM2874:
+	case CHIP_ID_EM28174:
 		ir->get_key = em2874_polling_getkey;
 		em28xx_write_regs(dev, EM2874_R50_IR_CONFIG, &ir_config, 1);
 		break;

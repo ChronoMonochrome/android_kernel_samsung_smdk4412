@@ -23,7 +23,7 @@
 #include <linux/err.h>
 #include <linux/slab.h>
 
-#include <device/linux/amba/pl093.h>
+#include <linux/amba/pl093.h>
 
 #include <asm/mach/arch.h>
 #include <asm/mach/map.h>

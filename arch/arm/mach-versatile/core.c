@@ -26,11 +26,11 @@
 #include <linux/irqdomain.h>
 #include <linux/of_address.h>
 #include <linux/of_platform.h>
-#include <device/linux/amba/bus.h>
-#include <device/linux/amba/clcd.h>
-#include <device/linux/amba/pl061.h>
-#include <device/linux/amba/mmci.h>
-#include <device/linux/amba/pl022.h>
+#include <linux/amba/bus.h>
+#include <linux/amba/clcd.h>
+#include <linux/amba/pl061.h>
+#include <linux/amba/mmci.h>
+#include <linux/amba/pl022.h>
 #include <linux/io.h>
 #include <linux/gfp.h>
 #include <linux/clkdev.h>

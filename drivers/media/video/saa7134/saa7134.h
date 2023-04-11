@@ -19,8 +19,7 @@
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#include <linux/version.h>
-#define SAA7134_VERSION_CODE KERNEL_VERSION(0, 2, 16)
+#define SAA7134_VERSION "0, 2, 17"
 
 #include <linux/pci.h>
 #include <linux/i2c.h>
@@ -127,8 +126,8 @@ struct saa7134_card_ir {
 	unsigned                users;
 
 	u32			polling;
-        u32			last_gpio;
-        u32			mask_keycode, mask_keydown, mask_keyup;
+	u32			last_gpio;
+	u32			mask_keycode, mask_keydown, mask_keyup;
 
 	bool                    running;
 	bool			active;
@@ -332,6 +331,7 @@ struct saa7134_card_ir {
 #define SAA7134_BOARD_BEHOLD_501            186
 #define SAA7134_BOARD_BEHOLD_503FM          187
 #define SAA7134_BOARD_SENSORAY811_911       188
+#define SAA7134_BOARD_KWORLD_PC150U         189
 
 #define SAA7134_MAXBOARDS 32
 #define SAA7134_INPUT_MAX 8
