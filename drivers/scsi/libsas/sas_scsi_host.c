@@ -44,7 +44,7 @@
 
 #include <linux/err.h>
 #include <linux/blkdev.h>
-#include <device/linux/freezer.h>
+#include <linux/freezer.h>
 #include <linux/gfp.h>
 #include <linux/scatterlist.h>
 #include <linux/libata.h>

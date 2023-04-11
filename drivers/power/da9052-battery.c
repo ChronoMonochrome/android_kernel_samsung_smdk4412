@@ -12,7 +12,7 @@
  */
 
 #include <linux/delay.h>
-#include <device/linux/freezer.h>
+#include <linux/freezer.h>
 #include <linux/fs.h>
 #include <linux/jiffies.h>
 #include <linux/module.h>

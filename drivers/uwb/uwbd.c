@@ -71,7 +71,7 @@
 #include <linux/kthread.h>
 #include <linux/slab.h>
 #include <linux/module.h>
-#include <device/linux/freezer.h>
+#include <linux/freezer.h>
 
 #include "uwb-internal.h"
 

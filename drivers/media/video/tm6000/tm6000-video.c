@@ -38,7 +38,7 @@
 #include <linux/interrupt.h>
 #include <linux/kthread.h>
 #include <linux/highmem.h>
-#include <device/linux/freezer.h>
+#include <linux/freezer.h>
 
 #include "tm6000-regs.h"
 #include "tm6000.h"

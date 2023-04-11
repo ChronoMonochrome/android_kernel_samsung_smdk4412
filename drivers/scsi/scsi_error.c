@@ -20,7 +20,7 @@
 #include <linux/timer.h>
 #include <linux/string.h>
 #include <linux/kernel.h>
-#include <device/linux/freezer.h>
+#include <linux/freezer.h>
 #include <linux/kthread.h>
 #include <linux/interrupt.h>
 #include <linux/blkdev.h>

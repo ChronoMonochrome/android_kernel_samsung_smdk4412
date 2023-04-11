@@ -12,7 +12,7 @@
 #include <linux/random.h>
 #include <linux/hdreg.h>
 #include <linux/kthread.h>
-#include <device/linux/freezer.h>
+#include <linux/freezer.h>
 #include <linux/sysfs.h>
 #include <linux/bitops.h>
 #include <linux/slab.h>

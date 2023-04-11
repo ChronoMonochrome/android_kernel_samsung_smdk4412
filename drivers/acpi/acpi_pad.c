@@ -24,7 +24,7 @@
 #include <linux/init.h>
 #include <linux/types.h>
 #include <linux/kthread.h>
-#include <device/linux/freezer.h>
+#include <linux/freezer.h>
 #include <linux/cpu.h>
 #include <linux/clockchips.h>
 #include <linux/slab.h>

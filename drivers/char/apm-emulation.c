@@ -22,7 +22,7 @@
 #include <linux/sched.h>
 #include <linux/suspend.h>
 #include <linux/apm-emulation.h>
-#include <device/linux/freezer.h>
+#include <linux/freezer.h>
 #include <linux/device.h>
 #include <linux/kernel.h>
 #include <linux/list.h>

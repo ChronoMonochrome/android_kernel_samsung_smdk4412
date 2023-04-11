@@ -35,7 +35,7 @@
 #include <linux/tty_flip.h>
 #include <linux/gpio.h>
 #include <linux/spi/spi.h>
-#include <device/linux/freezer.h>
+#include <linux/freezer.h>
 #include <linux/module.h>
 #include "max3107.h"
 

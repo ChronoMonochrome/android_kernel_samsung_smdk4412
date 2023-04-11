@@ -37,7 +37,7 @@
 
 #include <linux/module.h>
 #include <linux/errno.h>
-#include <device/linux/freezer.h>
+#include <linux/freezer.h>
 #include <linux/kernel.h>
 #include <linux/mm.h>
 #include <linux/poll.h>

@@ -27,7 +27,7 @@
 #include <linux/slab.h>
 #include <linux/mutex.h>
 #include <linux/spinlock.h>
-#include <device/linux/freezer.h>
+#include <linux/freezer.h>
 
 #include "tpm.h"
 

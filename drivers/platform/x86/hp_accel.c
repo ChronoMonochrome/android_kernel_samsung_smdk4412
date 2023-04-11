@@ -32,7 +32,7 @@
 #include <linux/delay.h>
 #include <linux/wait.h>
 #include <linux/poll.h>
-#include <device/linux/freezer.h>
+#include <linux/freezer.h>
 #include <linux/uaccess.h>
 #include <linux/leds.h>
 #include <linux/atomic.h>

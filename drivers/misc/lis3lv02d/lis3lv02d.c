@@ -34,7 +34,7 @@
 #include <linux/wait.h>
 #include <linux/poll.h>
 #include <linux/slab.h>
-#include <device/linux/freezer.h>
+#include <linux/freezer.h>
 #include <linux/uaccess.h>
 #include <linux/miscdevice.h>
 #include <linux/pm_runtime.h>

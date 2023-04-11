@@ -20,7 +20,7 @@
 #include <linux/kernel.h>
 #include <linux/module.h>
 #include <linux/kthread.h>
-#include <device/linux/freezer.h>
+#include <linux/freezer.h>
 #include <media/v4l2-ioctl.h>
 #include <media/v4l2-common.h>
 #include <media/videobuf-dma-sg.h>

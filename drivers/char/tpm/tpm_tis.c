@@ -26,7 +26,7 @@
 #include <linux/interrupt.h>
 #include <linux/wait.h>
 #include <linux/acpi.h>
-#include <device/linux/freezer.h>
+#include <linux/freezer.h>
 #include "tpm.h"
 
 enum tis_access {

@@ -65,7 +65,7 @@
 #include <linux/sched.h>
 #include <linux/kthread.h>
 #include <linux/mutex.h>
-#include <device/linux/freezer.h>
+#include <linux/freezer.h>
 #include <linux/slab.h>
 #include <linux/kernel.h>
 

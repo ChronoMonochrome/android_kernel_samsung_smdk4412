@@ -10,7 +10,7 @@
 #include <linux/mm.h>
 #include <linux/vmalloc.h>
 #include <linux/cpu.h>
-#include <device/linux/freezer.h>
+#include <linux/freezer.h>
 #include <linux/highmem.h>
 #include <linux/slab.h>
 #include <asm/paravirt.h>
