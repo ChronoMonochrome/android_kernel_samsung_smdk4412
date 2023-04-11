@@ -35,7 +35,7 @@
 #include <linux/stddef.h>
 #include <linux/tty.h>
 #include <linux/binfmts.h>
-#include <device/linux/freezer.h>
+#include <linux/freezer.h>
 #endif
 
 #include <asm/uaccess.h>

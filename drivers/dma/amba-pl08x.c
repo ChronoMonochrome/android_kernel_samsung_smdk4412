@@ -69,8 +69,8 @@
  * Global TODO:
  * - Break out common code from arch/arm/mach-s3c64xx and share
  */
-#include <device/linux/amba/bus.h>
-#include <device/linux/amba/pl08x.h>
+#include <linux/amba/bus.h>
+#include <linux/amba/pl08x.h>
 #include <linux/debugfs.h>
 #include <linux/delay.h>
 #include <linux/device.h>

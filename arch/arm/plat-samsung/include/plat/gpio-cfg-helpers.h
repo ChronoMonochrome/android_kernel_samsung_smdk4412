@@ -50,7 +50,7 @@ static inline samsung_gpio_pull_t samsung_gpio_do_getpull(struct samsung_gpio_ch
 
 /* Pull-{up,down} resistor controls.
  *
- * S3C2410,S3C2440,S3C24A0 = Pull-UP,
+ * S3C2410,S3C2440 = Pull-UP,
  * S3C2412,S3C2413 = Pull-Down
  * S3C6400,S3C6410 = Pull-Both [None,Down,Up,Undef]
  * S3C2443 = Pull-Both [not same as S3C6400]

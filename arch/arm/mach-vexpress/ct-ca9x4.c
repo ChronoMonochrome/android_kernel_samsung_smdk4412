@@ -6,8 +6,8 @@
 #include <linux/device.h>
 #include <linux/dma-mapping.h>
 #include <linux/platform_device.h>
-#include <device/linux/amba/bus.h>
-#include <device/linux/amba/clcd.h>
+#include <linux/amba/bus.h>
+#include <linux/amba/clcd.h>
 #include <linux/clkdev.h>
 
 #include <asm/hardware/arm_timer.h>

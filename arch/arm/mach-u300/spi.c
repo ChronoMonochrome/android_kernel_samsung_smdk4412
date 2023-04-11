@@ -7,9 +7,9 @@
  * Author: Linus Walleij <linus.walleij@stericsson.com>
  */
 #include <linux/device.h>
-#include <device/linux/amba/bus.h>
+#include <linux/amba/bus.h>
 #include <linux/spi/spi.h>
-#include <device/linux/amba/pl022.h>
+#include <linux/amba/pl022.h>
 #include <linux/err.h>
 #include <mach/coh901318.h>
 #include <mach/dma_channels.h>

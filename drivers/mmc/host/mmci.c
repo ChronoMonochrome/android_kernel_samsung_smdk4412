@@ -22,7 +22,7 @@
 #include <linux/log2.h>
 #include <linux/mmc/host.h>
 #include <linux/mmc/card.h>
-#include <device/linux/amba/bus.h>
+#include <linux/amba/bus.h>
 #include <linux/clk.h>
 #include <linux/scatterlist.h>
 #include <linux/gpio.h>
@@ -30,7 +30,7 @@
 #include <linux/regulator/consumer.h>
 #include <linux/dmaengine.h>
 #include <linux/dma-mapping.h>
-#include <device/linux/amba/mmci.h>
+#include <linux/amba/mmci.h>
 #include <linux/pm_runtime.h>
 #include <linux/types.h>
 

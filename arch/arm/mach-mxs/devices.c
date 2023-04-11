@@ -20,7 +20,7 @@
 #include <linux/slab.h>
 #include <linux/init.h>
 #include <linux/platform_device.h>
-#include <device/linux/amba/bus.h>
+#include <linux/amba/bus.h>
 
 struct platform_device *__init mxs_add_platform_device_dmamask(
 		const char *name, int id,

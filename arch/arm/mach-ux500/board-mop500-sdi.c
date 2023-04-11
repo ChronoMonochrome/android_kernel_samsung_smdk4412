@@ -7,8 +7,8 @@
 
 #include <linux/kernel.h>
 #include <linux/gpio.h>
-#include <device/linux/amba/bus.h>
-#include <device/linux/amba/mmci.h>
+#include <linux/amba/bus.h>
+#include <linux/amba/mmci.h>
 #include <linux/mmc/host.h>
 #include <linux/platform_device.h>
 

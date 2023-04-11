@@ -23,7 +23,7 @@
 #include <device/media/s5p_fimc.h>
 #endif
 
-#ifdef CONFIG_VIDEO_EXYNOS_FIMC_LITE
+#ifdef CONFIG_VIDEO_EXYNOS_FIMC_LITE_LEGACY
 #include <device/media/exynos_flite.h>
 #endif
 
@@ -3327,7 +3327,7 @@ static struct s3c_platform_fimc fimc_plat = {
 	.hw_ver		= 0x51,
 };
 
-#ifdef CONFIG_VIDEO_EXYNOS_FIMC_LITE
+#ifdef CONFIG_VIDEO_EXYNOS_FIMC_LITE_LEGACY
 static void __set_flite_camera_config(struct exynos_platform_flite *data,
 			u32 active_index, u32 max_cam)
 {
@@ -3348,7 +3348,7 @@ static void __init smdk4x12_set_camera_flite_platdata(void)
 	__set_flite_camera_config(&exynos_flite0_default_data, 0, flite0_cam_index);
 	__set_flite_camera_config(&exynos_flite1_default_data, 0, flite1_cam_index);
 }
-#endif /* CONFIG_VIDEO_EXYNOS_FIMC_LITE */
+#endif /* CONFIG_VIDEO_EXYNOS_FIMC_LITE_LEGACY */
 #endif /* CONFIG_VIDEO_FIMC */
 
 #ifdef CONFIG_VIDEO_SAMSUNG_S5P_FIMC
@@ -3407,7 +3407,7 @@ void __init midas_camera_init(void)
 	s3c_device_csis1.dev.parent = &exynos4_device_pd[PD_CAM].dev;
 #endif
 #endif
-#ifdef CONFIG_VIDEO_EXYNOS_FIMC_LITE
+#ifdef CONFIG_VIDEO_EXYNOS_FIMC_LITE_LEGACY
 	smdk4x12_set_camera_flite_platdata();
 	s3c_set_platdata(&exynos_flite0_default_data,
 		sizeof(exynos_flite0_default_data), &exynos_device_flite0);

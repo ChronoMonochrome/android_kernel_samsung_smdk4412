@@ -13,7 +13,7 @@
  */
 #include <linux/errno.h>
 #include <linux/module.h>
-#include <device/linux/amba/bus.h>
+#include <linux/amba/bus.h>
 #include <linux/device.h>
 #include <linux/dma-mapping.h>
 #include <linux/slab.h>

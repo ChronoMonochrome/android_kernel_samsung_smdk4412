@@ -2,8 +2,8 @@
  * Versatile Express V2M Motherboard Support
  */
 #include <linux/device.h>
-#include <device/linux/amba/bus.h>
-#include <device/linux/amba/mmci.h>
+#include <linux/amba/bus.h>
+#include <linux/amba/mmci.h>
 #include <linux/io.h>
 #include <linux/init.h>
 #include <linux/of_address.h>

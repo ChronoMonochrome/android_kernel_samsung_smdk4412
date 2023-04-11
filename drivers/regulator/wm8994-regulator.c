@@ -190,7 +190,7 @@ static __devinit int wm8994_ldo_probe(struct platform_device *pdev)
 
 	config.dev = wm8994->dev;
 	config.driver_data = ldo;
-	//config.regmap = wm8994->regmap;
+	config.regmap = wm8994->regmap;
 	if (pdata)
 		config.init_data = pdata->ldo[id].init_data;
 

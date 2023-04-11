@@ -27,7 +27,7 @@
 #include <linux/leds-aat1290a.h>
 #endif
 
-#ifdef CONFIG_MFD_MAX77693
+#ifdef CONFIG_MFD_MAX77693_LEGACY
 #include <linux/mfd/max77693.h>
 #include <linux/mfd/max77693-private.h>
 #include <linux/leds-max77693.h>
@@ -1989,7 +1989,7 @@ static struct platform_device *midas_devices[] __initdata = {
 #ifdef CONFIG_ION_EXYNOS
 	&exynos_device_ion,
 #endif
-#ifdef CONFIG_VIDEO_EXYNOS_FIMC_LITE
+#ifdef CONFIG_VIDEO_EXYNOS_FIMC_LITE_LEGACY
 	&exynos_device_flite0,
 	&exynos_device_flite1,
 #endif

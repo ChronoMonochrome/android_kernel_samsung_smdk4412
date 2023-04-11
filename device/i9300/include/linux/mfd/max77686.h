@@ -25,8 +25,8 @@
  * this mfd driver.
  */
 
-#ifndef __LINUX_MFD_MAX77686_H
-#define __LINUX_MFD_MAX77686_H
+#ifndef __LINUX_MFD_MAX77686_LEGACY_H
+#define __LINUX_MFD_MAX77686_LEGACY_H
 
 #include <device/linux/regulator/consumer.h>
 
@@ -133,4 +133,4 @@ struct max77686_platform_data {
 	unsigned int buck4_voltage[8];
 };
 
-#endif /* __LINUX_MFD_MAX77686_H */
+#endif /* __LINUX_MFD_MAX77686_LEGACY_H */

@@ -15,7 +15,7 @@
 #include <linux/io.h>
 #include <linux/pm.h>
 #include <linux/pm_runtime.h>
-#include <device/linux/amba/bus.h>
+#include <linux/amba/bus.h>
 
 #include <asm/irq.h>
 #include <asm/sizes.h>

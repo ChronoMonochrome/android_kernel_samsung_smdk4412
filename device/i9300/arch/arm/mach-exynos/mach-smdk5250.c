@@ -252,7 +252,7 @@ static struct fimg2d_platdata fimg2d_data __initdata = {
 };
 #endif
 
-#ifdef CONFIG_VIDEO_EXYNOS_FIMC_LITE
+#ifdef CONFIG_VIDEO_EXYNOS_FIMC_LITE_LEGACY
 #if defined(CONFIG_ITU_A)
 static int smdk5250_cam0_reset(int dummy)
 {
@@ -330,7 +330,7 @@ static struct i2c_board_info m5mols_board_info = {
 	.platform_data = &m5mols_platdata,
 };
 #endif
-#endif /* CONFIG_VIDEO_EXYNOS_FIMC_LITE */
+#endif /* CONFIG_VIDEO_EXYNOS_FIMC_LITE_LEGACY */
 
 #ifdef CONFIG_VIDEO_EXYNOS_MIPI_CSIS
 static struct regulator_consumer_supply mipi_csi_fixed_voltage_supplies[] = {
@@ -681,7 +681,7 @@ static struct platform_device *smdk5250_devices[] __initdata = {
 	&exynos5_device_gsc2,
 	&exynos5_device_gsc3,
 #endif
-#ifdef CONFIG_VIDEO_EXYNOS_FIMC_LITE
+#ifdef CONFIG_VIDEO_EXYNOS_FIMC_LITE_LEGACY
 	&exynos_device_flite0,
 	&exynos_device_flite1,
 	&exynos_device_flite2,
@@ -861,7 +861,7 @@ static inline void exynos_reserve_mem(void)
 }
 #endif
 
-#ifdef CONFIG_VIDEO_EXYNOS_FIMC_LITE
+#ifdef CONFIG_VIDEO_EXYNOS_FIMC_LITE_LEGACY
 static void __init smdk5250_camera_gpio_cfg(void)
 {
 	/* CAM A port(b0010) : PCLK, VSYNC, HREF, CLK_OUT */
@@ -882,7 +882,7 @@ static void __init smdk5250_camera_gpio_cfg(void)
 }
 #endif
 
-#if defined(CONFIG_VIDEO_EXYNOS_GSCALER) && defined(CONFIG_VIDEO_EXYNOS_FIMC_LITE)
+#if defined(CONFIG_VIDEO_EXYNOS_GSCALER) && defined(CONFIG_VIDEO_EXYNOS_FIMC_LITE_LEGACY)
 #if defined(CONFIG_VIDEO_S5K4BA)
 static struct exynos_isp_info s5k4ba = {
 	.board_info	= &s5k4ba_info,
@@ -1050,7 +1050,7 @@ static void __init exynos_sysmmu_init(void)
 	platform_set_sysmmu(&SYSMMU_PLATDEV(gsc3).dev,
 						&exynos5_device_gsc3.dev);
 #endif
-#ifdef CONFIG_VIDEO_EXYNOS_FIMC_LITE
+#ifdef CONFIG_VIDEO_EXYNOS_FIMC_LITE_LEGACY
 	platform_set_sysmmu(&SYSMMU_PLATDEV(camif0).dev,
 						&exynos_device_flite0.dev);
 	platform_set_sysmmu(&SYSMMU_PLATDEV(camif1).dev,
@@ -1166,7 +1166,7 @@ static void __init smdk5250_machine_init(void)
 	s3c_set_platdata(&s5p_mipi_csis1_default_data,
 			sizeof(s5p_mipi_csis1_default_data), &s5p_device_mipi_csis1);
 #endif
-#ifdef CONFIG_VIDEO_EXYNOS_FIMC_LITE
+#ifdef CONFIG_VIDEO_EXYNOS_FIMC_LITE_LEGACY
 #if defined(CONFIG_EXYNOS_DEV_PD)
 	exynos_device_flite0.dev.parent = &exynos5_device_pd[PD_GSCL].dev;
 	exynos_device_flite1.dev.parent = &exynos5_device_pd[PD_GSCL].dev;

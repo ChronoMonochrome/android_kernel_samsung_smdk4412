@@ -18,8 +18,8 @@
 #include <linux/device.h>
 #include <linux/errno.h>
 #include <linux/mm.h>
-#include <device/linux/amba/bus.h>
-#include <device/linux/amba/clcd.h>
+#include <linux/amba/bus.h>
+#include <linux/amba/clcd.h>
 #include <linux/io.h>
 #include <linux/slab.h>
 #include <linux/clkdev.h>

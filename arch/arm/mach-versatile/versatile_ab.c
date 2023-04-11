@@ -21,7 +21,7 @@
 
 #include <linux/init.h>
 #include <linux/device.h>
-#include <device/linux/amba/bus.h>
+#include <linux/amba/bus.h>
 #include <linux/io.h>
 
 #include <mach/hardware.h>
