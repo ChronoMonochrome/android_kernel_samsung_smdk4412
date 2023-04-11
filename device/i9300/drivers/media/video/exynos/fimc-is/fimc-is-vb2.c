@@ -15,9 +15,9 @@
 #include <linux/sched.h>
 #include <linux/spinlock.h>
 #include <linux/types.h>
-#include <linux/videodev2.h>
+#include <device/linux/videodev2.h>
 #include <linux/io.h>
-#include <media/videobuf2-core.h>
+#include <device/media/videobuf2-core.h>
 #include <linux/platform_device.h>
 #include "fimc-is-core.h"
 

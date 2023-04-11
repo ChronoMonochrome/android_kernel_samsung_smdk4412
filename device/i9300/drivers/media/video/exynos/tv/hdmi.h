@@ -23,8 +23,8 @@
 #include <linux/interrupt.h>
 #include <device/linux/regulator/consumer.h>
 
-#include <media/v4l2-subdev.h>
-#include <media/v4l2-device.h>
+#include <device/media/v4l2-subdev.h>
+#include <device/media/v4l2-device.h>
 
 #define INFOFRAME_CNT          2
 

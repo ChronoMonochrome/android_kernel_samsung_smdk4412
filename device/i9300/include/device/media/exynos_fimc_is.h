@@ -11,7 +11,7 @@
 #ifndef EXYNOS_FIMC_IS_H_
 #define EXYNOS_FIMC_IS_H_ __FILE__
 
-#include <linux/videodev2.h>
+#include <device/linux/videodev2.h>
 
 #define FIMC_IS_MAX_CAMIF_CLIENTS	2
 #define FIMC_IS_MAX_SENSOR_NAME_LEN	16

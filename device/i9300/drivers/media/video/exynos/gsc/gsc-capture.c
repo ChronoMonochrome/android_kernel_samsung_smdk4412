@@ -27,8 +27,8 @@
 #include <linux/clk.h>
 #include <linux/string.h>
 #include <linux/i2c.h>
-#include <media/v4l2-ioctl.h>
-#include <media/exynos_gscaler.h>
+#include <device/media/v4l2-ioctl.h>
+#include <device/media/exynos_gscaler.h>
 
 #include "gsc-core.h"
 

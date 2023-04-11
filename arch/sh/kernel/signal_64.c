@@ -18,7 +18,7 @@
 #include <linux/errno.h>
 #include <linux/wait.h>
 #include <linux/personality.h>
-#include <device/linux/freezer.h>
+#include <linux/freezer.h>
 #include <linux/ptrace.h>
 #include <linux/unistd.h>
 #include <linux/stddef.h>

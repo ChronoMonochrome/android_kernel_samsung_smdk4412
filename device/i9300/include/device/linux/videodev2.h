@@ -2244,7 +2244,7 @@ struct v4l2_dbg_register {
 /* VIDIOC_DBG_G_CHIP_IDENT */
 struct v4l2_dbg_chip_ident {
 	struct v4l2_dbg_match match;
-	__u32 ident;       /* chip identifier as specified in <media/v4l2-chip-ident.h> */
+	__u32 ident;       /* chip identifier as specified in <device/media/v4l2-chip-ident.h> */
 	__u32 revision;    /* chip revision, chip specific */
 } __attribute__ ((packed));
 

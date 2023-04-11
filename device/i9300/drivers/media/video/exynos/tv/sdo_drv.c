@@ -23,8 +23,8 @@
 #include <device/linux/regulator/consumer.h>
 #include <linux/slab.h>
 
-#include <media/v4l2-subdev.h>
-#include <media/exynos_mc.h>
+#include <device/media/v4l2-subdev.h>
+#include <device/media/exynos_mc.h>
 
 #include "regs-sdo.h"
 

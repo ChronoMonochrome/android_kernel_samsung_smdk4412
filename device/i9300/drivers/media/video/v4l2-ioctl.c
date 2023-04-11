@@ -17,15 +17,15 @@
 #include <linux/types.h>
 #include <linux/kernel.h>
 
-#include <linux/videodev2.h>
+#include <device/linux/videodev2.h>
 
-#include <media/v4l2-common.h>
-#include <media/v4l2-ioctl.h>
-#include <media/v4l2-ctrls.h>
-#include <media/v4l2-fh.h>
-#include <media/v4l2-event.h>
-#include <media/v4l2-device.h>
-#include <media/v4l2-chip-ident.h>
+#include <device/media/v4l2-common.h>
+#include <device/media/v4l2-ioctl.h>
+#include <device/media/v4l2-ctrls.h>
+#include <device/media/v4l2-fh.h>
+#include <device/media/v4l2-event.h>
+#include <device/media/v4l2-device.h>
+#include <device/media/v4l2-chip-ident.h>
 
 #define dbgarg(cmd, fmt, arg...) \
 		do {							\

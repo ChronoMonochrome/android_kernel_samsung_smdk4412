@@ -15,7 +15,7 @@
 #define MAX_CAMIF_CLIENTS	3
 #include <plat/fimc.h>
 #else
-#include <media/exynos_camera.h>
+#include <device/media/exynos_camera.h>
 
 struct s3c_platform_camera {
 	enum cam_bus_type type;

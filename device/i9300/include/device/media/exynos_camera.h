@@ -13,7 +13,7 @@
 #ifndef EXYNOS_CAMERA_H_
 #define EXYNOS_CAMERA_H_
 
-#include <media/exynos_mc.h>
+#include <device/media/exynos_mc.h>
 
 enum cam_bus_type {
 	CAM_TYPE_ITU = 1,

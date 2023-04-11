@@ -13,7 +13,7 @@
 #include <linux/device.h>
 #include <linux/list.h>
 #include <linux/ion.h>
-#include <linux/iommu.h>
+#include <device/linux/iommu.h>
 #include <linux/genalloc.h>
 #include <linux/err.h>
 #include <linux/spinlock.h>

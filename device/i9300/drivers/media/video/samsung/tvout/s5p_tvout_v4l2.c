@@ -15,10 +15,10 @@
 #include <linux/slab.h>
 #include <linux/dma-mapping.h>
 
-#include <media/v4l2-common.h>
-#include <media/v4l2-ioctl.h>
+#include <device/media/v4l2-common.h>
+#include <device/media/v4l2-ioctl.h>
 
-#include <linux/videodev2_exynos_camera.h>
+#include <device/linux/videodev2_exynos_camera.h>
 #include <linux/io.h>
 #include <asm/cacheflush.h>
 

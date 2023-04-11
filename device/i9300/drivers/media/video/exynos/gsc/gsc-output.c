@@ -27,7 +27,7 @@
 #include <linux/clk.h>
 #include <linux/string.h>
 #include <linux/delay.h>
-#include <media/v4l2-ioctl.h>
+#include <device/media/v4l2-ioctl.h>
 
 #include "gsc-core.h"
 

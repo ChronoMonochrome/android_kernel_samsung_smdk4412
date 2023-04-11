@@ -21,12 +21,12 @@
 #ifndef _V4L2_SUBDEV_H
 #define _V4L2_SUBDEV_H
 
-#include <linux/v4l2-subdev.h>
-#include <media/media-entity.h>
-#include <media/v4l2-common.h>
-#include <media/v4l2-dev.h>
-#include <media/v4l2-fh.h>
-#include <media/v4l2-mediabus.h>
+#include <device/linux/v4l2-subdev.h>
+#include <device/media/media-entity.h>
+#include <device/media/v4l2-common.h>
+#include <device/media/v4l2-dev.h>
+#include <device/media/v4l2-fh.h>
+#include <device/media/v4l2-mediabus.h>
 
 /* generic v4l2_device notify callback notification values */
 #define V4L2_SUBDEV_IR_RX_NOTIFY		_IOW('v', 0, u32)

@@ -19,7 +19,7 @@
 #include <linux/slab.h>
 #include <linux/sched.h>
 
-#include <media/videobuf2-core.h>
+#include <device/media/videobuf2-core.h>
 
 static int debug;
 module_param(debug, int, 0644);

@@ -22,7 +22,7 @@
 #if defined(CONFIG_BUSFREQ_OPP) && defined(CONFIG_CPU_EXYNOS5250)
 #include <mach/dev.h>
 #endif
-#include <media/exynos_mc.h>
+#include <device/media/exynos_mc.h>
 #include <linux/cma.h>
 #include <asm/cacheflush.h>
 #include <asm/pgtable.h>
@@ -30,9 +30,9 @@
 #include <linux/dma-mapping.h>
 #include <linux/delay.h>
 #include <linux/scatterlist.h>
-#include <linux/videodev2_exynos_media.h>
-#include <linux/videodev2_exynos_camera.h>
-#include <linux/v4l2-mediabus.h>
+#include <device/linux/videodev2_exynos_media.h>
+#include <device/linux/videodev2_exynos_camera.h>
+#include <device/linux/v4l2-mediabus.h>
 
 #include "fimc-is-core.h"
 #include "fimc-is-helper.h"

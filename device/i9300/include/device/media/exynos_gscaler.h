@@ -13,7 +13,7 @@
 #ifndef EXYNOS_GSCALER_H_
 #define EXYNOS_GSCALER_H_
 
-#include <media/exynos_camera.h>
+#include <device/media/exynos_camera.h>
 
 /**
  * struct exynos_platform_gscaler - camera host interface platform data

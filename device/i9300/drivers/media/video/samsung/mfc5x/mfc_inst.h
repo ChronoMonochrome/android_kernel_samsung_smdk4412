@@ -16,7 +16,7 @@
 
 #include <linux/list.h>
 #ifdef CONFIG_SLP
-#include <linux/videodev2.h>
+#include <device/linux/videodev2.h>
 #endif
 
 #include "mfc.h"

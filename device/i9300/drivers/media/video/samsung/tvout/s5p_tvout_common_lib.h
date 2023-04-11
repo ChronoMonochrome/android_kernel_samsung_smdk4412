@@ -15,7 +15,7 @@
 
 #include <linux/stddef.h>
 #include <linux/platform_device.h>
-#include <linux/videodev2.h>
+#include <device/linux/videodev2.h>
 #include <linux/interrupt.h>
 
 /*****************************************************************************

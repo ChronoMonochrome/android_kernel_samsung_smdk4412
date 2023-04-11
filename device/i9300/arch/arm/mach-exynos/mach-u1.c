@@ -118,14 +118,14 @@
 #endif
 
 #ifdef CONFIG_VIDEO_M5MO
-#include <media/m5mo_platform.h>
+#include <device/media/m5mo_platform.h>
 #endif
 #ifdef CONFIG_VIDEO_S5K5BAFX
-#include <media/s5k5bafx_platform.h>
+#include <device/media/s5k5bafx_platform.h>
 #endif
 
 #ifdef CONFIG_VIDEO_S5K5BBGX
-#include <media/s5k5bbgx_platform.h>
+#include <device/media/s5k5bbgx_platform.h>
 #endif
 #if defined(CONFIG_EXYNOS4_SETUP_THERMAL)
 #include <plat/s5p-tmu.h>

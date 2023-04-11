@@ -15,7 +15,7 @@
 #include <linux/interrupt.h>
 #include <linux/ioport.h>
 #include <mach/map.h>
-#include <media/exynos_flite.h>
+#include <device/media/exynos_flite.h>
 
 static struct resource exynos_flite0_resource[] = {
 	[0] = {

@@ -12,9 +12,9 @@
 
 #include <linux/delay.h>
 #include <device/linux/gpio.h>
-#include <linux/videodev2.h>
-#include <linux/videodev2_exynos_media.h>
-#include <linux/videodev2_exynos_camera.h>
+#include <device/linux/videodev2.h>
+#include <device/linux/videodev2_exynos_media.h>
+#include <device/linux/videodev2_exynos_camera.h>
 #include <linux/io.h>
 #include <mach/map.h>
 #include <plat/regs-fimc.h>

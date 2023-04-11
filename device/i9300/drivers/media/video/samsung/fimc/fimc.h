@@ -19,16 +19,16 @@
 #include <linux/mutex.h>
 #include <linux/i2c.h>
 #include <linux/fb.h>
-#include <linux/videodev2.h>
+#include <device/linux/videodev2.h>
 #include <linux/platform_device.h>
-#include <media/v4l2-common.h>
-#include <media/v4l2-device.h>
-#include <media/v4l2-ioctl.h>
-#include <media/videobuf-core.h>
+#include <device/media/v4l2-common.h>
+#include <device/media/v4l2-device.h>
+#include <device/media/v4l2-ioctl.h>
+#include <device/media/videobuf-core.h>
 #ifdef CONFIG_SLP_DMABUF
-#include <media/videobuf2-core.h>
+#include <device/media/videobuf2-core.h>
 #endif
-#include <media/v4l2-mediabus.h>
+#include <device/media/v4l2-mediabus.h>
 #if defined(CONFIG_BUSFREQ_OPP) || defined(CONFIG_BUSFREQ_LOCK_WRAPPER)
 #include <mach/dev.h>
 #endif

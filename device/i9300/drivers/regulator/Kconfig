@@ -1,6 +1,13 @@
+config REGULATOR_WM8994
+	tristate "Wolfson Microelectronics WM8994 CODEC"
+	depends on MFD_WM8994_LEGACY
+	help
+	  This driver provides support for the voltage regulators on the
+	  WM8994 CODEC.
+
 config REGULATOR_MAX77686
 	tristate "Maxim 77686 regulator"
-	depends on MFD_MAX77686
+	depends on MFD_MAX77686_LEGACY
 	help
 	  This driver controls a Maxim 77686 regulator
 	  via I2C bus. The provided regulator is suitable for
@@ -8,6 +15,6 @@ config REGULATOR_MAX77686
 
 config REGULATOR_MAX77693
 	tristate "Maxim 777693 regulator"
-	depends on MFD_MAX77693
+	depends on MFD_MAX77693_LEGACY
 	help
 	  This driver control a Maxim 77693 regulator.

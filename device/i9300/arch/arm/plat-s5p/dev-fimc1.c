@@ -15,7 +15,7 @@
 #include <linux/interrupt.h>
 #include <linux/ioport.h>
 #include <mach/map.h>
-#include <media/s5p_fimc.h>
+#include <device/media/s5p_fimc.h>
 
 static struct resource s5p_fimc1_resource[] = {
 	[0] = {

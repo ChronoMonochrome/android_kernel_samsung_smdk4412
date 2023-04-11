@@ -13,7 +13,7 @@
 #include <linux/fs.h>
 #include <linux/mutex.h>
 #include <linux/compiler.h> /* need __user */
-#include <linux/videodev2.h>
+#include <device/linux/videodev2.h>
 
 struct v4l2_fh;
 

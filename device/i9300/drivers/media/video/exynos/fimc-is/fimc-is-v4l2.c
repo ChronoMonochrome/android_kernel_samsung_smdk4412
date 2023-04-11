@@ -28,14 +28,14 @@
 #include <device/linux/pm_runtime.h>
 #include <linux/workqueue.h>
 
-#include <linux/videodev2.h>
-#include <linux/videodev2_exynos_camera.h>
-#include <media/videobuf2-core.h>
-#include <media/v4l2-subdev.h>
-#include <media/v4l2-ioctl.h>
-#include <media/v4l2-device.h>
-#include <media/v4l2-mem2mem.h>
-#include <media/v4l2-mediabus.h>
+#include <device/linux/videodev2.h>
+#include <device/linux/videodev2_exynos_camera.h>
+#include <device/media/videobuf2-core.h>
+#include <device/media/v4l2-subdev.h>
+#include <device/media/v4l2-ioctl.h>
+#include <device/media/v4l2-device.h>
+#include <device/media/v4l2-mem2mem.h>
+#include <device/media/v4l2-mediabus.h>
 
 #include <linux/firmware.h>
 #include <linux/dma-mapping.h>

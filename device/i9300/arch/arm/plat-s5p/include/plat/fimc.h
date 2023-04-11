@@ -12,7 +12,7 @@
 #ifndef __ASM_PLAT_FIMC_H
 #define __ASM_PLAT_FIMC_H __FILE__
 
-#include <linux/videodev2.h>
+#include <device/linux/videodev2.h>
 
 #define FIMC_SRC_MAX_W		4224
 #define FIMC_SRC_MAX_H		4224

@@ -13,7 +13,7 @@
 #ifndef _MEDIA_VIDEOBUF2_CMA_PHYS_H
 #define _MEDIA_VIDEOBUF2_CMA_PHYS_H
 
-#include <media/videobuf2-core.h>
+#include <device/media/videobuf2-core.h>
 
 static inline unsigned long vb2_cma_phys_plane_paddr(struct vb2_buffer *vb,
 						unsigned int plane_no)

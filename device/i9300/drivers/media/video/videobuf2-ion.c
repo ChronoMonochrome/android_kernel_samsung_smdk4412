@@ -17,9 +17,9 @@
 #include <linux/slab.h>
 #include <linux/highmem.h>
 
-#include <media/videobuf2-core.h>
-#include <media/videobuf2-memops.h>
-#include <media/videobuf2-ion.h>
+#include <device/media/videobuf2-core.h>
+#include <device/media/videobuf2-memops.h>
+#include <device/media/videobuf2-ion.h>
 
 #include <asm/cacheflush.h>
 

@@ -17,7 +17,7 @@
 #include <device/linux/usb/ch9.h>
 #include <device/linux/usb/gadget.h>
 
-#include <media/v4l2-dev.h>
+#include <device/media/v4l2-dev.h>
 
 #include "uvc.h"
 #include "uvc_queue.h"

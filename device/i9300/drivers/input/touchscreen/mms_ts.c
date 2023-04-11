@@ -691,8 +691,12 @@ static irqreturn_t mms_ts_interrupt(int irq, void *dev_id)
 		input_report_abs(info->input_dev, ABS_MT_POSITION_Y, y);
 		input_report_abs(info->input_dev, ABS_MT_TOUCH_MAJOR, tmp[6]);
 		input_report_abs(info->input_dev, ABS_MT_TOUCH_MINOR, tmp[7]);
-		input_report_abs(info->input_dev, ABS_MT_ANGLE, angle);
-		input_report_abs(info->input_dev, ABS_MT_PALM, palm);
+#ifndef ABS_MT_TOOL_X
+#define ABS_MT_TOOL_X		0x3c	/* Center X tool position */
+#define ABS_MT_TOOL_Y		0x3d	/* Center Y tool position */
+#endif
+		input_report_abs(info->input_dev, ABS_MT_TOOL_X, angle);
+		input_report_abs(info->input_dev, ABS_MT_TOOL_Y, palm);
 
 #if defined(SEC_TSP_DEBUG)
 		if (info->finger_state[id] == 0) {
@@ -2917,9 +2921,9 @@ static int __devinit mms_ts_probe(struct i2c_client *client,
 				0, MAX_PRESSURE, 0, 0);
 	input_set_abs_params(input_dev, ABS_MT_TOUCH_MINOR,
 				0, MAX_PRESSURE, 0, 0);
-	input_set_abs_params(input_dev, ABS_MT_ANGLE,
+	input_set_abs_params(input_dev, ABS_MT_TOOL_X,
 			     MIN_ANGLE, MAX_ANGLE, 0, 0);
-	input_set_abs_params(input_dev, ABS_MT_PALM,
+	input_set_abs_params(input_dev, ABS_MT_TOOL_Y,
 				0, 1, 0, 0);
 	input_set_drvdata(input_dev, info);
 

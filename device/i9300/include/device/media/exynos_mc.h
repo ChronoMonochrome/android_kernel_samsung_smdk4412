@@ -17,10 +17,10 @@
 #include <linux/platform_device.h>
 #include <linux/mutex.h>
 #include <linux/device.h>
-#include <media/media-device.h>
-#include <media/media-entity.h>
-#include <media/v4l2-device.h>
-#include <media/v4l2-subdev.h>
+#include <device/media/media-device.h>
+#include <device/media/media-entity.h>
+#include <device/media/v4l2-device.h>
+#include <device/media/v4l2-subdev.h>
 
 #define err(fmt, args...) \
 	printk(KERN_ERR "%s:%d: " fmt "\n", __func__, __LINE__, ##args)

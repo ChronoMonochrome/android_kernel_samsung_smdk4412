@@ -32,17 +32,17 @@
 #include <linux/sched.h>
 #include <linux/spinlock.h>
 
-#include <linux/videodev2.h>
-#include <linux/videodev2_exynos_camera.h>
-#include <media/v4l2-subdev.h>
-#include <media/v4l2-device.h>
-#include <media/v4l2-mem2mem.h>
-#include <media/v4l2-mediabus.h>
-#include <media/exynos_fimc_is.h>
+#include <device/linux/videodev2.h>
+#include <device/linux/videodev2_exynos_camera.h>
+#include <device/media/v4l2-subdev.h>
+#include <device/media/v4l2-device.h>
+#include <device/media/v4l2-mem2mem.h>
+#include <device/media/v4l2-mediabus.h>
+#include <device/media/exynos_fimc_is.h>
 #include <mach/dev.h>
 
-#include <media/videobuf2-core.h>
-#include <media/videobuf2-cma-phys.h>
+#include <device/media/videobuf2-core.h>
+#include <device/media/videobuf2-cma-phys.h>
 #define MODULE_NAME	"exynos4-fimc-is"
 
 #define MAX_I2H_ARG 12

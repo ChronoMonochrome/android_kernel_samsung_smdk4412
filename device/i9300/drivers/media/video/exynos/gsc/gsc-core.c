@@ -24,7 +24,7 @@
 #include <linux/io.h>
 #include <linux/slab.h>
 #include <linux/clk.h>
-#include <media/v4l2-ioctl.h>
+#include <device/media/v4l2-ioctl.h>
 #include <plat/sysmmu.h>
 
 #include "gsc-core.h"
