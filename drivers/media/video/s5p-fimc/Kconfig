@@ -33,7 +33,7 @@ config VIDEO_S5P_MIPI_CSIS
 
 if ARCH_EXYNOS
 
-config VIDEO_EXYNOS_FIMC_LITE
+config VIDEO_EXYNOS_FIMC_LITE_MAINLINE
 	tristate "EXYNOS FIMC-LITE camera interface driver"
 	depends on I2C
 	select VIDEOBUF2_DMA_CONTIG

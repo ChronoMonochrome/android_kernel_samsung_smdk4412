@@ -27,11 +27,11 @@
 #include <linux/slab.h>
 #include <linux/mm.h>
 #include <linux/sched.h>
-#include <linux/version.h>
 #include <linux/videodev2.h>
 #include <media/v4l2-common.h>
 #include <media/v4l2-device.h>
 #include <media/v4l2-ioctl.h>
+#include <media/v4l2-fh.h>
 #include <linux/mutex.h>
 
 #include <asm/uaccess.h>
@@ -54,7 +54,7 @@
  */
 #define USE_INT		0	/* Don't modify */
 
-#define VERSION	"0.04"
+#define VERSION	"0.0.5"
 
 #define ar_inl(addr) 		inl((unsigned long)(addr))
 #define ar_outl(val, addr)	outl((unsigned long)(val), (unsigned long)(addr))
@@ -404,8 +404,8 @@ static int ar_querycap(struct file *file, void  *priv,
 	strlcpy(vcap->driver, ar->vdev.name, sizeof(vcap->driver));
 	strlcpy(vcap->card, "Colour AR VGA", sizeof(vcap->card));
 	strlcpy(vcap->bus_info, "Platform", sizeof(vcap->bus_info));
-	vcap->version = KERNEL_VERSION(0, 0, 4);
-	vcap->capabilities = V4L2_CAP_VIDEO_CAPTURE | V4L2_CAP_READWRITE;
+	vcap->device_caps = V4L2_CAP_VIDEO_CAPTURE | V4L2_CAP_READWRITE;
+	vcap->capabilities = vcap->device_caps | V4L2_CAP_DEVICE_CAPS;
 	return 0;
 }
 
@@ -711,6 +711,8 @@ static int ar_initialize(struct ar *ar)
 
 static const struct v4l2_file_operations ar_fops = {
 	.owner		= THIS_MODULE,
+	.open		= v4l2_fh_open,
+	.release	= v4l2_fh_release,
 	.read		= ar_read,
 	.unlocked_ioctl	= video_ioctl2,
 };
@@ -771,6 +773,7 @@ static int __init ar_init(void)
 	ar->vdev.fops = &ar_fops;
 	ar->vdev.ioctl_ops = &ar_ioctl_ops;
 	ar->vdev.release = video_device_release_empty;
+	set_bit(V4L2_FL_USE_FH_PRIO, &ar->vdev.flags);
 	video_set_drvdata(&ar->vdev, ar);
 
 	if (vga) {
@@ -879,3 +882,4 @@ module_exit(ar_cleanup_module);
 MODULE_AUTHOR("Takeo Takahashi <takahashi.takeo@renesas.com>");
 MODULE_DESCRIPTION("Colour AR M64278(VGA) for Video4Linux");
 MODULE_LICENSE("GPL");
+MODULE_VERSION(VERSION);

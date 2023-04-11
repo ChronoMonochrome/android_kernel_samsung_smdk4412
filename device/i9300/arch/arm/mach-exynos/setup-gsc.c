@@ -18,7 +18,7 @@
 #include <plat/devs.h>
 #include <mach/regs-clock.h>
 #include <mach/map.h>
-#include <media/exynos_gscaler.h>
+#include <device/media/exynos_gscaler.h>
 
 void __init exynos5_gsc_set_pdev_name(int id, char *name)
 {

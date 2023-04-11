@@ -44,7 +44,6 @@
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#include <linux/version.h>
 #include <linux/init.h>
 #include <linux/module.h>
 #include <linux/delay.h>
@@ -1132,8 +1131,14 @@ static int setup_fbuffer(struct zoran_fh *fh,
 }
 
 
-static int setup_window(struct zoran_fh *fh, int x, int y, int width, int height,
-	struct v4l2_clip __user *clips, int clipcount, void __user *bitmap)
+static int setup_window(struct zoran_fh *fh,
+			int x,
+			int y,
+			int width,
+			int height,
+			struct v4l2_clip __user *clips,
+			unsigned int clipcount,
+			void __user *bitmap)
 {
 	struct zoran *zr = fh->zr;
 	struct v4l2_clip *vcp = NULL;
@@ -1153,6 +1158,14 @@ static int setup_window(struct zoran_fh *fh, int x, int y, int width, int height
 			KERN_ERR
 			"%s: %s - no overlay format set\n",
 			ZR_DEVNAME(zr), __func__);
+		return -EINVAL;
+	}
+
+	if (clipcount > 2048) {
+		dprintk(1,
+			KERN_ERR
+			"%s: %s - invalid clipcount\n",
+			 ZR_DEVNAME(zr), __func__);
 		return -EINVAL;
 	}
 
@@ -1219,7 +1232,7 @@ static int setup_window(struct zoran_fh *fh, int x, int y, int width, int height
 				   (width * height + 7) / 8)) {
 			return -EFAULT;
 		}
-	} else if (clipcount > 0) {
+	} else if (clipcount) {
 		/* write our own bitmap from the clips */
 		vcp = vmalloc(sizeof(struct v4l2_clip) * (clipcount + 4));
 		if (vcp == NULL) {
@@ -1538,8 +1551,6 @@ static int zoran_querycap(struct file *file, void *__fh, struct v4l2_capability 
 	strncpy(cap->driver, "zoran", sizeof(cap->driver)-1);
 	snprintf(cap->bus_info, sizeof(cap->bus_info), "PCI:%s",
 		 pci_name(zr->pci_dev));
-	cap->version = KERNEL_VERSION(MAJOR_VERSION, MINOR_VERSION,
-			   RELEASE_VERSION);
 	cap->capabilities = V4L2_CAP_STREAMING | V4L2_CAP_VIDEO_CAPTURE |
 			    V4L2_CAP_VIDEO_OUTPUT | V4L2_CAP_VIDEO_OVERLAY;
 	return 0;

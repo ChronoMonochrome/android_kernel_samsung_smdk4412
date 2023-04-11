@@ -85,7 +85,7 @@ static inline u8 rc5_data(struct rc_map_table *key)
 	return key->scancode & 0xff;
 }
 
-static inline u8 rc5_scan(struct rc_map_table *key)
+static inline u16 rc5_scan(struct rc_map_table *key)
 {
 	return key->scancode & 0xffff;
 }
@@ -141,6 +141,7 @@ struct dvb_usb_adapter_fe_properties {
 #define DVB_USB_ADAP_PID_FILTER_CAN_BE_TURNED_OFF 0x02
 #define DVB_USB_ADAP_NEED_PID_FILTERING           0x04
 #define DVB_USB_ADAP_RECEIVES_204_BYTE_TS         0x08
+#define DVB_USB_ADAP_RECEIVES_RAW_PAYLOAD         0x10
 	int caps;
 	int pid_filter_count;
 
@@ -156,7 +157,7 @@ struct dvb_usb_adapter_fe_properties {
 	int size_of_priv;
 };
 
-#define MAX_NO_OF_FE_PER_ADAP 2
+#define MAX_NO_OF_FE_PER_ADAP 3
 struct dvb_usb_adapter_properties {
 	int size_of_priv;
 

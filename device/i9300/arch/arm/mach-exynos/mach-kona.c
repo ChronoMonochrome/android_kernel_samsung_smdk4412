@@ -57,7 +57,7 @@
 #include <plat/csis.h>
 #include <plat/media.h>
 #include <plat/adc.h>
-#include <media/exynos_fimc_is.h>
+#include <device/media/exynos_fimc_is.h>
 #include <mach/exynos-ion.h>
 
 #include <mach/map.h>

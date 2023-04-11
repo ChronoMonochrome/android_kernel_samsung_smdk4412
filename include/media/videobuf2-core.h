@@ -16,7 +16,6 @@
 #include <linux/mutex.h>
 #include <linux/poll.h>
 #include <linux/videodev2.h>
-#include <linux/dma-buf.h>
 
 struct vb2_alloc_ctx;
 struct vb2_fileio_data;
@@ -42,29 +41,10 @@ struct vb2_fileio_data;
  *		 argument to other ops in this structure
  * @put_userptr: inform the allocator that a USERPTR buffer will no longer
  *		 be used
- * @attach_dmabuf: attach a shared struct dma_buf for a hardware operation;
- *		used for DMABUF memory types; alloc_ctx is the alloc context
- *		dbuf is the shared dma_buf; returns NULL on failure;
- *		allocator private per-buffer structure on success;
- *		this needs to be used for further accesses to the buffer.
- * @detach_dmabuf: inform the exporter of the buffer that the current DMABUF
- *		buffer is no longer used; the buf_priv argument is the
- *		allocator private per-buffers structure previously returned
- *		from the attach_dmabuf callback.
- * @map_dmabuf: request for access to the dmabuf from allocator; the allocator
- *		of dmabuf is informed that this driver is going to use the
- *		dmabuf.
- * @unmap_dmabuf: releases access control to the dmabuf - allocator is notified
- *		that this driver is done using the dmabuf for now.
- * @export_dmabuf: export an allocated buffer to the dmabuf for that user can
- *		access the buffer through the fd of it.
  * @vaddr:	return a kernel virtual address to a given memory buffer
  *		associated with the passed private structure or NULL if no
  *		such mapping exists
  * @cookie:	return allocator specific cookie for a given memory buffer
- *		associated with the passed private structure or NULL if not
- *		available
- * @share:	return allocator specific object to share a given memory buffer
  *		associated with the passed private structure or NULL if not
  *		available
  * @num_users:	return the current number of users of a memory buffer;
@@ -72,18 +52,10 @@ struct vb2_fileio_data;
  *		it) is the only user
  * @mmap:	setup a userspace mapping for a given memory buffer under
  *		the provided virtual memory region
- * @sync_to_dev: change the ownership of the buffer from CPU to device; this
- *               ensures that all stuffs related to the buffer visible to CPU
- *		 are also visible to the device.
- * @sync_from_dev: change the ownership of the buffer from device to CPU; this
- *                 ensures that all stuffs related to the buffer visible to
- *                 the device are also visible to the CPU.
  *
  * Required ops for USERPTR types: get_userptr, put_userptr.
  * Required ops for MMAP types: alloc, put, num_users, mmap.
  * Required ops for read/write access types: alloc, put, num_users, vaddr
- * Required ops for DMABUF types: attach_dmabuf, detach_dmabuf, map_dmabuf,
- *				  unmap_dmabuf, export_dmabuf.
  */
 struct vb2_mem_ops {
 	void		*(*alloc)(void *alloc_ctx, unsigned long size);
@@ -93,37 +65,16 @@ struct vb2_mem_ops {
 					unsigned long size, int write);
 	void		(*put_userptr)(void *buf_priv);
 
-	int		(*export_dmabuf)(void *alloc_ctx, void *buf_priv,
-						int *export_fd);
-
-	/*
-	 * XXX really, I think the attach/detach could be handled in the
-	 * vb2 core, and vb2_mem_ops really just need to get/put the sglist
-	 * (and make sure that the sglist fits it's needs..)
-	 */
-	void		*(*attach_dmabuf)(void *alloc_ctx,
-						struct dma_buf *dbuf);
-	void		(*detach_dmabuf)(void *buf_priv);
-	void		(*map_dmabuf)(void *buf_priv);
-	void		(*unmap_dmabuf)(void *buf_priv);
-
 	void		*(*vaddr)(void *buf_priv);
 	void		*(*cookie)(void *buf_priv);
-	void		*(*share)(void *buf_priv);
 
 	unsigned int	(*num_users)(void *buf_priv);
 
 	int		(*mmap)(void *buf_priv, struct vm_area_struct *vma);
-	void		(*sync_to_dev)(void *alloc_ctx[], void *privs[],
-					int nplanes, enum v4l2_buf_type type);
-	void		(*sync_from_dev)(void *alloc_ctx[], void *privs[],
-					int nplanes, enum v4l2_buf_type type);
 };
 
 struct vb2_plane {
 	void			*mem_priv;
-	struct dma_buf		*dbuf;
-	int			mapped:1;
 };
 
 /**
@@ -132,14 +83,12 @@ struct vb2_plane {
  * @VB2_USERPTR:	driver supports USERPTR with streaming API
  * @VB2_READ:		driver supports read() style access
  * @VB2_WRITE:		driver supports write() style access
- * @VB2_DMABUF:		driver supports DMABUF with streaming API
  */
 enum vb2_io_modes {
 	VB2_MMAP	= (1 << 0),
 	VB2_USERPTR	= (1 << 1),
 	VB2_READ	= (1 << 2),
 	VB2_WRITE	= (1 << 3),
-	VB2_DMABUF	= (1 << 4),
 };
 
 /**
@@ -199,7 +148,6 @@ struct vb2_queue;
  * @done_entry:		entry on the list that stores all buffers ready to
  *			be dequeued to userspace
  * @planes:		private per-plane information; do not change
- * @num_planes_mapped:	number of mapped planes; do not change
  */
 struct vb2_buffer {
 	struct v4l2_buffer	v4l2_buf;
@@ -216,7 +164,6 @@ struct vb2_buffer {
 	struct list_head	done_entry;
 
 	struct vb2_plane	planes[VIDEO_MAX_PLANES];
-	unsigned int		num_planes_mapped;
 };
 
 /**
@@ -259,20 +206,29 @@ struct vb2_buffer {
  *			before userspace accesses the buffer; optional
  * @buf_cleanup:	called once before the buffer is freed; drivers may
  *			perform any additional cleanup; optional
- * @start_streaming:	called once before entering 'streaming' state; enables
- *			driver to receive buffers over buf_queue() callback
+ * @start_streaming:	called once to enter 'streaming' state; the driver may
+ *			receive buffers with @buf_queue callback before
+ *			@start_streaming is called; the driver gets the number
+ *			of already queued buffers in count parameter; driver
+ *			can return an error if hardware fails or not enough
+ *			buffers has been queued, in such case all buffers that
+ *			have been already given by the @buf_queue callback are
+ *			invalidated.
  * @stop_streaming:	called when 'streaming' state must be disabled; driver
  *			should stop any DMA transactions or wait until they
  *			finish and give back all buffers it got from buf_queue()
  *			callback; may use vb2_wait_for_all_buffers() function
  * @buf_queue:		passes buffer vb to the driver; driver may start
  *			hardware operation on this buffer; driver should give
- *			the buffer back by calling vb2_buffer_done() function
+ *			the buffer back by calling vb2_buffer_done() function;
+ *			it is allways called after calling STREAMON ioctl;
+ *			might be called before start_streaming callback if user
+ *			pre-queued buffers before calling STREAMON
  */
 struct vb2_ops {
-	int (*queue_setup)(struct vb2_queue *q, unsigned int *num_buffers,
-			   unsigned int *num_planes, unsigned long sizes[],
-			   void *alloc_ctxs[]);
+	int (*queue_setup)(struct vb2_queue *q, const struct v4l2_format *fmt,
+			   unsigned int *num_buffers, unsigned int *num_planes,
+			   unsigned int sizes[], void *alloc_ctxs[]);
 
 	void (*wait_prepare)(struct vb2_queue *q);
 	void (*wait_finish)(struct vb2_queue *q);
@@ -282,7 +238,7 @@ struct vb2_ops {
 	int (*buf_finish)(struct vb2_buffer *vb);
 	void (*buf_cleanup)(struct vb2_buffer *vb);
 
-	int (*start_streaming)(struct vb2_queue *q);
+	int (*start_streaming)(struct vb2_queue *q, unsigned int count);
 	int (*stop_streaming)(struct vb2_queue *q);
 
 	void (*buf_queue)(struct vb2_buffer *vb);
@@ -336,6 +292,7 @@ struct vb2_queue {
 	wait_queue_head_t		done_wq;
 
 	void				*alloc_ctx[VIDEO_MAX_PLANES];
+	unsigned int			plane_sizes[VIDEO_MAX_PLANES];
 
 	unsigned int			streaming:1;
 

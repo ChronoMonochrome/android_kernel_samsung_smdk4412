@@ -12,19 +12,19 @@
  */
 #include "mixer.h"
 
-#include <linux/videodev2.h>
-#include <linux/videodev2_exynos_media.h>
-#include <linux/videodev2_exynos_camera.h>
+#include <device/linux/videodev2.h>
+#include <device/linux/videodev2_exynos_media.h>
+#include <device/linux/videodev2_exynos_camera.h>
 #include <linux/mm.h>
 #include <linux/version.h>
 #include <linux/timer.h>
 
-#include <media/exynos_mc.h>
-#include <media/v4l2-ioctl.h>
+#include <device/media/exynos_mc.h>
+#include <device/media/v4l2-ioctl.h>
 #if defined(CONFIG_VIDEOBUF2_CMA_PHYS)
-#include <media/videobuf2-cma-phys.h>
+#include <device/media/videobuf2-cma-phys.h>
 #elif defined(CONFIG_VIDEOBUF2_ION)
-#include <media/videobuf2-ion.h>
+#include <device/media/videobuf2-ion.h>
 #endif
 
 int __devinit mxr_acquire_video(struct mxr_device *mdev,

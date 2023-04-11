@@ -1006,15 +1006,6 @@ int get_user_pages(struct task_struct *tsk, struct mm_struct *mm,
 			unsigned long start, int nr_pages, int write, int force,
 			struct page **pages, struct vm_area_struct **vmas);
 
-#ifdef CONFIG_DMA_CMA
-int get_user_pages_nocma(struct task_struct *tsk, struct mm_struct *mm,
-			unsigned long start, int nr_pages, int write, int force,
-			struct page **pages, struct vm_area_struct **vmas);
-#else
-#define get_user_pages_nocma(tsk, mm, start, nr_pages, wr, force, pgs, vmas) \
-	get_user_pages(tsk, mm, start, nr_pages, wr, force, pgs, vmas)
-#endif
-
 int get_user_pages_fast(unsigned long start, int nr_pages, int write,
 			struct page **pages);
 struct page *get_dump_page(unsigned long addr);

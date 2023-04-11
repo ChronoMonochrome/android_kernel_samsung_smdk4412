@@ -22,7 +22,7 @@
 #include <linux/irq.h>
 #include <linux/mm.h>
 #include <linux/interrupt.h>
-#include <media/v4l2-device.h>
+#include <device/media/v4l2-device.h>
 #include <linux/io.h>
 #include <linux/memory.h>
 #include <linux/ctype.h>
@@ -36,8 +36,8 @@
 #endif
 #include <plat/fimc.h>
 #include <device/linux/pm_runtime.h>
-#include <linux/videodev2_exynos_media.h>
-#include <linux/videodev2_exynos_camera.h>
+#include <device/linux/videodev2_exynos_media.h>
+#include <device/linux/videodev2_exynos_camera.h>
 
 #include <mach/regs-pmu.h>
 #include <linux/delay.h>

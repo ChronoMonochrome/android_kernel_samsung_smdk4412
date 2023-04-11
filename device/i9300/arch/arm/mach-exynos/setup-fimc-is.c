@@ -24,7 +24,7 @@
 #include <plat/cpu.h>
 #include <mach/map.h>
 #include <mach/regs-clock.h>
-#include <media/exynos_fimc_is.h>
+#include <device/media/exynos_fimc_is.h>
 
 struct platform_device; /* don't need the contents */
 

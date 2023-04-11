@@ -22,10 +22,10 @@
 
 #include <linux/ctype.h>
 #include <linux/slab.h>
-#include <media/v4l2-ioctl.h>
-#include <media/v4l2-device.h>
-#include <media/v4l2-ctrls.h>
-#include <media/v4l2-dev.h>
+#include <device/media/v4l2-ioctl.h>
+#include <device/media/v4l2-device.h>
+#include <device/media/v4l2-ctrls.h>
+#include <device/media/v4l2-dev.h>
 
 /* Internal temporary helper struct, one for each v4l2_ext_control */
 struct ctrl_helper {

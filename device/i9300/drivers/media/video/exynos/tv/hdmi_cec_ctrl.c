@@ -13,8 +13,8 @@
 #include <linux/io.h>
 #include <linux/slab.h>
 #include <linux/platform_device.h>
-#include <linux/videodev2.h>
-#include <linux/videodev2_exynos_camera.h>
+#include <device/linux/videodev2.h>
+#include <device/linux/videodev2_exynos_camera.h>
 #include <linux/irqreturn.h>
 #include <linux/stddef.h>
 

@@ -466,18 +466,7 @@ struct input_keymap_entry {
 #define KEY_WIMAX		246
 #define KEY_RFKILL		247	/* Key that controls all radios */
 
-#define KEY_POUND		248
-#define KEY_STAR		249
-#define KEY_NETWORK		250
-
-#define KEY_FOLDER_OPEN		251  /*only use Grande CHN CTC */
-#define KEY_FOLDER_CLOSE	252  /*only use Grande CHN CTC */
-#define KEY_3G	253  /*only use Grande CHN CTC */
-
-/* kona dummy touchkey */
-#define KEY_DUMMY_1     251
-#define KEY_DUMMY_2     252
-#define KEY_DUMMY_3     253
+#define KEY_MICMUTE		248	/* Mute / unmute the microphone */
 
 /* Code 255 is reserved for special needs of AT keyboard driver */
 
@@ -818,22 +807,20 @@ struct input_keymap_entry {
 #define ABS_MT_WIDTH_MAJOR	0x32	/* Major axis of approaching ellipse */
 #define ABS_MT_WIDTH_MINOR	0x33	/* Minor axis (omit if circular) */
 #define ABS_MT_ORIENTATION	0x34	/* Ellipse orientation */
-#define ABS_MT_POSITION_X	0x35	/* Center X ellipse position */
-#define ABS_MT_POSITION_Y	0x36	/* Center Y ellipse position */
+#define ABS_MT_POSITION_X	0x35	/* Center X touch position */
+#define ABS_MT_POSITION_Y	0x36	/* Center Y touch position */
 #define ABS_MT_TOOL_TYPE	0x37	/* Type of touching device */
 #define ABS_MT_BLOB_ID		0x38	/* Group a set of packets as a blob */
 #define ABS_MT_TRACKING_ID	0x39	/* Unique ID of initiated contact */
 #define ABS_MT_PRESSURE		0x3a	/* Pressure on contact area */
 #define ABS_MT_DISTANCE		0x3b	/* Contact hover distance */
-#define ABS_MT_ANGLE		0x3c	/* touch angle */
-#define ABS_MT_COMPONENT	0x3c	/* touch component */
-#define ABS_MT_PALM		0x3d	/* palm touch */
-#define ABS_MT_SUMSIZE		0x3d	/* touch sumsize */
+#define ABS_MT_TOOL_X		0x3c	/* Center X tool position */
+#define ABS_MT_TOOL_Y		0x3d	/* Center Y tool position */
 
 #ifdef __KERNEL__
 /* Implementation details, userspace should not care about these */
 #define ABS_MT_FIRST		ABS_MT_TOUCH_MAJOR
-#define ABS_MT_LAST		ABS_MT_PALM
+#define ABS_MT_LAST		ABS_MT_TOOL_Y
 #endif
 
 #define ABS_MAX			0x3f
@@ -859,15 +846,7 @@ struct input_keymap_entry {
 #define SW_FRONT_PROXIMITY	0x0b  /* set = front proximity sensor active */
 #define SW_ROTATE_LOCK		0x0c  /* set = rotate locked/disabled */
 #define SW_LINEIN_INSERT	0x0d  /* set = inserted */
-#define SW_PEN_INSERT			0x0e	/* set = pen out */
-#define SW_STROBE_INSERT		0x0f	/* set = strobe out */
-//#ifdef CONFIG_SENSORS_HALL
-//#define SW_FLIP			0x10  /* set = flip cover... */
-//#define SW_MAX			0x17
-//#else
-#define SW_MAX			0x10
-//#endif
-
+#define SW_MAX			0x0f
 #define SW_CNT			(SW_MAX+1)
 
 /*

@@ -87,13 +87,13 @@
 #include <plat/csis.h>
 #include <plat/media.h>
 #include <plat/adc.h>
-#include <media/exynos_fimc_is.h>
+#include <device/media/exynos_fimc_is.h>
 #include <mach/exynos-ion.h>
 
 #if defined(CONFIG_TDMB) || defined(CONFIG_TDMB_MODULE)
 #include <mach/tdmb_pdata.h>
 #elif defined(CONFIG_ISDBT)
-#include <media/isdbt_pdata.h>
+#include <device/media/isdbt_pdata.h>
 #endif
 
 #include <mach/map.h>

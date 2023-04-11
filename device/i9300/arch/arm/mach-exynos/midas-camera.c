@@ -9,7 +9,7 @@
 #include <linux/i2c.h>
 #include <linux/clk.h>
 #include <linux/vmalloc.h>
-#include <media/v4l2-device.h>
+#include <device/media/v4l2-device.h>
 #include <linux/vmalloc.h>
 #include <linux/firmware.h>
 #include <device/linux/regulator/machine.h>
@@ -24,32 +24,32 @@
 #endif
 #ifdef CONFIG_VIDEO_SAMSUNG_S5P_FIMC
 #include <plat/fimc-core.h>
-#include <media/s5p_fimc.h>
+#include <device/media/s5p_fimc.h>
 #endif
 
 #ifdef CONFIG_VIDEO_EXYNOS_FIMC_LITE
-#include <media/exynos_flite.h>
+#include <device/media/exynos_flite.h>
 #endif
 
 #if defined(CONFIG_VIDEO_S5C73M3) || defined(CONFIG_VIDEO_SLP_S5C73M3)
-#include <media/s5c73m3_platform.h>
+#include <device/media/s5c73m3_platform.h>
 #endif
 
 #if defined(CONFIG_VIDEO_M5MO)
 #include <mach/regs-gpio.h>
-#include <media/m5mo_platform.h>
+#include <device/media/m5mo_platform.h>
 #endif
 
 #if defined(CONFIG_VIDEO_M9MO)
 #include <mach/regs-gpio.h>
-#include <media/m9mo_platform.h>
+#include <device/media/m9mo_platform.h>
 #endif
 
 #if defined(CONFIG_VIDEO_ISX012)
-#include <media/isx012_platform.h>
+#include <device/media/isx012_platform.h>
 #endif
 #if defined(CONFIG_VIDEO_S5K5CCGX_COMMON)
-#include <media/s5k5ccgx_platform.h>
+#include <device/media/s5k5ccgx_platform.h>
 #endif
 
 #ifdef CONFIG_EXYNOS_CONTENT_PATH_PROTECTION
@@ -57,15 +57,15 @@
 #endif
 
 #ifdef CONFIG_VIDEO_SR200PC20M
-#include <media/sr200pc20m_platform.h>
+#include <device/media/sr200pc20m_platform.h>
 #endif
 
 #ifdef CONFIG_VIDEO_SR200PC20
-#include <media/sr200pc20_platform.h>
+#include <device/media/sr200pc20_platform.h>
 #endif
 
 #ifdef CONFIG_VIDEO_SR130PC20
-#include <media/sr130pc20_platform.h>
+#include <device/media/sr130pc20_platform.h>
 #endif
 
 struct class *camera_class;

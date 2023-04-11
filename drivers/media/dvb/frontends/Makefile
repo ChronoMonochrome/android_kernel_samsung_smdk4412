@@ -2,14 +2,14 @@
 # Makefile for the kernel DVB frontend device drivers.
 #
 
-EXTRA_CFLAGS += -Idrivers/media/dvb/dvb-core/
-EXTRA_CFLAGS += -Idrivers/media/common/tuners/
+ccflags-y += -I$(srctree)/drivers/media/dvb/dvb-core/
+ccflags-y += -I$(srctree)/drivers/media/common/tuners/
 
 stb0899-objs = stb0899_drv.o stb0899_algo.o
 stv0900-objs = stv0900_core.o stv0900_sw.o
-au8522-objs = au8522_dig.o au8522_decoder.o
 drxd-objs = drxd_firm.o drxd_hard.o
 cxd2820r-objs = cxd2820r_core.o cxd2820r_c.o cxd2820r_t.o cxd2820r_t2.o
+drxk-objs := drxk_hard.o
 
 obj-$(CONFIG_DVB_PLL) += dvb-pll.o
 obj-$(CONFIG_DVB_STV0299) += stv0299.o
@@ -49,8 +49,10 @@ obj-$(CONFIG_DVB_BCM3510) += bcm3510.o
 obj-$(CONFIG_DVB_S5H1420) += s5h1420.o
 obj-$(CONFIG_DVB_LGDT330X) += lgdt330x.o
 obj-$(CONFIG_DVB_LGDT3305) += lgdt3305.o
+obj-$(CONFIG_DVB_LG2160) += lg2160.o
 obj-$(CONFIG_DVB_CX24123) += cx24123.o
 obj-$(CONFIG_DVB_LNBP21) += lnbp21.o
+obj-$(CONFIG_DVB_LNBP22) += lnbp22.o
 obj-$(CONFIG_DVB_ISL6405) += isl6405.o
 obj-$(CONFIG_DVB_ISL6421) += isl6421.o
 obj-$(CONFIG_DVB_TDA10086) += tda10086.o
@@ -61,7 +63,9 @@ obj-$(CONFIG_DVB_TUNER_DIB0090) += dib0090.o
 obj-$(CONFIG_DVB_TUA6100) += tua6100.o
 obj-$(CONFIG_DVB_S5H1409) += s5h1409.o
 obj-$(CONFIG_DVB_TUNER_ITD1000) += itd1000.o
-obj-$(CONFIG_DVB_AU8522) += au8522.o
+obj-$(CONFIG_DVB_AU8522) += au8522_common.o
+obj-$(CONFIG_DVB_AU8522_DTV) += au8522_dig.o
+obj-$(CONFIG_DVB_AU8522_V4L) += au8522_decoder.o
 obj-$(CONFIG_DVB_TDA10048) += tda10048.o
 obj-$(CONFIG_DVB_TUNER_CX24113) += cx24113.o
 obj-$(CONFIG_DVB_S5H1411) += s5h1411.o
@@ -89,4 +93,12 @@ obj-$(CONFIG_DVB_MB86A20S) += mb86a20s.o
 obj-$(CONFIG_DVB_IX2505V) += ix2505v.o
 obj-$(CONFIG_DVB_STV0367) += stv0367.o
 obj-$(CONFIG_DVB_CXD2820R) += cxd2820r.o
+obj-$(CONFIG_DVB_DRXK) += drxk.o
+obj-$(CONFIG_DVB_TDA18271C2DD) += tda18271c2dd.o
+obj-$(CONFIG_DVB_IT913X_FE) += it913x-fe.o
+obj-$(CONFIG_DVB_A8293) += a8293.o
+obj-$(CONFIG_DVB_TDA10071) += tda10071.o
+obj-$(CONFIG_DVB_RTL2830) += rtl2830.o
+obj-$(CONFIG_DVB_M88RS2000) += m88rs2000.o
+obj-$(CONFIG_DVB_AF9033) += af9033.o
 

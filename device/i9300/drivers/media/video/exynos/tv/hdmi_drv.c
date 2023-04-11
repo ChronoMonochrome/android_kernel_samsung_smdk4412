@@ -17,7 +17,7 @@
 #include <linux/io.h>
 #include <linux/i2c.h>
 #include <linux/platform_device.h>
-#include <media/v4l2-subdev.h>
+#include <device/media/v4l2-subdev.h>
 #include <linux/module.h>
 #include <linux/interrupt.h>
 #include <linux/irq.h>
@@ -26,14 +26,14 @@
 #include <device/linux/pm_runtime.h>
 #include <linux/clk.h>
 #include <device/linux/regulator/consumer.h>
-#include <linux/videodev2_exynos_media.h>
+#include <device/linux/videodev2_exynos_media.h>
 #include <linux/sched.h>
 #include <plat/tvout.h>
 
-#include <media/v4l2-common.h>
-#include <media/v4l2-dev.h>
-#include <media/v4l2-device.h>
-#include <media/exynos_mc.h>
+#include <device/media/v4l2-common.h>
+#include <device/media/v4l2-dev.h>
+#include <device/media/v4l2-device.h>
+#include <device/media/exynos_mc.h>
 
 MODULE_AUTHOR("Tomasz Stanislawski, <t.stanislaws@samsung.com>");
 MODULE_DESCRIPTION("Samsung HDMI");

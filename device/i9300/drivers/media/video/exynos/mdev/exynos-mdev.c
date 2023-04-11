@@ -22,9 +22,9 @@
 #include <linux/types.h>
 #include <linux/slab.h>
 #include <linux/version.h>
-#include <media/v4l2-ctrls.h>
-#include <media/media-device.h>
-#include <media/exynos_mc.h>
+#include <device/media/v4l2-ctrls.h>
+#include <device/media/media-device.h>
+#include <device/media/exynos_mc.h>
 
 static int __devinit mdev_probe(struct platform_device *pdev)
 {

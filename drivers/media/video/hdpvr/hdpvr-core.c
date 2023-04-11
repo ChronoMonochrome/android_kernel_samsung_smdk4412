@@ -17,7 +17,7 @@
 #include <linux/slab.h>
 #include <linux/module.h>
 #include <linux/uaccess.h>
-#include <asm/atomic.h>
+#include <linux/atomic.h>
 #include <linux/usb.h>
 #include <linux/mutex.h>
 #include <linux/i2c.h>
@@ -467,5 +467,6 @@ static struct usb_driver hdpvr_usb_driver = {
 module_usb_driver(hdpvr_usb_driver);
 
 MODULE_LICENSE("GPL");
+MODULE_VERSION("0.2.1");
 MODULE_AUTHOR("Janne Grunau");
 MODULE_DESCRIPTION("Hauppauge HD PVR driver");

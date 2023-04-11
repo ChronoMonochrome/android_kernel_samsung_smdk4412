@@ -27,11 +27,13 @@
 #ifndef OMAP3_ISP_CORE_H
 #define OMAP3_ISP_CORE_H
 
+#include <media/omap3isp.h>
 #include <media/v4l2-device.h>
 #include <linux/device.h>
 #include <linux/io.h>
 #include <linux/platform_device.h>
 #include <linux/wait.h>
+#include <linux/iommu.h>
 #include <plat/iommu.h>
 #include <plat/iovmm.h>
 
@@ -94,14 +96,6 @@ enum isp_subclk_resource {
 	OMAP3_ISP_SUBCLK_RESIZER	= (1 << 4),
 };
 
-enum isp_interface_type {
-	ISP_INTERFACE_PARALLEL,
-	ISP_INTERFACE_CSI2A_PHY2,
-	ISP_INTERFACE_CCP2B_PHY1,
-	ISP_INTERFACE_CCP2B_PHY2,
-	ISP_INTERFACE_CSI2C_PHY1,
-};
-
 /* ISP: OMAP 34xx ES 1.0 */
 #define ISP_REVISION_1_0		0x10
 /* ISP2: OMAP 34xx ES 2.0, 2.1 and 3.0 */
@@ -130,82 +124,11 @@ struct isp_reg {
 	u32 val;
 };
 
-/**
- * struct isp_parallel_platform_data - Parallel interface platform data
- * @data_lane_shift: Data lane shifter
- *		0 - CAMEXT[13:0] -> CAM[13:0]
- *		1 - CAMEXT[13:2] -> CAM[11:0]
- *		2 - CAMEXT[13:4] -> CAM[9:0]
- *		3 - CAMEXT[13:6] -> CAM[7:0]
- * @clk_pol: Pixel clock polarity
- *		0 - Non Inverted, 1 - Inverted
- * @bridge: CCDC Bridge input control
- *		ISPCTRL_PAR_BRIDGE_DISABLE - Disable
- *		ISPCTRL_PAR_BRIDGE_LENDIAN - Little endian
- *		ISPCTRL_PAR_BRIDGE_BENDIAN - Big endian
- */
-struct isp_parallel_platform_data {
-	unsigned int data_lane_shift:2;
-	unsigned int clk_pol:1;
-	unsigned int bridge:4;
-};
-
-/**
- * struct isp_ccp2_platform_data - CCP2 interface platform data
- * @strobe_clk_pol: Strobe/clock polarity
- *		0 - Non Inverted, 1 - Inverted
- * @crc: Enable the cyclic redundancy check
- * @ccp2_mode: Enable CCP2 compatibility mode
- *		0 - MIPI-CSI1 mode, 1 - CCP2 mode
- * @phy_layer: Physical layer selection
- *		ISPCCP2_CTRL_PHY_SEL_CLOCK - Data/clock physical layer
- *		ISPCCP2_CTRL_PHY_SEL_STROBE - Data/strobe physical layer
- * @vpclk_div: Video port output clock control
- */
-struct isp_ccp2_platform_data {
-	unsigned int strobe_clk_pol:1;
-	unsigned int crc:1;
-	unsigned int ccp2_mode:1;
-	unsigned int phy_layer:1;
-	unsigned int vpclk_div:2;
-};
-
-/**
- * struct isp_csi2_platform_data - CSI2 interface platform data
- * @crc: Enable the cyclic redundancy check
- * @vpclk_div: Video port output clock control
- */
-struct isp_csi2_platform_data {
-	unsigned crc:1;
-	unsigned vpclk_div:2;
-};
-
-struct isp_subdev_i2c_board_info {
-	struct i2c_board_info *board_info;
-	int i2c_adapter_id;
-};
-
-struct isp_v4l2_subdevs_group {
-	struct isp_subdev_i2c_board_info *subdevs;
-	enum isp_interface_type interface;
-	union {
-		struct isp_parallel_platform_data parallel;
-		struct isp_ccp2_platform_data ccp2;
-		struct isp_csi2_platform_data csi2;
-	} bus; /* gcc < 4.6.0 chokes on anonymous union initializers */
-};
-
-struct isp_platform_data {
-	struct isp_v4l2_subdevs_group *subdevs;
-	void (*set_constraints)(struct isp_device *isp, bool enable);
-};
-
 struct isp_platform_callback {
 	u32 (*set_xclk)(struct isp_device *isp, u32 xclk, u8 xclksel);
 	int (*csiphy_config)(struct isp_csiphy *phy,
 			     struct isp_csiphy_dphy_cfg *dphy,
 			     struct isp_csiphy_lanes_cfg *lanes);
-	void (*set_pixel_clock)(struct isp_device *isp, unsigned int pixelclk);
 };
 
 /*
@@ -221,6 +144,7 @@ struct isp_platform_callback {
  * @raw_dmamask: Raw DMA mask
  * @stat_lock: Spinlock for handling statistics
  * @isp_mutex: Mutex for serializing requests to ISP.
+ * @crashed: Bitmask of crashed entities (indexed by entity ID)
  * @has_context: Context has been saved at least once and can be restored.
  * @ref_count: Reference count for handling multiple ISP requests.
  * @cam_ick: Pointer to camera interface clock structure.
@@ -260,7 +184,7 @@ struct isp_device {
 	/* ISP Obj */
 	spinlock_t stat_lock;	/* common lock for statistic drivers */
 	struct mutex isp_mutex;	/* For handling ref_count field */
-	bool needs_reset;
+	u32 crashed;
 	int has_context;
 	int ref_count;
 	unsigned int autoidle;
@@ -288,7 +212,7 @@ struct isp_device {
 	unsigned int sbl_resources;
 	unsigned int subclk_resources;
 
-	struct iommu *iommu;
+	struct iommu_domain *domain;
 
 	struct isp_platform_callback platform_cb;
 };
@@ -312,10 +236,6 @@ void omap3isp_configure_bridge(struct isp_device *isp,
 			       enum ccdc_input_entity input,
 			       const struct isp_parallel_platform_data *pdata,
 			       unsigned int shift);
-
-#define ISP_XCLK_NONE			0
-#define ISP_XCLK_A			1
-#define ISP_XCLK_B			2
 
 struct isp_device *omap3isp_get(struct isp_device *isp);
 void omap3isp_put(struct isp_device *isp);

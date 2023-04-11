@@ -46,9 +46,9 @@ static int ir_raw_event_thread(void *data)
 	while (!kthread_should_stop()) {
 
 		spin_lock_irq(&raw->lock);
-		retval = kfifo_out(&raw->kfifo, &ev, sizeof(ev));
+		retval = kfifo_len(&raw->kfifo);
 
-		if (!retval) {
+		if (retval < sizeof(ev)) {
 			set_current_state(TASK_INTERRUPTIBLE);
 
 			if (kthread_should_stop())
@@ -59,10 +59,8 @@ static int ir_raw_event_thread(void *data)
 			continue;
 		}
 
+		retval = kfifo_out(&raw->kfifo, &ev, sizeof(ev));
 		spin_unlock_irq(&raw->lock);
-
-
-		BUG_ON(retval != sizeof(ev));
 
 		mutex_lock(&ir_raw_handler_lock);
 		list_for_each_entry(handler, &ir_raw_handler_list, list)
@@ -357,6 +355,8 @@ static void init_decoders(struct work_struct *work)
 	load_rc6_decode();
 	load_jvc_decode();
 	load_sony_decode();
+	load_sanyo_decode();
+	load_mce_kbd_decode();
 	load_lirc_codec();
 
 	/* If needed, we may later add some init code. In this case,

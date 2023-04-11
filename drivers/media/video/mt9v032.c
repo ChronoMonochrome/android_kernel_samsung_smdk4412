@@ -32,14 +32,14 @@
 #define MT9V032_CHIP_VERSION				0x00
 #define		MT9V032_CHIP_ID_REV1			0x1311
 #define		MT9V032_CHIP_ID_REV3			0x1313
-#define MT9V032_ROW_START				0x01
-#define		MT9V032_ROW_START_MIN			4
-#define		MT9V032_ROW_START_DEF			10
-#define		MT9V032_ROW_START_MAX			482
-#define MT9V032_COLUMN_START				0x02
+#define MT9V032_COLUMN_START				0x01
 #define		MT9V032_COLUMN_START_MIN		1
-#define		MT9V032_COLUMN_START_DEF		2
+#define		MT9V032_COLUMN_START_DEF		1
 #define		MT9V032_COLUMN_START_MAX		752
+#define MT9V032_ROW_START				0x02
+#define		MT9V032_ROW_START_MIN			4
+#define		MT9V032_ROW_START_DEF			5
+#define		MT9V032_ROW_START_MAX			482
 #define MT9V032_WINDOW_HEIGHT				0x03
 #define		MT9V032_WINDOW_HEIGHT_MIN		1
 #define		MT9V032_WINDOW_HEIGHT_DEF		480
@@ -421,13 +421,13 @@ static int mt9v032_set_crop(struct v4l2_subdev *subdev,
 	struct v4l2_rect *__crop;
 	struct v4l2_rect rect;
 
-	/* Clamp the crop rectangle boundaries and align them to a multiple of 2
-	 * pixels.
+	/* Clamp the crop rectangle boundaries and align them to a non multiple
+	 * of 2 pixels to ensure a GRBG Bayer pattern.
 	 */
-	rect.left = clamp(ALIGN(crop->rect.left, 2),
+	rect.left = clamp(ALIGN(crop->rect.left + 1, 2) - 1,
 			  MT9V032_COLUMN_START_MIN,
 			  MT9V032_COLUMN_START_MAX);
-	rect.top = clamp(ALIGN(crop->rect.top, 2),
+	rect.top = clamp(ALIGN(crop->rect.top + 1, 2) - 1,
 			 MT9V032_ROW_START_MIN,
 			 MT9V032_ROW_START_MAX);
 	rect.width = clamp(ALIGN(crop->rect.width, 2),
@@ -481,7 +481,7 @@ static int mt9v032_s_ctrl(struct v4l2_ctrl *ctrl)
 
 	case V4L2_CID_EXPOSURE_AUTO:
 		return mt9v032_update_aec_agc(mt9v032, MT9V032_AEC_ENABLE,
-					      ctrl->val);
+					      !ctrl->val);
 
 	case V4L2_CID_EXPOSURE:
 		return mt9v032_write(client, MT9V032_TOTAL_SHUTTER_WIDTH,
@@ -756,18 +756,7 @@ static struct i2c_driver mt9v032_driver = {
 	.id_table	= mt9v032_id,
 };
 
-static int __init mt9v032_init(void)
-{
-	return i2c_add_driver(&mt9v032_driver);
-}
-
-static void __exit mt9v032_exit(void)
-{
-	i2c_del_driver(&mt9v032_driver);
-}
-
-module_init(mt9v032_init);
-module_exit(mt9v032_exit);
+module_i2c_driver(mt9v032_driver);
 
 MODULE_DESCRIPTION("Aptina MT9V032 Camera driver");
 MODULE_AUTHOR("Laurent Pinchart <laurent.pinchart@ideasonboard.com>");

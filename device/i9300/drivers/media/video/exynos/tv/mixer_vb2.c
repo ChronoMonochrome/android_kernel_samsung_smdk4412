@@ -11,9 +11,9 @@
 */
 #include <linux/platform_device.h>
 #if defined(CONFIG_VIDEOBUF2_CMA_PHYS)
-#include <media/videobuf2-cma-phys.h>
+#include <device/media/videobuf2-cma-phys.h>
 #elif defined(CONFIG_VIDEOBUF2_ION)
-#include <media/videobuf2-ion.h>
+#include <device/media/videobuf2-ion.h>
 #endif
 
 #include "mixer.h"

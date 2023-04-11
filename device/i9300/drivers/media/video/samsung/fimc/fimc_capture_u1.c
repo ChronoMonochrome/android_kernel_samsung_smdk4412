@@ -14,9 +14,9 @@
 #include <linux/bootmem.h>
 #include <linux/string.h>
 #include <linux/platform_device.h>
-#include <linux/videodev2.h>
-#include <linux/videodev2_exynos_media.h>
-#include <linux/videodev2_exynos_camera.h>
+#include <device/linux/videodev2.h>
+#include <device/linux/videodev2_exynos_media.h>
+#include <device/linux/videodev2_exynos_camera.h>
 #include <linux/clk.h>
 #include <linux/mm.h>
 #include <linux/io.h>

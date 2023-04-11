@@ -26,6 +26,7 @@
 #include <linux/i2c.h>
 #include <linux/i2c-algo-bit.h>
 #include <linux/init.h>
+#include <linux/interrupt.h>
 #include <linux/kernel.h>
 #include <linux/module.h>
 #include <linux/pci.h>
@@ -479,14 +480,6 @@ static int lg_tdtpe001p_tuner_set_params(struct dvb_frontend *fe)
 
 	if (p->bandwidth_hz == 8000000)
 		buf[3] |= 0x08;
-
-	if (sizeof(buf) == 6) {
-		buf[4] = buf[2];
-		buf[4] &= ~0x1c;
-		buf[4] |=  0x18;
-
-		buf[5] = (0 << 7) | (2 << 4);
-	}
 
 	msg.addr = I2C_ADDR_TUA6034 >> 1;
 	msg.flags = 0;

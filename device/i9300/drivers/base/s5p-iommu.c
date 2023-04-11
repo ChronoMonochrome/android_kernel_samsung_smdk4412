@@ -21,7 +21,7 @@
 #include <linux/module.h>
 #include <linux/slab.h>
 #include <linux/errno.h>
-#include <linux/iommu.h>
+#include <device/linux/iommu.h>
 
 static struct iommu_ops *iommu_ops;
 

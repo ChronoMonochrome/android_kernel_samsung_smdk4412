@@ -10,7 +10,7 @@
 
 #include <linux/kernel.h>
 #include <linux/module.h>
-#include <linux/thermal.h>
+#include <device/linux/thermal.h>
 #include <linux/platform_device.h>
 #include <linux/cpufreq.h>
 #include <linux/err.h>

@@ -18,7 +18,7 @@
 #include <linux/i2c.h>
 #if defined(CONFIG_MEDIA_CONTROLLER) && defined(CONFIG_ARCH_EXYNOS5)
 #include <mach/videonode.h>
-#include <media/exynos_mc.h>
+#include <device/media/exynos_mc.h>
 #endif
 #include "fimc-lite-core.h"
 

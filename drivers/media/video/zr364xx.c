@@ -29,7 +29,6 @@
 
 
 #include <linux/module.h>
-#include <linux/version.h>
 #include <linux/init.h>
 #include <linux/usb.h>
 #include <linux/vmalloc.h>
@@ -42,8 +41,7 @@
 
 
 /* Version Information */
-#define DRIVER_VERSION "v0.73"
-#define ZR364XX_VERSION_CODE KERNEL_VERSION(0, 7, 3)
+#define DRIVER_VERSION "0.7.4"
 #define DRIVER_AUTHOR "Antoine Jacquet, http://royale.zerezo.com/"
 #define DRIVER_DESC "Zoran 364xx"
 
@@ -509,14 +507,12 @@ static void zr364xx_fillbuff(struct zr364xx_camera *cam,
 	const char *tmpbuf;
 	char *vbuf = videobuf_to_vmalloc(&buf->vb);
 	unsigned long last_frame;
-	struct zr364xx_framei *frm;
 
 	if (!vbuf)
 		return;
 
 	last_frame = cam->last_frame;
 	if (last_frame != -1) {
-		frm = &cam->buffer.frame[last_frame];
 		tmpbuf = (const char *)cam->buffer.frame[last_frame].lpvbits;
 		switch (buf->fmt->fourcc) {
 		case V4L2_PIX_FMT_JPEG:
@@ -744,7 +740,6 @@ static int zr364xx_vidioc_querycap(struct file *file, void *priv,
 	strlcpy(cap->card, cam->udev->product, sizeof(cap->card));
 	strlcpy(cap->bus_info, dev_name(&cam->udev->dev),
 		sizeof(cap->bus_info));
-	cap->version = ZR364XX_VERSION_CODE;
 	cap->capabilities = V4L2_CAP_VIDEO_CAPTURE |
 			    V4L2_CAP_READWRITE |
 			    V4L2_CAP_STREAMING;
@@ -1703,3 +1698,4 @@ module_usb_driver(zr364xx_driver);
 MODULE_AUTHOR(DRIVER_AUTHOR);
 MODULE_DESCRIPTION(DRIVER_DESC);
 MODULE_LICENSE("GPL");
+MODULE_VERSION(DRIVER_VERSION);

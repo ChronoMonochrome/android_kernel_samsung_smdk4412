@@ -22,11 +22,11 @@
 #include <asm/mach/arch.h>
 #include <asm/mach-types.h>
 
-#include <media/s5k4ba_platform.h>
-#include <media/m5mols.h>
-#include <media/exynos_gscaler.h>
-#include <media/exynos_flite.h>
-#include <media/exynos_fimc_is.h>
+#include <device/media/s5k4ba_platform.h>
+#include <device/media/m5mols.h>
+#include <device/media/exynos_gscaler.h>
+#include <device/media/exynos_flite.h>
+#include <device/media/exynos_fimc_is.h>
 #include <plat/gpio-cfg.h>
 #include <plat/adc.h>
 #include <plat/regs-serial.h>

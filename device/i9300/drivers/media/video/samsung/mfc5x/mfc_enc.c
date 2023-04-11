@@ -33,7 +33,7 @@
 
 #ifdef CONFIG_SLP_DMABUF
 #include <linux/dma-buf.h>
-#include <media/videobuf2-core.h>
+#include <device/media/videobuf2-core.h>
 #endif
 
 static LIST_HEAD(mfc_encoders);

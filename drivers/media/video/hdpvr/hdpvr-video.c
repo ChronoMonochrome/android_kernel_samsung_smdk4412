@@ -17,7 +17,6 @@
 #include <linux/uaccess.h>
 #include <linux/usb.h>
 #include <linux/mutex.h>
-#include <linux/version.h>
 #include <linux/workqueue.h>
 
 #include <linux/videodev2.h>
@@ -575,7 +574,6 @@ static int vidioc_querycap(struct file *file, void  *priv,
 	strcpy(cap->driver, "hdpvr");
 	strcpy(cap->card, "Hauppauge HD PVR");
 	usb_make_path(dev->udev, cap->bus_info, sizeof(cap->bus_info));
-	cap->version = HDPVR_VERSION;
 	cap->capabilities =     V4L2_CAP_VIDEO_CAPTURE |
 				V4L2_CAP_AUDIO         |
 				V4L2_CAP_READWRITE;
@@ -996,7 +994,7 @@ static int hdpvr_try_ctrl(struct v4l2_ext_control *ctrl, int ac3)
 	default:
 		return -EINVAL;
 	}
-	return 0;
+	return ret;
 }
 
 static int vidioc_try_ext_ctrls(struct file *file, void *priv,

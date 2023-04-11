@@ -67,7 +67,7 @@
 #endif
 
 #ifdef CONFIG_SLP_DMABUF
-#include <media/videobuf2-core.h>
+#include <device/media/videobuf2-core.h>
 #endif
 
 #define MFC_MINOR	252

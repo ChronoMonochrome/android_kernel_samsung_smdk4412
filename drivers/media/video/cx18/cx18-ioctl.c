@@ -471,7 +471,6 @@ static int cx18_querycap(struct file *file, void *fh,
 	strlcpy(vcap->card, cx->card_name, sizeof(vcap->card));
 	snprintf(vcap->bus_info, sizeof(vcap->bus_info),
 		 "PCI:%s", pci_name(cx->pci_dev));
-	vcap->version = CX18_DRIVER_VERSION; 	    /* version */
 	vcap->capabilities = cx->v4l2_cap; 	    /* capabilities */
 	if (id->type == CX18_ENC_STREAM_TYPE_YUV)
 		vcap->capabilities |= V4L2_CAP_STREAMING;
@@ -1086,8 +1085,6 @@ static int cx18_log_status(struct file *file, void *fh)
 	struct v4l2_audio audin;
 	int i;
 
-	CX18_INFO("=================  START STATUS CARD #%d  "
-		  "=================\n", cx->instance);
 	CX18_INFO("Version: %s  Card: %s\n", CX18_VERSION, cx->card_name);
 	if (cx->hw_flags & CX18_HW_TVEEPROM) {
 		struct tveeprom tv;
@@ -1121,8 +1118,6 @@ static int cx18_log_status(struct file *file, void *fh)
 	CX18_INFO("Read MPEG/VBI: %lld/%lld bytes\n",
 			(long long)cx->mpg_data_received,
 			(long long)cx->vbi_data_inserted);
-	CX18_INFO("==================  END STATUS CARD #%d  "
-		  "==================\n", cx->instance);
 	return 0;
 }
 
@@ -1142,7 +1137,7 @@ static long cx18_default(struct file *file, void *fh, bool valid_prio,
 	}
 
 	default:
-		return -EINVAL;
+		return -ENOTTY;
 	}
 	return 0;
 }

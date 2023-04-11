@@ -16,7 +16,7 @@
 #include <linux/ioport.h>
 #include <mach/map.h>
 #include <mach/regs-clock.h>
-#include <media/exynos_fimc_is.h>
+#include <device/media/exynos_fimc_is.h>
 
 #if defined(CONFIG_ARCH_EXYNOS4)
 static struct resource exynos4_fimc_is_resource[] = {

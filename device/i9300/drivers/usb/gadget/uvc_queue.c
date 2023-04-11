@@ -16,7 +16,7 @@
 #include <linux/list.h>
 #include <linux/module.h>
 #include <device/linux/usb.h>
-#include <linux/videodev2.h>
+#include <device/linux/videodev2.h>
 #include <linux/vmalloc.h>
 #include <linux/wait.h>
 #include <asm/atomic.h>

@@ -59,12 +59,12 @@
 #include <asm/pgtable.h>
 #include <asm/io.h>
 #include <asm/div64.h>
-#include <media/v4l2-common.h>
-#include <media/v4l2-device.h>
-#include <media/v4l2-ctrls.h>
-#include <media/v4l2-chip-ident.h>
+#include <device/media/v4l2-common.h>
+#include <device/media/v4l2-device.h>
+#include <device/media/v4l2-ctrls.h>
+#include <device/media/v4l2-chip-ident.h>
 
-#include <linux/videodev2.h>
+#include <device/linux/videodev2.h>
 
 MODULE_AUTHOR("Bill Dirks, Justin Schoeman, Gerd Knorr");
 MODULE_DESCRIPTION("misc helper functions for v4l2 device drivers");

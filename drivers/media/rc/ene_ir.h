@@ -226,8 +226,8 @@ struct ene_device {
 	bool tx_sample_pulse;			/* current sample is pulse */
 
 	/* TX buffer */
-	int *tx_buffer;				/* input samples buffer*/
-	int tx_pos;				/* position in that bufer */
+	unsigned *tx_buffer;			/* input samples buffer*/
+	int tx_pos;				/* position in that buffer */
 	int tx_len;				/* current len of tx buffer */
 	int tx_done;				/* done transmitting */
 						/* one more sample pending*/

@@ -361,6 +361,8 @@ static struct usb_device_id mceusb_dev_table[] = {
 	{ USB_DEVICE(VENDOR_FORMOSA, 0xe03c) },
 	/* Formosa Industrial Computing */
 	{ USB_DEVICE(VENDOR_FORMOSA, 0xe03e) },
+	/* Formosa Industrial Computing */
+	{ USB_DEVICE(VENDOR_FORMOSA, 0xe042) },
 	/* Fintek eHome Infrared Transceiver (HP branded) */
 	{ USB_DEVICE(VENDOR_FINTEK, 0x5168) },
 	/* Fintek eHome Infrared Transceiver */
@@ -518,7 +520,7 @@ static void mceusb_dev_printdata(struct mceusb_dev *ir, char *buf,
 {
 	char codes[USB_BUFLEN * 3 + 1];
 	char inout[9];
-	u8 cmd, subcmd, data1, data2, data3, data4, data5;
+	u8 cmd, subcmd, data1, data2, data3, data4;
 	struct device *dev = ir->dev;
 	int i, start, skip = 0;
 	u32 carrier, period;
@@ -551,7 +553,6 @@ static void mceusb_dev_printdata(struct mceusb_dev *ir, char *buf,
 	data2  = buf[start + 3] & 0xff;
 	data3  = buf[start + 4] & 0xff;
 	data4  = buf[start + 5] & 0xff;
-	data5  = buf[start + 6] & 0xff;
 
 	switch (cmd) {
 	case MCE_CMD_NULL:
@@ -779,20 +780,18 @@ static void mce_flush_rx_buffer(struct mceusb_dev *ir, int size)
 }
 
 /* Send data out the IR blaster port(s) */
-static int mceusb_tx_ir(struct rc_dev *dev, int *txbuf, u32 n)
+static int mceusb_tx_ir(struct rc_dev *dev, unsigned *txbuf, unsigned count)
 {
 	struct mceusb_dev *ir = dev->priv;
 	int i, ret = 0;
-	int count, cmdcount = 0;
+	int cmdcount = 0;
 	unsigned char *cmdbuf; /* MCE command buffer */
 	long signal_duration = 0; /* Singnal length in us */
 	struct timeval start_time, end_time;
 
 	do_gettimeofday(&start_time);
 
-	count = n / sizeof(int);
-
-	cmdbuf = kzalloc(sizeof(int) * MCE_CMDBUF_SIZE, GFP_KERNEL);
+	cmdbuf = kzalloc(sizeof(unsigned) * MCE_CMDBUF_SIZE, GFP_KERNEL);
 	if (!cmdbuf)
 		return -ENOMEM;
 
@@ -861,7 +860,7 @@ static int mceusb_tx_ir(struct rc_dev *dev, int *txbuf, u32 n)
 
 out:
 	kfree(cmdbuf);
-	return ret ? ret : n;
+	return ret ? ret : count;
 }
 
 /* Sets active IR outputs -- mce devices typically have two */
@@ -1443,7 +1442,7 @@ static int mceusb_dev_resume(struct usb_interface *intf)
 static struct usb_driver mceusb_dev_driver = {
 	.name =		DRIVER_NAME,
 	.probe =	mceusb_dev_probe,
-	.disconnect =	mceusb_dev_disconnect,
+	.disconnect =	__devexit_p(mceusb_dev_disconnect),
 	.suspend =	mceusb_dev_suspend,
 	.resume =	mceusb_dev_resume,
 	.reset_resume =	mceusb_dev_resume,

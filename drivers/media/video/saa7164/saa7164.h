@@ -48,7 +48,6 @@
 #include <linux/i2c.h>
 #include <linux/i2c-algo-bit.h>
 #include <linux/kdev_t.h>
-#include <linux/version.h>
 #include <linux/mutex.h>
 #include <linux/crc32.h>
 #include <linux/kthread.h>
@@ -610,11 +609,6 @@ extern unsigned int saa_debug;
 #define log_warn(fmt, arg...)\
 	do { \
 		printk(KERN_WARNING "%s: " fmt, dev->name, ## arg);\
-	} while (0)
-
-#define log_err(fmt, arg...)\
-	do { \
-		printk(KERN_ERROR "%s: " fmt, dev->name, ## arg);\
 	} while (0)
 
 #define saa7164_readl(reg) readl(dev->lmmio + ((reg) >> 2))

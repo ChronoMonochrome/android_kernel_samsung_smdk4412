@@ -22,9 +22,9 @@
 #include <linux/kernel.h>
 #include <linux/spinlock.h>
 #include <linux/wait.h>
-#include <media/v4l2-device.h>
-#include <media/videobuf2-core.h>
-#include <media/exynos_mc.h>
+#include <device/media/v4l2-device.h>
+#include <device/media/videobuf2-core.h>
+#include <device/media/exynos_mc.h>
 
 #include "regs-mixer.h"
 

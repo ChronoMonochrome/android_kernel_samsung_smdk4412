@@ -20,10 +20,10 @@
 #include <plat/pd.h>
 #include <plat/gpio-cfg.h>
 
-#include <media/exynos_flite.h>
+#include <device/media/exynos_flite.h>
 
-#include <media/s5k4ecgx_platform.h>
-#include <media/db8131m_platform.h>
+#include <device/media/s5k4ecgx_platform.h>
+#include <device/media/db8131m_platform.h>
 
 struct class *camera_class;
 struct device *s5k4ecgx_dev; /*sys/class/camera/rear*/

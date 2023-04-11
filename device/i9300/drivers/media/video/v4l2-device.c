@@ -25,9 +25,9 @@
 #if defined(CONFIG_SPI)
 #include <linux/spi/spi.h>
 #endif
-#include <linux/videodev2.h>
-#include <media/v4l2-device.h>
-#include <media/v4l2-ctrls.h>
+#include <device/linux/videodev2.h>
+#include <device/media/v4l2-device.h>
+#include <device/media/v4l2-ctrls.h>
 
 int v4l2_device_register(struct device *dev, struct v4l2_device *v4l2_dev)
 {

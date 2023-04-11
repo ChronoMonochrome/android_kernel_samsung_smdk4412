@@ -17,8 +17,8 @@
 #include <linux/sched.h>
 #include <linux/slab.h>
 
-#include <media/videobuf2-core.h>
-#include <media/v4l2-mem2mem.h>
+#include <device/media/videobuf2-core.h>
+#include <device/media/v4l2-mem2mem.h>
 
 MODULE_DESCRIPTION("Mem to mem device framework for videobuf");
 MODULE_AUTHOR("Pawel Osciak, <pawel@osciak.com>");

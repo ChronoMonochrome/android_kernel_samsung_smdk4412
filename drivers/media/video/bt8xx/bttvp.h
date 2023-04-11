@@ -25,9 +25,6 @@
 #ifndef _BTTVP_H_
 #define _BTTVP_H_
 
-#include <linux/version.h>
-#define BTTV_VERSION_CODE KERNEL_VERSION(0,9,18)
-
 #include <linux/types.h>
 #include <linux/wait.h>
 #include <linux/i2c.h>
@@ -443,6 +440,7 @@ struct bttv {
 	/* radio data/state */
 	int has_radio;
 	int radio_user;
+	int radio_uses_msp_demodulator;
 
 	/* miro/pinnacle + Aimslab VHX
 	   philips matchbox (tea5757 radio tuner) support */

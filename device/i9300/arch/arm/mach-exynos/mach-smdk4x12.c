@@ -62,7 +62,7 @@
 #include <plat/fimc.h>
 #elif defined(CONFIG_VIDEO_SAMSUNG_S5P_FIMC)
 #include <plat/fimc-core.h>
-#include <media/s5p_fimc.h>
+#include <device/media/s5p_fimc.h>
 #endif
 #if defined(CONFIG_VIDEO_FIMC_MIPI)
 #include <plat/csis.h>
@@ -78,13 +78,13 @@
 #include <plat/s5p-mfc.h>
 #endif
 
-#include <media/s5k4ba_platform.h>
-#include <media/s5k4ea_platform.h>
-#include <media/exynos_flite.h>
-#include <media/exynos_fimc_is.h>
+#include <device/media/s5k4ba_platform.h>
+#include <device/media/s5k4ea_platform.h>
+#include <device/media/exynos_flite.h>
+#include <device/media/exynos_fimc_is.h>
 #include <video/platform_lcd.h>
-#include <media/m5mo_platform.h>
-#include <media/m5mols.h>
+#include <device/media/m5mo_platform.h>
+#include <device/media/m5mols.h>
 #include <mach/board_rev.h>
 #include <mach/map.h>
 #include <mach/spi-clocks.h>
@@ -118,7 +118,7 @@ struct s3cfb_extdsp_lcd {
 
 #ifdef CONFIG_VIDEO_SAMSUNG_S5P_FIMC
 #include <plat/fimc-core.h>
-#include <media/s5p_fimc.h>
+#include <device/media/s5p_fimc.h>
 #endif
 
 #ifdef CONFIG_VIDEO_JPEG_V2X

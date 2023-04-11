@@ -27,9 +27,9 @@
 #include <linux/ctype.h>
 #include <linux/workqueue.h>
 #include <device/linux/pm_runtime.h>
-#include <media/v4l2-device.h>
-#include <linux/videodev2_exynos_media.h>
-#include <linux/videodev2_exynos_camera.h>
+#include <device/media/v4l2-device.h>
+#include <device/linux/videodev2_exynos_media.h>
+#include <device/linux/videodev2_exynos_camera.h>
 #include <linux/delay.h>
 #include <linux/cma.h>
 #include <linux/dma-mapping.h>

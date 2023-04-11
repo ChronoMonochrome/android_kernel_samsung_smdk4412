@@ -17,13 +17,13 @@
 #include <linux/list.h>
 #include <linux/mutex.h>
 #include <linux/version.h>
-#include <linux/videodev2.h>
+#include <device/linux/videodev2.h>
 #include <linux/vmalloc.h>
 #include <linux/wait.h>
 
-#include <media/v4l2-dev.h>
-#include <media/v4l2-event.h>
-#include <media/v4l2-ioctl.h>
+#include <device/media/v4l2-dev.h>
+#include <device/media/v4l2-event.h>
+#include <device/media/v4l2-ioctl.h>
 
 #include "uvc.h"
 #include "uvc_queue.h"

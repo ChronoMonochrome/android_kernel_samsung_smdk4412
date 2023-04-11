@@ -16,8 +16,8 @@
 #include <linux/scatterlist.h>
 #include <linux/dma-buf.h>
 
-#include <media/videobuf2-core.h>
-#include <media/videobuf2-memops.h>
+#include <device/media/videobuf2-core.h>
+#include <device/media/videobuf2-memops.h>
 
 struct vb2_dc_conf {
 	struct device		*dev;
