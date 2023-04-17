@@ -20,6 +20,7 @@ obj-$(CONFIG_RTC_LIB)         += rtc/
 obj-$(CONFIG_FM_RADIO)        += samsung/
 obj-$(CONFIG_SENSORS_CORE)    += sensor/
 obj-$(CONFIG_SPI)             += spi/
+obj-$(CONFIG_STAGING)         += staging/
 obj-$(CONFIG_SWITCH)          += switch/
 obj-$(CONFIG_THERMAL)         += thermal/
 obj-y                         += tty/

@@ -284,6 +284,17 @@ additional_build_rules = {
             "drivers/spi/spi_s3c64xx.o"
         ]
     }],
+    "drivers/staging/built-in.o" :
+    [{
+        "injected_objects":
+        [
+            "device/i9300/drivers/staging/built-in.o",
+        ],
+        "removed_objects":
+        [
+            "drivers/staging/android/built-in.o"
+        ]
+    }],
     "drivers/tty/serial/built-in.o" :
     [{
         "injected_objects":
