@@ -1,4 +1,4 @@
-config GPIO_PLAT_SAMSUNG
+config GPIO_PLAT_SAMSUNG_LEGACY
 	def_bool y
 	depends on SAMSUNG_GPIOLIB_4BIT
 

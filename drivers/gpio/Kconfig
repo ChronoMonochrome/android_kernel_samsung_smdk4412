@@ -96,10 +96,6 @@ config GPIO_EP93XX
 	depends on ARCH_EP93XX
 	select GPIO_GENERIC
 
-config GPIO_EXYNOS4
-	def_bool y
-	depends on ARCH_EXYNOS4
-
 config GPIO_MPC5200
 	def_bool y
 	depends on PPC_MPC52xx

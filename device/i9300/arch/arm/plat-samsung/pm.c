@@ -77,7 +77,7 @@ unsigned char pm_uart_udivslot;
 
 #ifdef CONFIG_SAMSUNG_PM_DEBUG
 
-struct pm_uart_save uart_save[CONFIG_SERIAL_SAMSUNG_UARTS];
+struct pm_uart_save uart_save[CONFIG_SERIAL_SAMSUNG_UARTS_LEGACY];
 
 static void s3c_pm_save_uart(unsigned int uart, struct pm_uart_save *save)
 {
@@ -101,7 +101,7 @@ static void s3c_pm_save_uarts(void)
 	struct pm_uart_save *save = uart_save;
 	unsigned int uart;
 
-	for (uart = 0; uart < CONFIG_SERIAL_SAMSUNG_UARTS; uart++, save++)
+	for (uart = 0; uart < CONFIG_SERIAL_SAMSUNG_UARTS_LEGACY; uart++, save++)
 		s3c_pm_save_uart(uart, save);
 }
 
@@ -126,7 +126,7 @@ static void s3c_pm_restore_uarts(void)
 	struct pm_uart_save *save = uart_save;
 	unsigned int uart;
 
-	for (uart = 0; uart < CONFIG_SERIAL_SAMSUNG_UARTS; uart++, save++)
+	for (uart = 0; uart < CONFIG_SERIAL_SAMSUNG_UARTS_LEGACY; uart++, save++)
 		s3c_pm_restore_uart(uart, save);
 }
 #else

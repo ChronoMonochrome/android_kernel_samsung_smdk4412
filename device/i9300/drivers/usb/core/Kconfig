@@ -150,7 +150,7 @@ config USB_OTG_BLACKLIST_HUB
 
 config HOST_COMPLIANT_TEST
 	bool "Embedded High-speed Host Electrical Test Support"
-	depends on USB && USB_ARCH_HAS_HCD && PLAT_SAMSUNG
+	depends on USB && USB_ARCH_HAS_HCD && PLAT_SAMSUNG_LEGACY
 	default n
 	help
 	 This option is only used if you are developing firmware for

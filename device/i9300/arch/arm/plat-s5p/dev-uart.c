@@ -95,7 +95,7 @@ static struct resource s5p_uart2_resource[] = {
 };
 
 static struct resource s5p_uart3_resource[] = {
-#if CONFIG_SERIAL_SAMSUNG_UARTS > 3
+#if CONFIG_SERIAL_SAMSUNG_UARTS_LEGACY > 3
 	[0] = {
 		.start	= S5P_PA_UART3,
 		.end	= S5P_PA_UART3 + S5P_SZ_UART - 1,
@@ -120,7 +120,7 @@ static struct resource s5p_uart3_resource[] = {
 };
 
 static struct resource s5p_uart4_resource[] = {
-#if CONFIG_SERIAL_SAMSUNG_UARTS > 4
+#if CONFIG_SERIAL_SAMSUNG_UARTS_LEGACY > 4
 	[0] = {
 		.start	= S5P_PA_UART4,
 		.end	= S5P_PA_UART4 + S5P_SZ_UART - 1,
@@ -145,7 +145,7 @@ static struct resource s5p_uart4_resource[] = {
 };
 
 static struct resource s5p_uart5_resource[] = {
-#if CONFIG_SERIAL_SAMSUNG_UARTS > 5
+#if CONFIG_SERIAL_SAMSUNG_UARTS_LEGACY > 5
 	[0] = {
 		.start	= S5P_PA_UART5,
 		.end	= S5P_PA_UART5 + S5P_SZ_UART - 1,

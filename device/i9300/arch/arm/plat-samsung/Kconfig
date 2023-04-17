@@ -4,7 +4,7 @@
 #
 # Licensed under GPLv2
 
-config PLAT_SAMSUNG
+config PLAT_SAMSUNG_LEGACY
 	bool
 	depends on PLAT_S3C24XX || ARCH_S3C64XX || PLAT_S5P
 	select NO_IOPORT
@@ -13,7 +13,7 @@ config PLAT_SAMSUNG
 	help
 	  Base platform code for all Samsung SoC based systems
 
-if PLAT_SAMSUNG
+if PLAT_SAMSUNG_LEGACY
 
 # vmalloc area and io map configurations
 

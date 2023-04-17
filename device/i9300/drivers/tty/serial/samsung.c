@@ -24,7 +24,7 @@
  * BJD, 04-Nov-2004
 */
 
-#if defined(CONFIG_SERIAL_SAMSUNG_CONSOLE) && defined(CONFIG_MAGIC_SYSRQ)
+#if defined(CONFIG_SERIAL_SAMSUNG_LEGACY_CONSOLE) && defined(CONFIG_MAGIC_SYSRQ)
 #define SUPPORT_SYSRQ
 #endif
 
@@ -76,7 +76,7 @@
 #define CONFIG_GPS_S3C_UART	1
 #endif
 
-#ifdef CONFIG_SERIAL_SAMSUNG_CONSOLE_SWITCH
+#ifdef CONFIG_SERIAL_SAMSUNG_LEGACY_CONSOLE_SWITCH
 static unsigned uart_debug; /* Initialized automatically with 0 by compiler */
 module_param_named(uart_debug, uart_debug, uint, 0644);
 #endif
@@ -1020,7 +1020,7 @@ s3c24xx_serial_wake_peer(struct uart_port *port)
 		cfg->wake_peer(port);
 }
 
-#ifdef CONFIG_SERIAL_SAMSUNG_CONSOLE
+#ifdef CONFIG_SERIAL_SAMSUNG_LEGACY_CONSOLE
 
 static struct console s3c24xx_serial_console;
 
@@ -1054,8 +1054,8 @@ static struct uart_ops s3c24xx_serial_ops = {
 static struct uart_driver s3c24xx_uart_drv = {
 	.owner		= THIS_MODULE,
 	.driver_name	= "s3c2410_serial",
-	.nr		= CONFIG_SERIAL_SAMSUNG_UARTS,
-#ifdef CONFIG_SERIAL_SAMSUNG_CONSOLE_SWITCH
+	.nr		= CONFIG_SERIAL_SAMSUNG_UARTS_LEGACY,
+#ifdef CONFIG_SERIAL_SAMSUNG_LEGACY_CONSOLE_SWITCH
 	.cons		= NULL,
 #else
 	.cons		= S3C24XX_SERIAL_CONSOLE,
@@ -1065,7 +1065,7 @@ static struct uart_driver s3c24xx_uart_drv = {
 	.minor		= S3C24XX_SERIAL_MINOR,
 };
 
-static struct s3c24xx_uart_port s3c24xx_serial_ports[CONFIG_SERIAL_SAMSUNG_UARTS] = {
+static struct s3c24xx_uart_port s3c24xx_serial_ports[CONFIG_SERIAL_SAMSUNG_UARTS_LEGACY] = {
 	[0] = {
 		.port = {
 			.lock		= __SPIN_LOCK_UNLOCKED(s3c24xx_serial_ports[0].port.lock),
@@ -1090,7 +1090,7 @@ static struct s3c24xx_uart_port s3c24xx_serial_ports[CONFIG_SERIAL_SAMSUNG_UARTS
 			.line		= 1,
 		}
 	},
-#if CONFIG_SERIAL_SAMSUNG_UARTS > 2
+#if CONFIG_SERIAL_SAMSUNG_UARTS_LEGACY > 2
 
 	[2] = {
 		.port = {
@@ -1105,7 +1105,7 @@ static struct s3c24xx_uart_port s3c24xx_serial_ports[CONFIG_SERIAL_SAMSUNG_UARTS
 		}
 	},
 #endif
-#if CONFIG_SERIAL_SAMSUNG_UARTS > 3
+#if CONFIG_SERIAL_SAMSUNG_UARTS_LEGACY > 3
 	[3] = {
 		.port = {
 			.lock		= __SPIN_LOCK_UNLOCKED(s3c24xx_serial_ports[3].port.lock),
@@ -1242,9 +1242,9 @@ static int s3c24xx_serial_init_port(struct s3c24xx_uart_port *ourport,
 	if (port->mapbase != 0)
 		return 0;
 
-	if (cfg->hwport > CONFIG_SERIAL_SAMSUNG_UARTS) {
+	if (cfg->hwport > CONFIG_SERIAL_SAMSUNG_UARTS_LEGACY) {
 		printk(KERN_ERR "%s: port %d bigger than %d\n", __func__,
-		       cfg->hwport, CONFIG_SERIAL_SAMSUNG_UARTS);
+		       cfg->hwport, CONFIG_SERIAL_SAMSUNG_UARTS_LEGACY);
 		return -ERANGE;
 	}
 
@@ -1572,7 +1572,7 @@ EXPORT_SYMBOL_GPL(s3c24xx_serial_init);
 static int __init s3c24xx_serial_modinit(void)
 {
 	int ret;
-#ifdef CONFIG_SERIAL_SAMSUNG_CONSOLE_SWITCH
+#ifdef CONFIG_SERIAL_SAMSUNG_LEGACY_CONSOLE_SWITCH
 	if (uart_debug)
 		s3c24xx_uart_drv.cons = S3C24XX_SERIAL_CONSOLE;
 #endif
@@ -1595,7 +1595,7 @@ module_exit(s3c24xx_serial_modexit);
 
 /* Console code */
 
-#ifdef CONFIG_SERIAL_SAMSUNG_CONSOLE
+#ifdef CONFIG_SERIAL_SAMSUNG_LEGACY_CONSOLE
 
 static struct uart_port *cons_uart;
 
@@ -1718,7 +1718,7 @@ static int s3c24xx_serial_init_ports(struct s3c24xx_uart_info **info)
 
 	platdev_ptr = s3c24xx_uart_devs;
 
-	for (i = 0; i < CONFIG_SERIAL_SAMSUNG_UARTS; i++, ptr++, platdev_ptr++) {
+	for (i = 0; i < CONFIG_SERIAL_SAMSUNG_UARTS_LEGACY; i++, ptr++, platdev_ptr++) {
 		s3c24xx_serial_init_port(ptr, info[i], *platdev_ptr);
 	}
 
@@ -1739,7 +1739,7 @@ s3c24xx_serial_console_setup(struct console *co, char *options)
 
 	/* is this a valid port */
 
-	if (co->index == -1 || co->index >= CONFIG_SERIAL_SAMSUNG_UARTS)
+	if (co->index == -1 || co->index >= CONFIG_SERIAL_SAMSUNG_UARTS_LEGACY)
 		co->index = 0;
 
 	port = &s3c24xx_serial_ports[co->index].port;
@@ -1808,7 +1808,7 @@ int s3c24xx_serial_initconsole(struct platform_driver *drv,
 	return 0;
 }
 
-#endif /* CONFIG_SERIAL_SAMSUNG_CONSOLE */
+#endif /* CONFIG_SERIAL_SAMSUNG_LEGACY_CONSOLE */
 
 MODULE_DESCRIPTION("Samsung SoC Serial port driver");
 MODULE_AUTHOR("Ben Dooks <ben@simtec.co.uk>");

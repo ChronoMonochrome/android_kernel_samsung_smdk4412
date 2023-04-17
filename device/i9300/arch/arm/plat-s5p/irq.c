@@ -45,7 +45,7 @@ static struct s3c_uart_irq uart_irqs[] = {
 		.base_irq	= IRQ_S5P_UART_BASE2,
 		.parent_irq	= IRQ_UART2,
 	},
-#if CONFIG_SERIAL_SAMSUNG_UARTS > 3
+#if CONFIG_SERIAL_SAMSUNG_UARTS_LEGACY > 3
 	[3] = {
 		.regs		= S5P_VA_UART3,
 		.base_irq	= IRQ_S5P_UART_BASE3,
