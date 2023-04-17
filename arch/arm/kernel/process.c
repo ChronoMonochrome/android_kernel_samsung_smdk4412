@@ -89,31 +89,6 @@ static int __init hlt_setup(char *__unused)
 __setup("nohlt", nohlt_setup);
 __setup("hlt", hlt_setup);
 
-#ifdef CONFIG_ARM_FLUSH_CONSOLE_ON_RESTART
-void arm_machine_flush_console(void)
-{
-	printk("\n");
-	pr_emerg("Restarting %s\n", linux_banner);
-	if (console_trylock()) {
-		console_unlock();
-		return;
-	}
-
-	mdelay(50);
-
-	local_irq_disable();
-	if (!console_trylock())
-		pr_emerg("arm_restart: Console was locked! Busting\n");
-	else
-		pr_emerg("arm_restart: Console was locked!\n");
-	console_unlock();
-}
-#else
-void arm_machine_flush_console(void)
-{
-}
-#endif
-
 extern void call_with_stack(void (*fn)(void *), void *arg, void *sp);
 typedef void (*phys_reset_t)(unsigned long);
 
