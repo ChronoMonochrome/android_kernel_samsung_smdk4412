@@ -299,9 +299,7 @@ void _ump_osk_msync( ump_dd_mem * mem, void * virt, u32 offset, u32 size, ump_uk
 	/* MALI_SEC */
 	if ((virt!=NULL) && (mem->size_bytes >= SZ_1M)) {
 		if (op == _UMP_UK_MSYNC_CLEAN)
-#if LINUX_VERSION_CODE < KERNEL_VERSION(3,4,0)
-			outer_clean_all();
-#else
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(3,4,0)
 			outer_sync();
 #endif
 		else if ((op == _UMP_UK_MSYNC_INVALIDATE) || (op == _UMP_UK_MSYNC_CLEAN_AND_INVALIDATE))
