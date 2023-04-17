@@ -900,8 +900,6 @@ static long ion_exynos_heap_msync(struct ion_client *client,
 	if (size > SZ_1M) {
 		if (need_cache_invalidate(dir))
 			outer_flush_all();
-		else
-			outer_clean_all();
 		goto done;
 	}
 #endif
