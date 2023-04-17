@@ -11,7 +11,7 @@
 #include <linux/rtc.h>
 #include <linux/init.h>
 #include <linux/interrupt.h>
-#include <device/linux/amba/bus.h>
+#include <linux/amba/bus.h>
 #include <linux/io.h>
 #include <linux/slab.h>
 
