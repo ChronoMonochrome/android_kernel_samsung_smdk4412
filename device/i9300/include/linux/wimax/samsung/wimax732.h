@@ -59,7 +59,7 @@ enum {
 };
 
 struct wimax_cfg {
-	struct wake_lock	wimax_driver_lock;	/* resume wake lock */
+	struct wakeup_source	wimax_driver_lock;	/* resume wake lock */
 	struct mutex power_mutex; /*serialize power on/off*/
 	struct mutex suspend_mutex;
 	struct work_struct		shutdown;

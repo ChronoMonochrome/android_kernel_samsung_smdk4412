@@ -146,7 +146,7 @@ struct spi_link_device {
 	struct link_device ld;
 
 	/* Wakelock for SPI device */
-	struct wake_lock spi_wake_lock;
+	struct wakeup_source spi_wake_lock;
 
 	/* Workqueue for modem bin transfers */
 	struct workqueue_struct *ipc_spi_wq;

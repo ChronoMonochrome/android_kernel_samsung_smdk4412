@@ -858,7 +858,7 @@ static irqreturn_t taos_irq_handler(int irq, void *dev_id)
 #endif
 
 	if (taos->irq != -1) {
-		wake_lock_timeout(&taos->prx_wake_lock, 3*HZ);
+		__pm_wakeup_event(&taos->prx_wake_lock, 3000);
 		disable_irq_nosync(taos->irq);
 		queue_work(taos->taos_wq, &taos->work_prox);
 	}
@@ -1066,8 +1066,7 @@ static int taos_opt_probe(struct i2c_client *client,
 	usleep_range(12000, 20000);
 
 	/* wake lock init */
-	wake_lock_init(&taos->prx_wake_lock,
-		WAKE_LOCK_SUSPEND, "prx_wake_lock");
+	wakeup_source_init(&taos->prx_wake_lock, "prx_wake_lock");
 	mutex_init(&taos->power_lock);
 
 	/* allocate proximity input_device */
@@ -1228,7 +1227,7 @@ err_sysfs_create_group_proximity:
 err_input_register_device_proximity:
 err_input_allocate_device_proximity:
 	mutex_destroy(&taos->power_lock);
-	wake_lock_destroy(&taos->prx_wake_lock);
+	wakeup_source_trash(&taos->prx_wake_lock);
 	kfree(taos);
 	taos = NULL;
 exit:
@@ -1262,7 +1261,7 @@ static int taos_opt_remove(struct i2c_client *client)
 	if (taos->taos_test_wq)
 		destroy_workqueue(taos->taos_test_wq);
 	mutex_destroy(&taos->power_lock);
-	wake_lock_destroy(&taos->prx_wake_lock);
+	wakeup_source_trash(&taos->prx_wake_lock);
 	kfree(taos);
 	return 0;
 }
@@ -1292,7 +1291,7 @@ static void taos_opt_shutdown(struct i2c_client *client)
 	if (taos->taos_test_wq)
 		destroy_workqueue(taos->taos_test_wq);
 	mutex_destroy(&taos->power_lock);
-	wake_lock_destroy(&taos->prx_wake_lock);
+	wakeup_source_trash(&taos->prx_wake_lock);
 	kfree(taos);
 }
 #ifdef CONFIG_PM

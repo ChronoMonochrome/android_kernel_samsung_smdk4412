@@ -70,7 +70,7 @@
 struct wm1811_machine_priv {
 	struct snd_soc_jack jack;
 	struct snd_soc_codec *codec;
-	struct wake_lock jackdet_wake_lock;
+	struct wakeup_source jackdet_wake_lock;
 	void (*lineout_switch_f) (int on);
 	void (*set_main_mic_f) (int on);
 	void (*set_sub_mic_f) (int on);
@@ -647,8 +647,7 @@ static int midas_wm1811_init_paiftx(struct snd_soc_pcm_runtime *rtd)
 	/* To wakeup for earjack event in suspend mode */
 	enable_irq_wake(control->irq);
 
-	wake_lock_init(&wm1811->jackdet_wake_lock,
-					WAKE_LOCK_SUSPEND, "midas_jackdet");
+	wakeup_source_init(&wm1811->jackdet_wake_lock, "midas_jackdet");
 
 	return snd_soc_dapm_sync(&codec->dapm);
 }
