@@ -30,7 +30,6 @@
 #include <linux/uaccess.h>
 #include <linux/random.h>
 #include <linux/hw_breakpoint.h>
-#include <linux/console.h>
 #include <linux/cpuidle.h>
 
 #include <asm/cacheflush.h>
@@ -60,20 +59,6 @@ static const char *isa_modes[] = {
 extern void setup_mm_for_reboot(void);
 
 static volatile int hlt_counter;
-
-#include <mach/system.h>
-
-#ifdef CONFIG_SMP
-void arch_trigger_all_cpu_backtrace(void)
-{
-	smp_send_all_cpu_backtrace();
-}
-#else
-void arch_trigger_all_cpu_backtrace(void)
-{
-	dump_stack();
-}
-#endif
 
 void disable_hlt(void)
 {
