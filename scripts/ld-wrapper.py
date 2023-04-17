@@ -106,6 +106,13 @@ additional_build_rules = {
             "drivers/char/mem.o",
         ],
     }],
+    "drivers/cpufreq/built-in.o" :
+    [{
+        "removed_objects":
+        [
+            "drivers/cpufreq/exynos-cpufreq.o",
+        ],
+    }],
     "drivers/gpio/built-in.o" :
     [{
         "injected_objects":

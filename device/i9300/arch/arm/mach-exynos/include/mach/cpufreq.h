@@ -118,7 +118,7 @@ struct exynos_dvfs_info {
 #endif
 };
 
-extern struct exynos_dvfs_info *exynos_info;
+extern struct exynos_dvfs_info *exynos_info_legacy;
 
 #define SUPPORT_1400MHZ	(1<<31)
 #define SUPPORT_1200MHZ	(1<<30)
