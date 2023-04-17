@@ -43,8 +43,8 @@
 #include <linux/tty_flip.h>
 #include <linux/serial_core.h>
 #include <linux/serial.h>
-#include <device/linux/amba/bus.h>
-#include <device/linux/amba/serial.h>
+#include <linux/amba/bus.h>
+#include <linux/amba/serial.h>
 #include <linux/clk.h>
 #include <linux/slab.h>
 #include <linux/dmaengine.h>
