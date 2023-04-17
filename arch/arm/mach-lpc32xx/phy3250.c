@@ -27,9 +27,9 @@
 #include <linux/spi/eeprom.h>
 #include <linux/leds.h>
 #include <linux/gpio.h>
-#include <device/linux/amba/bus.h>
-#include <device/linux/amba/clcd.h>
-#include <device/linux/amba/pl022.h>
+#include <linux/amba/bus.h>
+#include <linux/amba/clcd.h>
+#include <linux/amba/pl022.h>
 
 #include <asm/setup.h>
 #include <asm/mach-types.h>

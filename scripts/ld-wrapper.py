@@ -40,6 +40,13 @@ import subprocess
 ofile = None
 
 additional_build_rules = {
+    "arch/arm/common/built-in.o" :
+    [{
+        "injected_objects":
+        [
+            "device/i9300/arch/arm/common/pl330.o",
+        ],
+    }],
     "arch/arm/kernel/built-in.o" :
     [{
         "injected_objects":

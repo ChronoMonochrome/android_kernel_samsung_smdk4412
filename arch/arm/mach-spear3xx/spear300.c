@@ -12,7 +12,7 @@
  */
 
 #include <linux/types.h>
-#include <device/linux/amba/pl061.h>
+#include <linux/amba/pl061.h>
 #include <linux/ptrace.h>
 #include <asm/irq.h>
 #include <plat/shirq.h>
