@@ -1,1 +1,11 @@
 source "device/i9300/arch/arm/common/Kconfig"
+
+config ARM_TRUSTZONE
+	bool "Support TrustZone-enabled Trusted Execution Environment"
+	default n
+	help
+	  Select if you want a kernel to be executed at non-secure world.
+	  This option should be used with related secure bootloader and
+	  TrustZone software.
+
+	  If you don't know about TrustZone, say 'N'.
