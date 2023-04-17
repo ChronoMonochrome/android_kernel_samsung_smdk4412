@@ -79,7 +79,7 @@ extern int s3c24xx_serial_initconsole(struct platform_driver *drv,
 extern int s3c24xx_serial_init(struct platform_driver *drv,
 			       struct s3c24xx_uart_info *info);
 
-#ifdef CONFIG_SERIAL_SAMSUNG_DEBUG
+#ifdef CONFIG_SERIAL_SAMSUNG_LEGACY_DEBUG
 
 extern void printascii(const char *);
 

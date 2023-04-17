@@ -1,0 +1,50 @@
+config SERIAL_SAMSUNG_LEGACY
+	tristate "Samsung SoC serial support"
+	depends on ARM && PLAT_SAMSUNG_LEGACY
+	select SERIAL_CORE_LEGACY
+	help
+	  Support for the on-chip UARTs on the Samsung S3C24XX series CPUs,
+	  providing /dev/ttySAC0, 1 and 2 (note, some machines may not
+	  provide all of these ports, depending on how the serial port
+	  pins are configured.
+
+config SERIAL_SAMSUNG_UARTS_LEGACY_4
+	bool
+	depends on ARM && PLAT_SAMSUNG_LEGACY
+	default y if !(CPU_S3C2410 || SERIAL_S3C2412 || CPU_S3C2440 || CPU_S3C2442)
+	help
+	  Internal node for the common case of 4 Samsung compatible UARTs
+
+config SERIAL_SAMSUNG_UARTS_LEGACY
+	int
+	depends on ARM && PLAT_SAMSUNG_LEGACY
+	default 6 if ARCH_S5P6450
+	default 4 if SERIAL_SAMSUNG_UARTS_LEGACY_4 || CPU_S3C2416
+	default 3
+	help
+	  Select the number of available UART ports for the Samsung S3C
+	  serial driver
+	
+config SERIAL_SAMSUNG_LEGACY_DEBUG
+	bool "Samsung SoC serial debug"
+	depends on SERIAL_SAMSUNG_LEGACY && DEBUG_LL
+	help
+	  Add support for debugging the serial driver. Since this is
+	  generally being used as a console, we use our own output
+	  routines that go via the low-level debug printascii()
+	  function.
+
+config SERIAL_SAMSUNG_CONSOLE_LEGACY
+	bool "Support for console on Samsung SoC serial port"
+	depends on SERIAL_SAMSUNG_LEGACY=y
+	select SERIAL_CORE_CONSOLE
+	help
+	  Allow selection of the S3C24XX on-board serial ports for use as
+	  an virtual console.
+
+	  Even if you say Y here, the currently visible virtual console
+	  (/dev/tty0) will still be used as the system console by default, but
+	  you can alter that using a kernel command line option such as
+	  "console=ttySACx". (Try "man bootparam" or see the documentation of
+	  your boot loader about how to pass options to the kernel at
+	  boot time.)
