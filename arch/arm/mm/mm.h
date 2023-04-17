@@ -67,13 +67,5 @@ extern u32 arm_dma_limit;
 #define arm_dma_limit ((u32)~0)
 #endif
 
-#ifdef CONFIG_DMA_CMA
-extern phys_addr_t arm_lowmem_limit;
-#endif
-
 void __init bootmem_init(void);
 void arm_mm_memblock_reserve(void);
-#ifdef CONFIG_DMA_CMA
-void dma_contiguous_remap(void);
-#endif
-

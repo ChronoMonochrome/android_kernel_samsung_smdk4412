@@ -22,7 +22,6 @@
  */
 #include <linux/module.h>
 #include <linux/errno.h>
-#include <linux/memblock.h>
 #include <linux/mm.h>
 #include <linux/vmalloc.h>
 #include <linux/io.h>

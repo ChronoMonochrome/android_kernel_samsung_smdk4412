@@ -18,7 +18,7 @@
 #include <linux/sysrq.h>
 #include <linux/device.h>
 #include <linux/clk.h>
-#include <device/linux/amba/bus.h>
+#include <linux/amba/bus.h>
 #include <linux/fs.h>
 #include <linux/uaccess.h>
 #include <linux/miscdevice.h>
