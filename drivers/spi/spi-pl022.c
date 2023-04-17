@@ -32,8 +32,8 @@
 #include <linux/delay.h>
 #include <linux/clk.h>
 #include <linux/err.h>
-#include <device/linux/amba/bus.h>
-#include <device/linux/amba/pl022.h>
+#include <linux/amba/bus.h>
+#include <linux/amba/pl022.h>
 #include <linux/io.h>
 #include <linux/slab.h>
 #include <linux/dmaengine.h>
