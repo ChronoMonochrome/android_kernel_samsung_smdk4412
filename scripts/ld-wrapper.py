@@ -55,6 +55,7 @@ additional_build_rules = {
         [
             "device/i9300/arch/arm/kernel/idiv_emulate.o",
             "device/i9300/arch/arm/kernel/sleep.o",
+            "device/i9300/arch/arm/kernel/smp.o",
         ],
         "removed_objects":
         [
