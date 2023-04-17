@@ -427,7 +427,7 @@ static int busfreq_target(struct busfreq_table *freq_table,
 		}
 	}
 
-	if ((freqs->new == exynos_info->freq_table[exynos_info->max_support_idx].frequency)
+	if ((freqs->new == exynos_info_legacy->freq_table[exynos_info->max_support_idx].frequency)
 			&& (ppc_load == 0))
 		idx = pre_idx;
 #endif

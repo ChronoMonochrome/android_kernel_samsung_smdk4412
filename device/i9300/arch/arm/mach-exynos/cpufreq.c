@@ -38,7 +38,7 @@
 #include <mach/sec_debug.h>
 #endif
 
-struct exynos_dvfs_info *exynos_info;
+struct exynos_dvfs_info *exynos_info_legacy;
 
 static struct regulator *arm_regulator;
 static struct cpufreq_freqs freqs;
@@ -60,19 +60,19 @@ unsigned int g_cpufreq_lock_level;
 int exynos_verify_speed(struct cpufreq_policy *policy)
 {
 	return cpufreq_frequency_table_verify(policy,
-					      exynos_info->freq_table);
+					      exynos_info_legacy->freq_table);
 }
 
 unsigned int exynos_getspeed(unsigned int cpu)
 {
-	return clk_get_rate(exynos_info->cpu_clk) / 1000;
+	return clk_get_rate(exynos_info_legacy->cpu_clk) / 1000;
 }
 
 static unsigned int exynos_get_safe_armvolt(unsigned int old_index, unsigned int new_index)
 {
 	unsigned int safe_arm_volt = 0;
-	struct cpufreq_frequency_table *freq_table = exynos_info->freq_table;
-	unsigned int *volt_table = exynos_info->volt_table;
+	struct cpufreq_frequency_table *freq_table = exynos_info_legacy->freq_table;
+	unsigned int *volt_table = exynos_info_legacy->volt_table;
 
 	/*
 	 * ARM clock source will be changed APLL to MPLL temporary
@@ -80,11 +80,11 @@ static unsigned int exynos_get_safe_armvolt(unsigned int old_index, unsigned int
 	 * reguired voltage level
 	 */
 
-	if (exynos_info->need_apll_change != NULL) {
-		if (exynos_info->need_apll_change(old_index, new_index) &&
-			(freq_table[new_index].frequency < exynos_info->mpll_freq_khz) &&
-			(freq_table[old_index].frequency < exynos_info->mpll_freq_khz)) {
-				safe_arm_volt = volt_table[exynos_info->pll_safe_idx];
+	if (exynos_info_legacy->need_apll_change != NULL) {
+		if (exynos_info_legacy->need_apll_change(old_index, new_index) &&
+			(freq_table[new_index].frequency < exynos_info_legacy->mpll_freq_khz) &&
+			(freq_table[old_index].frequency < exynos_info_legacy->mpll_freq_khz)) {
+				safe_arm_volt = volt_table[exynos_info_legacy->pll_safe_idx];
 			}
 
 	}
@@ -99,8 +99,8 @@ static int exynos_target(struct cpufreq_policy *policy,
 	unsigned int index, old_index = UINT_MAX;
 	unsigned int arm_volt, safe_arm_volt = 0;
 	int ret = 0, i;
-	struct cpufreq_frequency_table *freq_table = exynos_info->freq_table;
-	unsigned int *volt_table = exynos_info->volt_table;
+	struct cpufreq_frequency_table *freq_table = exynos_info_legacy->freq_table;
+	unsigned int *volt_table = exynos_info_legacy->volt_table;
 
 	mutex_lock(&set_freq_lock);
 
@@ -157,7 +157,7 @@ static int exynos_target(struct cpufreq_policy *policy,
 		regulator_set_voltage(arm_regulator, safe_arm_volt,
 				     safe_arm_volt + 25000);
 	if (freqs.new != freqs.old)
-		exynos_info->set_freq(old_index, index);
+		exynos_info_legacy->set_freq(old_index, index);
 
 	cpufreq_notify_transition(&freqs, CPUFREQ_POSTCHANGE);
 
@@ -186,7 +186,7 @@ int exynos_find_cpufreq_level_by_volt(unsigned int arm_volt,
 					unsigned int *level)
 {
 	struct cpufreq_frequency_table *table;
-	unsigned int *volt_table = exynos_info->volt_table;
+	unsigned int *volt_table = exynos_info_legacy->volt_table;
 	int i;
 
 	if (!exynos_cpufreq_init_done)
@@ -205,8 +205,8 @@ int exynos_find_cpufreq_level_by_volt(unsigned int arm_volt,
 	}
 
 	/* find cpufreq level in volt_table */
-	for (i = exynos_info->min_support_idx;
-			i >= exynos_info->max_support_idx; i--) {
+	for (i = exynos_info_legacy->min_support_idx;
+			i >= exynos_info_legacy->max_support_idx; i--) {
 		if (volt_table[i] >= arm_volt) {
 			*level = (unsigned int)i;
 			return 0;
@@ -233,7 +233,7 @@ int exynos_cpufreq_get_level(unsigned int freq, unsigned int *level)
 		return -EINVAL;
 	}
 
-	for (i = exynos_info->max_support_idx;
+	for (i = exynos_info_legacy->max_support_idx;
 		(table[i].frequency != CPUFREQ_TABLE_END); i++) {
 		if (table[i].frequency == freq) {
 			*level = i;
@@ -261,7 +261,7 @@ int exynos_cpufreq_lock(unsigned int nId,
 	if (!exynos_cpufreq_init_done)
 		return -EPERM;
 
-	if (!exynos_info)
+	if (!exynos_info_legacy)
 		return -EPERM;
 
 	if (exynos_cpufreq_disable && (nId != DVFS_LOCK_ID_TMU)) {
@@ -269,8 +269,8 @@ int exynos_cpufreq_lock(unsigned int nId,
 		return -EPERM;
 	}
 
-	if (cpufreq_level < exynos_info->max_support_idx
-			|| cpufreq_level > exynos_info->min_support_idx) {
+	if (cpufreq_level < exynos_info_legacy->max_support_idx
+			|| cpufreq_level > exynos_info_legacy->min_support_idx) {
 		pr_warn("%s: invalid cpufreq_level(%d:%d)\n", __func__, nId,
 				cpufreq_level);
 		return -EINVAL;
@@ -280,8 +280,8 @@ int exynos_cpufreq_lock(unsigned int nId,
 	if (!policy)
 		return -EPERM;
 
-	volt_table = exynos_info->volt_table;
-	freq_table = exynos_info->freq_table;
+	volt_table = exynos_info_legacy->volt_table;
+	freq_table = exynos_info_legacy->freq_table;
 
 	mutex_lock(&set_cpu_freq_lock);
 	if (g_cpufreq_lock_id & (1 << nId)) {
@@ -345,7 +345,7 @@ int exynos_cpufreq_lock(unsigned int nId,
 		regulator_set_voltage(arm_regulator, arm_volt,
 				     arm_volt + 25000);
 
-		exynos_info->set_freq(old_idx, cpufreq_level);
+		exynos_info_legacy->set_freq(old_idx, cpufreq_level);
 
 		cpufreq_notify_transition(&freqs, CPUFREQ_POSTCHANGE);
 	}
@@ -365,8 +365,8 @@ void exynos_cpufreq_lock_free(unsigned int nId)
 
 	mutex_lock(&set_cpu_freq_lock);
 	g_cpufreq_lock_id &= ~(1 << nId);
-	g_cpufreq_lock_val[nId] = exynos_info->min_support_idx;
-	g_cpufreq_lock_level = exynos_info->min_support_idx;
+	g_cpufreq_lock_val[nId] = exynos_info_legacy->min_support_idx;
+	g_cpufreq_lock_level = exynos_info_legacy->min_support_idx;
 	if (g_cpufreq_lock_id) {
 		for (i = 0; i < DVFS_LOCK_ID_END; i++) {
 			if (g_cpufreq_lock_val[i] < g_cpufreq_lock_level)
@@ -385,7 +385,7 @@ static int exynos_cpu_dma_qos_notify(struct notifier_block *nb,
 	struct dvfs_qos_info *table;
 	enum cpufreq_level_index last_lvl = L0;
 
-	if (!exynos_info || !exynos_info->cpu_dma_latency)
+	if (!exynos_info_legacy || !exynos_info->cpu_dma_latency)
 		return NOTIFY_DONE;
 
 	if (value == 0 || value == PM_QOS_DEFAULT_VALUE ||
@@ -394,7 +394,7 @@ static int exynos_cpu_dma_qos_notify(struct notifier_block *nb,
 		return NOTIFY_OK;
 	}
 
-	table = exynos_info->cpu_dma_latency;
+	table = exynos_info_legacy->cpu_dma_latency;
 
 	for (i = 0; table[i].qos_value; i++) {
 		if (value >= table[i].qos_value) {
@@ -430,7 +430,7 @@ int exynos_cpufreq_upper_limit(unsigned int nId,
 	if (!exynos_cpufreq_init_done)
 		return -EPERM;
 
-	if (!exynos_info)
+	if (!exynos_info_legacy)
 		return -EPERM;
 
 	if (exynos_cpufreq_disable) {
@@ -438,8 +438,8 @@ int exynos_cpufreq_upper_limit(unsigned int nId,
 		return -EPERM;
 	}
 
-	if (cpufreq_level < exynos_info->max_support_idx
-			|| cpufreq_level > exynos_info->min_support_idx) {
+	if (cpufreq_level < exynos_info_legacy->max_support_idx
+			|| cpufreq_level > exynos_info_legacy->min_support_idx) {
 		pr_warn("%s: invalid cpufreq_level(%d:%d)\n", __func__, nId,
 				cpufreq_level);
 		return -EINVAL;
@@ -449,8 +449,8 @@ int exynos_cpufreq_upper_limit(unsigned int nId,
 	if (!policy)
 		return -EPERM;
 
-	volt_table = exynos_info->volt_table;
-	freq_table = exynos_info->freq_table;
+	volt_table = exynos_info_legacy->volt_table;
+	freq_table = exynos_info_legacy->freq_table;
 
 	mutex_lock(&set_cpu_freq_lock);
 	if (g_cpufreq_limit_id & (1 << nId)) {
@@ -475,11 +475,11 @@ int exynos_cpufreq_upper_limit(unsigned int nId,
 
 	if (freq_old > freq_new) {
 		/* Find out current level index */
-		for (i = 0; i <= exynos_info->min_support_idx; i++) {
+		for (i = 0; i <= exynos_info_legacy->min_support_idx; i++) {
 			if (freq_old == freq_table[i].frequency) {
 				old_idx = freq_table[i].index;
 				break;
-			} else if (i == exynos_info->min_support_idx) {
+			} else if (i == exynos_info_legacy->min_support_idx) {
 				printk(KERN_ERR "%s: Level is not found\n", __func__);
 				mutex_unlock(&set_freq_lock);
 
@@ -493,7 +493,7 @@ int exynos_cpufreq_upper_limit(unsigned int nId,
 
 		cpufreq_notify_transition(&freqs, CPUFREQ_PRECHANGE);
 
-		exynos_info->set_freq(old_idx, cpufreq_level);
+		exynos_info_legacy->set_freq(old_idx, cpufreq_level);
 
 		safe_arm_volt = exynos_get_safe_armvolt(old_idx, cpufreq_level);
 		if (safe_arm_volt)
@@ -520,8 +520,8 @@ void exynos_cpufreq_upper_limit_free(unsigned int nId)
 
 	mutex_lock(&set_cpu_freq_lock);
 	g_cpufreq_limit_id &= ~(1 << nId);
-	g_cpufreq_limit_val[nId] = exynos_info->max_support_idx;
-	g_cpufreq_limit_level = exynos_info->max_support_idx;
+	g_cpufreq_limit_val[nId] = exynos_info_legacy->max_support_idx;
+	g_cpufreq_limit_level = exynos_info_legacy->max_support_idx;
 
 	if (g_cpufreq_limit_id) {
 		for (i = 0; i < DVFS_LOCK_ID_END; i++) {
@@ -588,21 +588,21 @@ static void exynos_save_gov_freq(void)
 {
 	unsigned int cpu = 0;
 
-	exynos_info->gov_support_freq = exynos_getspeed(cpu);
+	exynos_info_legacy->gov_support_freq = exynos_getspeed(cpu);
 	pr_debug("cur_freq[%d] saved to freq[%d]\n", exynos_getspeed(0),
-			exynos_info->gov_support_freq);
+			exynos_info_legacy->gov_support_freq);
 }
 
 static void exynos_restore_gov_freq(struct cpufreq_policy *policy)
 {
 	unsigned int cpu = 0;
 
-	if (exynos_getspeed(cpu) != exynos_info->gov_support_freq)
-		exynos_target(policy, exynos_info->gov_support_freq,
+	if (exynos_getspeed(cpu) != exynos_info_legacy->gov_support_freq)
+		exynos_target(policy, exynos_info_legacy->gov_support_freq,
 				CPUFREQ_RELATION_H);
 
 	pr_debug("freq[%d] restored to cur_freq[%d]\n",
-			exynos_info->gov_support_freq, exynos_getspeed(cpu));
+			exynos_info_legacy->gov_support_freq, exynos_getspeed(cpu));
 }
 
 static int exynos_cpufreq_notifier_event(struct notifier_block *this,
@@ -623,12 +623,12 @@ static int exynos_cpufreq_notifier_event(struct notifier_block *this,
 			exynos_save_gov_freq();
 
 		ret = exynos_cpufreq_lock(DVFS_LOCK_ID_PM,
-					   exynos_info->pm_lock_idx);
+					   exynos_info_legacy->pm_lock_idx);
 		if (ret < 0)
 			return NOTIFY_BAD;
 #if defined(CONFIG_CPU_EXYNOS4210) || defined(CONFIG_SLP)
 		ret = exynos_cpufreq_upper_limit(DVFS_LOCK_ID_PM,
-						exynos_info->pm_lock_idx);
+						exynos_info_legacy->pm_lock_idx);
 		if (ret < 0)
 			return NOTIFY_BAD;
 #endif
@@ -708,7 +708,7 @@ static int exynos_cpufreq_cpu_init(struct cpufreq_policy *policy)
 
 	policy->cur = policy->min = policy->max = exynos_getspeed(policy->cpu);
 
-	cpufreq_frequency_table_get_attr(exynos_info->freq_table, policy->cpu);
+	cpufreq_frequency_table_get_attr(exynos_info_legacy->freq_table, policy->cpu);
 
 	/* set the transition latency value */
 	policy->cpuinfo.transition_latency = 100000;
@@ -726,11 +726,11 @@ static int exynos_cpufreq_cpu_init(struct cpufreq_policy *policy)
 		cpumask_setall(policy->cpus);
 	}
 
-	ret = cpufreq_frequency_table_cpuinfo(policy, exynos_info->freq_table);
+	ret = cpufreq_frequency_table_cpuinfo(policy, exynos_info_legacy->freq_table);
 	if (ret)
 		return ret;
 
-	cpufreq_frequency_table_get_attr(exynos_info->freq_table, policy->cpu);
+	cpufreq_frequency_table_get_attr(exynos_info_legacy->freq_table, policy->cpu);
 
 	return 0;
 }
@@ -751,7 +751,7 @@ static int exynos_cpufreq_reboot_notifier_call(struct notifier_block *this,
 {
 	int ret = 0;
 
-	ret = exynos_cpufreq_lock(DVFS_LOCK_ID_PM, exynos_info->pm_lock_idx);
+	ret = exynos_cpufreq_lock(DVFS_LOCK_ID_PM, exynos_info_legacy->pm_lock_idx);
 	if (ret < 0)
 		return NOTIFY_BAD;
 
@@ -783,23 +783,23 @@ static int __init exynos_cpufreq_init(void)
 	int ret = -EINVAL;
 	int i;
 
-	exynos_info = kzalloc(sizeof(struct exynos_dvfs_info), GFP_KERNEL);
-	if (!exynos_info)
+	exynos_info_legacy = kzalloc(sizeof(struct exynos_dvfs_info), GFP_KERNEL);
+	if (!exynos_info_legacy)
 		return -ENOMEM;
 
 	if (soc_is_exynos4210())
-		ret = exynos4210_cpufreq_init(exynos_info);
+		ret = exynos4210_cpufreq_init(exynos_info_legacy);
 	else if (soc_is_exynos4212() || soc_is_exynos4412())
-		ret = exynos4x12_cpufreq_init(exynos_info);
+		ret = exynos4x12_cpufreq_init(exynos_info_legacy);
 	else if (soc_is_exynos5250())
-		ret = exynos5250_cpufreq_init(exynos_info);
+		ret = exynos5250_cpufreq_init(exynos_info_legacy);
 	else
 		pr_err("%s: CPU type not found\n", __func__);
 
 	if (ret)
 		goto err_vdd_arm;
 
-	if (exynos_info->set_freq == NULL) {
+	if (exynos_info_legacy->set_freq == NULL) {
 		printk(KERN_ERR "%s: No set_freq function (ERR)\n",
 				__func__);
 		goto err_vdd_arm;
@@ -821,12 +821,12 @@ static int __init exynos_cpufreq_init(void)
 	exynos_cpufreq_init_done = true;
 
 	for (i = 0; i < DVFS_LOCK_ID_END; i++) {
-		g_cpufreq_lock_val[i] = exynos_info->min_support_idx;
-		g_cpufreq_limit_val[i] = exynos_info->max_support_idx;
+		g_cpufreq_lock_val[i] = exynos_info_legacy->min_support_idx;
+		g_cpufreq_limit_val[i] = exynos_info_legacy->max_support_idx;
 	}
 
-	g_cpufreq_lock_level = exynos_info->min_support_idx;
-	g_cpufreq_limit_level = exynos_info->max_support_idx;
+	g_cpufreq_lock_level = exynos_info_legacy->min_support_idx;
+	g_cpufreq_limit_level = exynos_info_legacy->max_support_idx;
 
 	if (cpufreq_register_driver(&exynos_driver)) {
 		pr_err("failed to register cpufreq driver\n");
@@ -834,7 +834,7 @@ static int __init exynos_cpufreq_init(void)
 	}
 
 #ifdef CONFIG_SLP
-	if (exynos_info->cpu_dma_latency)
+	if (exynos_info_legacy->cpu_dma_latency)
 		pm_qos_add_notifier(PM_QOS_CPU_DMA_LATENCY,
 				    &pm_qos_cpu_dma_notifier);
 #endif
@@ -847,7 +847,7 @@ err_cpufreq:
 	if (!IS_ERR(arm_regulator))
 		regulator_put(arm_regulator);
 err_vdd_arm:
-	kfree(exynos_info);
+	kfree(exynos_info_legacy);
 	pr_debug("%s: failed initialization\n", __func__);
 	return -EINVAL;
 }
