@@ -23,7 +23,8 @@
 #include <linux/compat.h>
 #include <linux/console.h>
 #include <linux/cpu.h>
-#include <device/linux/freezer.h>
+#include <linux/freezer.h>
+#include <scsi/scsi_scan.h>
 
 #include <asm/uaccess.h>
 
