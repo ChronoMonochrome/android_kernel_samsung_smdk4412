@@ -856,6 +856,19 @@ int dapm_reg_event(struct snd_soc_dapm_widget *w,
 }
 EXPORT_SYMBOL_GPL(dapm_reg_event);
 
+/*
+ * Handler for regulator supply widget.
+ */
+int dapm_regulator_event(struct snd_soc_dapm_widget *w,
+		   struct snd_kcontrol *kcontrol, int event)
+{
+	if (SND_SOC_DAPM_EVENT_ON(event))
+		return regulator_enable(w->priv);
+	else
+		return regulator_disable_deferred(w->priv, w->shift);
+}
+EXPORT_SYMBOL_GPL(dapm_regulator_event);
+
 static int dapm_widget_power_check(struct snd_soc_dapm_widget *w)
 {
 	if (w->power_checked)

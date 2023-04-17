@@ -281,7 +281,6 @@ enum snd_soc_control_type {
 
 enum snd_soc_compress_type {
 	SND_SOC_FLAT_COMPRESSION = 1,
-	SND_SOC_RBTREE_COMPRESSION
 };
 
 enum snd_soc_pcm_subclass {
@@ -646,7 +645,6 @@ struct snd_soc_codec_driver {
 	int (*volatile_register)(struct snd_soc_codec *, unsigned int);
 	int (*readable_register)(struct snd_soc_codec *, unsigned int);
 	int (*writable_register)(struct snd_soc_codec *, unsigned int);
-	short max_register;
 	unsigned int reg_cache_size;
 	short reg_cache_step;
 	short reg_word_size;

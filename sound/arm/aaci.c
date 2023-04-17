@@ -17,7 +17,7 @@
 #include <linux/spinlock.h>
 #include <linux/interrupt.h>
 #include <linux/err.h>
-#include <device/linux/amba/bus.h>
+#include <linux/amba/bus.h>
 #include <linux/io.h>
 
 #include <sound/core.h>

@@ -250,6 +250,7 @@ additional_build_rules = {
             "device/i9300/drivers/regulator/fixed.o",
             "device/i9300/drivers/regulator/max77686.o",
             "device/i9300/drivers/regulator/max77693.o",
+            "device/i9300/drivers/regulator/stub.o",
             "device/i9300/drivers/regulator/wm8994-regulator.o",
         ],
         "removed_objects":
