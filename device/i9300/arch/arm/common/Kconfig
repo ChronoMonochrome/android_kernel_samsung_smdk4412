@@ -1,0 +1,2 @@
+config PL330
+	bool
