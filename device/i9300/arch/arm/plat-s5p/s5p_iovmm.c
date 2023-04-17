@@ -14,7 +14,7 @@
 #include <linux/list.h>
 #include <linux/ion.h>
 #include <device/linux/iommu.h>
-#include <linux/genalloc.h>
+#include <device/linux/genalloc.h>
 #include <linux/err.h>
 #include <linux/spinlock.h>
 
