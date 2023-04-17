@@ -16,7 +16,7 @@
 #include <linux/kernel.h>
 #include <linux/interrupt.h>
 #include <linux/serial_core.h>
-#include <linux/irq.h>
+#include <device/linux/irq.h>
 #include <linux/io.h>
 
 #include <mach/map.h>

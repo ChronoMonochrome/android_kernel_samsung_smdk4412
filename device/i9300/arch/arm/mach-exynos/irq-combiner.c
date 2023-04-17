@@ -14,6 +14,7 @@
 
 #include <linux/io.h>
 #include <linux/interrupt.h>
+#include <device/linux/irq.h>
 
 #include <asm/mach/irq.h>
 #include <plat/cpu.h>

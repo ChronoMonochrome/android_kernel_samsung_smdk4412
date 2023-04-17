@@ -1,3 +1,4 @@
+obj-y += irq/
 obj-y += power/
 
 obj-$(CONFIG_FREEZER) += freezer.o
