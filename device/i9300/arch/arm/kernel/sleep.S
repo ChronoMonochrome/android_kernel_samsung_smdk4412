@@ -7,6 +7,9 @@
 #include <asm/system.h>
 	.text
 
+.globl cpu_v7_do_resume_legacy
+.globl cpu_v7_do_suspend_legacy
+
 /*
  * Save CPU state for a suspend
  *  r1 = v:p offset
@@ -53,7 +56,7 @@ ENTRY(cpu_suspend)
 #else
 	str	r2, [r3]		@ save phys SP
 #endif
-	bl	cpu_do_suspend
+	bl	cpu_v7_do_suspend_legacy
 #endif
 
 	@ flush data cache
@@ -132,7 +135,7 @@ THUMB(	bx	r4			)
   ARM(	ldmia	r0!, {r1, sp, lr}	)
 THUMB(	ldmia	r0!, {r1, r2, lr}	)
 THUMB(	mov	sp, r2			)
-	b	cpu_do_resume
+	b	cpu_v7_do_resume_legacy
 #endif
 ENDPROC(cpu_resume)
 
