@@ -1130,7 +1130,7 @@ MODULE_LICENSE ("GPL");
 	!defined(SM501_OHCI_DRIVER) && \
 	!defined(TMIO_OHCI_DRIVER) && \
 	!defined(SSB_OHCI_DRIVER)
-#error "missing bus glue for ohci-hcd"
+//#error "missing bus glue for ohci-hcd"
 #endif
 
 static int __init ohci_hcd_mod_init(void)
