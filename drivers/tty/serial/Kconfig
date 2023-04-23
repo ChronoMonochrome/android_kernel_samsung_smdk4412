@@ -190,7 +190,7 @@ config SERIAL_SAMSUNG
 config SERIAL_SAMSUNG_UARTS_4
 	bool
 	depends on ARM && PLAT_SAMSUNG
-	default y if !(CPU_S3C2410 || SERIAL_S3C2412 || CPU_S3C2440 || CPU_S3C2442)
+	default y if CPU_S3C2443
 	help
 	  Internal node for the common case of 4 Samsung compatible UARTs
 
@@ -198,7 +198,7 @@ config SERIAL_SAMSUNG_UARTS
 	int
 	depends on ARM && PLAT_SAMSUNG
 	default 6 if ARCH_S5P6450
-	default 4 if SERIAL_SAMSUNG_UARTS_4 || CPU_S3C2416
+	default 4 if SERIAL_SAMSUNG_UARTS_4
 	default 3
 	help
 	  Select the number of available UART ports for the Samsung S3C
