@@ -330,6 +330,7 @@ additional_build_rules = {
         ],
         "removed_objects":
         [
+            "drivers/tty/serial/8250/built-in.o",
             "drivers/tty/serial/samsung.o",
             "drivers/tty/serial/s5pv210.o",
         ],

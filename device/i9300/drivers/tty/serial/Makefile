@@ -1,2 +1,3 @@
+obj-$(CONFIG_SERIAL_8250) += 8250.o
 obj-$(CONFIG_SERIAL_SAMSUNG_LEGACY) += samsung.o
 obj-$(CONFIG_SERIAL_S5PV210) += s5pv210.o
