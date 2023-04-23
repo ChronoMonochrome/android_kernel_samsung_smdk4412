@@ -14,7 +14,6 @@
  *  option) any later version.
  */
 
-#include <linux/module.h>
 #include <linux/slab.h>
 #include <linux/dma-mapping.h>
 
@@ -223,10 +222,18 @@ static int dma_hw_free(struct snd_pcm_substream *substream)
 	/* TODO - do we need to ensure DMA flushed */
 	snd_pcm_set_runtime_buffer(substream, NULL);
 
+#ifdef CONFIG_SLP_WIP
+	spin_lock(&prtd->lock);
+#endif
+
 	if (prtd->params) {
 		s3c2410_dma_free(prtd->params->channel, prtd->params->client);
 		prtd->params = NULL;
 	}
+
+#ifdef CONFIG_SLP_WIP
+	spin_unlock(&prtd->lock);
+#endif
 
 	return 0;
 }
@@ -356,6 +363,7 @@ static int dma_open(struct snd_pcm_substream *substream)
 	spin_lock_init(&prtd->lock);
 
 	runtime->private_data = prtd;
+
 	return 0;
 }
 
@@ -443,11 +451,9 @@ static void dma_free_dma_buffers(struct snd_pcm *pcm)
 
 static u64 dma_mask = DMA_BIT_MASK(32);
 
-static int dma_new(struct snd_soc_pcm_runtime *rtd)
+static int dma_new(struct snd_card *card,
+	struct snd_soc_dai *dai, struct snd_pcm *pcm)
 {
-	struct snd_card *card = rtd->card->snd_card;
-	struct snd_soc_dai *dai = rtd->cpu_dai;
-	struct snd_pcm *pcm = rtd->pcm;
 	int ret = 0;
 
 	pr_debug("Entered %s\n", __func__);
@@ -474,7 +480,7 @@ out:
 	return ret;
 }
 
-static struct snd_soc_platform_driver samsung_asoc_platform = {
+struct snd_soc_platform_driver samsung_asoc_platform = {
 	.ops		= &dma_ops,
 	.pcm_new	= dma_new,
 	.pcm_free	= dma_free_dma_buffers,

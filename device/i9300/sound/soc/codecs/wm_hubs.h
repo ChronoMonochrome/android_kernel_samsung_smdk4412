@@ -36,9 +36,6 @@ struct wm_hubs_data {
 	struct list_head dcs_cache;
 	bool (*check_class_w_digital)(struct snd_soc_codec *);
 
-	int micb1_delay;
-	int micb2_delay;
-
 	bool lineout1_se;
 	bool lineout1n_ena;
 	bool lineout1p_ena;
@@ -57,7 +54,6 @@ extern int wm_hubs_handle_analogue_pdata(struct snd_soc_codec *,
 					 int lineout1_diff, int lineout2_diff,
 					 int lineout1fb, int lineout2fb,
 					 int jd_scthr, int jd_thr,
-					 int micbias1_dly, int micbias2_dly,
 					 int micbias1_lvl, int micbias2_lvl);
 
 extern irqreturn_t wm_hubs_dcs_done(int irq, void *data);

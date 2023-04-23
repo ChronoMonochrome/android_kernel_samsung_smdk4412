@@ -20,7 +20,6 @@
 #include <linux/gpio.h>
 #include <linux/clk.h>
 #include <linux/io.h>
-#include <linux/module.h>
 
 #include <sound/soc.h>
 #include <sound/pcm_params.h>
@@ -78,7 +77,11 @@ static int s3c2412_i2s_probe(struct snd_soc_dai *dai)
 
 	/* Set MPLL as the source for IIS CLK */
 
-	clk_set_parent(s3c2412_i2s.iis_cclk, clk_get(NULL, "mpll"));
+	if (clk_set_parent(s3c2412_i2s.iis_cclk, clk_get(NULL, "mpll"))) {
+		pr_err("unable to set parent %s of clock %s.\n",
+				"mpll", s3c2412_i2c.iis_cclk->name);
+		return -EINVAL;
+	}
 	clk_enable(s3c2412_i2s.iis_cclk);
 
 	s3c2412_i2s.iis_cclk = s3c2412_i2s.iis_pclk;
@@ -142,7 +145,7 @@ static int s3c2412_i2s_hw_params(struct snd_pcm_substream *substream,
 	SNDRV_PCM_RATE_22050 | SNDRV_PCM_RATE_32000 | SNDRV_PCM_RATE_44100 | \
 	SNDRV_PCM_RATE_48000 | SNDRV_PCM_RATE_88200 | SNDRV_PCM_RATE_96000)
 
-static const struct snd_soc_dai_ops s3c2412_i2s_dai_ops = {
+static struct snd_soc_dai_ops s3c2412_i2s_dai_ops = {
 	.hw_params	= s3c2412_i2s_hw_params,
 };
 
@@ -166,7 +169,7 @@ static struct snd_soc_dai_driver s3c2412_i2s_dai = {
 
 static __devinit int s3c2412_iis_dev_probe(struct platform_device *pdev)
 {
-	return s3c_i2sv2_register_dai(&pdev->dev, -1, &s3c2412_i2s_dai);
+	return snd_soc_register_dai(&pdev->dev, &s3c2412_i2s_dai);
 }
 
 static __devexit int s3c2412_iis_dev_remove(struct platform_device *pdev)
@@ -177,14 +180,24 @@ static __devexit int s3c2412_iis_dev_remove(struct platform_device *pdev)
 
 static struct platform_driver s3c2412_iis_driver = {
 	.probe  = s3c2412_iis_dev_probe,
-	.remove = __devexit_p(s3c2412_iis_dev_remove),
+	.remove = s3c2412_iis_dev_remove,
 	.driver = {
 		.name = "s3c2412-iis",
 		.owner = THIS_MODULE,
 	},
 };
 
-module_platform_driver(s3c2412_iis_driver);
+static int __init s3c2412_i2s_init(void)
+{
+	return platform_driver_register(&s3c2412_iis_driver);
+}
+module_init(s3c2412_i2s_init);
+
+static void __exit s3c2412_i2s_exit(void)
+{
+	platform_driver_unregister(&s3c2412_iis_driver);
+}
+module_exit(s3c2412_i2s_exit);
 
 /* Module information */
 MODULE_AUTHOR("Ben Dooks, <ben@simtec.co.uk>");

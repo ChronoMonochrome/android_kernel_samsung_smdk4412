@@ -87,6 +87,7 @@ struct snd_usb_substream {
 	struct snd_urb_ctx syncurb[SYNC_URBS];	/* sync urb table */
 	char *syncbuf;				/* sync buffer for all sync URBs */
 	dma_addr_t sync_dma;			/* DMA address of syncbuf */
+	unsigned int speed;		/* USB_SPEED_XXX */
 
 	u64 formats;			/* format bitmasks (all or'ed) */
 	unsigned int num_formats;		/* number of supported audio formats (list) */
@@ -95,8 +96,6 @@ struct snd_usb_substream {
 	spinlock_t lock;
 
 	struct snd_urb_ops ops;		/* callbacks (must be filled at init) */
-	int last_frame_number;          /* stored frame number */
-	int last_delay;                 /* stored delay */
 };
 
 struct snd_usb_stream {
