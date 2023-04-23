@@ -1,7 +1,7 @@
 /*
  * wm_hubs.c  --  WM8993/4 common code
  *
- * Copyright 2009-12 Wolfson Microelectronics plc
+ * Copyright 2009 Wolfson Microelectronics plc
  *
  * Author: Mark Brown <broonie@opensource.wolfsonmicro.com>
  *
@@ -40,7 +40,7 @@ static const DECLARE_TLV_DB_SCALE(outmix_tlv, -2100, 300, 0);
 static const DECLARE_TLV_DB_SCALE(spkmixout_tlv, -1800, 600, 1);
 static const DECLARE_TLV_DB_SCALE(outpga_tlv, -5700, 100, 0);
 static const unsigned int spkboost_tlv[] = {
-	TLV_DB_RANGE_HEAD(2),
+	TLV_DB_RANGE_HEAD(7),
 	0, 6, TLV_DB_SCALE_ITEM(0, 150, 0),
 	7, 7, TLV_DB_SCALE_ITEM(1200, 0, 0),
 };
@@ -200,58 +200,15 @@ static void wm_hubs_dcs_cache_set(struct snd_soc_codec *codec, u16 dcs_cfg)
 	list_add_tail(&cache->list, &hubs->dcs_cache);
 }
 
-static int wm_hubs_read_dc_servo(struct snd_soc_codec *codec,
-				  u16 *reg_l, u16 *reg_r)
-{
-	struct wm_hubs_data *hubs = snd_soc_codec_get_drvdata(codec);
-	u16 dcs_reg, reg;
-	int ret = 0;
-
-	switch (hubs->dcs_readback_mode) {
-	case 2:
-		dcs_reg = WM8994_DC_SERVO_4E;
-		break;
-	case 1:
-		dcs_reg = WM8994_DC_SERVO_READBACK;
-		break;
-	default:
-		dcs_reg = WM8993_DC_SERVO_3;
-		break;
-	}
-
-	/* Different chips in the family support different readback
-	 * methods.
-	 */
-	switch (hubs->dcs_readback_mode) {
-	case 0:
-		*reg_l = snd_soc_read(codec, WM8993_DC_SERVO_READBACK_1)
-			& WM8993_DCS_INTEG_CHAN_0_MASK;
-		*reg_r = snd_soc_read(codec, WM8993_DC_SERVO_READBACK_2)
-			& WM8993_DCS_INTEG_CHAN_1_MASK;
-		break;
-	case 2:
-	case 1:
-		reg = snd_soc_read(codec, dcs_reg);
-		*reg_r = (reg & WM8993_DCS_DAC_WR_VAL_1_MASK)
-			>> WM8993_DCS_DAC_WR_VAL_1_SHIFT;
-		*reg_l = reg & WM8993_DCS_DAC_WR_VAL_0_MASK;
-		break;
-	default:
-		WARN(1, "Unknown DCS readback method\n");
-		ret = -1;
-	}
-	return ret;
-}
-
 /*
  * Startup calibration of the DC servo
  */
-static void enable_dc_servo(struct snd_soc_codec *codec)
+static void calibrate_dc_servo(struct snd_soc_codec *codec)
 {
 	struct wm_hubs_data *hubs = snd_soc_codec_get_drvdata(codec);
 	struct wm_hubs_dcs_cache *cache;
 	s8 offset;
-	u16 reg_l, reg_r, dcs_cfg, dcs_reg;
+	u16 reg, reg_l, reg_r, dcs_cfg, dcs_reg;
 
 	switch (hubs->dcs_readback_mode) {
 	case 2:
@@ -289,8 +246,27 @@ static void enable_dc_servo(struct snd_soc_codec *codec)
 				  WM8993_DCS_TRIG_STARTUP_1);
 	}
 
-	if (wm_hubs_read_dc_servo(codec, &reg_l, &reg_r) < 0)
+	/* Different chips in the family support different readback
+	 * methods.
+	 */
+	switch (hubs->dcs_readback_mode) {
+	case 0:
+		reg_l = snd_soc_read(codec, WM8993_DC_SERVO_READBACK_1)
+			& WM8993_DCS_INTEG_CHAN_0_MASK;
+		reg_r = snd_soc_read(codec, WM8993_DC_SERVO_READBACK_2)
+			& WM8993_DCS_INTEG_CHAN_1_MASK;
+		break;
+	case 2:
+	case 1:
+		reg = snd_soc_read(codec, dcs_reg);
+		reg_r = (reg & WM8993_DCS_DAC_WR_VAL_1_MASK)
+			>> WM8993_DCS_DAC_WR_VAL_1_SHIFT;
+		reg_l = reg & WM8993_DCS_DAC_WR_VAL_0_MASK;
+		break;
+	default:
+		WARN(1, "Unknown DCS readback method\n");
 		return;
+	}
 
 	dev_dbg(codec->dev, "DCS input: %x %x\n", reg_l, reg_r);
 
@@ -301,16 +277,12 @@ static void enable_dc_servo(struct snd_soc_codec *codec)
 			hubs->dcs_codes_l, hubs->dcs_codes_r);
 
 		/* HPOUT1R */
-		offset = (s8)reg_r;
-		dev_dbg(codec->dev, "DCS right %d->%d\n", offset,
-			offset + hubs->dcs_codes_r);
+		offset = reg_r;
 		offset += hubs->dcs_codes_r;
 		dcs_cfg = (u8)offset << WM8993_DCS_DAC_WR_VAL_1_SHIFT;
 
 		/* HPOUT1L */
-		offset = (s8)reg_l;
-		dev_dbg(codec->dev, "DCS left %d->%d\n", offset,
-			offset + hubs->dcs_codes_l);
+		offset = reg_l;
 		offset += hubs->dcs_codes_l;
 		dcs_cfg |= (u8)offset;
 
@@ -342,7 +314,7 @@ static int wm8993_put_dc_servo(struct snd_kcontrol *kcontrol,
 	struct wm_hubs_data *hubs = snd_soc_codec_get_drvdata(codec);
 	int ret;
 
-	ret = snd_soc_put_volsw(kcontrol, ucontrol);
+	ret = snd_soc_put_volsw_2r(kcontrol, ucontrol);
 
 	/* If we're applying an offset correction then updating the
 	 * callibration would be likely to introduce further offsets. */
@@ -479,11 +451,19 @@ SOC_DOUBLE_TLV("Speaker Boost Volume", WM8993_SPKOUT_BOOST, 3, 0, 7, 0,
 SOC_ENUM("Speaker Reference", speaker_ref),
 SOC_ENUM("Speaker Mode", speaker_mode),
 
-SOC_DOUBLE_R_EXT_TLV("Headphone Volume",
-		     WM8993_LEFT_OUTPUT_VOLUME, WM8993_RIGHT_OUTPUT_VOLUME,
-		     0, 63, 0, snd_soc_get_volsw, wm8993_put_dc_servo,
-		     outpga_tlv),
-
+{
+	.iface = SNDRV_CTL_ELEM_IFACE_MIXER, .name = "Headphone Volume",
+	.access = SNDRV_CTL_ELEM_ACCESS_TLV_READ |
+		 SNDRV_CTL_ELEM_ACCESS_READWRITE,
+	.tlv.p = outpga_tlv,
+	.info = snd_soc_info_volsw_2r,
+	.get = snd_soc_get_volsw_2r, .put = wm8993_put_dc_servo,
+	.private_value = (unsigned long)&(struct soc_mixer_control) {
+		.reg = WM8993_LEFT_OUTPUT_VOLUME,
+		.rreg = WM8993_RIGHT_OUTPUT_VOLUME,
+		.shift = 0, .max = 63
+	},
+},
 SOC_DOUBLE_R("Headphone Switch", WM8993_LEFT_OUTPUT_VOLUME,
 	     WM8993_RIGHT_OUTPUT_VOLUME, 6, 1, 0),
 SOC_DOUBLE_R("Headphone ZC Switch", WM8993_LEFT_OUTPUT_VOLUME,
@@ -564,7 +544,7 @@ static int hp_event(struct snd_soc_dapm_widget *w,
 		snd_soc_update_bits(codec, WM8993_DC_SERVO_1,
 				    WM8993_DCS_TIMER_PERIOD_01_MASK, 0);
 
-		enable_dc_servo(codec);
+		calibrate_dc_servo(codec);
 
 		reg |= WM8993_HPOUT1R_OUTP | WM8993_HPOUT1R_RMV_SHORT |
 			WM8993_HPOUT1L_OUTP | WM8993_HPOUT1L_RMV_SHORT;
@@ -648,28 +628,6 @@ static int lineout_event(struct snd_soc_dapm_widget *w,
 	return 0;
 }
 
-static int micbias_event(struct snd_soc_dapm_widget *w,
-			 struct snd_kcontrol *kcontrol, int event)
-{
-	struct snd_soc_codec *codec = w->codec;
-	struct wm_hubs_data *hubs = snd_soc_codec_get_drvdata(codec);
-
-	switch (w->shift) {
-	case WM8993_MICB1_ENA_SHIFT:
-		if (hubs->micb1_delay)
-			msleep(hubs->micb1_delay);
-		break;
-	case WM8993_MICB2_ENA_SHIFT:
-		if (hubs->micb2_delay)
-			msleep(hubs->micb2_delay);
-		break;
-	default:
-		return -EINVAL;
-	}
-
-	return 0;
-}
-
 void wm_hubs_update_class_w(struct snd_soc_codec *codec)
 {
 	struct wm_hubs_data *hubs = snd_soc_codec_get_drvdata(codec);
@@ -685,11 +643,6 @@ void wm_hubs_update_class_w(struct snd_soc_codec *codec)
 
 	snd_soc_update_bits(codec, WM8993_CLASS_W_0,
 			    WM8993_CP_DYN_V | WM8993_CP_DYN_FREQ, enable);
-
-	snd_soc_write(codec, WM8993_LEFT_OUTPUT_VOLUME,
-		      snd_soc_read(codec, WM8993_LEFT_OUTPUT_VOLUME));
-	snd_soc_write(codec, WM8993_RIGHT_OUTPUT_VOLUME,
-		      snd_soc_read(codec, WM8993_RIGHT_OUTPUT_VOLUME));
 }
 EXPORT_SYMBOL_GPL(wm_hubs_update_class_w);
 
@@ -865,10 +818,8 @@ SND_SOC_DAPM_INPUT("IN1RP"),
 SND_SOC_DAPM_INPUT("IN2RN"),
 SND_SOC_DAPM_INPUT("IN2RP:VXRP"),
 
-SND_SOC_DAPM_SUPPLY("MICBIAS2", WM8993_POWER_MANAGEMENT_1, 5, 0,
-		    micbias_event, SND_SOC_DAPM_POST_PMU),
-SND_SOC_DAPM_SUPPLY("MICBIAS1", WM8993_POWER_MANAGEMENT_1, 4, 0,
-		    micbias_event, SND_SOC_DAPM_POST_PMU),
+SND_SOC_DAPM_MICBIAS("MICBIAS2", WM8993_POWER_MANAGEMENT_1, 5, 0),
+SND_SOC_DAPM_MICBIAS("MICBIAS1", WM8993_POWER_MANAGEMENT_1, 4, 0),
 
 SND_SOC_DAPM_MIXER("IN1L PGA", WM8993_POWER_MANAGEMENT_2, 6, 0,
 		   in1l_pga, ARRAY_SIZE(in1l_pga)),
@@ -1155,7 +1106,7 @@ int wm_hubs_add_analogue_controls(struct snd_soc_codec *codec)
 			    WM8993_MIXOUTR_ZC | WM8993_MIXOUT_VU,
 			    WM8993_MIXOUTR_ZC | WM8993_MIXOUT_VU);
 
-	snd_soc_add_codec_controls(codec, analogue_snd_controls,
+	snd_soc_add_controls(codec, analogue_snd_controls,
 			     ARRAY_SIZE(analogue_snd_controls));
 
 	snd_soc_dapm_new_controls(dapm, analogue_dapm_widgets,
@@ -1201,16 +1152,13 @@ EXPORT_SYMBOL_GPL(wm_hubs_add_analogue_routes);
 int wm_hubs_handle_analogue_pdata(struct snd_soc_codec *codec,
 				  int lineout1_diff, int lineout2_diff,
 				  int lineout1fb, int lineout2fb,
-				  int jd_scthr, int jd_thr,
-				  int micbias1_delay, int micbias2_delay,
-				  int micbias1_lvl, int micbias2_lvl)
+				  int jd_scthr, int jd_thr, int micbias1_lvl,
+				  int micbias2_lvl)
 {
 	struct wm_hubs_data *hubs = snd_soc_codec_get_drvdata(codec);
 
 	hubs->lineout1_se = !lineout1_diff;
 	hubs->lineout2_se = !lineout2_diff;
-	hubs->micb1_delay = micbias1_delay;
-	hubs->micb2_delay = micbias2_delay;
 
 	if (!lineout1_diff)
 		snd_soc_update_bits(codec, WM8993_LINE_MIXER1,
@@ -1266,7 +1214,7 @@ void wm_hubs_set_bias_level(struct snd_soc_codec *codec,
 			    enum snd_soc_bias_level level)
 {
 	struct wm_hubs_data *hubs = snd_soc_codec_get_drvdata(codec);
-	int mask, val;
+	int val;
 
 	switch (level) {
 	case SND_SOC_BIAS_STANDBY:
@@ -1278,13 +1226,6 @@ void wm_hubs_set_bias_level(struct snd_soc_codec *codec,
 	case SND_SOC_BIAS_ON:
 		/* Turn off any unneded single ended outputs */
 		val = 0;
-		mask = 0;
-
-		if (hubs->lineout1_se)
-			mask |= WM8993_LINEOUT1N_ENA | WM8993_LINEOUT1P_ENA;
-
-		if (hubs->lineout2_se)
-			mask |= WM8993_LINEOUT2N_ENA | WM8993_LINEOUT2P_ENA;
 
 		if (hubs->lineout1_se && hubs->lineout1n_ena)
 			val |= WM8993_LINEOUT1N_ENA;
@@ -1299,7 +1240,11 @@ void wm_hubs_set_bias_level(struct snd_soc_codec *codec,
 			val |= WM8993_LINEOUT2P_ENA;
 
 		snd_soc_update_bits(codec, WM8993_POWER_MANAGEMENT_3,
-				    mask, val);
+				    WM8993_LINEOUT1N_ENA |
+				    WM8993_LINEOUT1P_ENA |
+				    WM8993_LINEOUT2N_ENA |
+				    WM8993_LINEOUT2P_ENA,
+				    val);
 
 		/* Remove the input clamps */
 		snd_soc_update_bits(codec, WM8993_INPUTS_CLAMP_REG,

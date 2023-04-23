@@ -37,12 +37,24 @@ enum wm8994_vmid_mode {
 	WM8994_VMID_FORCE,
 };
 
-typedef void (*wm8958_micdet_cb)(u16 status, void *data);
+typedef void (*wm1811_micdet_cb)(void *data);
+typedef void (*wm1811_mic_id_cb)(void *data, u16 status);
 
 int wm8994_mic_detect(struct snd_soc_codec *codec, struct snd_soc_jack *jack,
-		      int micbias);
+		      int micbias, int det, int shrt);
 int wm8958_mic_detect(struct snd_soc_codec *codec, struct snd_soc_jack *jack,
-		      wm8958_micdet_cb cb, void *cb_data);
+			wm1811_micdet_cb cb, void *det_cb_data,
+			wm1811_mic_id_cb id_cb, void *id_cb_data);
+
+#define WM8994_CACHE_SIZE 1570
+
+struct wm8994_access_mask {
+	unsigned short readable;   /* Mask of readable bits */
+	unsigned short writable;   /* Mask of writable bits */
+};
+
+extern const struct wm8994_access_mask wm8994_access_masks[WM8994_CACHE_SIZE];
+extern const u16 wm8994_reg_defaults[WM8994_CACHE_SIZE];
 
 int wm8994_vmid_mode(struct snd_soc_codec *codec, enum wm8994_vmid_mode mode);
 
@@ -53,7 +65,8 @@ void wm8958_dsp2_init(struct snd_soc_codec *codec);
 
 struct wm8994_micdet {
 	struct snd_soc_jack *jack;
-	bool detecting;
+	int det;
+	int shrt;
 };
 
 /* codec private data */
@@ -66,19 +79,20 @@ struct wm8994_fll_config {
 #define WM8994_NUM_DRC 3
 #define WM8994_NUM_EQ  3
 
-struct wm8994;
-
 struct wm8994_priv {
 	struct wm_hubs_data hubs;
-	struct wm8994 *wm8994;
+	enum snd_soc_control_type control_type;
+	void *control_data;
 	struct snd_soc_codec *codec;
 	int sysclk[2];
 	int sysclk_rate[2];
 	int mclk[2];
 	int aifclk[2];
+	int aifdiv[2];
 	struct wm8994_fll_config fll[2], fll_suspend[2];
 	struct completion fll_locked[2];
 	bool fll_locked_irq;
+	bool fll_byp;
 
 	int vmid_refcount;
 	int active_refcount;
@@ -132,9 +146,11 @@ struct wm8994_priv {
 	bool jackdet;
 	int jackdet_mode;
 
-	wm8958_micdet_cb jack_cb;
-	void *jack_cb_data;
 	int micdet_irq;
+	wm1811_micdet_cb micd_cb;
+	void *micd_cb_data;
+	wm1811_mic_id_cb mic_id_cb;
+	void *mic_id_cb_data;
 
 	int revision;
 	struct wm8994_pdata *pdata;

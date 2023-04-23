@@ -10,7 +10,6 @@
  * published by the Free Software Foundation.
  */
 
-#include <linux/module.h>
 #include <linux/delay.h>
 #include <linux/slab.h>
 #include <linux/clk.h>

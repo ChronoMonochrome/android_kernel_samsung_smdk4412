@@ -20,7 +20,6 @@
  */
   
 #include <linux/time.h>
-#include <linux/export.h>
 #include <sound/core.h>
 #include <sound/pcm.h>
 #define SND_PCM_FORMAT_UNKNOWN (-1)

@@ -9,7 +9,6 @@
  * option) any later version.
  */
 
-#include <linux/module.h>
 #include <linux/interrupt.h>
 #include <linux/platform_device.h>
 #include <linux/dma-mapping.h>
@@ -494,11 +493,9 @@ static int preallocate_idma_buffer(struct snd_pcm *pcm, int stream)
 
 static u64 idma_mask = DMA_BIT_MASK(32);
 
-static int idma_new(struct snd_soc_pcm_runtime *rtd)
+static int idma_new(struct snd_card *card,
+	struct snd_soc_dai *dai, struct snd_pcm *pcm)
 {
-	struct snd_card *card = rtd->card->snd_card;
-	struct snd_soc_dai *dai = rtd->cpu_dai;
-	struct snd_pcm *pcm = rtd->pcm;
 	int ret = 0;
 
 	pr_debug("Entered %s\n", __func__);
