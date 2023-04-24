@@ -38,3 +38,28 @@ config MMC_MSHCI_ENABLE_CACHE
 	  This should be used when the eMMC device  supports cache feature.
 
 	  If unsure, say N.
+
+config MMC_SDHCI_S3C_LEGACY
+	tristate "SDHCI support on Samsung S3C SoC"
+	depends on MMC_SDHCI && PLAT_SAMSUNG_LEGACY
+	help
+	  This selects the Secure Digital Host Controller Interface (SDHCI)
+	  often referrered to as the HSMMC block in some of the Samsung S3C
+	  range of SoC.
+
+	  Note, due to the problems with DMA, the DMA support is only
+	  available with CONFIG_EXPERIMENTAL is selected.
+
+	  If you have a controller with this interface, say Y or M here.
+
+	  If unsure, say N.
+
+config MMC_SDHCI_S3C_LEGACY_DMA
+	bool "DMA support on S3C SDHCI"
+	depends on MMC_SDHCI_S3C_LEGACY && EXPERIMENTAL
+	help
+	  Enable DMA support on the Samsung S3C SDHCI glue. The DMA
+	  has proved to be problematic if the controller encounters
+	  certain errors, and thus should be treated with care.
+
+	  YMMV.
