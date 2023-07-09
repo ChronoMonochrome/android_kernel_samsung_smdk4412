@@ -91,7 +91,7 @@ static int ss222_on(struct modem_ctl *mc)
 	gpio_set_value(mc->gpio_pda_active, 1);
 
 	if (!wake_lock_active(&mc->mc_wake_lock))
-		__pm_stay_awake(&mc->mc_wake_lock);
+		wake_lock(&mc->mc_wake_lock);
 
 	mc->phone_state = STATE_OFFLINE;
 	ld->mode = LINK_MODE_OFFLINE;
@@ -172,7 +172,7 @@ static int ss222_dump_reset(struct modem_ctl *mc)
 	mif_err("+++\n");
 
 	if (!wake_lock_active(&mc->mc_wake_lock))
-		__pm_stay_awake(&mc->mc_wake_lock);
+		wake_lock(&mc->mc_wake_lock);
 
 	gpio_set_value(gpio_cp_reset, 0);
 	udelay(200);
@@ -231,7 +231,7 @@ static int ss222_boot_done(struct modem_ctl *mc)
 	mif_debug("+++\n");
 
 	if (wake_lock_active(&mc->mc_wake_lock))
-		__pm_relax(&mc->mc_wake_lock);
+		wake_unlock(&mc->mc_wake_lock);
 
 	enable_irq(mc->irq_phone_active);
 
@@ -284,7 +284,7 @@ int ss222_init_modemctl_device(struct modem_ctl *mc, struct modem_data *pdata)
 	ss222_get_ops(mc);
 	dev_set_drvdata(mc->dev, mc);
 
-	wakeup_source_init(&mc->mc_wake_lock, "umts_wake_lock");
+	wake_lock_init(&mc->mc_wake_lock, WAKE_LOCK_SUSPEND, "umts_wake_lock");
 
 	mc->irq_phone_active = pdata->irq_phone_active;
 	if (!mc->irq_phone_active) {

@@ -80,7 +80,7 @@ static int cbp82_on(struct modem_ctl *mc)
 
 	/* prevent sleep during bootloader downloading */
 	if (!wake_lock_active(&mc->mc_wake_lock))
-		__pm_stay_awake(&mc->mc_wake_lock);
+		wake_lock(&mc->mc_wake_lock);
 
 	gpio_set_value(mc->gpio_cp_on, 0);
 	gpio_set_value(mc->gpio_cp_off, 1);
@@ -205,7 +205,7 @@ static int cbp82_boot_off(struct modem_ctl *mc)
 	ret = 0;
 
 exit:
-	__pm_relax(&mc->mc_wake_lock);
+	wake_unlock(&mc->mc_wake_lock);
 	mif_err("---\n");
 	return ret;
 }
@@ -259,7 +259,7 @@ int cbp82_init_modemctl_device(struct modem_ctl *mc, struct modem_data *pdata)
 
 	cbp82_get_ops(mc);
 
-	wakeup_source_init(&mc->mc_wake_lock, "cbp82_wake_lock");
+	wake_lock_init(&mc->mc_wake_lock, WAKE_LOCK_SUSPEND, "cbp82_wake_lock");
 
 	mc->irq_phone_active = pdata->irq_phone_active;
 	if (!mc->irq_phone_active) {

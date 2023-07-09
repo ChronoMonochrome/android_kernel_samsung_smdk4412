@@ -71,7 +71,7 @@ static int cbp72_on(struct modem_ctl *mc)
 
 	/* prevent sleep during bootloader downloading */
 	if (!wake_lock_active(&mc->mc_wake_lock))
-		__pm_stay_awake(&mc->mc_wake_lock);
+		wake_lock(&mc->mc_wake_lock);
 
 	gpio_set_value(mc->gpio_cp_on, 0);
 	if (mc->gpio_cp_off)
@@ -182,7 +182,7 @@ static int cbp72_boot_off(struct modem_ctl *mc)
 	}
 	mc->bootd->modem_state_changed(mc->bootd, STATE_ONLINE);
 
-	__pm_relax(&mc->mc_wake_lock);
+	wake_unlock(&mc->mc_wake_lock);
 
 	return 0;
 }
@@ -253,7 +253,7 @@ int cbp72_init_modemctl_device(struct modem_ctl *mc, struct modem_data *pdata)
 		return ret;
 	}
 
-	wakeup_source_init(&mc->mc_wake_lock, "cbp72_wake_lock");
+	wake_lock_init(&mc->mc_wake_lock, WAKE_LOCK_SUSPEND, "cbp72_wake_lock");
 
 	ret = enable_irq_wake(irq);
 	if (ret)

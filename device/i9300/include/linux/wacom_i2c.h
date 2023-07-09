@@ -398,7 +398,7 @@ struct wacom_i2c {
 	struct input_dev *input_dev;
 	struct early_suspend early_suspend;
 	struct mutex lock;
-	struct wakeup_source wakelock;
+	struct wake_lock wakelock;
 	struct device	*dev;
 	int irq;
 #ifdef WACOM_PDCT_WORK_AROUND

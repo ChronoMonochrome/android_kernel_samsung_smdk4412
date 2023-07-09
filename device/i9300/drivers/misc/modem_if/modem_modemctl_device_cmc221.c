@@ -143,7 +143,7 @@ static int cmc221_on(struct modem_ctl *mc)
 	struct link_device *ld = get_current_link(mc->iod);
 
 	if (!wake_lock_active(&mc->mc_wake_lock))
-		__pm_stay_awake(&mc->mc_wake_lock);
+		wake_lock(&mc->mc_wake_lock);
 	set_sromc_access(true);
 
 	mc->phone_state = STATE_OFFLINE;
@@ -177,7 +177,7 @@ static int cmc221_off(struct modem_ctl *mc)
 		return 0;
 
 	if (!wake_lock_active(&mc->mc_wake_lock))
-		__pm_stay_awake(&mc->mc_wake_lock);
+		wake_lock(&mc->mc_wake_lock);
 	set_sromc_access(true);
 
 	gpio_set_value(mc->gpio_cp_on, 0);
@@ -202,7 +202,7 @@ static int cmc221_dump_reset(struct modem_ctl *mc)
 	mif_err("%s\n", mc->name);
 
 	if (!wake_lock_active(&mc->mc_wake_lock))
-		__pm_stay_awake(&mc->mc_wake_lock);
+		wake_lock(&mc->mc_wake_lock);
 	set_sromc_access(true);
 
 	gpio_set_value(mc->gpio_host_active, 0);
@@ -270,7 +270,7 @@ static int cmc221_boot_done(struct modem_ctl *mc)
 
 	set_sromc_access(false);
 	if (wake_lock_active(&mc->mc_wake_lock))
-		__pm_relax(&mc->mc_wake_lock);
+		wake_unlock(&mc->mc_wake_lock);
 
 	return 0;
 }
@@ -327,7 +327,7 @@ int cmc221_init_modemctl_device(struct modem_ctl *mc, struct modem_data *pdata)
 	}
 	mif_err("%s: PHONE_ACTIVE IRQ# = %d\n", mc->name, mc->irq_phone_active);
 
-	wakeup_source_init(&mc->mc_wake_lock, "cmc_wake_lock");
+	wake_lock_init(&mc->mc_wake_lock, WAKE_LOCK_SUSPEND, "cmc_wake_lock");
 
 	flag = IRQF_TRIGGER_FALLING | IRQF_NO_SUSPEND;
 	irq = mc->irq_phone_active;

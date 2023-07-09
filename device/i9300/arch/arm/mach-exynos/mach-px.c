@@ -359,7 +359,7 @@ static int register_wlan_pdev(struct platform_device *pdev)
 struct wlansleep_info {
 	unsigned host_wake;
 	unsigned host_wake_irq;
-	struct wakeup_source wake_lock;
+	struct wake_lock wake_lock;
 };
 
 static struct wlansleep_info *wsi;
@@ -369,10 +369,10 @@ static void wlan_hostwake_task(unsigned long data)
 {
 #if defined(CONFIG_MACH_P8LTE)
 	printk(KERN_INFO "WLAN: wake lock timeout 1 sec...\n");
-	__pm_wakeup_event(&wsi->wake_lock, 1000);
+	wake_lock_timeout(&wsi->wake_lock, HZ);
 #else
 	printk(KERN_INFO "WLAN: wake lock timeout 0.5 sec...\n");
-	__pm_wakeup_event(&wsi->wake_lock, 500);
+	wake_lock_timeout(&wsi->wake_lock, HZ / 2);
 #endif
 }
 
@@ -390,7 +390,7 @@ static int wlan_host_wake_init(void)
 	if (!wsi)
 		return -ENOMEM;
 
-	wakeup_source_init(&wsi->wake_lock, "bluesleep");
+	wake_lock_init(&wsi->wake_lock, WAKE_LOCK_SUSPEND, "bluesleep");
 	tasklet_init(&hostwake_task, wlan_hostwake_task, 0);
 
 	wsi->host_wake = GPIO_WLAN_HOST_WAKE;
@@ -420,7 +420,7 @@ static void wlan_host_wake_exit(void)
 		printk(KERN_ERR "WLAN: Couldn't disable hostwake IRQ wakeup mode\n");
 	free_irq(wsi->host_wake_irq, NULL);
 	tasklet_kill(&hostwake_task);
-	wakeup_source_trash(&wsi->wake_lock);
+	wake_lock_destroy(&wsi->wake_lock);
 	kfree(wsi);
 }
 #endif /* WLAN_HOST_WAKE */

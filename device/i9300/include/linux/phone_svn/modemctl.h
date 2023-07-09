@@ -79,7 +79,7 @@ struct modemctl {
 	int boot_done;
 	struct completion *l2_done;
 #ifdef CONFIG_HAS_WAKELOCK
-	struct wakeup_source reset_lock;
+	struct wake_lock reset_lock;
 #endif
 	int debug_cnt;
 };

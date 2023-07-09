@@ -183,8 +183,8 @@ struct max77693_charger_data {
 	struct mutex ops_lock;
 
 	/* wakelock */
-	struct wakeup_source update_wake_lock;
-	struct wakeup_source softreg_wake_lock;
+	struct wake_lock update_wake_lock;
+	struct wake_lock softreg_wake_lock;
 
 	unsigned int	charging_state;
 	unsigned int	charging_type;
@@ -978,7 +978,7 @@ void max77693_set_online_type(struct max77693_charger_data *chg_data, int data)
 					m_typ, s_typ, p_typ);
 
 	cancel_delayed_work(&chg_data->update_work);
-	__pm_stay_awake(&chg_data->update_wake_lock);
+	wake_lock(&chg_data->update_wake_lock);
 	schedule_delayed_work(&chg_data->update_work,
 			msecs_to_jiffies(STABLE_POWER_DELAY));
 }
@@ -993,7 +993,7 @@ void max77693_set_muic_cb_type(struct max77693_charger_data *chg_data, int data)
 #endif
 
 	cancel_delayed_work(&chg_data->update_work);
-	__pm_stay_awake(&chg_data->update_wake_lock);
+	wake_lock(&chg_data->update_wake_lock);
 	schedule_delayed_work(&chg_data->update_work,
 			msecs_to_jiffies(STABLE_POWER_DELAY));
 }
@@ -1201,7 +1201,7 @@ static void max77693_update_work(struct work_struct *work)
 #else
 	if (!battery_psy) {
 		pr_err("%s: fail to get battery power supply\n", __func__);
-		__pm_relax(&chg_data->update_wake_lock);
+		wake_unlock(&chg_data->update_wake_lock);
 		return;
 	}
 
@@ -1210,7 +1210,7 @@ static void max77693_update_work(struct work_struct *work)
 		vbus_state = max77693_get_vbus_state(chg_data);
 		if (vbus_state == POWER_SUPPLY_VBUS_WEAK) {
 			pr_info("%s: vbus weak\n", __func__);
-			__pm_stay_awake(&chg_data->softreg_wake_lock);
+			wake_lock(&chg_data->softreg_wake_lock);
 			schedule_delayed_work(&chg_data->softreg_work,
 					msecs_to_jiffies(SW_REG_START_DELAY));
 		} else
@@ -1226,7 +1226,7 @@ static void max77693_update_work(struct work_struct *work)
 				&value);
 #endif
 
-	__pm_relax(&chg_data->update_wake_lock);
+	wake_unlock(&chg_data->update_wake_lock);
 }
 
 static void max77693_softreg_work(struct work_struct *work)
@@ -1295,7 +1295,7 @@ static void max77693_softreg_work(struct work_struct *work)
 		cancel_delayed_work(&chg_data->update_work);
 
 		/* schedule softreg wq */
-		__pm_stay_awake(&chg_data->softreg_wake_lock);
+		wake_lock(&chg_data->softreg_wake_lock);
 		schedule_delayed_work(&chg_data->softreg_work,
 				msecs_to_jiffies(SW_REG_STEP_DELAY));
 	} else {
@@ -1306,7 +1306,7 @@ static void max77693_softreg_work(struct work_struct *work)
 			pr_info("%s: maybe cable is detached\n", __func__);
 
 			cancel_delayed_work(&chg_data->update_work);
-			__pm_stay_awake(&chg_data->update_wake_lock);
+			wake_lock(&chg_data->update_wake_lock);
 			schedule_delayed_work(&chg_data->update_work,
 					msecs_to_jiffies(STABLE_POWER_DELAY));
 		}
@@ -1319,7 +1319,7 @@ static void max77693_softreg_work(struct work_struct *work)
 			chg_data->soft_reg_ing = false;
 		}
 
-		__pm_relax(&chg_data->softreg_wake_lock);
+		wake_unlock(&chg_data->softreg_wake_lock);
 	}
 
 	mutex_unlock(&chg_data->ops_lock);
@@ -1476,7 +1476,7 @@ static irqreturn_t max77693_bypass_irq(int irq, void *data)
 		pr_err("%s: chgin regulation loop is active\n", __func__);
 		if (chg_data->cable_type != POWER_SUPPLY_TYPE_WIRELESS) {
 			/* software regulation */
-			__pm_stay_awake(&chg_data->softreg_wake_lock);
+			wake_lock(&chg_data->softreg_wake_lock);
 			schedule_delayed_work(&chg_data->softreg_work,
 					msecs_to_jiffies(SW_REG_START_DELAY));
 		} else
@@ -1490,7 +1490,7 @@ static irqreturn_t max77693_bypass_irq(int irq, void *data)
 	}
 
 	cancel_delayed_work(&chg_data->update_work);
-	__pm_stay_awake(&chg_data->update_wake_lock);
+	wake_lock(&chg_data->update_wake_lock);
 	schedule_delayed_work(&chg_data->update_work,
 			msecs_to_jiffies(STABLE_POWER_DELAY));
 
@@ -1576,14 +1576,14 @@ static irqreturn_t max77693_charger_irq(int irq, void *data)
 		max77693_reduce_input(chg_data, SW_REG_CURR_STEP_MA);
 
 		/* software regulation */
-		__pm_stay_awake(&chg_data->softreg_wake_lock);
+		wake_lock(&chg_data->softreg_wake_lock);
 		schedule_delayed_work(&chg_data->softreg_work,
 				msecs_to_jiffies(SW_REG_STEP_DELAY));
 	}
 #endif
 
 	cancel_delayed_work(&chg_data->update_work);
-	__pm_stay_awake(&chg_data->update_wake_lock);
+	wake_lock(&chg_data->update_wake_lock);
 	schedule_delayed_work(&chg_data->update_work,
 			msecs_to_jiffies(STABLE_POWER_DELAY));
 
@@ -1650,7 +1650,7 @@ static irqreturn_t wpc_charger_irq(int irq, void *data)
 			max77693_reset_chgtyp(chg_data);
 
 			cancel_delayed_work(&chg_data->update_work);
-			__pm_stay_awake(&chg_data->update_wake_lock);
+			wake_lock(&chg_data->update_wake_lock);
 			schedule_delayed_work(&chg_data->update_work,
 				msecs_to_jiffies(STABLE_POWER_DELAY));
 		}
@@ -1762,8 +1762,10 @@ static __devinit int max77693_charger_probe(struct platform_device *pdev)
 	mutex_init(&chg_data->irq_lock);
 	mutex_init(&chg_data->ops_lock);
 
-	wakeup_source_init(&chg_data->update_wake_lock, "charger-update");
-	wakeup_source_init(&chg_data->softreg_wake_lock, "charger-softreg");
+	wake_lock_init(&chg_data->update_wake_lock, WAKE_LOCK_SUSPEND,
+		       "charger-update");
+	wake_lock_init(&chg_data->softreg_wake_lock, WAKE_LOCK_SUSPEND,
+		       "charger-softreg");
 
 	/* unlock charger setting protect */
 	max77693_charger_unlock(chg_data);
@@ -1937,8 +1939,8 @@ wpc_init_finish:
 	return 0;
 
 err_kfree:
-	wakeup_source_trash(&chg_data->update_wake_lock);
-	wakeup_source_trash(&chg_data->softreg_wake_lock);
+	wake_lock_destroy(&chg_data->update_wake_lock);
+	wake_lock_destroy(&chg_data->softreg_wake_lock);
 
 	mutex_destroy(&chg_data->ops_lock);
 	mutex_destroy(&chg_data->irq_lock);
@@ -1950,8 +1952,8 @@ static int __devexit max77693_charger_remove(struct platform_device *pdev)
 {
 	struct max77693_charger_data *chg_data = platform_get_drvdata(pdev);
 
-	wakeup_source_trash(&chg_data->update_wake_lock);
-	wakeup_source_trash(&chg_data->softreg_wake_lock);
+	wake_lock_destroy(&chg_data->update_wake_lock);
+	wake_lock_destroy(&chg_data->softreg_wake_lock);
 
 	mutex_destroy(&chg_data->ops_lock);
 	mutex_destroy(&chg_data->irq_lock);

@@ -151,9 +151,9 @@ static void sec_fg_isr_work(struct work_struct *work)
 		__func__, is_fuel_alerted_now ? "" : "NOT ");
 
 	if (is_fuel_alerted_now)
-		__pm_stay_awake(&fuelgauge->fuel_alert_wake_lock);
+		wake_lock(&fuelgauge->fuel_alert_wake_lock);
 	else
-		__pm_relax(&fuelgauge->fuel_alert_wake_lock);
+		wake_unlock(&fuelgauge->fuel_alert_wake_lock);
 
 	if (!(fuelgauge->pdata->repeated_fuelalert) &&
 		(fuelgauge->is_fuel_alerted == is_fuel_alerted_now)) {
@@ -317,7 +317,8 @@ static int __devinit sec_fuelgauge_probe(struct i2c_client *client,
 	if (fuelgauge->pdata->fuel_alert_soc >= 0) {
 		if (sec_hal_fg_fuelalert_init(fuelgauge->client,
 			fuelgauge->pdata->fuel_alert_soc))
-			wakeup_source_init(&fuelgauge->fuel_alert_wake_lock, "fuel_alerted");
+			wake_lock_init(&fuelgauge->fuel_alert_wake_lock,
+				WAKE_LOCK_SUSPEND, "fuel_alerted");
 		else {
 			dev_err(&client->dev,
 				"%s: Failed to Initialize Fuel-alert\n",
@@ -340,7 +341,7 @@ static int __devinit sec_fuelgauge_probe(struct i2c_client *client,
 	return 0;
 
 err_irq:
-	wakeup_source_trash(&fuelgauge->fuel_alert_wake_lock);
+	wake_lock_destroy(&fuelgauge->fuel_alert_wake_lock);
 err_free:
 	kfree(fuelgauge);
 
@@ -353,7 +354,7 @@ static int __devexit sec_fuelgauge_remove(
 	struct sec_fuelgauge_info *fuelgauge = i2c_get_clientdata(client);
 
 	if (fuelgauge->pdata->fuel_alert_soc >= 0)
-		wakeup_source_trash(&fuelgauge->fuel_alert_wake_lock);
+		wake_lock_destroy(&fuelgauge->fuel_alert_wake_lock);
 
 	return 0;
 }

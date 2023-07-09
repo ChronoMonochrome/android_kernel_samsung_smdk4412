@@ -53,7 +53,7 @@ struct bcm_bt_lpm {
 
 	struct hci_dev *hdev;
 
-	struct wakeup_source wake_lock;
+	struct wake_lock wake_lock;
 	char wake_lock_name[100];
 } bt_lpm;
 
@@ -135,7 +135,7 @@ static void set_wake_locked(int wake)
 	bt_lpm.wake = wake;
 
 	if (!wake)
-		__pm_relax(&bt_lpm.wake_lock);
+		wake_unlock(&bt_lpm.wake_lock);
 
 	gpio_set_value(GPIO_BT_WAKE, wake);
 }
@@ -178,13 +178,13 @@ static void update_host_wake_locked(int host_wake)
 	bt_is_running = 1;
 
 	if (host_wake) {
-		__pm_stay_awake(&bt_lpm.wake_lock);
+		wake_lock(&bt_lpm.wake_lock);
 	} else  {
 		/* Take a timed wakelock, so that upper layers can take it.
 		 * The chipset deasserts the hostwake lock, when there is no
 		 * more data to send.
 		 */
-		__pm_wakeup_event(&bt_lpm.wake_lock, 500);
+		wake_lock_timeout(&bt_lpm.wake_lock, HZ/2);
 	}
 }
 
@@ -223,7 +223,8 @@ static int bcm_bt_lpm_init(struct platform_device *pdev)
 
 	snprintf(bt_lpm.wake_lock_name, sizeof(bt_lpm.wake_lock_name),
 			"BTLowPower");
-	wakeup_source_init(&bt_lpm.wake_lock, bt_lpm.wake_lock_name);
+	wake_lock_init(&bt_lpm.wake_lock, WAKE_LOCK_SUSPEND,
+			 bt_lpm.wake_lock_name);
 
 	irq = IRQ_BT_HOST_WAKE;
 	ret = request_irq(irq, host_wake_isr, IRQF_TRIGGER_HIGH,
@@ -346,7 +347,7 @@ static int bcm43241_bluetooth_remove(struct platform_device *pdev)
 	gpio_free(GPIO_BT_WAKE);
 	gpio_free(GPIO_BT_HOST_WAKE);
 
-	wakeup_source_trash(&bt_lpm.wake_lock);
+	wake_lock_destroy(&bt_lpm.wake_lock);
 
 #ifdef BT_LPM_ENABLE
 	hci_unregister_notifier(&bcm_bt_nblock);

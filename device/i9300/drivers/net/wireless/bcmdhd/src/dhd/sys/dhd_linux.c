@@ -294,8 +294,8 @@ typedef struct dhd_info {
 
 	/* Wakelocks */
 #if defined(CONFIG_HAS_WAKELOCK) && (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 27))
-	struct wakeup_source wl_wifi;   /* Wifi wakelock */
-	struct wakeup_source wl_rxwake; /* Wifi rx wakelock */
+	struct wake_lock wl_wifi;   /* Wifi wakelock */
+	struct wake_lock wl_rxwake; /* Wifi rx wakelock */
 #endif
 
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 25)) && 1
@@ -3070,10 +3070,10 @@ dhd_attach(osl_t *osh, struct dhd_bus *bus, uint bus_hdrlen)
 	dhd->wakelock_counter = 0;
 	dhd->wakelock_timeout_enable = 0;
 #ifdef CONFIG_HAS_WAKELOCK
-	wakeup_source_init(&dhd->wl_wifi, "wlan_wake");
-	wakeup_source_init(&dhd->wl_rxwake, "wlan_rx_wake");
+	wake_lock_init(&dhd->wl_wifi, WAKE_LOCK_SUSPEND, "wlan_wake");
+	wake_lock_init(&dhd->wl_rxwake, WAKE_LOCK_SUSPEND, "wlan_rx_wake");
 #ifdef PNO_SUPPORT
-	wakeup_source_init(&dhd->pub.pno_wakelock, "pno_wake_lock");
+	wake_lock_init(&dhd->pub.pno_wakelock, WAKE_LOCK_SUSPEND, "pno_wake_lock");
 #endif
 #endif
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 25)) && 1
@@ -4314,10 +4314,10 @@ void dhd_detach(dhd_pub_t *dhdp)
 #ifdef CONFIG_HAS_WAKELOCK
 		dhd->wakelock_counter = 0;
 		dhd->wakelock_timeout_enable = 0;
-		wakeup_source_trash(&dhd->wl_wifi);
-		wakeup_source_trash(&dhd->wl_rxwake);
+		wake_lock_destroy(&dhd->wl_wifi);
+		wake_lock_destroy(&dhd->wl_rxwake);
 #ifdef PNO_SUPPORT
-	wakeup_source_trash(&dhdp->pno_wakelock);
+	wake_lock_destroy(&dhdp->pno_wakelock);
 #endif
 #endif
 	}
@@ -5268,7 +5268,8 @@ int dhd_os_wake_lock_timeout(dhd_pub_t *pub)
 		ret = dhd->wakelock_timeout_enable;
 #ifdef CONFIG_HAS_WAKELOCK
 		if (dhd->wakelock_timeout_enable)
-			__pm_wakeup_event(&dhd->wl_rxwake, dhd->wakelock_timeout_enable);
+			wake_lock_timeout(&dhd->wl_rxwake,
+				msecs_to_jiffies(dhd->wakelock_timeout_enable));
 #endif
 		dhd->wakelock_timeout_enable = 0;
 		spin_unlock_irqrestore(&dhd->wakelock_spinlock, flags);
@@ -5294,7 +5295,7 @@ int net_os_wake_lock_timeout_for_pno(struct net_device *dev, int sec)
 
 	if (dhd) {
 		spin_lock_irqsave(&dhd->wakelock_spinlock, flags);
-		__pm_wakeup_event(&dhd->pub.pno_wakelock, HZ * sec / HZ * 1000);
+		wake_lock_timeout(&dhd->pub.pno_wakelock, HZ * sec);
 		spin_unlock_irqrestore(&dhd->wakelock_spinlock, flags);
 	}
 	return ret;
@@ -5335,7 +5336,7 @@ int dhd_os_wake_lock(dhd_pub_t *pub)
 		spin_lock_irqsave(&dhd->wakelock_spinlock, flags);
 #ifdef CONFIG_HAS_WAKELOCK
 		if (!dhd->wakelock_counter)
-			__pm_stay_awake(&dhd->wl_wifi);
+			wake_lock(&dhd->wl_wifi);
 #endif
 		dhd->wakelock_counter++;
 		ret = dhd->wakelock_counter;
@@ -5367,7 +5368,7 @@ int dhd_os_wake_unlock(dhd_pub_t *pub)
 			dhd->wakelock_counter--;
 #ifdef CONFIG_HAS_WAKELOCK
 			if (!dhd->wakelock_counter)
-				__pm_relax(&dhd->wl_wifi);
+				wake_unlock(&dhd->wl_wifi);
 #endif
 			ret = dhd->wakelock_counter;
 		}

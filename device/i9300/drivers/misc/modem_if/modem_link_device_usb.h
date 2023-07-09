@@ -81,8 +81,8 @@ struct usb_link_device {
 	struct delayed_work     wait_enumeration;
 	struct work_struct	disconnect_work;
 
-	struct wakeup_source	gpiolock;
-	struct wakeup_source	susplock;
+	struct wake_lock	gpiolock;
+	struct wake_lock	susplock;
 
 	unsigned int		dev_count;
 	unsigned int		suspended;

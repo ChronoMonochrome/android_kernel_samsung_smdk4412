@@ -240,7 +240,7 @@ struct s3cfb_global {
 	unsigned int		support_fence;
 #ifdef CONFIG_HAS_WAKELOCK
 	struct early_suspend	early_suspend;
-	struct wakeup_source	idle_lock;
+	struct wake_lock	idle_lock;
 #endif
 #ifdef FEATURE_BUSFREQ_LOCK
 	atomic_t		busfreq_lock_cnt;	/* Bus frequency Lock count */

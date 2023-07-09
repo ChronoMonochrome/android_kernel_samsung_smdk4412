@@ -33,7 +33,7 @@ static inline void start_hub_work(struct link_pm_data *pm_data, int delay)
 {
 	if (pm_data->hub_work_running == false) {
 		pm_data->hub_work_running = true;
-		__pm_stay_awake(&pm_data->hub_lock);
+		wake_lock(&pm_data->hub_lock);
 		mif_debug("link_pm_hub_work is started\n");
 		during_hub_resume = 1;
 	}
@@ -43,7 +43,7 @@ static inline void start_hub_work(struct link_pm_data *pm_data, int delay)
 
 static inline void end_hub_work(struct link_pm_data *pm_data)
 {
-	__pm_relax(&pm_data->hub_lock);
+	wake_unlock(&pm_data->hub_lock);
 	pm_data->hub_work_running = false;
 	mif_debug("link_pm_hub_work is done\n");
 }
@@ -412,7 +412,8 @@ int link_pm_init(struct usb_link_device *usb_ld, void *data)
 		pm_pdata->hub_standby = link_pm_hub_standby;
 		pm_pdata->hub_pm_data = pm_data;
 
-		wakeup_source_init(&pm_data->hub_lock, "modem_hub_enum_lock");
+		wake_lock_init(&pm_data->hub_lock, WAKE_LOCK_SUSPEND,
+				"modem_hub_enum_lock");
 		INIT_DELAYED_WORK(&pm_data->link_pm_hub, link_pm_hub_work);
 		pm_data->hub_work_running = false;
 	}

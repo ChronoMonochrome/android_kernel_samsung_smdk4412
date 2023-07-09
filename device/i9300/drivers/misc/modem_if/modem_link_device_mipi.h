@@ -135,7 +135,7 @@ struct mipi_link_device {
 	struct work_struct cmd_work;
 	struct delayed_work start_work;
 
-	struct wakeup_source wlock;
+	struct wake_lock wlock;
 	struct timer_list hsi_acwake_down_timer;
 };
 /* converts from struct link_device* to struct xxx_link_device* */

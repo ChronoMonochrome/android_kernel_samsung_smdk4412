@@ -138,7 +138,7 @@ struct max17047_fuelgauge_data {
 	struct mutex			irq_lock;
 
 	/* wakelock */
-	struct wakeup_source		update_wake_lock;
+	struct wake_lock		update_wake_lock;
 
 	unsigned int			irq;
 
@@ -1437,7 +1437,7 @@ static void max17047_update_work(struct work_struct *work)
 				POWER_SUPPLY_PROP_STATUS,
 				&value);
 
-	__pm_wakeup_event(&fg_data->update_wake_lock, 1000);
+	wake_lock_timeout(&fg_data->update_wake_lock, HZ);
 }
 
 #ifdef DEBUG_FUELGAUGE_POLLING
@@ -1668,7 +1668,7 @@ static irqreturn_t max17047_fuelgauge_isr(int irq, void *data)
 					i2c_data[1], i2c_data[0]);
 
 	cancel_delayed_work(&fg_data->update_work);
-	__pm_stay_awake(&fg_data->update_wake_lock);
+	wake_lock(&fg_data->update_wake_lock);
 	schedule_delayed_work(&fg_data->update_work, msecs_to_jiffies(1000));
 
 	mutex_unlock(&fg_data->irq_lock);
@@ -1883,7 +1883,8 @@ static int __devinit max17047_fuelgauge_i2c_probe(struct i2c_client *client,
 
 	mutex_init(&fg_data->irq_lock);
 
-	wakeup_source_init(&fg_data->update_wake_lock, "fuel-update");
+	wake_lock_init(&fg_data->update_wake_lock, WAKE_LOCK_SUSPEND,
+							       "fuel-update");
 
 	/* Initialize full_soc, set this before fisrt SOC reading */
 	fg_data->full_soc = FULL_SOC_DEFAULT;
@@ -1999,7 +2000,7 @@ err_enable_irq:
 err_irq:
 	power_supply_unregister(&fg_data->fuelgauge);
 err_psy_reg_fg:
-	wakeup_source_trash(&fg_data->update_wake_lock);
+	wake_lock_destroy(&fg_data->update_wake_lock);
 	mutex_destroy(&fg_data->irq_lock);
 	kfree(fg_data);
 	return ret;
@@ -2009,7 +2010,7 @@ static int __devexit max17047_fuelgauge_remove(struct i2c_client *client)
 {
 	struct max17047_fuelgauge_data *fg_data = i2c_get_clientdata(client);
 
-	wakeup_source_trash(&fg_data->update_wake_lock);
+	wake_lock_destroy(&fg_data->update_wake_lock);
 	free_irq(fg_data->irq, fg_data);
 	power_supply_unregister(&fg_data->fuelgauge);
 #ifdef DEBUG_FUELGAUGE_POLLING
