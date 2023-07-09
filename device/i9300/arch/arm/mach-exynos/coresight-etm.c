@@ -154,7 +154,7 @@ module_param_named(
 struct etm_ctx {
 	void __iomem			*base;
 	bool				enabled;
-	struct wakeup_source		wake_lock;
+	struct wake_lock		wake_lock;
 	struct pm_qos_request_list	qos_req;
 	struct mutex			mutex;
 	struct device			*dev;
@@ -343,7 +343,7 @@ int etm_enable(int pm_enable)
 		goto err;
 	}
 
-	__pm_stay_awake(&etm.wake_lock);
+	wake_lock(&etm.wake_lock);
 	/* 1. causes all online cpus to come out of idle PC
 	 * 2. prevents idle PC until save restore flag is enabled atomically
 	 *
@@ -366,7 +366,7 @@ int etm_enable(int pm_enable)
 
 	if (pm_enable)
 		pm_qos_update_request(&etm.qos_req, PM_QOS_DEFAULT_VALUE);
-	__pm_relax(&etm.wake_lock);
+	wake_unlock(&etm.wake_lock);
 
 	return 0;
 err:
@@ -400,7 +400,7 @@ int etm_disable(int pm_enable)
 		goto err;
 	}
 
-	__pm_stay_awake(&etm.wake_lock);
+	wake_lock(&etm.wake_lock);
 	/* 1. causes all online cpus to come out of idle PC
 	 * 2. prevents idle PC until save restore flag is disabled atomically
 	 *
@@ -422,7 +422,7 @@ int etm_disable(int pm_enable)
 
 	if (pm_enable)
 		pm_qos_update_request(&etm.qos_req, PM_QOS_DEFAULT_VALUE);
-	__pm_relax(&etm.wake_lock);
+	wake_unlock(&etm.wake_lock);
 
 	return 0;
 err:
@@ -1208,7 +1208,7 @@ static int __devinit etm_probe(struct platform_device *pdev)
 	etm.dev = &pdev->dev;
 
 	mutex_init(&etm.mutex);
-	wakeup_source_init(&etm.wake_lock, "coresight_etm");
+	wake_lock_init(&etm.wake_lock, WAKE_LOCK_SUSPEND, "coresight_etm");
 	pm_qos_add_request(&etm.qos_req, PM_QOS_CPU_DMA_LATENCY,
 						PM_QOS_DEFAULT_VALUE);
 
@@ -1232,7 +1232,7 @@ static int __devinit etm_probe(struct platform_device *pdev)
 err_sysfs:
 err_arch:
 	pm_qos_remove_request(&etm.qos_req);
-	wakeup_source_trash(&etm.wake_lock);
+	wake_lock_destroy(&etm.wake_lock);
 	mutex_destroy(&etm.mutex);
 	iounmap(etm.base);
 err_ioremap:
@@ -1247,7 +1247,7 @@ static int etm_remove(struct platform_device *pdev)
 		etm_disable(1);
 	etm_sysfs_exit();
 	pm_qos_remove_request(&etm.qos_req);
-	wakeup_source_trash(&etm.wake_lock);
+	wake_lock_destroy(&etm.wake_lock);
 	mutex_destroy(&etm.mutex);
 	iounmap(etm.base);
 

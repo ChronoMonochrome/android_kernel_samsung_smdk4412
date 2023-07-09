@@ -120,7 +120,7 @@ static int cbp_dump_start(struct dpram_link_device *dpld)
 	dpld->ld.mode = LINK_MODE_ULOAD;
 
 	ret = del_timer(&dpld->crash_timer);
-	__pm_stay_awake(&dpld->wlock);
+	wake_lock(&dpld->wlock);
 
 	iowrite32(DP_MAGIC_UMDL, dpld->ul_map.magic);
 
@@ -225,7 +225,7 @@ exit:
 	if (buff)
 		vfree(buff);
 	iowrite32(0, dpld->ul_map.magic);
-	__pm_relax(&dpld->wlock);
+	wake_unlock(&dpld->wlock);
 	return err;
 }
 #endif
@@ -580,7 +580,7 @@ static int cmc221_dump_start(struct dpram_link_device *dpld)
 	dpld->ld.mode = LINK_MODE_ULOAD;
 
 	del_timer(&dpld->crash_timer);
-	__pm_stay_awake(&dpld->wlock);
+	wake_lock(&dpld->wlock);
 
 	dpld->crash_rcvd = 0;
 	iowrite32(CMC22x_CP_DUMP_MAGIC, dpld->ul_map.magic);
@@ -1707,7 +1707,7 @@ static void s5p_idpram_try_resume(struct work_struct *work)
 		pm_data->last_msg = 0;
 
 		s5p_idpram_set_pm_lock(dpld, 0);
-		__pm_relax(&pm_data->hold_wlock);
+		wake_unlock(&pm_data->hold_wlock);
 
 		delay = msecs_to_jiffies(10);
 		schedule_delayed_work(&pm_data->tx_dwork, delay);
@@ -1733,10 +1733,10 @@ static void s5p_idpram_try_resume(struct work_struct *work)
 		if (iod)
 			iod->modem_state_changed(iod, STATE_CRASH_EXIT);
 
-		__pm_relax(&pm_data->hold_wlock);
+		wake_unlock(&pm_data->hold_wlock);
 
 		/* hold wakelock until uevnet sent to rild */
-		__pm_wakeup_event(&pm_data->hold_wlock, 7000);
+		wake_lock_timeout(&pm_data->hold_wlock, HZ*7);
 		s5p_idpram_set_pm_lock(dpld, 0);
 	}
 
@@ -1752,7 +1752,7 @@ static irqreturn_t s5p_cp_dump_irq_handler(int irq, void *data)
 static irqreturn_t s5p_ap_wakeup_irq_handler(int irq, void *data)
 {
 	struct idpram_pm_data *pm_data = data;
-	__pm_wakeup_event(&pm_data->ap_wlock, 5000);
+	wake_lock_timeout(&pm_data->ap_wlock, HZ*5);
 	return IRQ_HANDLED;
 }
 
@@ -1845,7 +1845,7 @@ static int s5p_idpram_prepare_suspend(struct dpram_link_device *dpld)
 		mif_err("ERR! %s down or not ready!!! (intr 0x%04X)\n",
 			ld->name, dpld->recv_intr(dpld));
 		timeout = msecs_to_jiffies(500);
-		__pm_wakeup_event(&pm_data->hold_wlock, timeout / HZ * 1000);
+		wake_lock_timeout(&pm_data->hold_wlock, timeout);
 		s5p_idpram_set_pm_lock(dpld, 0);
 		break;
 	}
@@ -1891,7 +1891,7 @@ static int s5p_idpram_start_resume(struct dpram_link_device *dpld)
 		msleep(20);
 
 		pm_data->resume_try_cnt = 0;
-		__pm_stay_awake(&pm_data->hold_wlock);
+		wake_lock(&pm_data->hold_wlock);
 
 		delay = msecs_to_jiffies(20);
 		schedule_delayed_work(&pm_data->resume_dwork, delay);
@@ -1948,8 +1948,8 @@ static int s5p_idpram_pm_init(struct dpram_link_device *dpld,
 
 	init_completion(&pm_data->down_cmpl);
 
-	wakeup_source_init(&pm_data->ap_wlock, "ap_wakeup");
-	wakeup_source_init(&pm_data->hold_wlock, "dpram_hold");
+	wake_lock_init(&pm_data->ap_wlock, WAKE_LOCK_SUSPEND, "ap_wakeup");
+	wake_lock_init(&pm_data->hold_wlock, WAKE_LOCK_SUSPEND, "dpram_hold");
 
 	INIT_DELAYED_WORK(&pm_data->tx_dwork, pm_tx_func);
 	INIT_DELAYED_WORK(&pm_data->resume_dwork, s5p_idpram_try_resume);

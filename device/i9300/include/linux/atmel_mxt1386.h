@@ -754,7 +754,7 @@ struct mxt_data {
 	struct work_struct fhe_work;
 	struct report_id_map *rid_map;
 	struct mxt_object *object_table;
-	struct wakeup_source wakelock;
+	struct wake_lock wakelock;
 	struct mxt_callbacks callbacks;
 	struct mutex mutex;
 #ifdef MXT_CALIBRATE_WORKAROUND

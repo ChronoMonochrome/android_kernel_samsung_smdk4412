@@ -68,7 +68,7 @@ static irqreturn_t spi_srdy_irq_handler(int irq, void *p_ld)
 		return result;
 
 	if (!wake_lock_active(&spild->spi_wake_lock)) {
-		__pm_stay_awake(&spild->spi_wake_lock);
+		wake_lock(&spild->spi_wake_lock);
 		pr_debug("[SPI] [%s](%d) spi_wakelock locked . spild->spi_state[%d]\n",
 			__func__, __LINE__, (int)spild->spi_state);
 	}
@@ -1434,7 +1434,7 @@ static void spi_work(struct work_struct *work)
 
 	kfree(spi_wq);
 	if (wake_lock_active(&p_spild->spi_wake_lock)) {
-		__pm_relax(&p_spild->spi_wake_lock);
+		wake_unlock(&p_spild->spi_wake_lock);
 		pr_debug("[SPI] [%s](%d) spi_wakelock unlocked .\n",
 			__func__, __LINE__);
 	}
@@ -1541,7 +1541,9 @@ static int spi_link_init(void)
 	INIT_WORK(&p_spild->send_modem_w,
 		spi_send_modem_bin);
 
-	wakeup_source_init(&p_spild->spi_wake_lock, "samsung-spiwakelock");
+	wake_lock_init(&p_spild->spi_wake_lock,
+		       WAKE_LOCK_SUSPEND,
+		       "samsung-spiwakelock");
 
 	/* Register SPI Srdy interrupt handler */
 	ret = spi_register_isr(gpio_to_irq(p_spild->gpio_ipc_srdy),
@@ -1593,11 +1595,11 @@ void spi_set_restart(void)
 	spi_unregister_isr(gpio_to_irq(p_spild->gpio_ipc_sub_srdy), ld);
 
 	if (wake_lock_active(&p_spild->spi_wake_lock)) {
-		__pm_relax(&p_spild->spi_wake_lock);
+		wake_unlock(&p_spild->spi_wake_lock);
 		pr_err("[SPI] [%s](%d) spi_wakelock unlocked.\n",
 			__func__, __LINE__);
 	}
-	wakeup_source_trash(&p_spild->spi_wake_lock);
+	wake_lock_destroy(&p_spild->spi_wake_lock);
 }
 
 

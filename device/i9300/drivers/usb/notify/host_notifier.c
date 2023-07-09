@@ -21,7 +21,7 @@
 struct  host_notifier_info {
 	struct host_notifier_platform_data *pdata;
 	struct task_struct *th;
-	struct wakeup_source	wlock;
+	struct wake_lock	wlock;
 	struct delayed_work current_dwork;
 	wait_queue_head_t	delay_wait;
 	int	thread_remove;
@@ -84,7 +84,7 @@ static int start_usbhostd_thread(void)
 			return -1;
 		}
 		host_state_notify(&ninfo.pdata->ndev, NOTIFY_HOST_ADD);
-		__pm_stay_awake(&ninfo.wlock);
+		wake_lock(&ninfo.wlock);
 
 	} else
 		pr_info("host_notifier: usbhostd already started!\n");
@@ -102,7 +102,7 @@ static int stop_usbhostd_thread(void)
 
 		ninfo.th = NULL;
 		host_state_notify(&ninfo.pdata->ndev, NOTIFY_HOST_REMOVE);
-		__pm_relax(&ninfo.wlock);
+		wake_unlock(&ninfo.wlock);
 	} else
 		pr_info("host_notifier: no thread\n");
 
@@ -114,7 +114,7 @@ static int start_usbhostd_notify(void)
 	pr_info("host_notifier: start usbhostd notify\n");
 
 	host_state_notify(&ninfo.pdata->ndev, NOTIFY_HOST_ADD);
-	__pm_stay_awake(&ninfo.wlock);
+	wake_lock(&ninfo.wlock);
 
 	return 0;
 }
@@ -124,7 +124,7 @@ static int stop_usbhostd_notify(void)
 	pr_info("host_notifier: stop usbhostd notify\n");
 
 	host_state_notify(&ninfo.pdata->ndev, NOTIFY_HOST_REMOVE);
-	__pm_relax(&ninfo.wlock);
+	wake_unlock(&ninfo.wlock);
 
 	return 0;
 }
@@ -243,7 +243,7 @@ static int host_notifier_probe(struct platform_device *pdev)
 		dev_err(&pdev->dev, "Failed to host_notify_dev_register\n");
 		return ret;
 	}
-	wakeup_source_init(&ninfo.wlock, "hostd");
+	wake_lock_init(&ninfo.wlock, WAKE_LOCK_SUSPEND, "hostd");
 
 	return 0;
 }
@@ -252,7 +252,7 @@ static int host_notifier_remove(struct platform_device *pdev)
 {
 	/* gpio_free(ninfo.pdata->gpio); */
 	host_notify_dev_unregister(&ninfo.pdata->ndev);
-	wakeup_source_trash(&ninfo.wlock);
+	wake_lock_destroy(&ninfo.wlock);
 	return 0;
 }
 

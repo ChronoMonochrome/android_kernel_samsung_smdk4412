@@ -99,7 +99,7 @@ struct pas2m110_data {
 	struct hrtimer light_timer;
 	struct hrtimer prox_timer;
 	struct mutex power_lock;
-	struct wakeup_source prx_wake_lock;
+	struct wake_lock prx_wake_lock;
 	struct workqueue_struct *light_wq;
 	struct workqueue_struct *prox_wq;
 	struct class *lightsensor_class;
@@ -624,7 +624,7 @@ irqreturn_t pas2m110_irq_thread_fn(int irq, void *data)
 	/* 0 is close, 1 is far */
 	input_report_abs(ip->proximity_input_dev, ABS_DISTANCE, val);
 	input_sync(ip->proximity_input_dev);
-	__pm_wakeup_event(&ip->prx_wake_lock, 3000);
+	wake_lock_timeout(&ip->prx_wake_lock, 3*HZ);
 
 	return IRQ_HANDLED;
 }
@@ -712,7 +712,8 @@ static int pas2m110_i2c_probe(struct i2c_client *client,
 	i2c_set_clientdata(client, pas2m110);
 
 	/* wake lock init */
-	wakeup_source_init(&pas2m110->prx_wake_lock, "prx_wake_lock");
+	wake_lock_init(&pas2m110->prx_wake_lock, WAKE_LOCK_SUSPEND,
+		       "prx_wake_lock");
 	mutex_init(&pas2m110->power_lock);
 
 	/* setup initial registers */
@@ -895,7 +896,7 @@ err_input_allocate_device_proximity:
 err_setup_irq:
 err_setup_reg:
 	mutex_destroy(&pas2m110->power_lock);
-	wakeup_source_trash(&pas2m110->prx_wake_lock);
+	wake_lock_destroy(&pas2m110->prx_wake_lock);
 	kfree(pas2m110);
 done:
 	return ret;
@@ -962,7 +963,7 @@ static int pas2m110_i2c_remove(struct i2c_client *client)
 	destroy_workqueue(pas2m110->light_wq);
 	destroy_workqueue(pas2m110->prox_wq);
 	mutex_destroy(&pas2m110->power_lock);
-	wakeup_source_trash(&pas2m110->prx_wake_lock);
+	wake_lock_destroy(&pas2m110->prx_wake_lock);
 	kfree(pas2m110);
 	return 0;
 }

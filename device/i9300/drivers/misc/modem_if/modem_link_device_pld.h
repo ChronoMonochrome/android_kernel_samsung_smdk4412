@@ -208,7 +208,7 @@ struct pld_link_device {
 	u16 __iomem *mbx2cp;
 
 	/* Wakelock for DPRAM device */
-	struct wakeup_source wlock;
+	struct wake_lock wlock;
 	char wlock_name[MIF_MAX_NAME_LEN];
 
 	/* For booting */

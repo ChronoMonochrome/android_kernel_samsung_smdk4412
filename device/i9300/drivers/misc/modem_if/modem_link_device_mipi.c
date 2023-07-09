@@ -448,7 +448,7 @@ static int hsi_init_handshake(struct mipi_link_device *mipi_ld, int mode)
 		mif_debug("[MIPI-HSI] Set TX/RX MIPI-HSI\n");
 
 		if (!wake_lock_active(&mipi_ld->wlock)) {
-			__pm_stay_awake(&mipi_ld->wlock);
+			wake_lock(&mipi_ld->wlock);
 			mif_debug("[MIPI-HSI] wake_lock\n");
 		}
 
@@ -500,7 +500,7 @@ static int hsi_init_handshake(struct mipi_link_device *mipi_ld, int mode)
 		mif_debug("[MIPI-HSI] Set TX/RX MIPI-HSI\n");
 
 		if (!wake_lock_active(&mipi_ld->wlock)) {
-			__pm_stay_awake(&mipi_ld->wlock);
+			wake_lock(&mipi_ld->wlock);
 			mif_debug("[MIPI-HSI] wake_lock\n");
 		}
 
@@ -729,7 +729,7 @@ static int if_hsi_rx_cmd_handle(struct mipi_link_device *mipi_ld, u32 cmd,
 			channel->recv_step = STEP_TO_ACK;
 
 			if (!wake_lock_active(&mipi_ld->wlock)) {
-				__pm_stay_awake(&mipi_ld->wlock);
+				wake_lock(&mipi_ld->wlock);
 				mif_debug("[MIPI-HSI] wake_lock\n");
 			}
 
@@ -841,7 +841,7 @@ static int if_hsi_protocol_send(struct mipi_link_device *mipi_ld, int ch,
 	channel->send_step = STEP_SEND_OPEN_CONN;
 
 	if (!wake_lock_active(&mipi_ld->wlock)) {
-		__pm_stay_awake(&mipi_ld->wlock);
+		wake_lock(&mipi_ld->wlock);
 		mif_debug("[MIPI-HSI] wake_lock\n");
 	}
 
@@ -1221,7 +1221,7 @@ static void if_hsi_port_event(struct hsi_device *dev, unsigned int event,
 	case HSI_EVENT_CAWAKE_UP:
 		if (dev->n_ch == HSI_CONTROL_CHANNEL) {
 			if (!wake_lock_active(&mipi_ld->wlock)) {
-				__pm_stay_awake(&mipi_ld->wlock);
+				wake_lock(&mipi_ld->wlock);
 				mif_debug("[MIPI-HSI] wake_lock\n");
 			}
 			mif_debug("[MIPI-HSI] CAWAKE_%d(1)\n", dev->n_ch);
@@ -1242,7 +1242,7 @@ static void if_hsi_port_event(struct hsi_device *dev, unsigned int event,
 					dev->n_ch, acwake_level);
 
 			if (!acwake_level) {
-				__pm_relax(&mipi_ld->wlock);
+				wake_unlock(&mipi_ld->wlock);
 				mif_debug("[MIPI-HSI] wake_unlock\n");
 			}
 		}
@@ -1390,7 +1390,7 @@ struct link_device *mipi_create_link_device(struct platform_device *pdev)
 	skb_queue_head_init(&mipi_ld->ld.sk_fmt_tx_q);
 	skb_queue_head_init(&mipi_ld->ld.sk_raw_tx_q);
 
-	wakeup_source_init(&mipi_ld->wlock, "mipi_link");
+	wake_lock_init(&mipi_ld->wlock, WAKE_LOCK_SUSPEND, "mipi_link");
 
 	ld = &mipi_ld->ld;
 

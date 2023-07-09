@@ -239,7 +239,7 @@ typedef struct dhd_pub {
 	int	op_mode;				/* STA, HostAPD, WFD, SoftAP */
 
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 27)) && defined(CONFIG_HAS_WAKELOCK)
-	struct wakeup_source wakelock[WAKE_LOCK_MAX];
+	struct wake_lock wakelock[WAKE_LOCK_MAX];
 #endif /* (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 27)) && defined (CONFIG_HAS_WAKELOCK) */
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 25)) && 1
 	struct mutex	wl_start_stop_lock; /* lock/unlock for Android start/stop */
@@ -266,7 +266,7 @@ typedef struct dhd_pub {
 #endif
 	struct reorder_info *reorder_bufs[WLHOST_REORDERDATA_MAXFLOWS];
 #if defined(PNO_SUPPORT) && defined(CONFIG_HAS_WAKELOCK)
-	struct wakeup_source	pno_wakelock;
+	struct wake_lock	pno_wakelock;
 #endif
 } dhd_pub_t;
 

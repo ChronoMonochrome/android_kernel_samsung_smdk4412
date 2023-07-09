@@ -93,7 +93,7 @@ struct gp2a_data {
 	struct mutex data_mutex;
 	struct device *proximity_dev;
 	struct gp2a_platform_data *pdata;
-	struct wakeup_source prx_wake_lock;
+	struct wake_lock prx_wake_lock;
 	struct hrtimer prox_timer;
 	struct workqueue_struct *prox_wq;
 	struct work_struct work_prox;
@@ -811,7 +811,7 @@ irqreturn_t gp2a_irq_handler(int irq, void *gp2a_data_p)
 {
 	struct gp2a_data *data = gp2a_data_p;
 
-	__pm_wakeup_event(&data->prx_wake_lock, 3000);
+	wake_lock_timeout(&data->prx_wake_lock, 3 * HZ);
 #ifdef CONFIG_SLP
 	pm_wakeup_event(data->proximity_dev, 0);
 #endif
@@ -1118,7 +1118,8 @@ static int gp2a_opt_probe(struct platform_device *pdev)
 	mutex_init(&gp2a->data_mutex);
 
 	/* wake lock init */
-	wakeup_source_init(&gp2a->prx_wake_lock, "prx_wake_lock");
+	wake_lock_init(&gp2a->prx_wake_lock, WAKE_LOCK_SUSPEND,
+		       "prx_wake_lock");
 
 	/* init i2c */
 	opt_i2c_init();
@@ -1252,7 +1253,7 @@ err_setup_irq:
 err_no_device:
 	sysfs_remove_group(&gp2a->input_dev->dev.kobj,
 			   &proximity_attribute_group);
-	wakeup_source_trash(&gp2a->prx_wake_lock);
+	wake_lock_destroy(&gp2a->prx_wake_lock);
 	mutex_destroy(&gp2a->data_mutex);
 err_sysfs_create_group_proximity:
 	input_unregister_device(gp2a->input_dev);
@@ -1310,7 +1311,7 @@ static int gp2a_opt_remove(struct platform_device *pdev)
 			kfree(gp2a->input_dev);
 	}
 
-	wakeup_source_trash(&gp2a->prx_wake_lock);
+	wake_lock_destroy(&gp2a->prx_wake_lock);
 	device_init_wakeup(&pdev->dev, 0);
 	free_irq(gp2a->irq, gp2a);
 	gpio_free(gp2a->pdata->p_out);

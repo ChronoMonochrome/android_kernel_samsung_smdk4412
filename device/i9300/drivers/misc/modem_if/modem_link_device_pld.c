@@ -988,7 +988,7 @@ static void handle_no_crash_ack(unsigned long arg)
 	mif_err("%s: ERR! No CRASH_EXIT ACK from CP\n", ld->mc->name);
 
 	if (!wake_lock_active(&pld->wlock))
-		__pm_stay_awake(&pld->wlock);
+		wake_lock(&pld->wlock);
 
 	handle_cp_crash(pld);
 }
@@ -1052,7 +1052,7 @@ static int pld_init_ipc(struct pld_link_device *pld)
 	ld->mode = LINK_MODE_IPC;
 
 	if (wake_lock_active(&pld->wlock))
-		__pm_relax(&pld->wlock);
+		wake_unlock(&pld->wlock);
 
 	return 0;
 }
@@ -1070,7 +1070,7 @@ static void cmd_crash_reset_handler(struct pld_link_device *pld)
 	ld->mode = LINK_MODE_ULOAD;
 
 	if (!wake_lock_active(&pld->wlock))
-		__pm_stay_awake(&pld->wlock);
+		wake_lock(&pld->wlock);
 
 	mif_err("%s: Recv 0xC7 (CRASH_RESET)\n", ld->name);
 
@@ -1088,7 +1088,7 @@ static void cmd_crash_exit_handler(struct pld_link_device *pld)
 	ld->mode = LINK_MODE_ULOAD;
 
 	if (!wake_lock_active(&pld->wlock))
-		__pm_stay_awake(&pld->wlock);
+		wake_lock(&pld->wlock);
 
 	mif_err("%s: Recv 0xC9 (CRASH_EXIT)\n", ld->name);
 
@@ -1551,7 +1551,7 @@ struct link_device *pld_create_link_device(struct platform_device *pdev)
 
 	/* Initialize locks, completions, and bottom halves */
 	snprintf(pld->wlock_name, MIF_MAX_NAME_LEN, "%s_wlock", ld->name);
-	wakeup_source_init(&pld->wlock, pld->wlock_name);
+	wake_lock_init(&pld->wlock, WAKE_LOCK_SUSPEND, pld->wlock_name);
 
 	init_completion(&pld->dpram_init_cmd);
 	init_completion(&pld->modem_pif_init_done);

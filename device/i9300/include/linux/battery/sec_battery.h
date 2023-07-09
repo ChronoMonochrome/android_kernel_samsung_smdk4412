@@ -84,7 +84,7 @@ struct sec_battery_info {
 	struct adc_sample_info	adc_sample[ADC_CH_COUNT];
 
 	/* keep awake until monitor is done */
-	struct wakeup_source monitor_wake_lock;
+	struct wake_lock monitor_wake_lock;
 	struct workqueue_struct *monitor_wqueue;
 	struct work_struct monitor_work;
 	unsigned int polling_count;
@@ -132,9 +132,9 @@ struct sec_battery_info {
 	unsigned int charging_mode;
 	int cable_type;
 	int extended_cable_type;
-	struct wakeup_source cable_wake_lock;
+	struct wake_lock cable_wake_lock;
 	struct work_struct cable_work;
-	struct wakeup_source vbus_wake_lock;
+	struct wake_lock vbus_wake_lock;
 	unsigned int full_check_cnt;
 	unsigned int recharge_check_cnt;
 

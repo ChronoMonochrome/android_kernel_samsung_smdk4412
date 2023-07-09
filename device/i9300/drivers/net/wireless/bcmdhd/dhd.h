@@ -285,7 +285,7 @@ typedef struct dhd_pub {
 #endif
 	struct reorder_info *reorder_bufs[WLHOST_REORDERDATA_MAXFLOWS];
 #if defined(CUSTOMER_HW4) && defined(PNO_SUPPORT) && defined(CONFIG_HAS_WAKELOCK)
-	struct wakeup_source	pno_wakelock;
+	struct wake_lock	pno_wakelock;
 #endif
 } dhd_pub_t;
 

@@ -307,7 +307,7 @@ static void release_ap_status(struct work_struct *ws)
 	print_pm_status(shmd, 1);
 
 	if (wake_lock_active(&shmd->cp_wlock))
-		__pm_relax(&shmd->cp_wlock);
+		wake_unlock(&shmd->cp_wlock);
 
 	return;
 
@@ -427,13 +427,13 @@ static irqreturn_t ap_wakeup_handler(int irq, void *data)
 			__cancel_delayed_work(&shmd->link_off_dwork);
 
 		if (!wake_lock_active(&shmd->ap_wlock))
-			__pm_stay_awake(&shmd->ap_wlock);
+			wake_lock(&shmd->ap_wlock);
 
 		if (!c2c_suspended() && !ap_status)
 			gpio_set_value(shmd->gpio_ap_status, 1);
 	} else {
 		if (wake_lock_active(&shmd->ap_wlock))
-			__pm_relax(&shmd->ap_wlock);
+			wake_unlock(&shmd->ap_wlock);
 
 		queue_delayed_work(system_nrt_wq, &shmd->cp_sleep_dwork,
 				   msecs_to_jiffies(CP_WAKEUP_HOLD_TIME));
@@ -464,7 +464,7 @@ static irqreturn_t cp_status_handler(int irq, void *data)
 
 	if (cp_status) {
 		if (!wake_lock_active(&shmd->cp_wlock))
-			__pm_stay_awake(&shmd->cp_wlock);
+			wake_lock(&shmd->cp_wlock);
 	} else {
 		if (atomic_read(&shmd->ref_cnt) > 0) {
 			queue_delayed_work(system_nrt_wq, &shmd->link_off_dwork,
@@ -472,7 +472,7 @@ static irqreturn_t cp_status_handler(int irq, void *data)
 		} else {
 			gpio_set_value(shmd->gpio_ap_status, 0);
 			if (wake_lock_active(&shmd->cp_wlock))
-				__pm_relax(&shmd->cp_wlock);
+				wake_unlock(&shmd->cp_wlock);
 		}
 	}
 
@@ -561,7 +561,7 @@ static void trigger_forced_cp_crash(struct shmem_link_device *shmd)
 		ld->name, t.hour, t.min, t.sec, t.msec, CALLER);
 
 	if (!wake_lock_active(&shmd->wlock))
-		__pm_stay_awake(&shmd->wlock);
+		wake_lock(&shmd->wlock);
 
 #ifdef DEBUG_MODEM_IF
 	if (in_interrupt())
@@ -598,7 +598,7 @@ static void cmd_crash_reset_handler(struct shmem_link_device *shmd)
 	ld->mode = LINK_MODE_ULOAD;
 
 	if (!wake_lock_active(&shmd->wlock))
-		__pm_stay_awake(&shmd->wlock);
+		wake_lock(&shmd->wlock);
 
 	get_utc_time(&t);
 	mif_err("%s: ERR! [%02d:%02d:%02d.%03d] Recv 0xC7 (CRASH_RESET)\n",
@@ -644,7 +644,7 @@ static void cmd_crash_exit_handler(struct shmem_link_device *shmd)
 	del_timer(&shmd->crash_ack_timer);
 
 	if (!wake_lock_active(&shmd->wlock))
-		__pm_stay_awake(&shmd->wlock);
+		wake_lock(&shmd->wlock);
 
 	get_utc_time(&t);
 	mif_err("%s: ERR! [%02d:%02d:%02d.%03d] Recv 0xC9 (CRASH_EXIT)\n",
@@ -683,15 +683,15 @@ static void cmd_phone_start_handler(struct shmem_link_device *shmd)
 		return;
 
 	if (wake_lock_active(&shmd->wlock))
-		__pm_relax(&shmd->wlock);
+		wake_unlock(&shmd->wlock);
 
 	s5p_change_irq_type(shmd->irq_ap_wakeup, ap_wakeup);
 	if (ap_wakeup && !wake_lock_active(&shmd->ap_wlock))
-		__pm_stay_awake(&shmd->ap_wlock);
+		wake_lock(&shmd->ap_wlock);
 
 	s5p_change_irq_type(shmd->irq_cp_status, cp_status);
 	if (cp_status && !wake_lock_active(&shmd->ap_wlock))
-		__pm_stay_awake(&shmd->cp_wlock);
+		wake_lock(&shmd->cp_wlock);
 
 	ld->mode = LINK_MODE_IPC;
 	iod->modem_state_changed(iod, STATE_ONLINE);
@@ -2192,13 +2192,13 @@ struct link_device *c2c_create_link_device(struct platform_device *pdev)
 	** Initialize locks, completions, and bottom halves
 	*/
 	sprintf(shmd->wlock_name, "%s_wlock", ld->name);
-	wakeup_source_init(&shmd->wlock, shmd->wlock_name);
+	wake_lock_init(&shmd->wlock, WAKE_LOCK_SUSPEND, shmd->wlock_name);
 
 	sprintf(shmd->ap_wlock_name, "%s_ap_wlock", ld->name);
-	wakeup_source_init(&shmd->ap_wlock, shmd->ap_wlock_name);
+	wake_lock_init(&shmd->ap_wlock, WAKE_LOCK_SUSPEND, shmd->ap_wlock_name);
 
 	sprintf(shmd->cp_wlock_name, "%s_cp_wlock", ld->name);
-	wakeup_source_init(&shmd->cp_wlock, shmd->cp_wlock_name);
+	wake_lock_init(&shmd->cp_wlock, WAKE_LOCK_SUSPEND, shmd->cp_wlock_name);
 
 	init_completion(&shmd->udl_cmpl);
 	for (i = 0; i < MAX_SIPC5_DEV; i++)

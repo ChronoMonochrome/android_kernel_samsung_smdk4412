@@ -117,7 +117,7 @@ struct taos_data {
 	struct device *proximity_dev;
 	struct device *switch_cmd_dev;
 	int             irq;
-	struct wakeup_source prx_wake_lock;
+	struct wake_lock prx_wake_lock;
 	struct hrtimer timer;
 	struct hrtimer ptimer;
 	struct mutex power_lock;

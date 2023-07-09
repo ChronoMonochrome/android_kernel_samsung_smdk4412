@@ -100,7 +100,7 @@ struct gp2a_data {
 	bool on;
 	u8 power_state;
 	struct mutex power_lock;
-	struct wakeup_source prx_wake_lock;
+	struct wake_lock prx_wake_lock;
 	struct workqueue_struct *wq;
 	struct mutex adc_lock;
 	char val_state;
@@ -417,7 +417,7 @@ irqreturn_t gp2a_irq_handler(int irq, void *data)
 	/* 0 is close, 1 is far */
 	input_report_abs(ip->proximity_input_dev, ABS_DISTANCE, val);
 	input_sync(ip->proximity_input_dev);
-	__pm_wakeup_event(&ip->prx_wake_lock, 3000);
+	wake_lock_timeout(&ip->prx_wake_lock, 3*HZ);
 	return IRQ_HANDLED;
 }
 
@@ -532,7 +532,8 @@ static int gp2a_i2c_probe(struct i2c_client *client,
 	i2c_set_clientdata(client, gp2a);
 
 	/* wake lock init */
-	wakeup_source_init(&gp2a->prx_wake_lock, "prx_wake_lock");
+	wake_lock_init(&gp2a->prx_wake_lock, WAKE_LOCK_SUSPEND,
+		       "prx_wake_lock");
 	mutex_init(&gp2a->power_lock);
 	mutex_init(&gp2a->adc_lock);
 
@@ -678,7 +679,7 @@ err_input_allocate_device_proximity:
 err_setup_irq:
 	mutex_destroy(&gp2a->power_lock);
 	mutex_destroy(&gp2a->adc_lock);
-	wakeup_source_trash(&gp2a->prx_wake_lock);
+	wake_lock_destroy(&gp2a->prx_wake_lock);
 	kfree(gp2a);
 done:
 	return ret;
@@ -739,7 +740,7 @@ static int gp2a_i2c_remove(struct i2c_client *client)
 	destroy_workqueue(gp2a->wq);
 	mutex_destroy(&gp2a->power_lock);
 	mutex_destroy(&gp2a->adc_lock);
-	wakeup_source_trash(&gp2a->prx_wake_lock);
+	wake_lock_destroy(&gp2a->prx_wake_lock);
 	s3c_adc_release(gp2a->padc);
 	kfree(gp2a);
 	return 0;

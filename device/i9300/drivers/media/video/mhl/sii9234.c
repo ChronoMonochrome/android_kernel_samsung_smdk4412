@@ -229,7 +229,7 @@ void sii9234_wake_lock(void)
 			 __func__);
 		return;
 	}
-	__pm_stay_awake(&sii9234->mhl_wake_lock);
+	wake_lock(&sii9234->mhl_wake_lock);
 	pr_debug("%s()\n", __func__);
 }
 EXPORT_SYMBOL(sii9234_wake_lock);
@@ -242,7 +242,7 @@ void sii9234_wake_unlock(void)
 			 __func__);
 		return;
 	}
-	__pm_relax(&sii9234->mhl_wake_lock);
+	wake_unlock(&sii9234->mhl_wake_lock);
 	pr_debug("%s()\n", __func__);
 }
 EXPORT_SYMBOL(sii9234_wake_unlock);
@@ -4087,7 +4087,8 @@ static int __devinit sii9234_mhl_tx_i2c_probe(struct i2c_client *client,
 	switch_dev_register(&sii9234->mhl_event_switch);
 
 #ifdef CONFIG_MACH_MIDAS
-	wakeup_source_init(&sii9234->mhl_wake_lock, "mhl_wake_lock");
+	wake_lock_init(&sii9234->mhl_wake_lock, WAKE_LOCK_SUSPEND,
+		       "mhl_wake_lock");
 	pr_debug("%s(): wake lock is initialized.\n", __func__);
 #endif
 

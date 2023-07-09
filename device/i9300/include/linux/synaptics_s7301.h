@@ -225,7 +225,7 @@ struct synaptics_drv_data {
 	struct synaptics_platform_data *pdata;
 	struct mutex	mutex;
 	struct synaptics_ts_fw_block *fw;
-	struct wakeup_source wakelock;
+	struct wake_lock wakelock;
 	struct work_struct fw_update_work;
 	struct function_info f01;
 	struct function_info f11;

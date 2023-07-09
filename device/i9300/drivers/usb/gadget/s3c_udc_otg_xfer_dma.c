@@ -473,7 +473,7 @@ static irqreturn_t s3c_udc_irq(int irq, void *_dev)
 				usb_status);
 			set_max_pktsize(dev, USB_SPEED_HIGH);
 		}
-		__pm_stay_awake(&dev->usbd_wake_lock);
+		wake_lock(&dev->usbd_wake_lock);
 	}
 
 	if (intr_status & INT_EARLY_SUSPEND) {
@@ -539,7 +539,7 @@ static irqreturn_t s3c_udc_irq(int irq, void *_dev)
 #endif
 			reset_available = 1;
 			DEBUG_ISR("\t\tRESET handling skipped\n");
-			__pm_wakeup_event(&dev->usbd_wake_lock, 5000);
+			wake_lock_timeout(&dev->usbd_wake_lock, HZ * 5);
 			printk(KERN_DEBUG "usb: reset\n");
 			/* report disconnect; the driver is already quiesced */
 			if (dev->driver) {

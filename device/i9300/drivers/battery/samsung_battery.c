@@ -569,7 +569,7 @@ static void battery_event_alarm(struct alarm *alarm)
 	/* clear event state */
 	info->event_state = EVENT_STATE_CLEAR;
 
-	__pm_stay_awake(&info->monitor_wake_lock);
+	wake_lock(&info->monitor_wake_lock);
 	schedule_work(&info->monitor_work);
 }
 
@@ -607,7 +607,7 @@ void battery_event_control(struct battery_info *info)
 
 			info->event_state = EVENT_STATE_SET;
 
-			__pm_stay_awake(&info->monitor_wake_lock);
+			wake_lock(&info->monitor_wake_lock);
 			schedule_work(&info->monitor_work);
 		} else {
 			pr_info("%s: enter event state(%d, 0x%04x)\n",
@@ -615,7 +615,7 @@ void battery_event_control(struct battery_info *info)
 
 			info->event_state = EVENT_STATE_SET;
 
-			__pm_stay_awake(&info->monitor_wake_lock);
+			wake_lock(&info->monitor_wake_lock);
 			schedule_work(&info->monitor_work);
 		}
 	} else {
@@ -666,7 +666,7 @@ static void battery_monitor_alarm(struct alarm *alarm)
 								 monitor_alarm);
 	pr_debug("%s\n", __func__);
 
-	__pm_stay_awake(&info->monitor_wake_lock);
+	wake_lock(&info->monitor_wake_lock);
 	schedule_work(&info->monitor_work);
 }
 
@@ -1303,11 +1303,11 @@ static void battery_interval_calulation(struct battery_info *info)
 	if (info->ambiguous_state == true) {
 		pr_info("%s: ambiguous state\n", __func__);
 		info->monitor_mode = MONITOR_EMER_LV2;
-		__pm_stay_awake(&info->emer_wake_lock);
+		wake_lock(&info->emer_wake_lock);
 		return;
 	} else {
 		pr_debug("%s: not ambiguous state\n", __func__);
-		__pm_relax(&info->emer_wake_lock);
+		wake_unlock(&info->emer_wake_lock);
 	}
 
 	/* prevent critical low raw soc factor */
@@ -1315,12 +1315,12 @@ static void battery_interval_calulation(struct battery_info *info)
 		pr_info("%s: soc(%d) too low state\n", __func__,
 						info->battery_raw_soc);
 		info->monitor_mode = MONITOR_EMER_LV2;
-		__pm_stay_awake(&info->emer_wake_lock);
+		wake_lock(&info->emer_wake_lock);
 		return;
 	} else {
 		pr_debug("%s: soc(%d) not too low state\n", __func__,
 						info->battery_raw_soc);
-		__pm_relax(&info->emer_wake_lock);
+		wake_unlock(&info->emer_wake_lock);
 	}
 
 	/* prevent critical low voltage factor */
@@ -1330,12 +1330,12 @@ static void battery_interval_calulation(struct battery_info *info)
 		pr_info("%s: voltage(%d) too low state\n", __func__,
 						info->battery_vcell);
 		info->monitor_mode = MONITOR_EMER_LV2;
-		__pm_stay_awake(&info->emer_wake_lock);
+		wake_lock(&info->emer_wake_lock);
 		return;
 	} else {
 		pr_debug("%s: voltage(%d) not too low state\n", __func__,
 						info->battery_vcell);
-		__pm_relax(&info->emer_wake_lock);
+		wake_unlock(&info->emer_wake_lock);
 	}
 
 	/* charge state factor */
@@ -1343,7 +1343,7 @@ static void battery_interval_calulation(struct battery_info *info)
 				POWER_SUPPLY_STATUS_CHARGING) {
 		pr_debug("%s: v_state charging\n", __func__);
 		info->monitor_mode = MONITOR_CHNG;
-		__pm_relax(&info->emer_wake_lock);
+		wake_unlock(&info->emer_wake_lock);
 #if defined(CONFIG_TARGET_LOCALE_KOR) || defined(CONFIG_MACH_M0_CTC)
 		if ((info->prev_cable_type == POWER_SUPPLY_TYPE_BATTERY &&
 			info->cable_type != POWER_SUPPLY_TYPE_BATTERY) &&
@@ -1359,12 +1359,12 @@ static void battery_interval_calulation(struct battery_info *info)
 				POWER_SUPPLY_STATUS_NOT_CHARGING) {
 		pr_debug("%s: emergency(not charging) state\n", __func__);
 		info->monitor_mode = MONITOR_EMER_LV2;
-		__pm_stay_awake(&info->emer_wake_lock);
+		wake_lock(&info->emer_wake_lock);
 		return;
 	} else {
 		pr_debug("%s: normal state\n", __func__);
 		info->monitor_mode = MONITOR_NORM;
-		__pm_relax(&info->emer_wake_lock);
+		wake_unlock(&info->emer_wake_lock);
 	}
 
 	/*
@@ -1584,7 +1584,7 @@ charge_ok:
 	switch (info->cable_type) {
 	case POWER_SUPPLY_TYPE_BATTERY:
 		if (!info->pdata->suspend_chging)
-			__pm_relax(&info->charge_wake_lock);
+			wake_unlock(&info->charge_wake_lock);
 		battery_charge_control(info, OFF_CURR, OFF_CURR);
 
 		/* clear charge scenario state */
@@ -1598,25 +1598,25 @@ charge_ok:
 		break;
 	case POWER_SUPPLY_TYPE_MAINS:
 		if (!info->pdata->suspend_chging)
-			__pm_stay_awake(&info->charge_wake_lock);
+			wake_lock(&info->charge_wake_lock);
 		battery_charge_control(info, info->pdata->chg_curr_ta,
 						info->pdata->in_curr_limit);
 		break;
 	case POWER_SUPPLY_TYPE_USB:
 		if (!info->pdata->suspend_chging)
-			__pm_stay_awake(&info->charge_wake_lock);
+			wake_lock(&info->charge_wake_lock);
 		battery_charge_control(info, info->pdata->chg_curr_usb,
 						info->pdata->chg_curr_usb);
 		break;
 	case POWER_SUPPLY_TYPE_USB_CDP:
 		if (!info->pdata->suspend_chging)
-			__pm_stay_awake(&info->charge_wake_lock);
+			wake_lock(&info->charge_wake_lock);
 		battery_charge_control(info, info->pdata->chg_curr_cdp,
 						info->pdata->chg_curr_cdp);
 		break;
 	case POWER_SUPPLY_TYPE_DOCK:
 		if (!info->pdata->suspend_chging)
-			__pm_stay_awake(&info->charge_wake_lock);
+			wake_lock(&info->charge_wake_lock);
 		/* default dock prop is AC */
 		info->online_prop = ONLINE_PROP_AC;
 		muic_cb_typ = max77693_muic_get_charging_type();
@@ -1662,7 +1662,7 @@ charge_ok:
 		break;
 	case POWER_SUPPLY_TYPE_WIRELESS:
 		if (!info->pdata->suspend_chging)
-			__pm_stay_awake(&info->charge_wake_lock);
+			wake_lock(&info->charge_wake_lock);
 		battery_charge_control(info, info->pdata->chg_curr_wpc,
 						info->pdata->chg_curr_wpc);
 		break;
@@ -1738,7 +1738,7 @@ monitor_finish:
 		info->prev_battery_soc != info->battery_soc) {
 		/* TBD : timeout value */
 		pr_info("%s : update wakelock (%d)\n", __func__, 3 * HZ);
-		__pm_wakeup_event(&info->update_wake_lock, 3000);
+		wake_lock_timeout(&info->update_wake_lock, 3 * HZ);
 	}
 
 	info->prev_cable_type = info->cable_type;
@@ -1751,9 +1751,9 @@ monitor_finish:
 	if ((info->lpm_state == true) &&
 		(info->cable_type == POWER_SUPPLY_TYPE_BATTERY)) {
 		pr_info("%s: lpm with battery, maybe power off\n", __func__);
-		__pm_wakeup_event(&info->monitor_wake_lock, 10000);
+		wake_lock_timeout(&info->monitor_wake_lock, 10 * HZ);
 	} else
-		__pm_wakeup_event(&info->monitor_wake_lock, 1000);
+		wake_lock_timeout(&info->monitor_wake_lock, HZ);
 
 	mutex_unlock(&info->mon_lock);
 
@@ -2039,7 +2039,7 @@ static int samsung_battery_set_property(struct power_supply *ps,
 	}
 
 	cancel_work_sync(&info->monitor_work);
-	__pm_stay_awake(&info->monitor_wake_lock);
+	wake_lock(&info->monitor_wake_lock);
 	schedule_work(&info->monitor_work);
 
 	return 0;
@@ -2105,7 +2105,7 @@ static irqreturn_t battery_isr(int irq, void *data)
 	pr_info("%s: battery present gpio(%d)\n", __func__, bat_gpio);
 
 	cancel_work_sync(&info->monitor_work);
-	__pm_stay_awake(&info->monitor_wake_lock);
+	wake_lock(&info->monitor_wake_lock);
 	schedule_work(&info->monitor_work);
 
 	return IRQ_HANDLED;
@@ -2242,12 +2242,16 @@ static __devinit int samsung_battery_probe(struct platform_device *pdev)
 	mutex_init(&info->ops_lock);
 	mutex_init(&info->err_lock);
 
-	wakeup_source_init(&info->monitor_wake_lock, "battery-monitor");
-	wakeup_source_init(&info->emer_wake_lock, "battery-emergency");
+	wake_lock_init(&info->monitor_wake_lock, WAKE_LOCK_SUSPEND,
+		       "battery-monitor");
+	wake_lock_init(&info->emer_wake_lock, WAKE_LOCK_SUSPEND,
+		       "battery-emergency");
 	if (!info->pdata->suspend_chging)
-		wakeup_source_init(&info->charge_wake_lock, "battery-charging");
+		wake_lock_init(&info->charge_wake_lock,
+			       WAKE_LOCK_SUSPEND, "battery-charging");
 #if defined(CONFIG_TARGET_LOCALE_KOR) || defined(CONFIG_MACH_M0_CTC)
-	wakeup_source_init(&info->update_wake_lock, "battery-update");
+	wake_lock_init(&info->update_wake_lock, WAKE_LOCK_SUSPEND,
+		       "battery-update");
 #endif
 
 	/* Init wq for battery */
@@ -2375,16 +2379,16 @@ err_psy_reg_usb:
 	power_supply_unregister(&info->psy_bat);
 err_psy_reg_bat:
 	s3c_adc_release(info->adc_client);
-	wakeup_source_trash(&info->monitor_wake_lock);
-	wakeup_source_trash(&info->emer_wake_lock);
+	wake_lock_destroy(&info->monitor_wake_lock);
+	wake_lock_destroy(&info->emer_wake_lock);
 #if defined(CONFIG_TARGET_LOCALE_KOR) || defined(CONFIG_MACH_M0_CTC)
-	wakeup_source_trash(&info->update_wake_lock);
+	wake_lock_destroy(&info->update_wake_lock);
 #endif
 	mutex_destroy(&info->mon_lock);
 	mutex_destroy(&info->ops_lock);
 	mutex_destroy(&info->err_lock);
 	if (!info->pdata->suspend_chging)
-		wakeup_source_trash(&info->charge_wake_lock);
+		wake_lock_destroy(&info->charge_wake_lock);
 
 err_adc_reg:
 err_psy_get:
@@ -2410,13 +2414,13 @@ static int __devexit samsung_battery_remove(struct platform_device *pdev)
 	power_supply_unregister(&info->psy_usb);
 	power_supply_unregister(&info->psy_ac);
 
-	wakeup_source_trash(&info->monitor_wake_lock);
-	wakeup_source_trash(&info->emer_wake_lock);
+	wake_lock_destroy(&info->monitor_wake_lock);
+	wake_lock_destroy(&info->emer_wake_lock);
 #if defined(CONFIG_TARGET_LOCALE_KOR) || defined(CONFIG_MACH_M0_CTC)
-	wakeup_source_trash(&info->update_wake_lock);
+	wake_lock_destroy(&info->update_wake_lock);
 #endif
 	if (!info->pdata->suspend_chging)
-		wakeup_source_trash(&info->charge_wake_lock);
+		wake_lock_destroy(&info->charge_wake_lock);
 
 	mutex_destroy(&info->mon_lock);
 	mutex_destroy(&info->ops_lock);
