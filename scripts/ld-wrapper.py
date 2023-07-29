@@ -246,13 +246,6 @@ additional_build_rules = {
             "device/i9300/drivers/nfc/built-in.o",
         ],
     }],
-    "drivers/net/wireless/built-in.o" :
-    [{
-        "injected_objects":
-        [
-            "device/i9300/drivers/net/wireless/bcmdhd/built-in.o",
-        ],
-    }],
     "drivers/power/built-in.o" :
     [{
         "injected_objects":
@@ -373,6 +366,7 @@ additional_build_rules = {
             "device/i9300/drivers/amba/built-in.o",
             "device/i9300/drivers/leds/built-in.o",
             "device/i9300/drivers/motor/built-in.o",
+            "device/i9300/drivers/net/built-in.o",
             "device/i9300/drivers/samsung/built-in.o",
             "device/i9300/drivers/sensor/built-in.o",
             "device/i9300/drivers/switch/built-in.o",
