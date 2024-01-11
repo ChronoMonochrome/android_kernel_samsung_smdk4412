@@ -610,6 +610,7 @@ static int set_alarm_time_to_rtc(const long power_on_time)
 	struct rtc_wkalrm alarm;
 	long rtc_secs, alarm_delta, alarm_time;
 	int rc = -EINVAL;
+	unsigned long flags = 0UL;
 
 	if (power_on_time <= 0) {
 		goto disable_alarm;
