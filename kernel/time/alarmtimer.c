@@ -154,7 +154,7 @@ static struct rtc_task alarmtimer_rtc_task = {
  * If one has not already been chosen, it checks to see if a
  * functional rtc device is available.
  */
-static struct rtc_device *alarmtimer_get_rtcdev(void)
+struct rtc_device *alarmtimer_get_rtcdev(void)
 {
 	unsigned long flags;
 	struct rtc_device *ret = NULL;
@@ -225,7 +225,7 @@ static void alarmtimer_rtc_interface_remove(void)
 	class_interface_unregister(&alarmtimer_rtc_interface);
 }
 #else
-static inline struct rtc_device *alarmtimer_get_rtcdev(void)
+static struct rtc_device *alarmtimer_get_rtcdev(void)
 {
 	return NULL;
 }
