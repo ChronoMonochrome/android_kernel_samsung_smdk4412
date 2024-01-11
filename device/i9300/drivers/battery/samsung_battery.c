@@ -603,7 +603,7 @@ void battery_event_control(struct battery_info *info)
 		} else if (info->event_state == EVENT_STATE_IN_TIMER) {
 			pr_info("%s: cancel event timer\n", __func__);
 
-			alarm_cancel(&info->event_alarm);
+			//alarm_cancel(&info->event_alarm);
 
 			info->event_state = EVENT_STATE_SET;
 
@@ -624,14 +624,14 @@ void battery_event_control(struct battery_info *info)
 
 		if (info->event_state == EVENT_STATE_SET) {
 			pr_info("%s: start event timer\n", __func__);
-			info->last_poll = alarm_get_elapsed_realtime();
+			//info->last_poll = alarm_get_elapsed_realtime();
 
 			interval = ktime_set(info->pdata->event_time, 0);
 			next = ktime_add(info->last_poll, interval);
 			slack = ktime_set(20, 0);
 
-			alarm_start_range(&info->event_alarm, next,
-						ktime_add(next, slack));
+			/*alarm_start_range(&info->event_alarm, next,
+						ktime_add(next, slack));*/
 
 			info->event_state = EVENT_STATE_IN_TIMER;
 		} else {
@@ -678,7 +678,7 @@ static void battery_monitor_interval(struct battery_info *info)
 
 	local_irq_save(flags);
 
-	info->last_poll = alarm_get_elapsed_realtime();
+	//info->last_poll = alarm_get_elapsed_realtime();
 
 	switch (info->monitor_mode) {
 	case MONITOR_CHNG:
@@ -724,7 +724,7 @@ static void battery_monitor_interval(struct battery_info *info)
 	next = ktime_add(info->last_poll, interval);
 	slack = ktime_set(20, 0);
 
-	alarm_start_range(&info->monitor_alarm, next, ktime_add(next, slack));
+	//alarm_start_range(&info->monitor_alarm, next, ktime_add(next, slack));
 
 	local_irq_restore(flags);
 }
@@ -754,12 +754,12 @@ static bool battery_abstimer_cond(struct battery_info *info)
 {
 	unsigned int abstimer_duration;
 	ktime_t ktime;
-	struct timespec current_time;
+	//struct timespec current_time;
 	pr_debug("%s\n", __func__);
 
 	/* always update time for info data */
-	ktime = alarm_get_elapsed_realtime();
-	info->current_time = current_time = ktime_to_timespec(ktime);
+	//ktime = alarm_get_elapsed_realtime();
+	//info->current_time = current_time = ktime_to_timespec(ktime);
 
 	if ((info->cable_type == POWER_SUPPLY_TYPE_USB) ||
 		(info->full_charged_state != STATUS_NOT_FULL) ||
@@ -782,7 +782,7 @@ static bool battery_abstimer_cond(struct battery_info *info)
 			abstimer_duration =
 				info->pdata->abstimer_charge_duration;
 	}
-
+/*
 	if ((current_time.tv_sec - info->charge_start_time) >
 	    abstimer_duration) {
 		pr_info("%s: abstimer state, t(%d - %d ?? %d)\n", __func__,
@@ -795,7 +795,7 @@ static bool battery_abstimer_cond(struct battery_info *info)
 			(int)current_time.tv_sec, info->charge_start_time,
 							abstimer_duration);
 		info->abstimer_state = false;
-	}
+	}*/
 
 	return info->abstimer_state;
 }
@@ -1067,13 +1067,13 @@ static void battery_charge_control(struct battery_info *info,
 {
 	int charge_state;
 	ktime_t ktime;
-	struct timespec current_time;
+	//struct timespec current_time;
 	pr_debug("%s, chg(%d), in(%d)\n", __func__, chg_curr, in_curr);
 
 	mutex_lock(&info->ops_lock);
 
-	ktime = alarm_get_elapsed_realtime();
-	current_time = ktime_to_timespec(ktime);
+	//ktime = alarm_get_elapsed_realtime();
+	//current_time = ktime_to_timespec(ktime);
 
 	if ((info->cable_type != POWER_SUPPLY_TYPE_BATTERY) &&
 		(chg_curr > 0) && (info->siop_state == true)) {
@@ -1157,7 +1157,7 @@ charge_state_con:
 	if ((chg_curr != 0) && (info->charge_start_time == 0)) {
 		battery_control_info(info, POWER_SUPPLY_PROP_STATUS, ENABLE);
 
-		info->charge_start_time = current_time.tv_sec;
+		//info->charge_start_time = current_time.tv_sec;
 		pr_info("%s: charge enabled, current as %d/%dmA @%d\n",
 			__func__, info->charge_current, info->input_current,
 			info->charge_start_time);
@@ -1178,9 +1178,9 @@ charge_state_con:
 	} else if ((chg_curr == 0) && (info->charge_start_time != 0)) {
 		battery_control_info(info, POWER_SUPPLY_PROP_STATUS, DISABLE);
 
-		pr_info("%s: charge disabled, current as %d/%dmA @%d\n",
+		/*pr_info("%s: charge disabled, current as %d/%dmA @%d\n",
 			__func__, info->charge_current, info->input_current,
-			(int)current_time.tv_sec);
+			(int)current_time.tv_sec);*/
 
 		info->charge_start_time = 0;
 
@@ -1716,9 +1716,9 @@ monitor_finish:
 		pr_cont(", f(%d)", info->full_charged_state);
 	if (info->recharge_phase == 1)
 		pr_cont(", r(%d)", info->recharge_phase);
-	if (info->charge_start_time != 0)
+	/*if (info->charge_start_time != 0)
 		pr_cont(", t(%d)", ((int)info->current_time.tv_sec -
-						info->charge_start_time));
+						info->charge_start_time));*/
 	if (info->event_state != EVENT_STATE_CLEAR)
 		pr_cont(", e(%d, 0x%04x)", info->event_state, info->event_type);
 	if (info->siop_state)
@@ -2339,8 +2339,8 @@ static __devinit int samsung_battery_probe(struct platform_device *pdev)
 gpio_bat_det_finish:
 
 	/* Using android alarm for gauging instead of workqueue */
-	info->last_poll = alarm_get_elapsed_realtime();
-	alarm_init(&info->monitor_alarm,
+	//info->last_poll = alarm_get_elapsed_realtime();
+	/*alarm_init(&info->monitor_alarm,
 			ANDROID_ALARM_ELAPSED_REALTIME_WAKEUP,
 			battery_monitor_alarm);
 
@@ -2403,9 +2403,9 @@ static int __devexit samsung_battery_remove(struct platform_device *pdev)
 
 	remove_proc_entry("battery_info_proc", NULL);
 
-	alarm_cancel(&info->monitor_alarm);
-	if (info->pdata->ctia_spec == true)
-		alarm_cancel(&info->event_alarm);
+	//alarm_cancel(&info->monitor_alarm);
+	//if (info->pdata->ctia_spec == true)
+	//	alarm_cancel(&info->event_alarm);
 
 	cancel_work_sync(&info->error_work);
 	cancel_work_sync(&info->monitor_work);
