@@ -135,7 +135,7 @@
 #include <linux/interrupt.h>
 #include <linux/capability.h>
 #include <linux/hrtimer.h>
-#include <linux/freezer.h>
+#include <device/linux/freezer.h>
 #include <linux/delay.h>
 #include <linux/timer.h>
 #include <linux/list.h>

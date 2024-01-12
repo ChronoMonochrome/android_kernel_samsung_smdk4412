@@ -248,7 +248,7 @@
 #include <linux/slab.h>
 #include <linux/spinlock.h>
 #include <linux/string.h>
-#include <linux/freezer.h>
+#include <device/linux/freezer.h>
 #include <linux/utsname.h>
 
 #include <device/linux/usb/ch9.h>

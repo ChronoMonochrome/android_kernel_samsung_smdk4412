@@ -21,7 +21,7 @@
 #include <device/linux/pm.h>
 #include <linux/console.h>
 #include <linux/cpu.h>
-#include <linux/freezer.h>
+#include <device/linux/freezer.h>
 #include <linux/gfp.h>
 #include <linux/syscore_ops.h>
 #include <linux/ctype.h>

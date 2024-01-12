@@ -45,7 +45,7 @@
 #include <linux/fs.h>
 #include <linux/vmalloc.h>
 #include <linux/completion.h>
-#include <linux/freezer.h>
+#include <device/linux/freezer.h>
 #include <linux/module.h>
 #include <linux/moduleparam.h>
 #include <linux/kthread.h>

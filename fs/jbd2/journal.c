@@ -30,7 +30,7 @@
 #include <linux/slab.h>
 #include <linux/init.h>
 #include <linux/mm.h>
-#include <linux/freezer.h>
+#include <device/linux/freezer.h>
 #include <linux/pagemap.h>
 #include <linux/kthread.h>
 #include <linux/poison.h>

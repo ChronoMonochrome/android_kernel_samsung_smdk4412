@@ -1,4 +1,3 @@
-#error include file from device instead
 /* Freezer declarations */
 
 #ifndef FREEZER_H_INCLUDED
