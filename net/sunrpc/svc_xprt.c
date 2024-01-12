@@ -6,7 +6,7 @@
 
 #include <linux/sched.h>
 #include <linux/errno.h>
-#include <linux/freezer.h>
+#include <device/linux/freezer.h>
 #include <linux/kthread.h>
 #include <linux/slab.h>
 #include <net/sock.h>

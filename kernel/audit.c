@@ -59,7 +59,7 @@
 #include <linux/security.h>
 #endif
 #include <linux/netlink.h>
-#include <linux/freezer.h>
+#include <device/linux/freezer.h>
 #include <linux/tty.h>
 
 #include "audit.h"

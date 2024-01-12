@@ -24,7 +24,7 @@
 #include <linux/platform_device.h>
 #include <linux/posix-timers.h>
 #include <linux/workqueue.h>
-#include <linux/freezer.h>
+#include <device/linux/freezer.h>
 
 /**
  * struct alarm_base - Alarm timer bases

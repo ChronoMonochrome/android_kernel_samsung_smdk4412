@@ -28,7 +28,7 @@
 #include <linux/completion.h>
 #include <linux/blkdev.h>
 #include <linux/backing-dev.h>
-#include <linux/freezer.h>
+#include <device/linux/freezer.h>
 #include <linux/kthread.h>
 #include <linux/crc32.h>
 #include <linux/pagevec.h>

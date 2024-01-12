@@ -26,7 +26,7 @@
 #include <linux/numa.h>
 #include <linux/suspend.h>
 #include <linux/device.h>
-#include <linux/freezer.h>
+#include <device/linux/freezer.h>
 #include <linux/pm.h>
 #include <linux/cpu.h>
 #include <linux/console.h>

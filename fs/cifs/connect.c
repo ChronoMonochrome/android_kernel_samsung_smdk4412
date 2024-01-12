@@ -32,7 +32,7 @@
 #include <linux/completion.h>
 #include <linux/kthread.h>
 #include <linux/pagevec.h>
-#include <linux/freezer.h>
+#include <device/linux/freezer.h>
 #include <linux/namei.h>
 #include <asm/uaccess.h>
 #include <asm/processor.h>

@@ -15,7 +15,7 @@
 #include <linux/export.h>
 #include <linux/mutex.h>
 #include <linux/slab.h>
-#include <linux/freezer.h>
+#include <device/linux/freezer.h>
 #include <trace/events/sched.h>
 
 static DEFINE_SPINLOCK(kthread_create_lock);

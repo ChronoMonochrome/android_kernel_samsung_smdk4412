@@ -40,7 +40,7 @@
 #include <linux/percpu.h>
 #include <linux/notifier.h>
 #include <linux/reboot.h>
-#include <linux/freezer.h>
+#include <device/linux/freezer.h>
 #include <linux/cpu.h>
 #include <linux/delay.h>
 #include <linux/stat.h>

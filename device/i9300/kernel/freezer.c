@@ -9,7 +9,7 @@
 #include <linux/export.h>
 #include <device/linux/sched.h>
 #include <linux/syscalls.h>
-#include <linux/freezer.h>
+#include <device/linux/freezer.h>
 #include <linux/kthread.h>
 
 /* total number of freezing conditions in effect */

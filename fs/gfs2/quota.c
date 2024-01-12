@@ -47,7 +47,7 @@
 #include <linux/bio.h>
 #include <linux/gfs2_ondisk.h>
 #include <linux/kthread.h>
-#include <linux/freezer.h>
+#include <device/linux/freezer.h>
 #include <linux/quota.h>
 #include <linux/dqblk_xfs.h>
 
