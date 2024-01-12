@@ -32,7 +32,7 @@
 #include <linux/signal.h>
 #include <linux/init.h>
 #include <linux/wait.h>
-#include <device/linux/freezer.h>
+#include <linux/freezer.h>
 #include <linux/errno.h>
 #include <linux/net.h>
 #include <linux/slab.h>

@@ -26,7 +26,7 @@
 #include <linux/err.h>
 #include <linux/interrupt.h>
 #include <linux/kthread.h>
-#include <device/linux/freezer.h>
+#include <linux/freezer.h>
 
 #include <linux/types.h>
 #include <linux/file.h>

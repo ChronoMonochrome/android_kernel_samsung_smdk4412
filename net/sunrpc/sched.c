@@ -18,7 +18,7 @@
 #include <linux/smp.h>
 #include <linux/spinlock.h>
 #include <linux/mutex.h>
-#include <device/linux/freezer.h>
+#include <linux/freezer.h>
 
 #include <linux/sunrpc/clnt.h>
 

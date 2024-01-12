@@ -12,7 +12,7 @@
 #include <linux/sched.h>
 #include <linux/spinlock.h>
 #include <linux/timer.h>
-#include <device/linux/freezer.h>
+#include <linux/freezer.h>
 
 #include "rtmutex.h"
 

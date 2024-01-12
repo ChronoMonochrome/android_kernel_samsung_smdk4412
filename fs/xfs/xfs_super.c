@@ -60,7 +60,7 @@
 #include <linux/mempool.h>
 #include <linux/writeback.h>
 #include <linux/kthread.h>
-#include <device/linux/freezer.h>
+#include <linux/freezer.h>
 #include <linux/parser.h>
 
 static const struct super_operations xfs_super_operations;

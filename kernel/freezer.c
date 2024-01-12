@@ -8,7 +8,7 @@
 #include <linux/suspend.h>
 #include <linux/export.h>
 #include <linux/syscalls.h>
-#include <device/linux/freezer.h>
+#include <linux/freezer.h>
 #include <linux/kthread.h>
 
 /* total number of freezing conditions in effect */

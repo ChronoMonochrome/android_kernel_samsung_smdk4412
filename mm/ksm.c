@@ -34,7 +34,7 @@
 #include <linux/swap.h>
 #include <linux/ksm.h>
 #include <linux/hash.h>
-#include <device/linux/freezer.h>
+#include <linux/freezer.h>
 #include <linux/oom.h>
 
 #include <asm/tlbflush.h>

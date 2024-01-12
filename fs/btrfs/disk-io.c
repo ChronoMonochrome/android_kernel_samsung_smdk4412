@@ -25,7 +25,7 @@
 #include <linux/buffer_head.h>
 #include <linux/workqueue.h>
 #include <linux/kthread.h>
-#include <device/linux/freezer.h>
+#include <linux/freezer.h>
 #include <linux/crc32c.h>
 #include <linux/slab.h>
 #include <linux/migrate.h>

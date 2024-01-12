@@ -42,7 +42,7 @@
 #include <asm/uaccess.h>
 
 #include <linux/kthread.h>
-#include <device/linux/freezer.h>
+#include <linux/freezer.h>
 
 #include "ext4.h"
 #include "ext4_extents.h"

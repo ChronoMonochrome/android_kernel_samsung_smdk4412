@@ -16,7 +16,7 @@
 #include <linux/crc32.h>
 #include <linux/delay.h>
 #include <linux/kthread.h>
-#include <device/linux/freezer.h>
+#include <linux/freezer.h>
 #include <linux/bio.h>
 #include <linux/writeback.h>
 #include <linux/list_sort.h>

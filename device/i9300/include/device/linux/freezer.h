@@ -3,7 +3,7 @@
 #ifndef FREEZER_H_INCLUDED
 #define FREEZER_H_INCLUDED
 
-#include <device/linux/sched.h>
+#include <linux/sched.h>
 #include <linux/wait.h>
 
 #ifdef CONFIG_FREEZER

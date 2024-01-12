@@ -19,7 +19,7 @@
 #include <linux/cgroup.h>
 #include <linux/fs.h>
 #include <linux/uaccess.h>
-#include <device/linux/freezer.h>
+#include <linux/freezer.h>
 #include <linux/seq_file.h>
 
 enum freezer_state {

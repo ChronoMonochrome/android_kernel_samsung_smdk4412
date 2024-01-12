@@ -36,7 +36,7 @@
 #include <linux/kthread.h>
 #include <linux/hardirq.h>
 #include <linux/mempolicy.h>
-#include <device/linux/freezer.h>
+#include <linux/freezer.h>
 #include <linux/kallsyms.h>
 #include <linux/debug_locks.h>
 #include <linux/lockdep.h>

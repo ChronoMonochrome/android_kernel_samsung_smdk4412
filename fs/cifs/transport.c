@@ -26,7 +26,7 @@
 #include <linux/wait.h>
 #include <linux/net.h>
 #include <linux/delay.h>
-#include <device/linux/freezer.h>
+#include <linux/freezer.h>
 #include <asm/uaccess.h>
 #include <asm/processor.h>
 #include <linux/mempool.h>
