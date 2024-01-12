@@ -61,15 +61,11 @@ additional_build_rules = {
     [{
         "injected_objects":
         [
-            "device/i9300/kernel/freezer.o",
-            "device/i9300/kernel/cgroup_freezer.o",
             "device/i9300/kernel/irq/built-in.o",
             "device/i9300/kernel/power/built-in.o",
         ],
         "removed_objects":
         [
-           "kernel/cgroup_freezer.o",
-           "kernel/freezer.o",
            "kernel/power/built-in.o",
         ]
     }],
