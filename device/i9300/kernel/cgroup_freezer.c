@@ -386,5 +386,11 @@ struct cgroup_subsys freezer_subsys = {
 	.destroy	= freezer_destroy,
 	.populate	= freezer_populate,
 	.subsys_id	= freezer_subsys_id,
+	.can_attach	= freezer_can_attach,
+	.can_attach_task = freezer_can_attach_task,
+	.pre_attach	= NULL,
+	.attach_task	= NULL,
+	.attach		= NULL,
 	.fork		= freezer_fork,
+	.exit		= NULL,
 };
