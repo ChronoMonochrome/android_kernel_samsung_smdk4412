@@ -62,12 +62,7 @@ additional_build_rules = {
         "injected_objects":
         [
             "device/i9300/kernel/irq/built-in.o",
-            "device/i9300/kernel/power/built-in.o",
         ],
-        "removed_objects":
-        [
-           "kernel/power/built-in.o",
-        ]
     }],
     "mm/built-in.o" :
     [{
@@ -92,7 +87,6 @@ additional_build_rules = {
             "drivers/base/s5p-iommu.o",
             "drivers/base/sync.o",
             "drivers/base/sw_sync.o",
-            "drivers/base/power/built-in.o",
         ],
     }],
     "drivers/char/built-in.o" :
