@@ -29,7 +29,6 @@
 
 /*#define DEBUG*/
 
-#include <linux/module.h>
 #include <linux/pm_qos_params.h>
 #include <linux/sched.h>
 #include <linux/spinlock.h>
