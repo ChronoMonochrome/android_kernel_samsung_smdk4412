@@ -13,7 +13,7 @@
 */
 
 #include <linux/init.h>
-#include <device/linux/suspend.h>
+#include <linux/suspend.h>
 #include <linux/errno.h>
 #include <linux/delay.h>
 #include <linux/serial_core.h>

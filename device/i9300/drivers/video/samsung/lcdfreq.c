@@ -8,7 +8,7 @@
 */
 
 #include <linux/reboot.h>
-#include <device/linux/suspend.h>
+#include <linux/suspend.h>
 #include <linux/cpufreq.h>
 #include <linux/sysfs.h>
 #include <linux/gcd.h>

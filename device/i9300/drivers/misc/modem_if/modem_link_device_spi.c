@@ -26,7 +26,7 @@
 #include <linux/if_arp.h>
 #include <linux/platform_device.h>
 #include <linux/spi/spi.h>
-#include <device/linux/suspend.h>
+#include <linux/suspend.h>
 #include <linux/kthread.h>
 
 #include "modem.h"

@@ -25,7 +25,7 @@
 #include <linux/pm_runtime.h>
 #include <plat/gpio-cfg.h>
 #include <linux/mdm_hsic_pm.h>
-#include <device/linux/suspend.h>
+#include <linux/suspend.h>
 #include <linux/wakelock.h>
 #include <mach/subsystem_restart.h>
 #include <mach/sec_modem.h>

@@ -5,7 +5,7 @@
  */
 
 #include <linux/interrupt.h>
-#include <device/linux/suspend.h>
+#include <linux/suspend.h>
 #include <linux/export.h>
 #include <device/linux/sched.h>
 #include <linux/syscalls.h>

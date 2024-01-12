@@ -28,7 +28,7 @@
 #include <linux/cdev.h>
 #include <linux/platform_device.h>
 #include <linux/wakelock.h>
-#include <device/linux/suspend.h>
+#include <linux/suspend.h>
 #include <linux/version.h>
 
 #include "modem.h"

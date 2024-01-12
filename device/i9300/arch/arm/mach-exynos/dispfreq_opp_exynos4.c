@@ -18,7 +18,7 @@
 #include <linux/err.h>
 #include <linux/opp.h>
 #include <linux/mutex.h>
-#include <device/linux/suspend.h>
+#include <linux/suspend.h>
 #include <linux/notifier.h>
 #include <linux/slab.h>
 #include <linux/platform_device.h>

@@ -23,7 +23,7 @@
 #include <linux/log2.h>
 #include <device/linux/regulator/consumer.h>
 #include <linux/pm_runtime.h>
-#include <device/linux/suspend.h>
+#include <linux/suspend.h>
 #include <linux/wakelock.h>
 
 #include <device/linux/mmc/card.h>

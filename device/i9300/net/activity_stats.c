@@ -15,7 +15,7 @@
  */
 
 #include <linux/proc_fs.h>
-#include <device/linux/suspend.h>
+#include <linux/suspend.h>
 #include <net/net_namespace.h>
 
 /*

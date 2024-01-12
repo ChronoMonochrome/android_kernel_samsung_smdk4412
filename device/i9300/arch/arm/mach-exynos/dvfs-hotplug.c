@@ -16,7 +16,7 @@
 #include <linux/err.h>
 #include <linux/notifier.h>
 #include <linux/reboot.h>
-#include <device/linux/suspend.h>
+#include <linux/suspend.h>
 #include <linux/io.h>
 
 #include <plat/cpu.h>

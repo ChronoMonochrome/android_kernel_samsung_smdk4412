@@ -13,7 +13,7 @@
 #include <linux/version.h>
 #include <linux/module.h>
 #include <linux/mm.h>
-#include <device/linux/suspend.h>
+#include <linux/suspend.h>
 #include <linux/delay.h>
 #include <linux/bitops.h>
 #include <linux/spinlock.h>

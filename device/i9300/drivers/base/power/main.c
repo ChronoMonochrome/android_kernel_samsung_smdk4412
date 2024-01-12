@@ -27,7 +27,7 @@
 #include <linux/interrupt.h>
 #include <linux/sched.h>
 #include <linux/async.h>
-#include <device/linux/suspend.h>
+#include <linux/suspend.h>
 #include <linux/timer.h>
 
 #include "../base.h"

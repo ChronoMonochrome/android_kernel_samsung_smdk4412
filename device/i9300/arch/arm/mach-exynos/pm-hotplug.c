@@ -24,7 +24,7 @@
 #include <linux/tick.h>
 #include <linux/kernel_stat.h>
 #include <linux/sched.h>
-#include <device/linux/suspend.h>
+#include <linux/suspend.h>
 #include <linux/reboot.h>
 
 #include <plat/map-base.h>
