@@ -19,7 +19,7 @@
 #include <linux/pagemap.h>
 #include <linux/leds.h>
 #include <linux/slab.h>
-#include <device/linux/suspend.h>
+#include <linux/suspend.h>
 
 #include <device/linux/mmc/host.h>
 #include <device/linux/mmc/card.h>

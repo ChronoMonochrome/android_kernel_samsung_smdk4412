@@ -14,7 +14,7 @@
 #include <linux/cpu_pm.h>
 #include <linux/cpuidle.h>
 #include <linux/io.h>
-#include <device/linux/suspend.h>
+#include <linux/suspend.h>
 #include <linux/platform_device.h>
 #include <device/linux/gpio.h>
 #include <linux/cpufreq.h>

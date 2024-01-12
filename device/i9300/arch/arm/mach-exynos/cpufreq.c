@@ -19,7 +19,7 @@
 #include <linux/slab.h>
 #include <device/linux/regulator/consumer.h>
 #include <linux/cpufreq.h>
-#include <device/linux/suspend.h>
+#include <linux/suspend.h>
 #include <linux/reboot.h>
 #include <linux/pm_qos_params.h>
 

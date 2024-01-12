@@ -24,7 +24,7 @@
 #include <device/linux/gpio.h>
 #include <linux/if_arp.h>
 #include <linux/platform_device.h>
-#include <device/linux/suspend.h>
+#include <linux/suspend.h>
 
 #include "modem.h"
 #include "modem_prj.h"

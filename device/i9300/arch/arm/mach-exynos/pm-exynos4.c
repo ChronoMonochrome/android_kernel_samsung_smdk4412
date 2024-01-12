@@ -15,7 +15,7 @@
 */
 
 #include <linux/init.h>
-#include <device/linux/suspend.h>
+#include <linux/suspend.h>
 #include <linux/syscore_ops.h>
 #include <linux/io.h>
 #include <device/linux/regulator/machine.h>

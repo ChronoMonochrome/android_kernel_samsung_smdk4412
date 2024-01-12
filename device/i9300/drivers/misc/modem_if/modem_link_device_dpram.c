@@ -25,7 +25,7 @@
 #include <linux/if_arp.h>
 #include <linux/platform_device.h>
 #include <linux/kallsyms.h>
-#include <device/linux/suspend.h>
+#include <linux/suspend.h>
 #include <plat/gpio-cfg.h>
 #include <mach/gpio.h>
 

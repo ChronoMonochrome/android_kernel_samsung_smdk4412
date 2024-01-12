@@ -48,7 +48,7 @@
 #ifdef CONFIG_HAS_WAKELOCK
 #include <linux/wakelock.h>
 #include <linux/earlysuspend.h>
-#include <device/linux/suspend.h>
+#include <linux/suspend.h>
 #endif
 
 #if defined(CONFIG_MACH_U1_BD) && defined(CONFIG_TARGET_LOCALE_KOR)

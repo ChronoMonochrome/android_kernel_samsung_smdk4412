@@ -23,7 +23,7 @@
 #include <linux/slab.h>
 #include <linux/err.h>
 #include <linux/mutex.h>
-#include <device/linux/suspend.h>
+#include <linux/suspend.h>
 #include <linux/delay.h>
 #include <device/linux/regulator/consumer.h>
 #include <device/linux/regulator/driver.h>

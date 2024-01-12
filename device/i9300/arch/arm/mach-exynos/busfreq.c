@@ -25,7 +25,7 @@
 #include <linux/tick.h>
 #include <linux/kernel_stat.h>
 #include <linux/cpufreq.h>
-#include <device/linux/suspend.h>
+#include <linux/suspend.h>
 #include <linux/reboot.h>
 #include <linux/clk.h>
 #include <linux/pm_qos_params.h>

@@ -38,7 +38,7 @@
 #ifdef CONFIG_HAS_WAKELOCK
 #include <linux/wakelock.h>
 #include <linux/earlysuspend.h>
-#include <device/linux/suspend.h>
+#include <linux/suspend.h>
 #endif
 
 #define TRUE    1

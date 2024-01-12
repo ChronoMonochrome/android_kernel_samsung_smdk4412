@@ -24,7 +24,7 @@
 #include <linux/ktime.h>
 #include <linux/tick.h>
 #include <linux/kernel_stat.h>
-#include <device/linux/suspend.h>
+#include <linux/suspend.h>
 #include <linux/reboot.h>
 #include <linux/slab.h>
 #include <linux/opp.h>

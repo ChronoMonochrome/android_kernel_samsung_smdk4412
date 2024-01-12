@@ -21,7 +21,7 @@
 #include <linux/io.h>
 #include <linux/time.h>
 #include <linux/wakelock.h>
-#include <device/linux/suspend.h>
+#include <linux/suspend.h>
 #include <mach/subsystem_restart.h>
 #include <mach/sec_debug.h>
 

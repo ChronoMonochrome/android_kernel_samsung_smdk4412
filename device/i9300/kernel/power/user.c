@@ -9,7 +9,7 @@
  *
  */
 
-#include <device/linux/suspend.h>
+#include <linux/suspend.h>
 #include <linux/syscalls.h>
 #include <linux/reboot.h>
 #include <linux/string.h>
