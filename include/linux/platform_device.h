@@ -13,6 +13,7 @@
 
 #include <linux/device.h>
 #include <linux/mod_devicetable.h>
+#include <asm/system_info.h>
 
 struct mfd_cell;
 
