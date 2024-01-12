@@ -38,7 +38,7 @@
 #endif
 
 #ifdef CONFIG_PM_RUNTIME
-#include <device/linux/pm_runtime.h>
+#include <linux/pm_runtime.h>
 #endif
 
 #if defined(CONFIG_MACH_GC1) || defined(CONFIG_MACH_GC2PD) || defined(CONFIG_MACH_GD2)

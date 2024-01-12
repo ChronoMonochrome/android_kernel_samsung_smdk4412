@@ -21,8 +21,8 @@
 #include <linux/device.h>
 #include <linux/kallsyms.h>
 #include <linux/mutex.h>
-#include <device/linux/pm.h>
-#include <device/linux/pm_runtime.h>
+#include <linux/pm.h>
+#include <linux/pm_runtime.h>
 #include <linux/resume-trace.h>
 #include <linux/interrupt.h>
 #include <linux/sched.h>

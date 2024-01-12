@@ -19,7 +19,7 @@
 #include <linux/io.h>
 #include <linux/irq.h>
 #include <linux/platform_device.h>
-#include <device/linux/pm_runtime.h>
+#include <linux/pm_runtime.h>
 #include <device/linux/regulator/consumer.h>
 #include <linux/slab.h>
 

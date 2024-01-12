@@ -23,7 +23,7 @@
 #include <linux/blkdev.h>
 #include <linux/swap.h>
 #include <linux/swapops.h>
-#include <device/linux/pm.h>
+#include <linux/pm.h>
 #include <linux/slab.h>
 #include <linux/lzo.h>
 #include <linux/vmalloc.h>

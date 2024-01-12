@@ -29,7 +29,7 @@
 #include <device/linux/mmc/sh_mmcif.h>
 #include <linux/pagemap.h>
 #include <linux/platform_device.h>
-#include <device/linux/pm_runtime.h>
+#include <linux/pm_runtime.h>
 #include <linux/spinlock.h>
 
 #define DRIVER_NAME	"sh_mmcif"

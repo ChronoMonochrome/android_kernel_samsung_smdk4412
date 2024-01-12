@@ -7,7 +7,7 @@
 #include <linux/kernel.h>
 #include <linux/sysrq.h>
 #include <linux/init.h>
-#include <device/linux/pm.h>
+#include <linux/pm.h>
 #include <linux/workqueue.h>
 #include <linux/reboot.h>
 #include <linux/cpumask.h>

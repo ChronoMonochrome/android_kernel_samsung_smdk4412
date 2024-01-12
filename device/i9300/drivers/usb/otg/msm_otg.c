@@ -29,7 +29,7 @@
 #include <linux/uaccess.h>
 #include <linux/debugfs.h>
 #include <linux/seq_file.h>
-#include <device/linux/pm_runtime.h>
+#include <linux/pm_runtime.h>
 
 #include <device/linux/usb.h>
 #include <device/linux/usb/otg.h>

@@ -22,7 +22,7 @@
 #include <linux/scatterlist.h>
 #include <linux/log2.h>
 #include <device/linux/regulator/consumer.h>
-#include <device/linux/pm_runtime.h>
+#include <linux/pm_runtime.h>
 #include <device/linux/suspend.h>
 #include <linux/wakelock.h>
 

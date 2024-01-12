@@ -18,7 +18,7 @@
 #include <linux/i2c.h>
 #include <linux/delay.h>
 #include <linux/mfd/core.h>
-#include <device/linux/pm_runtime.h>
+#include <linux/pm_runtime.h>
 #include <device/linux/regulator/consumer.h>
 #include <device/linux/regulator/machine.h>
 

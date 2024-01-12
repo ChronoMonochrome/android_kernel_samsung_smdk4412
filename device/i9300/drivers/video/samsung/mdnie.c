@@ -22,7 +22,7 @@
 #include <linux/lcd.h>
 #include <linux/mdnie.h>
 #include <linux/fb.h>
-#include <device/linux/pm_runtime.h>
+#include <linux/pm_runtime.h>
 #include <linux/clk.h>
 
 #include "s3cfb.h"

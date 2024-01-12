@@ -10,7 +10,7 @@
  */
 
 #include <linux/err.h>
-#include <device/linux/pm_runtime.h>
+#include <linux/pm_runtime.h>
 
 #include <device/linux/mmc/host.h>
 #include <device/linux/mmc/card.h>

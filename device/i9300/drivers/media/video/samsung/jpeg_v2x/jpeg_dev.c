@@ -41,7 +41,7 @@
 #include <mach/irqs.h>
 
 #ifdef CONFIG_PM_RUNTIME
-#include <device/linux/pm_runtime.h>
+#include <linux/pm_runtime.h>
 #endif
 
 #include <device/media/v4l2-ioctl.h>

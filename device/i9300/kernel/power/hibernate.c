@@ -18,7 +18,7 @@
 #include <linux/delay.h>
 #include <linux/fs.h>
 #include <linux/mount.h>
-#include <device/linux/pm.h>
+#include <linux/pm.h>
 #include <linux/console.h>
 #include <linux/cpu.h>
 #include <device/linux/freezer.h>

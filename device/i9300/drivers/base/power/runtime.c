@@ -9,7 +9,7 @@
 
 #include <linux/module.h>
 #include <linux/sched.h>
-#include <device/linux/pm_runtime.h>
+#include <linux/pm_runtime.h>
 #include "power.h"
 
 static int rpm_resume(struct device *dev, int rpmflags);

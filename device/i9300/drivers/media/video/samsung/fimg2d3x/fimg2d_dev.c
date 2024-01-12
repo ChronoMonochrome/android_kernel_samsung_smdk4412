@@ -46,7 +46,7 @@
 #include <plat/fimg2d.h>
 
 #if defined(CONFIG_EXYNOS_DEV_PD)
-#include <device/linux/pm_runtime.h>
+#include <linux/pm_runtime.h>
 #endif 
 
 #include "fimg2d.h"

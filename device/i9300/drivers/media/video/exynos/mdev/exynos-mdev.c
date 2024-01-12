@@ -18,7 +18,7 @@
 #include <linux/list.h>
 #include <linux/module.h>
 #include <linux/platform_device.h>
-#include <device/linux/pm_runtime.h>
+#include <linux/pm_runtime.h>
 #include <linux/types.h>
 #include <linux/slab.h>
 #include <linux/version.h>

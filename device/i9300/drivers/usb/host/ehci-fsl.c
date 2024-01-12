@@ -26,7 +26,7 @@
 #include <linux/kernel.h>
 #include <linux/types.h>
 #include <linux/delay.h>
-#include <device/linux/pm.h>
+#include <linux/pm.h>
 #include <linux/platform_device.h>
 #include <linux/fsl_devices.h>
 

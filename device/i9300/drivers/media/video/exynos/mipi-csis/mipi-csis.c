@@ -20,7 +20,7 @@
 #include <linux/memory.h>
 #include <linux/module.h>
 #include <linux/platform_device.h>
-#include <device/linux/pm_runtime.h>
+#include <linux/pm_runtime.h>
 #include <device/linux/regulator/consumer.h>
 #include <linux/slab.h>
 #include <linux/spinlock.h>

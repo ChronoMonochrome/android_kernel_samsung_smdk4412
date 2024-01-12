@@ -20,7 +20,7 @@
 #include <plat/sysmmu.h>
 #ifdef CONFIG_PM_RUNTIME
 #include <plat/devs.h>
-#include <device/linux/pm_runtime.h>
+#include <linux/pm_runtime.h>
 #endif
 #include "fimg2d.h"
 #include "fimg2d_clk.h"

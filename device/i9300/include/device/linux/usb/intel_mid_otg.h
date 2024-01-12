@@ -20,7 +20,7 @@
 #ifndef __INTEL_MID_OTG_H
 #define __INTEL_MID_OTG_H
 
-#include <device/linux/pm.h>
+#include <linux/pm.h>
 #include <device/linux/usb/otg.h>
 #include <linux/notifier.h>
 

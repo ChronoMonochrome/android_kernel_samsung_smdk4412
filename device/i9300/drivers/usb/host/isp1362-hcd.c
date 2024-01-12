@@ -78,7 +78,7 @@
 #include <device/linux/usb/isp1362.h>
 #include <device/linux/usb/hcd.h>
 #include <linux/platform_device.h>
-#include <device/linux/pm.h>
+#include <linux/pm.h>
 #include <linux/io.h>
 #include <linux/bitmap.h>
 #include <linux/prefetch.h>

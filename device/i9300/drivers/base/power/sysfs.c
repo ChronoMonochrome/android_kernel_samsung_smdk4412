@@ -5,7 +5,7 @@
 #include <linux/module.h>
 #include <linux/device.h>
 #include <linux/string.h>
-#include <device/linux/pm_runtime.h>
+#include <linux/pm_runtime.h>
 #include <asm/atomic.h>
 #include <linux/jiffies.h>
 #include "power.h"

@@ -19,7 +19,7 @@
 #include <linux/io.h>
 #include <linux/delay.h>
 #include <linux/interrupt.h>
-#include <device/linux/pm_runtime.h>
+#include <linux/pm_runtime.h>
 #include <device/media/videobuf2-core.h>
 #include <device/media/v4l2-ctrls.h>
 #include <device/media/v4l2-device.h>

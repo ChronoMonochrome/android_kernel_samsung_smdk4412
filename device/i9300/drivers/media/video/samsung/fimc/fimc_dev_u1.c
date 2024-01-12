@@ -35,6 +35,7 @@
 #include <mach/media.h>
 #endif
 #include <plat/fimc.h>
+#include <linux/pm_runtime.h>
 #include <device/linux/pm_runtime.h>
 #include <device/linux/videodev2_exynos_media.h>
 #include <device/linux/videodev2_exynos_camera.h>

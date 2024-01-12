@@ -34,7 +34,7 @@
 #include <linux/interrupt.h>
 #include <linux/spinlock.h>
 #include <linux/debugfs.h>
-#include <device/linux/pm.h>
+#include <linux/pm.h>
 #include <linux/dmapool.h>
 #include <linux/dma-mapping.h>
 #include <device/linux/usb.h>

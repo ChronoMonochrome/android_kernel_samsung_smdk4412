@@ -24,7 +24,7 @@
 #include <linux/delay.h>
 #include <linux/memory.h>
 #include <device/linux/regulator/consumer.h>
-#include <device/linux/pm_runtime.h>
+#include <linux/pm_runtime.h>
 
 #include <device/linux/videodev2.h>
 #include <device/linux/videodev2_exynos_camera.h>

@@ -13,7 +13,7 @@
 #include <linux/poll.h>
 #include <linux/dma-mapping.h>
 #include <linux/platform_device.h>
-#include <device/linux/pm_runtime.h>
+#include <linux/pm_runtime.h>
 
 #include <linux/file.h>
 #include <linux/fs.h>
