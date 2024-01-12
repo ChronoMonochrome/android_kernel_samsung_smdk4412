@@ -10,7 +10,6 @@
 #include <device/linux/sched.h>
 #include <linux/syscalls.h>
 #include <device/linux/freezer.h>
-#include <linux/kthread.h>
 
 /* total number of freezing conditions in effect */
 atomic_t system_freezing_cnt = ATOMIC_INIT(0);
@@ -52,7 +51,7 @@ static inline void frozen_process(void)
 }
 
 /* Refrigerator is place where frozen processes are stored :-). */
-bool __refrigerator(bool check_kthr_stop)
+bool __refrigerator(void)
 {
 	/* Hmm, should we be allowed to suspend when there are realtime
 	   processes around? */
@@ -79,8 +78,7 @@ bool __refrigerator(bool check_kthr_stop)
 
 	for (;;) {
 		set_current_state(TASK_UNINTERRUPTIBLE);
-		if (!frozen(current) ||
-		    (check_kthr_stop && kthread_should_stop()))
+		if (!frozen(current))
 			break;
 		was_frozen = true;
 		schedule();
