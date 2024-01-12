@@ -18,7 +18,7 @@
 #include <linux/bitops.h>
 #include <linux/spinlock.h>
 #include <linux/kernel.h>
-#include <device/linux/pm.h>
+#include <linux/pm.h>
 #include <linux/device.h>
 #include <linux/init.h>
 #include <linux/bootmem.h>

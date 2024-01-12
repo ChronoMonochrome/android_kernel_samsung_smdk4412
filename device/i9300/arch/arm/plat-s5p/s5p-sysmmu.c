@@ -17,7 +17,7 @@
 #include <linux/interrupt.h>
 #include <linux/platform_device.h>
 #include <linux/slab.h>
-#include <device/linux/pm_runtime.h>
+#include <linux/pm_runtime.h>
 #include <linux/clk.h>
 #include <linux/err.h>
 #include <linux/mm.h>

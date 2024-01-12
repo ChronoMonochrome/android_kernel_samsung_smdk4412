@@ -30,7 +30,7 @@
 #include <linux/kthread.h>
 #include <linux/notifier.h>
 #include <device/linux/regulator/consumer.h>
-#include <device/linux/pm_runtime.h>
+#include <linux/pm_runtime.h>
 
 #include <plat/fb.h>
 #include <plat/mipi_dsim2.h>

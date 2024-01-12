@@ -132,7 +132,7 @@ struct s3cfb_extdsp_lcd {
 #include <mach/midas-sound.h>
 #ifdef CONFIG_USB_HOST_NOTIFY
 #include <linux/host_notify.h>
-#include <device/linux/pm_runtime.h>
+#include <linux/pm_runtime.h>
 #include <device/linux/usb.h>
 #include <device/linux/usb/hcd.h>
 #include <mach/usb_switch.h>

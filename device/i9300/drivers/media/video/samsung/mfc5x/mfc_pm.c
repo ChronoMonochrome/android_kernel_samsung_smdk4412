@@ -15,7 +15,7 @@
 #include <linux/clk.h>
 #include <linux/delay.h>
 #ifdef CONFIG_PM_RUNTIME
-#include <device/linux/pm_runtime.h>
+#include <linux/pm_runtime.h>
 #endif
 #include <linux/interrupt.h>
 

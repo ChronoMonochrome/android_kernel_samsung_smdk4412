@@ -12,7 +12,7 @@
  */
 
 #include <linux/delay.h>
-#include <device/linux/pm_runtime.h>
+#include <linux/pm_runtime.h>
 #include <plat/tvout.h>
 
 #include "hdmi.h"

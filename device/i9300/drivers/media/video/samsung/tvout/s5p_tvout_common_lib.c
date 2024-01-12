@@ -14,7 +14,7 @@
 #include <linux/slab.h>
 #include <linux/err.h>
 
-#include <device/linux/pm_runtime.h>
+#include <linux/pm_runtime.h>
 
 #include "s5p_tvout_common_lib.h"
 

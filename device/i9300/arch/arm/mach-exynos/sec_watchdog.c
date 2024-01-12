@@ -20,7 +20,7 @@
 #include <linux/moduleparam.h>
 #include <linux/init.h>
 #include <linux/platform_device.h>
-#include <device/linux/pm.h>
+#include <linux/pm.h>
 #include <linux/cpufreq.h>
 #include <linux/err.h>
 #include <linux/irq.h>

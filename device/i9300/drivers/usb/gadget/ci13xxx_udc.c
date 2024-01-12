@@ -60,7 +60,7 @@
 #include <linux/irq.h>
 #include <linux/kernel.h>
 #include <linux/slab.h>
-#include <device/linux/pm_runtime.h>
+#include <linux/pm_runtime.h>
 #include <device/linux/usb/ch9.h>
 #include <device/linux/usb/gadget.h>
 #include <device/linux/usb/otg.h>

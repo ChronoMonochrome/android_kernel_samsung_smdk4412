@@ -18,7 +18,7 @@
 
 #include <linux/module.h>
 #include <linux/platform_device.h>
-#include <device/linux/pm_runtime.h>
+#include <linux/pm_runtime.h>
 #include <device/linux/usb/msm_hsusb_hw.h>
 #include <device/linux/usb/ulpi.h>
 

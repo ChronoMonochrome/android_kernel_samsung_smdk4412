@@ -14,7 +14,7 @@
 
 #include <linux/clk.h>
 #include <linux/platform_device.h>
-#include <device/linux/pm_runtime.h>
+#include <linux/pm_runtime.h>
 
 #include <plat/cpu.h>
 #include <plat/ehci.h>

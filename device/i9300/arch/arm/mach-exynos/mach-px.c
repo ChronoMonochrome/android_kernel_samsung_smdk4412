@@ -199,7 +199,7 @@
 #ifdef CONFIG_USB_HOST_NOTIFY
 #include <linux/host_notify.h>
 #endif
-#include <device/linux/pm_runtime.h>
+#include <linux/pm_runtime.h>
 
 #ifdef CONFIG_SMB136_CHARGER
 #include <linux/power/smb136_charger.h>

@@ -13,8 +13,8 @@
 #include <linux/string.h>
 #include <linux/slab.h>
 #include <linux/io.h>
-#include <device/linux/pm.h>
-#include <device/linux/pm_runtime.h>
+#include <linux/pm.h>
+#include <linux/pm_runtime.h>
 #include <device/linux/amba/bus.h>
 
 #include <asm/irq.h>

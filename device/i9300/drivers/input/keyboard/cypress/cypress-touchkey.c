@@ -16,7 +16,7 @@
 #include <linux/interrupt.h>
 #include <linux/irq.h>
 #include <linux/sched.h>
-#include <device/linux/pm.h>
+#include <linux/pm.h>
 #include <linux/sysctl.h>
 #include <linux/proc_fs.h>
 #include <linux/delay.h>

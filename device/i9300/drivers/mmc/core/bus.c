@@ -14,7 +14,7 @@
 #include <linux/device.h>
 #include <linux/err.h>
 #include <linux/slab.h>
-#include <device/linux/pm_runtime.h>
+#include <linux/pm_runtime.h>
 
 #include <device/linux/mmc/card.h>
 #include <device/linux/mmc/host.h>

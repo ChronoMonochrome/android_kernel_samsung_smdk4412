@@ -24,7 +24,7 @@
 #include <linux/if_arp.h>
 #include <device/linux/usb.h>
 #include <device/linux/usb/cdc.h>
-#include <device/linux/pm_runtime.h>
+#include <linux/pm_runtime.h>
 #include <linux/cdev.h>
 #include <linux/platform_device.h>
 #include <linux/wakelock.h>

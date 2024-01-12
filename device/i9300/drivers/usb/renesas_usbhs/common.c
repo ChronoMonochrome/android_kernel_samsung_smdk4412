@@ -16,7 +16,7 @@
  */
 #include <linux/io.h>
 #include <linux/module.h>
-#include <device/linux/pm_runtime.h>
+#include <linux/pm_runtime.h>
 #include <linux/slab.h>
 #include <linux/sysfs.h>
 #include "./common.h"

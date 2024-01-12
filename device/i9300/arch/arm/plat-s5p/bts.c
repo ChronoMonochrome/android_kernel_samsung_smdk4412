@@ -23,7 +23,7 @@
 #include <linux/slab.h>
 #include <linux/clk.h>
 #if (defined(CONFIG_EXYNOS_DEV_PD) && defined(CONFIG_PM_RUNTIME))
-#include <device/linux/pm_runtime.h>
+#include <linux/pm_runtime.h>
 #include <plat/pd.h>
 #endif
 #include <plat/devs.h>

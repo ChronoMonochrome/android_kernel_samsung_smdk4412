@@ -31,7 +31,7 @@
 #ifdef CONFIG_USB_HOST_NOTIFY
 #include <linux/host_notify.h>
 #endif
-#include <device/linux/pm_runtime.h>
+#include <linux/pm_runtime.h>
 #include <device/linux/usb.h>
 #include <device/linux/usb/hcd.h>
 

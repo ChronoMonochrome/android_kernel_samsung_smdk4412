@@ -18,7 +18,7 @@
 #include <linux/mm.h>
 #include <linux/swap.h>
 #include <linux/swapops.h>
-#include <device/linux/pm.h>
+#include <linux/pm.h>
 #include <linux/fs.h>
 #include <linux/console.h>
 #include <linux/cpu.h>

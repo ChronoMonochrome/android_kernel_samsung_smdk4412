@@ -16,11 +16,11 @@
  */
 #include <linux/platform_device.h>
 #include <linux/version.h>
-#include <device/linux/pm.h>
+#include <linux/pm.h>
 #include <device/linux/suspend.h>
 
 #ifdef CONFIG_PM_RUNTIME
-#include <device/linux/pm_runtime.h>
+#include <linux/pm_runtime.h>
 #endif
 
 #ifdef CONFIG_MALI_DVFS

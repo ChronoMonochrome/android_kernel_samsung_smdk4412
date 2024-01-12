@@ -4,7 +4,7 @@
 #include <linux/swap.h>
 #include <linux/notifier.h>
 #include <linux/init.h>
-#include <device/linux/pm.h>
+#include <linux/pm.h>
 #include <linux/mm.h>
 #include <device/linux/freezer.h>
 #include <asm/errno.h>

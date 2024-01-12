@@ -22,7 +22,7 @@
 #include <linux/delay.h>
 #include <linux/clk.h>
 #include <device/linux/usb.h>
-#include <device/linux/pm_runtime.h>
+#include <linux/pm_runtime.h>
 #include <plat/gpio-cfg.h>
 #include <linux/mdm_hsic_pm.h>
 #include <device/linux/suspend.h>

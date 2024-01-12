@@ -14,7 +14,7 @@
 #include <linux/cma.h>
 #include <linux/uaccess.h>
 #include <linux/fs.h>
-#include <device/linux/pm_runtime.h>
+#include <linux/pm_runtime.h>
 #include <linux/slab.h>
 #include <linux/mm.h>
 #include <linux/dma-mapping.h>

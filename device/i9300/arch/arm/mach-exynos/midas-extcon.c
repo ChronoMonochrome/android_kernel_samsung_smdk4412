@@ -19,7 +19,7 @@
  */
 
 #include <linux/platform_device.h>
-#include <device/linux/pm_runtime.h>
+#include <linux/pm_runtime.h>
 #include <linux/err.h>
 #include <linux/extcon.h>
 #include <device/linux/usb/ch9.h>

@@ -16,7 +16,7 @@
 #include <linux/sched.h>
 
 #ifdef CONFIG_PM_RUNTIME
-#include <device/linux/pm_runtime.h>
+#include <linux/pm_runtime.h>
 #endif /* CONFIG_PM_RUNTIME */
 
 #include <linux/platform_device.h>

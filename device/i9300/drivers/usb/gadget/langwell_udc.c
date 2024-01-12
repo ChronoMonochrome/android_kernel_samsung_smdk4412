@@ -44,7 +44,7 @@
 #include <device/linux/usb/ch9.h>
 #include <device/linux/usb/gadget.h>
 #include <device/linux/usb/otg.h>
-#include <device/linux/pm.h>
+#include <linux/pm.h>
 #include <linux/io.h>
 #include <linux/irq.h>
 #include <asm/system.h>

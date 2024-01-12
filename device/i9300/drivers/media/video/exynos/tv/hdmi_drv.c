@@ -23,7 +23,7 @@
 #include <linux/irq.h>
 #include <linux/delay.h>
 #include <linux/bug.h>
-#include <device/linux/pm_runtime.h>
+#include <linux/pm_runtime.h>
 #include <linux/clk.h>
 #include <device/linux/regulator/consumer.h>
 #include <device/linux/videodev2_exynos_media.h>

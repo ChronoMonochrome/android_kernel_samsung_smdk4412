@@ -1,5 +1,5 @@
 #include <linux/delay.h>
-#include <device/linux/pm.h>
+#include <linux/pm.h>
 #include <asm/io.h>
 #include <asm/cacheflush.h>
 #include <asm/system_misc.h>

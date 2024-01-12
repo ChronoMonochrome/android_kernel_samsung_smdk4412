@@ -1,4 +1,4 @@
-#include <device/linux/pm.h>
+#include <linux/pm.h>
 
 /* Functions local to drivers/usb/core/ */
 

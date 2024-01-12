@@ -18,7 +18,7 @@
 #include <linux/clk.h>
 #include <linux/err.h>
 #if (defined(CONFIG_EXYNOS_DEV_PD) && defined(CONFIG_PM_RUNTIME))
-#include <device/linux/pm_runtime.h>
+#include <linux/pm_runtime.h>
 #endif
 
 #include <asm/hardware/pl330.h>
