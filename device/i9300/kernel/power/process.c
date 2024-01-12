@@ -173,9 +173,12 @@ int freeze_kernel_threads(void)
 	printk("\n");
 	BUG_ON(in_atomic());
 
-	if (error)
-		thaw_kernel_threads();
-	return error;
+		if (cgroup_freezing_or_frozen(p))
+			continue;
+
+		thaw_process(p);
+	} while_each_thread(g, p);
+	read_unlock(&tasklist_lock);
 }
 
 void thaw_processes(void)
