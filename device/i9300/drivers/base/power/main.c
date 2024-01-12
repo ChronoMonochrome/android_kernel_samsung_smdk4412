@@ -465,13 +465,13 @@ static int device_resume_noirq(struct device *dev, pm_message_t state)
 }
 
 /**
- * dpm_resume_start - Execute "early resume" callbacks for non-sysdev devices.
+ * dpm_resume_noirq - Execute "early resume" callbacks for non-sysdev devices.
  * @state: PM transition of the system being carried out.
  *
  * Call the "noirq" resume handlers for all devices marked as DPM_OFF_IRQ and
  * enable device drivers to receive interrupts.
  */
-void dpm_resume_start(pm_message_t state)
+void dpm_resume_noirq(pm_message_t state)
 {
 	ktime_t starttime = ktime_get();
 
@@ -495,7 +495,7 @@ void dpm_resume_start(pm_message_t state)
 	dpm_show_time(starttime, state, "early");
 	resume_device_irqs();
 }
-EXPORT_SYMBOL_GPL(dpm_resume_start);
+EXPORT_SYMBOL_GPL(dpm_resume_noirq);
 
 /**
  * legacy_resume - Execute a legacy (bus or class) resume callback for device.
@@ -844,13 +844,13 @@ exit:
 }
 
 /**
- * dpm_suspend_end - Execute "late suspend" callbacks for non-sysdev devices.
+ * dpm_suspend_noirq - Execute "late suspend" callbacks for non-sysdev devices.
  * @state: PM transition of the system being carried out.
  *
  * Prevent device drivers from receiving interrupts and call the "noirq" suspend
  * handlers for all non-sysdev devices.
  */
-int dpm_suspend_end(pm_message_t state)
+int dpm_suspend_noirq(pm_message_t state)
 {
 	ktime_t starttime = ktime_get();
 	int error = 0;
@@ -877,12 +877,12 @@ int dpm_suspend_end(pm_message_t state)
 	}
 	mutex_unlock(&dpm_list_mtx);
 	if (error)
-		dpm_resume_start(resume_event(state));
+		dpm_resume_noirq(resume_event(state));
 	else
 		dpm_show_time(starttime, state, "late");
 	return error;
 }
-EXPORT_SYMBOL_GPL(dpm_suspend_end);
+EXPORT_SYMBOL_GPL(dpm_suspend_noirq);
 
 /**
  * legacy_suspend - Execute a legacy (bus or class) suspend callback for device.
