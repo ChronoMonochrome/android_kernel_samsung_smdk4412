@@ -259,6 +259,8 @@ additional_build_rules = {
     [{
         "injected_objects":
         [
+            "device/i9300/drivers/rtc/alarm.o",
+            "device/i9300/drivers/rtc/alarm-dev.o",
             "device/i9300/drivers/rtc/rtc-max77686.o",
             "device/i9300/drivers/rtc/rtc-s3c.o",
         ],
