@@ -1022,7 +1022,7 @@ static int diag_function_bind_config(struct android_usb_function *f,
 {
 	char *name;
 	char buf[32], *b;
-	int err = -1;
+	int once = 0, err = -1;
 	int (*notify)(uint32_t, const char *) = NULL;
 
 	strlcpy(buf, diag_clients, sizeof(buf));
