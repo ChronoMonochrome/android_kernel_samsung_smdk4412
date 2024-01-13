@@ -8,11 +8,14 @@
  *
  */
 
-#include <linux/module.h>
+#include <linux/export.h>
 #include <linux/kobject.h>
 #include <linux/string.h>
 #include <linux/resume-trace.h>
 #include <linux/workqueue.h>
+#include <linux/hrtimer.h>
+#include <linux/debugfs.h>
+#include <linux/seq_file.h>
 
 #if defined(CONFIG_CPU_FREQ) && defined(CONFIG_ARCH_EXYNOS4)
 #define CONFIG_DVFS_LIMIT
@@ -21,6 +24,11 @@
 #if defined(CONFIG_CPU_EXYNOS4210)
 #define CONFIG_GPU_LOCK
 #define CONFIG_ROTATION_BOOSTER_SUPPORT
+#endif
+
+#if defined(CONFIG_CPU_EXYNOS4412) && defined(CONFIG_MALI400) \
+			&& defined(CONFIG_MALI_DVFS)
+#define CONFIG_EXYNOS4_GPU_LOCK
 #endif
 
 #ifdef CONFIG_DVFS_LIMIT
@@ -41,6 +49,8 @@ extern int mali_dvfs_bottom_lock_pop(void);
 
 #include "power.h"
 
+#define MAX_BUF 100
+
 DEFINE_MUTEX(pm_mutex);
 
 #ifdef CONFIG_PM_SLEEP
@@ -48,6 +58,13 @@ DEFINE_MUTEX(pm_mutex);
 /* Routines for PM-transition notifications */
 
 static BLOCKING_NOTIFIER_HEAD(pm_chain_head);
+
+static void touch_event_fn(struct work_struct *work);
+static DECLARE_WORK(touch_event_struct, touch_event_fn);
+
+static struct hrtimer tc_ev_timer;
+static int tc_ev_processed;
+static ktime_t touch_evt_timer_val;
 
 int register_pm_notifier(struct notifier_block *nb)
 {
@@ -92,6 +109,81 @@ static ssize_t pm_async_store(struct kobject *kobj, struct kobj_attribute *attr,
 }
 
 power_attr(pm_async);
+
+static ssize_t
+touch_event_show(struct kobject *kobj,
+		 struct kobj_attribute *attr, char *buf)
+{
+	if (tc_ev_processed == 0)
+		return snprintf(buf, strnlen("touch_event", MAX_BUF) + 1,
+				"touch_event");
+	else
+		return snprintf(buf, strnlen("null", MAX_BUF) + 1,
+				"null");
+}
+
+static ssize_t
+touch_event_store(struct kobject *kobj,
+		  struct kobj_attribute *attr,
+		  const char *buf, size_t n)
+{
+
+	hrtimer_cancel(&tc_ev_timer);
+	tc_ev_processed = 0;
+
+	/* set a timer to notify the userspace to stop processing
+	 * touch event
+	 */
+	hrtimer_start(&tc_ev_timer, touch_evt_timer_val, HRTIMER_MODE_REL);
+
+	/* wakeup the userspace poll */
+	sysfs_notify(kobj, NULL, "touch_event");
+
+	return n;
+}
+
+power_attr(touch_event);
+
+static ssize_t
+touch_event_timer_show(struct kobject *kobj,
+		 struct kobj_attribute *attr, char *buf)
+{
+	return snprintf(buf, MAX_BUF, "%lld", touch_evt_timer_val.tv64);
+}
+
+static ssize_t
+touch_event_timer_store(struct kobject *kobj,
+			struct kobj_attribute *attr,
+			const char *buf, size_t n)
+{
+	unsigned long val;
+
+	if (strict_strtoul(buf, 10, &val))
+		return -EINVAL;
+
+	touch_evt_timer_val = ktime_set(0, val*1000);
+
+	return n;
+}
+
+power_attr(touch_event_timer);
+
+static void touch_event_fn(struct work_struct *work)
+{
+	/* wakeup the userspace poll */
+	tc_ev_processed = 1;
+	sysfs_notify(power_kobj, NULL, "touch_event");
+
+	return;
+}
+
+static enum hrtimer_restart tc_ev_stop(struct hrtimer *hrtimer)
+{
+
+	schedule_work(&touch_event_struct);
+
+	return HRTIMER_NORESTART;
+}
 
 #ifdef CONFIG_PM_DEBUG
 int pm_test_level = TEST_NONE;
@@ -158,6 +250,101 @@ power_attr(pm_test);
 
 #endif /* CONFIG_PM_SLEEP */
 
+#ifdef CONFIG_DEBUG_FS
+static char *suspend_step_name(enum suspend_stat_step step)
+{
+	switch (step) {
+	case SUSPEND_FREEZE:
+		return "freeze";
+	case SUSPEND_PREPARE:
+		return "prepare";
+	case SUSPEND_SUSPEND:
+		return "suspend";
+	case SUSPEND_SUSPEND_NOIRQ:
+		return "suspend_noirq";
+	case SUSPEND_RESUME_NOIRQ:
+		return "resume_noirq";
+	case SUSPEND_RESUME:
+		return "resume";
+	default:
+		return "";
+	}
+}
+
+static int suspend_stats_show(struct seq_file *s, void *unused)
+{
+	int i, index, last_dev, last_errno, last_step;
+
+	last_dev = suspend_stats.last_failed_dev + REC_FAILED_NUM - 1;
+	last_dev %= REC_FAILED_NUM;
+	last_errno = suspend_stats.last_failed_errno + REC_FAILED_NUM - 1;
+	last_errno %= REC_FAILED_NUM;
+	last_step = suspend_stats.last_failed_step + REC_FAILED_NUM - 1;
+	last_step %= REC_FAILED_NUM;
+	seq_printf(s, "%s: %d\n%s: %d\n%s: %d\n%s: %d\n"
+			"%s: %d\n%s: %d\n%s: %d\n%s: %d\n",
+			"success", suspend_stats.success,
+			"fail", suspend_stats.fail,
+			"failed_freeze", suspend_stats.failed_freeze,
+			"failed_prepare", suspend_stats.failed_prepare,
+			"failed_suspend", suspend_stats.failed_suspend,
+			"failed_suspend_noirq",
+				suspend_stats.failed_suspend_noirq,
+			"failed_resume", suspend_stats.failed_resume,
+			"failed_resume_noirq",
+				suspend_stats.failed_resume_noirq);
+	seq_printf(s,	"failures:\n  last_failed_dev:\t%-s\n",
+			suspend_stats.failed_devs[last_dev]);
+	for (i = 1; i < REC_FAILED_NUM; i++) {
+		index = last_dev + REC_FAILED_NUM - i;
+		index %= REC_FAILED_NUM;
+		seq_printf(s, "\t\t\t%-s\n",
+			suspend_stats.failed_devs[index]);
+	}
+	seq_printf(s,	"  last_failed_errno:\t%-d\n",
+			suspend_stats.errno[last_errno]);
+	for (i = 1; i < REC_FAILED_NUM; i++) {
+		index = last_errno + REC_FAILED_NUM - i;
+		index %= REC_FAILED_NUM;
+		seq_printf(s, "\t\t\t%-d\n",
+			suspend_stats.errno[index]);
+	}
+	seq_printf(s,	"  last_failed_step:\t%-s\n",
+			suspend_step_name(
+				suspend_stats.failed_steps[last_step]));
+	for (i = 1; i < REC_FAILED_NUM; i++) {
+		index = last_step + REC_FAILED_NUM - i;
+		index %= REC_FAILED_NUM;
+		seq_printf(s, "\t\t\t%-s\n",
+			suspend_step_name(
+				suspend_stats.failed_steps[index]));
+	}
+
+	return 0;
+}
+
+static int suspend_stats_open(struct inode *inode, struct file *file)
+{
+	return single_open(file, suspend_stats_show, NULL);
+}
+
+static const struct file_operations suspend_stats_operations = {
+	.open           = suspend_stats_open,
+	.read           = seq_read,
+	.llseek         = seq_lseek,
+	.release        = single_release,
+};
+
+static int __init pm_debugfs_init(void)
+{
+	debugfs_create_file("suspend_stats", S_IFREG | S_IRUGO,
+			NULL, NULL, &suspend_stats_operations);
+	return 0;
+}
+
+late_initcall(pm_debugfs_init);
+#endif /* CONFIG_DEBUG_FS */
+
 struct kobject *power_kobj;
 
 /**
@@ -198,8 +385,7 @@ EXPORT_SYMBOL(fake_shut_down);
 extern void wakelock_force_suspend(void);
 #endif
 
-static ssize_t state_store(struct kobject *kobj, struct kobj_attribute *attr,
-			   const char *buf, size_t n)
+static suspend_state_t decode_state(const char *buf, size_t n)
 {
 #ifdef CONFIG_SUSPEND
 	suspend_state_t state = PM_SUSPEND_MIN;
@@ -207,23 +393,19 @@ static ssize_t state_store(struct kobject *kobj, struct kobj_attribute *attr,
 #endif
 	char *p;
 	int len;
-	int error = -EINVAL;
 
 	p = memchr(buf, '\n', n);
 	len = p ? p - buf : n;
 
-	/* First, check if we are requested to hibernate */
-	if (len == 4 && !strncmp(buf, "disk", len)) {
-		error = hibernate();
-  goto Exit;
-	}
+	/* Check hibernation first. */
+	if (len == 4 && !strncmp(buf, "disk", len))
+		return PM_SUSPEND_MAX;
 
 #ifdef CONFIG_SUSPEND
-	for (s = &pm_states[state]; state < PM_SUSPEND_MAX; s++, state++) {
+	for (s = &pm_states[state]; state < PM_SUSPEND_MAX; s++, state++)
 		if (*s && len == strlen(*s) && !strncmp(buf, *s, len))
-			break;
-	}
-
+			return state;
+#endif
 #ifdef CONFIG_FAST_BOOT
 	if (len == 4 && !strncmp(buf, "dmem", len)) {
 		pr_info("%s: fake shut down!!!\n", __func__);
@@ -232,23 +414,34 @@ static ssize_t state_store(struct kobject *kobj, struct kobj_attribute *attr,
 	}
 #endif
 
-	if (state < PM_SUSPEND_MAX && *s) {
-#ifdef CONFIG_EARLYSUSPEND
-		if (state == PM_SUSPEND_ON || valid_state(state)) {
-			error = 0;
-			request_suspend_state(state);
-		}
-#ifdef CONFIG_FAST_BOOT
-		if (fake_shut_down)
-			wakelock_force_suspend();
-#endif
-#else
-		error = enter_state(state);
-#endif
-	}
-#endif
+	return PM_SUSPEND_ON;
+}
 
- Exit:
+static ssize_t state_store(struct kobject *kobj, struct kobj_attribute *attr,
+			   const char *buf, size_t n)
+{
+	suspend_state_t state;
+	int error;
+
+	error = pm_autosleep_lock();
+	if (error)
+		return error;
+
+	if (pm_autosleep_state() > PM_SUSPEND_ON) {
+		error = -EBUSY;
+		goto out;
+	}
+
+	state = decode_state(buf, n);
+	if (state < PM_SUSPEND_MAX)
+		error = pm_suspend(state);
+	else if (state == PM_SUSPEND_MAX)
+		error = hibernate();
+	else
+		error = -EINVAL;
+
+ out:
+	pm_autosleep_unlock();
 	return error ? error : n;
 }
 
@@ -289,7 +482,8 @@ static ssize_t wakeup_count_show(struct kobject *kobj,
 {
 	unsigned int val;
 
-	return pm_get_wakeup_count(&val) ? sprintf(buf, "%u\n", val) : -EINTR;
+	return pm_get_wakeup_count(&val, true) ?
+		sprintf(buf, "%u\n", val) : -EINTR;
 }
 
 static ssize_t wakeup_count_store(struct kobject *kobj,
@@ -297,12 +491,26 @@ static ssize_t wakeup_count_store(struct kobject *kobj,
 				const char *buf, size_t n)
 {
 	unsigned int val;
+	int error;
 
+	error = pm_autosleep_lock();
+	if (error)
+		return error;
+
+	if (pm_autosleep_state() > PM_SUSPEND_ON) {
+		error = -EBUSY;
+		goto out;
+	}
+
+	error = -EINVAL;
 	if (sscanf(buf, "%u", &val) == 1) {
 		if (pm_save_wakeup_count(val))
-			return n;
+			error = n;
 	}
-	return -EINVAL;
+
+ out:
+	pm_autosleep_unlock();
+	return error;
 }
 
 power_attr(wakeup_count);
@@ -536,20 +744,24 @@ static ssize_t cpufreq_max_limit_store(struct kobject *kobj,
 			printk(KERN_ERR "%s: Unlock request is ignored\n",
 				__func__);
 	} else { /* Lock request */
-		if (get_cpufreq_level((unsigned int)val, &cpufreq_level)
-		    == VALID_LEVEL) {
-			if (cpufreq_max_limit_val != -1)
-				/* Unlock the previous lock */
-				exynos_cpufreq_upper_limit_free(
-					DVFS_LOCK_ID_USER);
-			lock_ret = exynos_cpufreq_upper_limit(
-					DVFS_LOCK_ID_USER, cpufreq_level);
-			/* ret of exynos_cpufreq_upper_limit is meaningless.
-			   0 is fail? success? */
-			cpufreq_max_limit_val = val;
-		} else /* Invalid lock request --> No action */
-			printk(KERN_ERR "%s: Lock request is invalid\n",
-				__func__);
+		if (val < 1200000) {
+			val = 1000000;
+
+			if (get_cpufreq_level((unsigned int)val, &cpufreq_level)
+			    == VALID_LEVEL) {
+				if (cpufreq_max_limit_val != -1)
+					/* Unlock the previous lock */
+					exynos_cpufreq_upper_limit_free(
+						DVFS_LOCK_ID_USER);
+				lock_ret = exynos_cpufreq_upper_limit(
+						DVFS_LOCK_ID_USER, cpufreq_level);
+				/* ret of exynos_cpufreq_upper_limit is meaningless.
+				   0 is fail? success? */
+				cpufreq_max_limit_val = val;
+			} else /* Invalid lock request --> No action */
+				printk(KERN_ERR "%s: Lock request is invalid\n",
+						__func__);
+		}
 	}
 
 	ret = n;
@@ -788,7 +1000,7 @@ out:
 power_attr(mali_lock);
 #endif
 
-static struct attribute * g[] = {
+static struct attribute *g[] = {
 	&state_attr.attr,
 #ifdef CONFIG_PM_TRACE
 	&pm_trace_attr.attr,
@@ -797,6 +1009,9 @@ static struct attribute * g[] = {
 #ifdef CONFIG_PM_SLEEP
 	&pm_async_attr.attr,
 	&wakeup_count_attr.attr,
+#ifdef CONFIG_PM_AUTOSLEEP
+	&autosleep_attr.attr,
+#endif
 #ifdef CONFIG_PM_WAKELOCKS
 	&wake_lock_attr.attr,
 	&wake_unlock_attr.attr,
@@ -809,10 +1024,6 @@ static struct attribute * g[] = {
 	&cpufreq_table_attr.attr,
 	&cpufreq_max_limit_attr.attr,
 	&cpufreq_min_limit_attr.attr,
-#endif
-#ifdef CONFIG_GPU_LOCK
-	&gpu_lock_attr.attr,
-#endif
 #ifdef CONFIG_PEGASUS_GPU_LOCK
 	&mali_lock_attr.attr,
 #endif
@@ -847,10 +1058,19 @@ static int __init pm_init(void)
 		return error;
 	hibernate_image_size_init();
 	hibernate_reserved_size_init();
+
+	touch_evt_timer_val = ktime_set(2, 0);
+	hrtimer_init(&tc_ev_timer, CLOCK_MONOTONIC, HRTIMER_MODE_REL);
+	tc_ev_timer.function = &tc_ev_stop;
+	tc_ev_processed = 1;
+
 	power_kobj = kobject_create_and_add("power", NULL);
 	if (!power_kobj)
 		return -ENOMEM;
-	return sysfs_create_group(power_kobj, &attr_group);
+	error = sysfs_create_group(power_kobj, &attr_group);
+	if (error)
+		return error;
+	return pm_autosleep_init();
 }
 
 core_initcall(pm_init);
