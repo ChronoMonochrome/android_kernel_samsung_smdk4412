@@ -22,7 +22,6 @@
 #include <linux/rtc.h>
 #include <linux/sched.h>
 #include <linux/spinlock.h>
-#include <linux/sysdev.h>
 
 #define ALARM_DELTA 120
 #define ANDROID_ALARM_PRINT_ERROR (1U << 0)
