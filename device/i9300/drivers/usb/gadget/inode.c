@@ -1041,8 +1041,6 @@ ep0_read (struct file *fd, char __user *buf, size_t len, loff_t *ptr)
 // FIXME don't call this with the spinlock held ...
 				if (copy_to_user (buf, dev->req->buf, len))
 					retval = -EFAULT;
-				else
-					retval = len;
 				clean_req (dev->gadget->ep0, dev->req);
 				/* NOTE userspace can't yet choose to stall */
 			}
@@ -2119,6 +2117,7 @@ static struct file_system_type gadgetfs_type = {
 	.mount		= gadgetfs_mount,
 	.kill_sb	= gadgetfs_kill_sb,
 };
+MODULE_ALIAS_FS("gadgetfs");
 
 /*----------------------------------------------------------------------*/
 

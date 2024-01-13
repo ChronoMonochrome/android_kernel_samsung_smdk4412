@@ -20,9 +20,6 @@
 
 #define	DMA_ADDR_INVALID	(~(dma_addr_t)0)
 
-#ifdef CONFIG_USB_ANDROID_SAMSUNG_COMPOSITE
-#include <device/linux/usb/composite.h>
-#endif
 static u8 clear_feature_num;
 static int clear_feature_flag;
 static int set_conf_done;
