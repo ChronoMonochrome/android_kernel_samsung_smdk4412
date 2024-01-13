@@ -32,11 +32,15 @@
 /* Debugging ****************************************************************/
 
 #ifdef VERBOSE_DEBUG
+#ifndef pr_vdebug
 #  define pr_vdebug pr_debug
+#endif /* pr_vdebug */
 #  define ffs_dump_mem(prefix, ptr, len) \
 	print_hex_dump_bytes(pr_fmt(prefix ": "), DUMP_PREFIX_NONE, ptr, len)
 #else
+#ifndef pr_vdebug
 #  define pr_vdebug(...)                 do { } while (0)
+#endif /* pr_vdebug */
 #  define ffs_dump_mem(prefix, ptr, len) do { } while (0)
 #endif /* VERBOSE_DEBUG */
 
@@ -1087,21 +1091,26 @@ static int ffs_sb_fill(struct super_block *sb, void *_data, int silent)
 				  &simple_dir_inode_operations,
 				  &data->perms);
 	if (unlikely(!inode))
-		goto Enomem;
-	sb->s_root = d_alloc_root(inode);
-	if (unlikely(!sb->s_root)) {
-		iput(inode);
-		goto Enomem;
-	}
+		goto enomem1;
+	d = d_alloc_root(inode);
+	if (unlikely(!d))
+		goto enomem2;
+	sb->s_root = d;
 
 	/* EP0 file */
 	if (unlikely(!ffs_sb_create_file(sb, "ep0", ffs,
 					 &ffs_ep0_operations, NULL)))
-		goto Enomem;
+		goto enomem3;
 
 	return 0;
 
-Enomem:
+enomem3:
+	dput(d);
+enomem2:
+	iput(inode);
+enomem1:
+	ffs_data_put(ffs);
+enomem0:
 	return -ENOMEM;
 }
 
@@ -1229,6 +1238,7 @@ static struct file_system_type ffs_fs_type = {
 	.mount		= ffs_fs_mount,
 	.kill_sb	= ffs_fs_kill_sb,
 };
+MODULE_ALIAS_FS("functionfs");
 
 
 /* Driver's main init/cleanup functions *************************************/
