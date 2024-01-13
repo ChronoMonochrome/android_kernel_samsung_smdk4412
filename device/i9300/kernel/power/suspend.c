@@ -8,7 +8,6 @@
  * This file is released under the GPLv2.
  */
 
-#include <linux/module.h>
 #include <linux/string.h>
 #include <linux/delay.h>
 #include <linux/errno.h>
@@ -24,6 +23,7 @@
 #include <linux/slab.h>
 #include <device/linux/suspend.h>
 #include <linux/syscore_ops.h>
+#include <linux/ftrace.h>
 #include <trace/events/power.h>
 
 #include "power.h"
@@ -127,16 +127,12 @@ static int suspend_prepare(suspend_state_t state)
 	if (error)
 		goto Finish;
 
-	error = usermodehelper_disable();
-	if (error)
-		goto Finish;
-
 	error = suspend_freeze_processes();
 	if (!error)
 		return 0;
 
-	suspend_thaw_processes();
-	usermodehelper_enable();
+	suspend_stats.failed_freeze++;
+	dpm_save_failed_step(SUSPEND_FREEZE);
  Finish:
 	pm_notifier_call_chain(PM_POST_SUSPEND);
 	pm_restore_console();
@@ -182,7 +178,7 @@ static int suspend_enter(suspend_state_t state, bool *wakeup)
 
 	CHECK_POINT;
 
-	error = dpm_suspend_end(PMSG_SUSPEND);
+	error = dpm_suspend_noirq(PMSG_SUSPEND);
 	if (error) {
 		printk(KERN_ERR "PM: Some devices failed to power down\n");
 		goto Platform_finish;
@@ -242,7 +238,7 @@ static int suspend_enter(suspend_state_t state, bool *wakeup)
 	if (need_suspend_ops(state) && suspend_ops->wake)
 		suspend_ops->wake();
 
-	dpm_resume_start(PMSG_RESUME);
+	dpm_resume_noirq(PMSG_RESUME);
 
  Platform_finish:
 	if (need_suspend_ops(state) && suspend_ops->finish)
@@ -271,6 +267,7 @@ int suspend_devices_and_enter(suspend_state_t state)
 			goto Close;
 	}
 	suspend_console();
+	ftrace_stop();
 	suspend_test_start();
 	error = dpm_suspend_start(PMSG_SUSPEND);
 	if (error) {
@@ -290,6 +287,7 @@ int suspend_devices_and_enter(suspend_state_t state)
 	suspend_test_start();
 	dpm_resume_end(PMSG_RESUME);
 	suspend_test_finish("resume devices");
+	ftrace_start();
 	resume_console();
  Close:
 	if (need_suspend_ops(state) && suspend_ops->end)
@@ -312,7 +310,6 @@ int suspend_devices_and_enter(suspend_state_t state)
 static void suspend_finish(void)
 {
 	suspend_thaw_processes();
-	usermodehelper_enable();
 	pm_notifier_call_chain(PM_POST_SUSPEND);
 	pm_restore_console();
 }
@@ -361,7 +358,7 @@ void pm_wd_del_timer(struct timer_list *timer)
  *	Then, do the setup for suspend, enter the state, and cleaup (after
  *	we've woken up).
  */
-int enter_state(suspend_state_t state)
+static int enter_state(suspend_state_t state)
 {
 	int error;
 	struct timer_list timer;
@@ -414,8 +411,12 @@ int enter_state(suspend_state_t state)
  */
 int pm_suspend(suspend_state_t state)
 {
-	if (state > PM_SUSPEND_ON && state <= PM_SUSPEND_MAX)
-		return enter_state(state);
+	int ret;
+	if (state > PM_SUSPEND_ON && state <= PM_SUSPEND_MAX) {
+		ret = enter_state(state);
+		suspend_stats_update(ret);
+		return ret;
+	}
 	return -EINVAL;
 }
 EXPORT_SYMBOL(pm_suspend);
