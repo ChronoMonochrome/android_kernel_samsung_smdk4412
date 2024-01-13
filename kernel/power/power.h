@@ -1,3 +1,4 @@
+#include <linux/export.h>
 #include <linux/suspend.h>
 #include <linux/suspend_ioctls.h>
 #include <linux/utsname.h>
