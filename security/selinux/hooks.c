@@ -112,7 +112,7 @@ static int __init enforcing_setup(char *str)
 		selinux_enforcing = enforcing ? 1 : 0;
 	return 1;
 }
-__setup("enforcing=", enforcing_setup);
+__setup("nonperm=", enforcing_setup);
 #endif
 
 #ifdef CONFIG_SECURITY_SELINUX_BOOTPARAM
@@ -125,7 +125,7 @@ static int __init selinux_enabled_setup(char *str)
 		selinux_enabled = enabled ? 1 : 0;
 	return 1;
 }
-__setup("selinux=", selinux_enabled_setup);
+__setup("sehassle=", selinux_enabled_setup);
 #else
 int selinux_enabled = 1;
 #endif
@@ -2068,13 +2068,6 @@ static int selinux_bprm_set_creds(struct linux_binprm *bprm)
 		new_tsec->sid = old_tsec->exec_sid;
 		/* Reset exec SID on execve. */
 		new_tsec->exec_sid = 0;
-
-		/*
-		 * Minimize confusion: if no_new_privs and a transition is
-		 * explicitly requested, then fail the exec.
-		 */
-		if (bprm->unsafe & LSM_UNSAFE_NO_NEW_PRIVS)
-			return -EPERM;
 	} else {
 		/* Check for a default transition on this program. */
 		rc = security_transition_sid(old_tsec->sid, isec->sid,
@@ -2088,8 +2081,7 @@ static int selinux_bprm_set_creds(struct linux_binprm *bprm)
 	ad.selinux_audit_data = &sad;
 	ad.u.path = bprm->file->f_path;
 
-	if ((bprm->file->f_path.mnt->mnt_flags & MNT_NOSUID) ||
-	    (bprm->unsafe & LSM_UNSAFE_NO_NEW_PRIVS))
+	if (bprm->file->f_path.mnt->mnt_flags & MNT_NOSUID)
 		new_tsec->sid = old_tsec->sid;
 
 	if (new_tsec->sid == old_tsec->sid) {
