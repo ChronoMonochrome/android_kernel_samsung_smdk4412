@@ -212,7 +212,7 @@ static int s6e8ax0_power_off(struct lcd_info *lcd)
 {
 	int ret = 0;
 
-	dev_info(&lcd->ld->dev, "%s\n", __func__);
+	//dev_info(&lcd->ld->dev, "%s\n", __func__);
 
 	lcd->ldi_enable = 0;
 
@@ -288,7 +288,7 @@ static int s6e8ax0_check_fb(struct lcd_device *ld, struct fb_info *fb)
 {
 	struct lcd_info *lcd = lcd_get_data(ld);
 
-	dev_info(&lcd->ld->dev, "%s, fb%d\n", __func__, fb->node);
+	//dev_info(&lcd->ld->dev, "%s, fb%d\n", __func__, fb->node);
 
 	return 0;
 }
@@ -327,7 +327,7 @@ static ssize_t power_reduce_store(struct device *dev,
 		return rc;
 	else {
 		if (lcd->acl_enable != value) {
-			dev_info(dev, "%s - %d, %d\n", __func__, lcd->acl_enable, value);
+			//dev_info(dev, "%s - %d, %d\n", __func__, lcd->acl_enable, value);
 			mutex_lock(&lcd->bl_lock);
 			lcd->acl_enable = value;
 			/* if (lcd->ldi_enable)
@@ -375,7 +375,7 @@ static ssize_t auto_brightness_store(struct device *dev,
 		return rc;
 	else {
 		if (lcd->auto_brightness != value) {
-			dev_info(dev, "%s - %d, %d\n", __func__, lcd->auto_brightness, value);
+			//dev_info(dev, "%s - %d, %d\n", __func__, lcd->auto_brightness, value);
 			mutex_lock(&lcd->bl_lock);
 			lcd->auto_brightness = value;
 			mutex_unlock(&lcd->bl_lock);
@@ -397,9 +397,9 @@ void s6e8ax0_fb_suspend(void)
 
 	set_dsim_lcd_enabled(0);
 
-	dev_info(&lcd->ld->dev, "+%s\n", __func__);
+	//dev_info(&lcd->ld->dev, "+%s\n", __func__);
 	s6e8ax0_power(lcd, FB_BLANK_POWERDOWN);
-	dev_info(&lcd->ld->dev, "-%s\n", __func__);
+	//dev_info(&lcd->ld->dev, "-%s\n", __func__);
 
 	return ;
 }
@@ -408,9 +408,9 @@ void s6e8ax0_fb_resume(void)
 {
 	struct lcd_info *lcd = g_lcd;
 
-	dev_info(&lcd->ld->dev, "+%s\n", __func__);
+	//dev_info(&lcd->ld->dev, "+%s\n", __func__);
 	s6e8ax0_power(lcd, FB_BLANK_UNBLANK);
-	dev_info(&lcd->ld->dev, "-%s\n", __func__);
+	//dev_info(&lcd->ld->dev, "-%s\n", __func__);
 
 	set_dsim_lcd_enabled(1);
 
@@ -435,7 +435,7 @@ static void s6e8ax0_read_id(struct lcd_info *lcd, u8 *buf)
 	ret = s6e8ax0_read(lcd, LDI_ID_REG, LDI_ID_LEN, buf, 3);
 	if (!ret) {
 		lcd->connected = 0;
-		dev_info(&lcd->ld->dev, "panel is not connected well\n");
+		//dev_info(&lcd->ld->dev, "panel is not connected well\n");
 	}
 }
 
