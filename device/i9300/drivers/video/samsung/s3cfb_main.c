@@ -34,7 +34,7 @@
 #include <plat/media.h>
 #include <mach/media.h>
 #include <mach/map.h>
-//#include <mach/board-lcd.h>
+#include <mach/board-lcd.h>
 #include "s3cfb.h"
 
 #ifdef CONFIG_BUSFREQ_OPP
@@ -439,6 +439,17 @@ static int s3cfb_wait_for_vsync_thread(void *data)
 				!ktime_equal(timestamp,
 				fbdev->vsync_info.timestamp) &&
 				fbdev->vsync_info.active);
+
+#if defined(CONFIG_FB_S5P_VSYNC_SEND_UEVENTS)
+                        char *envp[2];
+                        char buf[64];
+                        snprintf(buf, sizeof(buf), "VSYNC=%llu",
+                                        ktime_to_ns(fbdev->vsync_info.timestamp));
+                        envp[0] = buf;
+                        envp[1] = NULL;
+                        kobject_uevent_env(&fbdev->dev->kobj, KOBJ_CHANGE,
+                                                        envp);
+#endif
 
 		sysfs_notify(&fbdev->fb[pdata->default_win]->dev->kobj,
 				NULL, "vsync_event");
@@ -1160,7 +1171,7 @@ static int s3cfb_probe(struct platform_device *pdev)
 			dev_err(fbdev[i]->dev, "failed to allocate for	\
 				global fb structure fimd[%d]!\n", i);
 				ret = -ENOMEM;
-			goto err1;
+			goto err0;
 		}
 
 		fbdev[i]->dev = &pdev->dev;

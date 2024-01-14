@@ -687,7 +687,7 @@ static int lms501xx_check_fb(struct lcd_device *ld, struct fb_info *fb)
 {
 	struct lcd_info *lcd = lcd_get_data(ld);
 
-	dev_info(&lcd->ld->dev, "%s, fb%d\n", __func__, fb->node);
+	//dev_info(&lcd->ld->dev, "%s, fb%d\n", __func__, fb->node);
 
 	return 0;
 }

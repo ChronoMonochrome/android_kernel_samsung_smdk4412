@@ -52,7 +52,9 @@
 #include <plat/s5p-sysmmu.h>
 #endif
 
-#define SUPPORT_LPM_PAN_DISPLAY
+#if defined(CONFIG_MACH_KONA) || defined(CONFIG_MACH_TAB3) || defined(CONFIG_MACH_T0) || defined(CONFIG_MACH_M0)
+extern unsigned int poweroff_charging;
+#endif
 
 #if defined(CONFIG_S6D7AA0_LSL080AL02)
 static unsigned int fb_busfreq_table[S3C_FB_MAX_WIN + 1] = {
@@ -90,7 +92,6 @@ struct s3c_platform_fb *to_fb_plat(struct device *dev)
 	return (struct s3c_platform_fb *)pdev->dev.platform_data;
 }
 
-#ifndef CONFIG_FRAMEBUFFER_CONSOLE
 static unsigned int bootloaderfb;
 module_param_named(bootloaderfb, bootloaderfb, uint, 0444);
 MODULE_PARM_DESC(bootloaderfb, "Address of booting logo image in Bootloader");
@@ -148,7 +149,6 @@ int s3cfb_draw_logo(struct fb_info *fb)
 	}
 
 #endif /* #ifdef RGB_BOOTSCREEN */
-#endif
 #endif
 
 	return 0;
@@ -1117,7 +1117,7 @@ int s3cfb_pan_display(struct fb_var_screeninfo *var, struct fb_info *fb)
 	}
 #endif
 
-#if defined(CONFIG_MACH_M0) || defined(CONFIG_MACH_T0)
+#if defined(CONFIG_MACH_KONA) || defined(CONFIG_MACH_TAB3) || defined(CONFIG_MACH_T0) || defined(CONFIG_MACH_M0)
 	if (poweroff_charging) {
 		/* support LPM (off charging mode) display based on FBIOPAN_DISPLAY */
 		s3cfb_check_var(var, fb);
@@ -1175,6 +1175,7 @@ int s3cfb_wait_for_vsync(struct s3cfb_global *fbdev)
 #endif
 
 
+#if defined(CONFIG_CPU_EXYNOS4212) || defined(CONFIG_CPU_EXYNOS4412)
 /**
  * s3c_fb_align_word() - align pixel count to word boundary
  * @bpp: The number of bits per pixel
@@ -1529,8 +1530,8 @@ static inline u32 wincon(u32 bits_per_pixel, u32 transp_length, u32 red_length)
 
 	return data;
 }
+#endif
 
-#ifdef CONFIG_BUSFREQ_OPP
 void s3c_fb_set_busfreq(struct s3cfb_global *fbdev, unsigned int num_of_win)
 {
 	if (num_of_win > S3C_FB_MAX_WIN)
@@ -1539,23 +1540,11 @@ void s3c_fb_set_busfreq(struct s3cfb_global *fbdev, unsigned int num_of_win)
 	dev_dbg(fbdev->dev, "%s : nWin=%d, busfreq = %d\n", __func__,
 			num_of_win, fb_busfreq_table[num_of_win]);
 
+#if defined(CONFIG_CPU_EXYNOS4212) || defined(CONFIG_CPU_EXYNOS4412)
+#ifdef CONFIG_BUSFREQ_OPP
 	dev_lock(fbdev->bus_dev, fbdev->dev, fb_busfreq_table[num_of_win]);
-}
-#else
-void s3c_fb_set_busfreq(struct s3cfb_global *fbdev, unsigned int num_of_win) {}
 #endif
-
-static void s3c_fd_fence_wait(struct s3cfb_global *fbdev, struct sync_fence *fence)
-{
-	int err = sync_fence_wait(fence, 1000);
-	if (err >= 0)
-		return;
-
-	if (err == -ETIME)
-		err = sync_fence_wait(fence, 10 * MSEC_PER_SEC);
-
-	if (err < 0)
-		dev_warn(fbdev->dev, "error waiting on fence: %d\n", err);
+#endif
 }
 
 void s3c_fb_update_regs(struct s3cfb_global *fbdev, struct s3c_reg_data *regs)
@@ -1564,15 +1553,6 @@ void s3c_fb_update_regs(struct s3cfb_global *fbdev, struct s3c_reg_data *regs)
 	unsigned short i;
 	bool wait_for_vsync;
 	struct s3cfb_window *win;
-	struct sync_fence *old_fence[S3C_FB_MAX_WIN];
-
-	memset(&old_fence, 0, sizeof(old_fence));
-
-	for (i = 0; i < pdata->nr_wins; i++) {
-		old_fence[i] = regs->fence[i];
-		if (regs->fence[i])
-			s3c_fd_fence_wait(fbdev, regs->fence[i]);
-	}
 
 #if defined(CONFIG_CPU_EXYNOS4212) || defined(CONFIG_CPU_EXYNOS4412)
 #ifdef CONFIG_BUSFREQ_OPP
@@ -1648,11 +1628,7 @@ void s3c_fb_update_regs(struct s3cfb_global *fbdev, struct s3c_reg_data *regs)
 			}
 		}
 	} while (wait_for_vsync);
-	
-		for (i = 0; i < pdata->nr_wins; i++) {
-			if (old_fence[i])
-				sync_fence_put(old_fence[i]);
-		}
+
 		sw_sync_timeline_inc(fbdev->timeline, 1);
 	}
 
@@ -1731,6 +1707,7 @@ static bool s3c_fb_validate_x_alignment(struct s3cfb_global *fbdev, int x, u32 w
 	return 1;
 }
 
+#if defined(CONFIG_CPU_EXYNOS4212) || defined(CONFIG_CPU_EXYNOS4412)
 static int s3c_fb_set_win_buffer(struct s3cfb_global *fbdev,
 		struct fb_info *fb, struct s3c_fb_win_config *win_config,
 		struct s3c_reg_data *regs)
@@ -1804,21 +1781,12 @@ static int s3c_fb_set_win_buffer(struct s3cfb_global *fbdev,
 		ret = -EINVAL;
 		goto err_invalid;
 	}
-	
+
 	if (!s3c_fb_validate_x_alignment(fbdev, win_config->x, win_config->w,
 			fb->var.bits_per_pixel)) {
 		ret = -EINVAL;
 		goto err_invalid;
 	}
-	if (win_config->fence_fd >= 0) {
-		regs->fence[win_no] = sync_fence_fdget(win_config->fence_fd);
-		if (!regs->fence[win_no]) {
-			dev_err(fbdev->dev, "failed to import fence fd\n");
-			ret = -EINVAL;
-			goto err_invalid;
-		}
-	} else
-		regs->fence[win_no] = NULL;
 
 	window_size = win_config->stride * win_config->h;
 
@@ -1959,15 +1927,12 @@ static int s3c_fb_set_win_config(struct s3cfb_global *fbdev,
 		if (fbdev->support_fence == FENCE_NOT_SUPPORT) {
 			win_data->fence = -1;
 		} else {
-			fbdev->timeline_max++;
-			pt = sw_sync_pt_create(fbdev->timeline, fbdev->timeline_max);
-			fence = sync_fence_create("display", pt);
-			if (fence != NULL) {
-				sync_fence_install(fence, fd);
-				win_data->fence = fd;
-			} else
-				dev_err(fbdev->dev, "creating fence is failed");
- 
+		fbdev->timeline_max++;
+		pt = sw_sync_pt_create(fbdev->timeline, fbdev->timeline_max);
+		fence = sync_fence_create("display", pt);
+		sync_fence_install(fence, fd);
+		win_data->fence = fd;
+
 			sw_sync_timeline_inc(fbdev->timeline, 1);
 		}
 		mutex_unlock(&fbdev->output_lock);
@@ -2027,18 +1992,15 @@ static int s3c_fb_set_win_config(struct s3cfb_global *fbdev,
 			kfree(regs);
 			win_data->fence = -1;
 		} else {
-			fbdev->timeline_max++;
-			pt = sw_sync_pt_create(fbdev->timeline, fbdev->timeline_max);
-			fence = sync_fence_create("display", pt);
-			if (fence != NULL) {
-				sync_fence_install(fence, fd);
-				win_data->fence = fd;
-			} else
-				dev_err(fbdev->dev, "creating fence is failed");
+		fbdev->timeline_max++;
+		pt = sw_sync_pt_create(fbdev->timeline, fbdev->timeline_max);
+		fence = sync_fence_create("display", pt);
+		sync_fence_install(fence, fd);
+		win_data->fence = fd;
 
-			list_add_tail(&regs->list, &fbdev->update_regs_list);
-			mutex_unlock(&fbdev->update_regs_list_lock);
-			queue_kthread_work(&fbdev->update_regs_worker,
+		list_add_tail(&regs->list, &fbdev->update_regs_list);
+		mutex_unlock(&fbdev->update_regs_list_lock);
+		queue_kthread_work(&fbdev->update_regs_worker,
 					&fbdev->update_regs_work);
 		}
 	}
@@ -2046,6 +2008,7 @@ static int s3c_fb_set_win_config(struct s3cfb_global *fbdev,
 
 	return ret;
 }
+#endif
 
 int s3cfb_ioctl(struct fb_info *fb, unsigned int cmd, unsigned long arg)
 {
@@ -2115,7 +2078,7 @@ int s3cfb_ioctl(struct fb_info *fb, unsigned int cmd, unsigned long arg)
 				   sizeof(p.user_window)))
 			ret = -EFAULT;
 		else {
-#if defined(CONFIG_CPU_EXYNOS4212) || defined(CONFIG_CPU_EXYNOS4412) || defined(CONFIG_CPU_EXYNOS4210)
+#if defined(CONFIG_CPU_EXYNOS4212) || defined(CONFIG_CPU_EXYNOS4412)
 			win->x = p.user_window.x;
 			win->y = p.user_window.y;
 #else
@@ -2241,6 +2204,7 @@ int s3cfb_ioctl(struct fb_info *fb, unsigned int cmd, unsigned long arg)
 			s3cfb_set_alpha_mode(fbdev, win->id, p.alpha_mode);
 		break;
 
+#if defined(CONFIG_CPU_EXYNOS4212) || defined(CONFIG_CPU_EXYNOS4412)
 	case S3CFB_WIN_CONFIG:
 		if (copy_from_user(&p.win_data,
 				   (struct s3c_fb_win_config_data __user *)arg,
@@ -2260,6 +2224,7 @@ int s3cfb_ioctl(struct fb_info *fb, unsigned int cmd, unsigned long arg)
 			break;
 		}
 		break;
+#endif
 	case S3CFB_SET_INITIAL_CONFIG:
 		fix->smem_start = fbdev->initial_fix.smem_start;
 		fix->smem_len = fbdev->initial_fix.smem_len;
