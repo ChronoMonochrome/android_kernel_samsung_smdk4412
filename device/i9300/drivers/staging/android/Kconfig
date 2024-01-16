@@ -34,7 +34,7 @@ config ANDROID_BINDER_DEVICES
 
 config ANDROID_BINDER_IPC_SELFTEST
         bool "Android Binder IPC Driver Selftest"
-        depends on ANDROID_BINDER_IPC
+        depends on ANDROID_BINDER_IPC_LEGACY
         ---help---
           This feature allows binder selftest to run.
 
