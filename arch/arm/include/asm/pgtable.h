@@ -22,6 +22,7 @@
 
 #include <asm-generic/pgtable-nopud.h>
 #include <asm/memory.h>
+#include <mach/vmalloc.h>
 #include <asm/pgtable-hwdef.h>
 
 #ifdef CONFIG_ARM_LPAE
@@ -37,10 +38,15 @@
  * any out-of-bounds memory accesses will hopefully be caught.
  * The vmalloc() routines leaves a hole of 4kB between each vmalloced
  * area for the same reason. ;)
+ *
+ * Note that platforms may override VMALLOC_START, but they must provide
+ * VMALLOC_END.  VMALLOC_END defines the (exclusive) limit of this space,
+ * which may not overlap IO space.
  */
+#ifndef VMALLOC_START
 #define VMALLOC_OFFSET		(8*1024*1024)
 #define VMALLOC_START		(((unsigned long)high_memory + VMALLOC_OFFSET) & ~(VMALLOC_OFFSET-1))
-#define VMALLOC_END		0xff000000UL
+#endif
 
 #define LIBRARY_TEXT_START	0x0c000000
 
@@ -108,9 +114,6 @@ extern pgprot_t		pgprot_kernel;
 
 #define pgprot_writecombine(prot) \
 	__pgprot_modify(prot, L_PTE_MT_MASK, L_PTE_MT_BUFFERABLE)
-
-#define pgprot_stronglyordered(prot) \
-	__pgprot_modify(prot, L_PTE_MT_MASK, L_PTE_MT_UNCACHED)
 
 #ifdef CONFIG_ARM_DMA_MEM_BUFFERABLE
 #define pgprot_dmacoherent(prot) \

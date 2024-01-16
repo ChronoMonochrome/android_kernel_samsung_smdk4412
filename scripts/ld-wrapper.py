@@ -44,17 +44,8 @@ additional_build_rules = {
     [{
         "injected_objects":
         [
-            "device/i9300/arch/arm/common/pl330.o",
             "device/i9300/lib/bitmap.o",
             "device/i9300/lib/genalloc.o",
-        ],
-    }],
-    "arch/arm/kernel/built-in.o" :
-    [{
-        "injected_objects":
-        [
-            "device/i9300/arch/arm/kernel/idiv_emulate.o",
-            "device/i9300/arch/arm/kernel/smp.o",
         ],
     }],
     "kernel/built-in.o" :
