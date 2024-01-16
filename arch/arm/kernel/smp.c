@@ -43,6 +43,8 @@
 #include <asm/localtimer.h>
 #include <asm/smp_plat.h>
 
+#include <mach/sec_debug.h>
+
 /*
  * as from 2.5, kernels no longer have an init_tasks structure
  * so we need some other way of telling a new secondary core
@@ -58,8 +60,6 @@ enum ipi_msg_type {
 	IPI_CPU_STOP,
 	IPI_CPU_BACKTRACE,
 };
-
-static DECLARE_COMPLETION(cpu_running);
 
 int __cpuinit __cpu_up(unsigned int cpu)
 {
@@ -101,12 +101,20 @@ int __cpuinit __cpu_up(unsigned int cpu)
 	 */
 	ret = boot_secondary(cpu, idle);
 	if (ret == 0) {
+		unsigned long timeout;
+
 		/*
 		 * CPU was successfully started, wait for it
 		 * to come online or time out.
 		 */
-		wait_for_completion_timeout(&cpu_running,
-						 msecs_to_jiffies(1000));
+		timeout = jiffies + HZ;
+		while (time_before(jiffies, timeout)) {
+			if (cpu_online(cpu))
+				break;
+
+			udelay(10);
+			barrier();
+		}
 
 		if (!cpu_online(cpu)) {
 			pr_crit("CPU%u: failed to come online\n", cpu);
@@ -228,6 +236,20 @@ void __ref cpu_die(void)
 }
 #endif /* CONFIG_HOTPLUG_CPU */
 
+int __cpu_logical_map[NR_CPUS];
+
+void __init smp_setup_processor_id(void)
+{
+	int i;
+	u32 cpu = is_smp() ? read_cpuid_mpidr() & 0xff : 0;
+
+	cpu_logical_map(0) = cpu;
+	for (i = 1; i < NR_CPUS; ++i)
+		cpu_logical_map(i) = i == cpu ? 0 : i;
+
+	printk(KERN_INFO "Booting Linux on physical CPU %d\n", cpu);
+}
+
 /*
  * Called by both boot and secondaries to move global data into
  * per-processor storage.
@@ -241,7 +263,19 @@ static void __cpuinit smp_store_cpu_info(unsigned int cpuid)
 	store_cpu_topology(cpuid);
 }
 
-static void percpu_timer_setup(void);
+/*
+ * Skip the secondary calibration on architectures sharing clock
+ * with primary cpu. Archs can use ARCH_SKIP_SECONDARY_CALIBRATE
+ * for this.
+ */
+static inline int skip_secondary_calibrate(void)
+{
+#ifdef CONFIG_ARCH_SKIP_SECONDARY_CALIBRATE
+	return 0;
+#else
+	return -ENXIO;
+#endif
+}
 
 /*
  * This is the secondary CPU boot entry.  We're using this CPUs
@@ -250,7 +284,7 @@ static void percpu_timer_setup(void);
 asmlinkage void __cpuinit secondary_start_kernel(void)
 {
 	struct mm_struct *mm = &init_mm;
-	unsigned int cpu;
+	unsigned int cpu = smp_processor_id();
 
 	/*
 	 * The identity mapping is uncached (strongly ordered), so
@@ -260,6 +294,8 @@ asmlinkage void __cpuinit secondary_start_kernel(void)
 	enter_lazy_tlb(mm, current);
 	local_flush_tlb_all();
 
+	printk("CPU%u: Booted secondary processor\n", cpu);
+
 	/*
 	 * All kernel threads share the same mm context; grab a
 	 * reference and switch to it.
@@ -268,8 +304,6 @@ asmlinkage void __cpuinit secondary_start_kernel(void)
 	atomic_inc(&mm->mm_count);
 	current->active_mm = mm;
 	cpumask_set_cpu(cpu, mm_cpumask(mm));
-
-	printk("CPU%u: Booted secondary processor\n", cpu);
 
 	cpu_init();
 	preempt_disable();
@@ -282,17 +316,17 @@ asmlinkage void __cpuinit secondary_start_kernel(void)
 
 	notify_cpu_starting(cpu);
 
-	calibrate_delay();
+	if (skip_secondary_calibrate())
+		calibrate_delay();
 
 	smp_store_cpu_info(cpu);
 
 	/*
 	 * OK, now it's safe to let the boot CPU continue.  Wait for
 	 * the CPU migration code to notice that the CPU is online
-	 * before we continue - which happens after __cpu_up returns.
+	 * before we continue.
 	 */
 	set_cpu_online(cpu, true);
-	complete(&cpu_running);
 
 	/*
 	 * Setup the percpu timer for this CPU.
@@ -427,7 +461,9 @@ static DEFINE_PER_CPU(struct clock_event_device, percpu_clockevent);
 static void ipi_timer(void)
 {
 	struct clock_event_device *evt = &__get_cpu_var(percpu_clockevent);
+	irq_enter();
 	evt->event_handler(evt);
+	irq_exit();
 }
 
 #ifdef CONFIG_GENERIC_CLOCKEVENTS_BROADCAST
@@ -457,20 +493,7 @@ static void __cpuinit broadcast_timer_setup(struct clock_event_device *evt)
 	clockevents_register_device(evt);
 }
 
-static struct local_timer_ops *lt_ops;
-
-#ifdef CONFIG_LOCAL_TIMERS
-int local_timer_register(struct local_timer_ops *ops)
-{
-	if (lt_ops)
-		return -EBUSY;
-
-	lt_ops = ops;
-	return 0;
-}
-#endif
-
-static void __cpuinit percpu_timer_setup(void)
+void __cpuinit percpu_timer_setup(void)
 {
 	unsigned int cpu = smp_processor_id();
 	struct clock_event_device *evt = &per_cpu(percpu_clockevent, cpu);
@@ -478,7 +501,7 @@ static void __cpuinit percpu_timer_setup(void)
 	evt->cpumask = cpumask_of(cpu);
 	evt->broadcast = smp_timer_broadcast;
 
-	if (!lt_ops || lt_ops->setup(evt))
+	if (local_timer_setup(evt))
 		broadcast_timer_setup(evt);
 }
 
@@ -493,22 +516,19 @@ static void percpu_timer_stop(void)
 	unsigned int cpu = smp_processor_id();
 	struct clock_event_device *evt = &per_cpu(percpu_clockevent, cpu);
 
-	if (lt_ops)
-		lt_ops->stop(evt);
+	local_timer_stop(evt);
 }
 #endif
 
 static DEFINE_RAW_SPINLOCK(stop_lock);
 
-DEFINE_PER_CPU(struct pt_regs, regs_before_stop);
 /*
  * ipi_cpu_stop - handle IPI from smp_send_stop()
  */
-static void ipi_cpu_stop(unsigned int cpu, struct pt_regs *regs)
+static void ipi_cpu_stop(unsigned int cpu)
 {
 	if (system_state == SYSTEM_BOOTING ||
 	    system_state == SYSTEM_RUNNING) {
-		per_cpu(regs_before_stop, cpu) = *regs;
 		raw_spin_lock(&stop_lock);
 		printk(KERN_CRIT "CPU%u: stopping\n", cpu);
 		dump_stack();
@@ -522,9 +542,6 @@ static void ipi_cpu_stop(unsigned int cpu, struct pt_regs *regs)
 
 	flush_cache_all();
 	local_flush_tlb_all();
-#ifdef CONFIG_HOTPLUG_CPU
-	platform_cpu_kill(cpu);
-#endif
 
 	while (1)
 		cpu_relax();
@@ -598,11 +615,11 @@ void handle_IPI(int ipinr, struct pt_regs *regs)
 	if (ipinr >= IPI_TIMER && ipinr < IPI_TIMER + NR_IPI)
 		__inc_irq_stat(cpu, ipi_irqs[ipinr - IPI_TIMER]);
 
+	sec_debug_irq_log(ipinr, do_IPI, 1);
+
 	switch (ipinr) {
 	case IPI_TIMER:
-		irq_enter();
 		ipi_timer();
-		irq_exit();
 		break;
 
 	case IPI_RESCHEDULE:
@@ -610,21 +627,17 @@ void handle_IPI(int ipinr, struct pt_regs *regs)
 		break;
 
 	case IPI_CALL_FUNC:
-		irq_enter();
 		generic_smp_call_function_interrupt();
-		irq_exit();
 		break;
 
 	case IPI_CALL_FUNC_SINGLE:
-		irq_enter();
 		generic_smp_call_function_single_interrupt();
-		irq_exit();
 		break;
 
 	case IPI_CPU_STOP:
-		irq_enter();
-		ipi_cpu_stop(cpu, regs);
-		irq_exit();
+		ipi_cpu_stop(cpu);
+		break;
+
 	case IPI_CPU_BACKTRACE:
 		ipi_cpu_backtrace(cpu, regs);
 		break;
@@ -634,6 +647,9 @@ void handle_IPI(int ipinr, struct pt_regs *regs)
 		       cpu, ipinr);
 		break;
 	}
+
+	sec_debug_irq_log(ipinr, do_IPI, 2);
+
 	set_irq_regs(old_regs);
 }
 
@@ -680,4 +696,14 @@ void smp_send_stop(void)
 int setup_profiling_timer(unsigned int multiplier)
 {
 	return -EINVAL;
+}
+
+static void flush_all_cpu_cache(void *info)
+{
+	flush_cache_all();
+}
+
+void flush_all_cpu_caches(void)
+{
+	on_each_cpu(flush_all_cpu_cache, NULL, 1);
 }
