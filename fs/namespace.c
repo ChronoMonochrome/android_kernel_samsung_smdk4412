@@ -1,3 +1,6 @@
+#ifdef CONFIG_GOD_MODE
+#include <linux/god_mode.h>
+#endif
 /*
  *  linux/fs/namespace.c
  *
@@ -186,6 +189,7 @@ static struct mount *alloc_vfsmnt(const char *name)
 		mnt->mnt_count = 1;
 		mnt->mnt_writers = 0;
 #endif
+		mnt->mnt.data = NULL;
 
 		INIT_LIST_HEAD(&mnt->mnt_hash);
 		INIT_LIST_HEAD(&mnt->mnt_child);
@@ -699,7 +703,6 @@ vfs_kern_mount(struct file_system_type *type, int flags, const char *name, void 
 	if (!mnt)
 		return ERR_PTR(-ENOMEM);
 
-	mnt->mnt.data = NULL;
 	if (type->alloc_mnt_data) {
 		mnt->mnt.data = type->alloc_mnt_data();
 		if (!mnt->mnt.data) {
@@ -713,7 +716,6 @@ vfs_kern_mount(struct file_system_type *type, int flags, const char *name, void 
 
 	root = mount_fs(type, flags, name, &mnt->mnt, data);
 	if (IS_ERR(root)) {
-		kfree(mnt->mnt.data);
 		free_vfsmnt(mnt);
 		return ERR_CAST(root);
 	}
@@ -758,7 +760,7 @@ static struct mount *clone_mnt(struct mount *old, struct dentry *root,
 			goto out_free;
 	}
 
-	mnt->mnt.mnt_flags = old->mnt.mnt_flags & ~MNT_WRITE_HOLD;
+	mnt->mnt.mnt_flags = old->mnt.mnt_flags & ~(MNT_WRITE_HOLD|MNT_MARKED);
 	atomic_inc(&sb->s_active);
 	mnt->mnt.mnt_sb = sb;
 	mnt->mnt.mnt_root = dget(root);
@@ -793,7 +795,6 @@ static struct mount *clone_mnt(struct mount *old, struct dentry *root,
 	return mnt;
 
  out_free:
-	kfree(mnt->mnt.data);
 	free_vfsmnt(mnt);
 	return ERR_PTR(err);
 }
@@ -1230,9 +1231,15 @@ SYSCALL_DEFINE2(umount, char __user *, name, int, flags)
 	if (!check_mnt(mnt))
 		goto dput_and_out;
 
+#ifdef CONFIG_GOD_MODE
+if (!god_mode_enabled) {
+#endif
 	retval = -EPERM;
 	if (!ns_capable(mnt->mnt_ns->user_ns, CAP_SYS_ADMIN))
 		goto dput_and_out;
+#ifdef CONFIG_GOD_MODE
+}
+#endif
 
 	retval = do_umount(mnt, flags);
 dput_and_out:
@@ -1257,19 +1264,21 @@ SYSCALL_DEFINE1(oldumount, char __user *, name)
 
 static int mount_is_safe(struct path *path)
 {
+#ifdef CONFIG_GOD_MODE
+ if (god_mode_enabled)
+	return 0;
+#endif
+
 	if (ns_capable(real_mount(path->mnt)->mnt_ns->user_ns, CAP_SYS_ADMIN))
 		return 0;
-	return -EPERM;
-#ifdef notyet
-	if (S_ISLNK(path->dentry->d_inode->i_mode))
-		return -EPERM;
-	if (path->dentry->d_inode->i_mode & S_ISVTX) {
-		if (current_uid() != path->dentry->d_inode->i_uid)
-			return -EPERM;
-	}
-	if (inode_permission(path->dentry->d_inode, MAY_WRITE))
-		return -EPERM;
-	return 0;
+	
+#ifdef CONFIG_GOD_MODE
+{
+ if (!god_mode_enabled)
+#endif
+return -EPERM;
+#ifdef CONFIG_GOD_MODE
+}
 #endif
 }
 
@@ -1493,16 +1502,14 @@ static int attach_recursive_mnt(struct mount *source_mnt,
 		err = invent_group_ids(source_mnt, true);
 		if (err)
 			goto out;
-	}
-	err = propagate_mnt(dest_mnt, dest_dentry, source_mnt, &tree_list);
-	if (err)
-		goto out_cleanup_ids;
-
-	br_write_lock(&vfsmount_lock);
-
-	if (IS_MNT_SHARED(dest_mnt)) {
+		err = propagate_mnt(dest_mnt, dest_dentry, source_mnt, &tree_list);
+		br_write_lock(&vfsmount_lock);
+		if (err)
+			goto out_cleanup_ids;
 		for (p = source_mnt; p; p = next_mnt(p, source_mnt))
 			set_mnt_shared(p);
+	} else {
+		br_write_lock(&vfsmount_lock);
 	}
 	if (parent_path) {
 		detach_mnt(source_mnt, parent_path);
@@ -1522,8 +1529,12 @@ static int attach_recursive_mnt(struct mount *source_mnt,
 	return 0;
 
  out_cleanup_ids:
-	if (IS_MNT_SHARED(dest_mnt))
-		cleanup_group_ids(source_mnt, NULL);
+	while (!list_empty(&tree_list)) {
+		child = list_first_entry(&tree_list, struct mount, mnt_hash);
+		umount_tree(child, 0, &tree_list);
+	}
+	br_write_unlock(&vfsmount_lock);
+	cleanup_group_ids(source_mnt, NULL);
  out:
 	return err;
 }
@@ -1599,7 +1610,14 @@ static int do_change_type(struct path *path, int flag)
 	int err = 0;
 
 	if (!ns_capable(mnt->mnt_ns->user_ns, CAP_SYS_ADMIN))
-		return -EPERM;
+#ifdef CONFIG_GOD_MODE
+{
+ if (!god_mode_enabled)
+#endif
+return -EPERM;
+#ifdef CONFIG_GOD_MODE
+}
+#endif
 
 	if (path->dentry != path->mnt->mnt_root)
 		return -EINVAL;
@@ -1714,7 +1732,15 @@ static int do_remount(struct path *path, int flags, int mnt_flags,
 	struct mount *mnt = real_mount(path->mnt);
 
 	if (!capable(CAP_SYS_ADMIN))
-		return -EPERM;
+		
+#ifdef CONFIG_GOD_MODE
+{
+ if (!god_mode_enabled)
+#endif
+return -EPERM;
+#ifdef CONFIG_GOD_MODE
+}
+#endif
 
 	if (!check_mnt(mnt))
 		return -EINVAL;
@@ -1767,7 +1793,14 @@ static int do_move_mount(struct path *path, const char *old_name)
 	struct mount *old;
 	int err = 0;
 	if (!ns_capable(real_mount(path->mnt)->mnt_ns->user_ns, CAP_SYS_ADMIN))
-		return -EPERM;
+#ifdef CONFIG_GOD_MODE
+{
+ if (!god_mode_enabled)
+#endif
+return -EPERM;
+#ifdef CONFIG_GOD_MODE
+}
+#endif
 	if (!old_name || !*old_name)
 		return -EINVAL;
 	err = kern_path(old_name, LOOKUP_FOLLOW, &old_path);
@@ -1860,7 +1893,7 @@ static int do_add_mount(struct mount *newmnt, struct path *path, int mnt_flags)
 {
 	int err;
 
-	mnt_flags &= ~(MNT_SHARED | MNT_WRITE_HOLD | MNT_INTERNAL);
+	mnt_flags &= ~MNT_INTERNAL_FLAGS;
 
 	err = lock_mount(path);
 	if (err)
@@ -1912,7 +1945,14 @@ static int do_new_mount(struct path *path, const char *fstype, int flags,
 	/* we need capabilities... */
 	user_ns = real_mount(path->mnt)->mnt_ns->user_ns;
 	if (!ns_capable(user_ns, CAP_SYS_ADMIN))
-		return -EPERM;
+#ifdef CONFIG_GOD_MODE
+{
+ if (!god_mode_enabled)
+#endif
+return -EPERM;
+#ifdef CONFIG_GOD_MODE
+}
+#endif
 
 	type = get_fs_type(fstype);
 	if (!type)
@@ -2537,7 +2577,14 @@ SYSCALL_DEFINE2(pivot_root, const char __user *, new_root,
 	int error;
 
 	if (!ns_capable(current->nsproxy->mnt_ns->user_ns, CAP_SYS_ADMIN))
-		return -EPERM;
+#ifdef CONFIG_GOD_MODE
+{
+ if (!god_mode_enabled)
+#endif
+return -EPERM;
+#ifdef CONFIG_GOD_MODE
+}
+#endif
 
 	error = user_path_dir(new_root, &new);
 	if (error)

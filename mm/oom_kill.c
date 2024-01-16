@@ -58,11 +58,9 @@ void compare_swap_oom_score_adj(int old_val, int new_val)
 	struct sighand_struct *sighand = current->sighand;
 
 	spin_lock_irq(&sighand->siglock);
-	if (current->signal->oom_score_adj == old_val) {
+	if (current->signal->oom_score_adj == old_val)
 		current->signal->oom_score_adj = new_val;
-		delete_from_adj_tree(current);
-		add_2_adj_tree(current);
-	}
+	trace_oom_score_adj_update(current);
 	spin_unlock_irq(&sighand->siglock);
 }
 
@@ -412,8 +410,8 @@ static void dump_tasks(const struct mem_cgroup *memcg, const nodemask_t *nodemas
 		}
 
 		pr_info("[%5d] %5d %5d %8lu %8lu %3u     %3d         %5d %s\n",
-			task->pid, from_kuid(&init_user_ns, task_uid(task)),
-			task->tgid, task->mm->total_vm, get_mm_rss(task->mm),
+			task->pid, task_uid(task), task->tgid,
+			task->mm->total_vm, get_mm_rss(task->mm),
 			task_cpu(task), task->signal->oom_adj,
 			task->signal->oom_score_adj, task->comm);
 		task_unlock(task);

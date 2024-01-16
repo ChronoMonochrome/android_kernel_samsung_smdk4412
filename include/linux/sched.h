@@ -1827,6 +1827,7 @@ extern int task_free_unregister(struct notifier_block *n);
 #define PF_FROZEN	0x00010000	/* frozen for system suspend */
 #define PF_FSTRANS	0x00020000	/* inside a filesystem transaction */
 #define PF_KSWAPD	0x00040000	/* I am kswapd */
+#define PF_MEMALLOC_NOIO 0x00080000	/* Allocating memory without IO involved */
 #define PF_LESS_THROTTLE 0x00100000	/* Throttle me less: I clean memory */
 #define PF_KTHREAD	0x00200000	/* I am a kernel thread */
 #define PF_RANDOMIZE	0x00400000	/* randomize virtual address space */
@@ -1863,6 +1864,26 @@ extern int task_free_unregister(struct notifier_block *n);
 /* NOTE: this will return 0 or PF_USED_MATH, it will never return 1 */
 #define tsk_used_math(p) ((p)->flags & PF_USED_MATH)
 #define used_math() tsk_used_math(current)
+
+/* __GFP_IO isn't allowed if PF_MEMALLOC_NOIO is set in current->flags */
+static inline gfp_t memalloc_noio_flags(gfp_t flags)
+{
+	if (unlikely(current->flags & PF_MEMALLOC_NOIO))
+		flags &= ~__GFP_IO;
+	return flags;
+}
+
+static inline unsigned int memalloc_noio_save(void)
+{
+	unsigned int flags = current->flags & PF_MEMALLOC_NOIO;
+	current->flags |= PF_MEMALLOC_NOIO;
+	return flags;
+}
+
+static inline void memalloc_noio_restore(unsigned int flags)
+{
+	current->flags = (current->flags & ~PF_MEMALLOC_NOIO) | flags;
+}
 
 /* Per-process atomic flags. */
 #define PFA_NO_NEW_PRIVS 0x00000001	/* May not gain new privileges. */

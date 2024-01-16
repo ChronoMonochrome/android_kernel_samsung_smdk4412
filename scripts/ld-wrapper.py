@@ -64,17 +64,6 @@ additional_build_rules = {
             "device/i9300/kernel/irq/built-in.o",
         ],
     }],
-    "mm/built-in.o" :
-    [{
-        "injected_objects":
-        [
-            "device/i9300/mm/built-in.o",
-        ],
-        "removed_objects":
-        [
-            "device/i9300/mm/ashmem.o",
-        ],
-    }],
     "drivers/base/built-in.o" :
     [{
         "injected_objects":

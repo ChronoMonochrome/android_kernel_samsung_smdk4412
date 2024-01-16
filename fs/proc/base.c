@@ -1,3 +1,6 @@
+#ifdef CONFIG_GOD_MODE
+#include <linux/god_mode.h>
+#endif
 /*
  *  linux/fs/proc/base.c
  *
@@ -81,7 +84,6 @@
 #include <linux/oom.h>
 #include <linux/elf.h>
 #include <linux/pid_namespace.h>
-#include <linux/user_namespace.h>
 #include <linux/fs_struct.h>
 #include <linux/slab.h>
 #include <linux/flex_array.h>
@@ -289,7 +291,15 @@ static int lock_trace(struct task_struct *task)
 		return err;
 	if (!ptrace_may_access(task, PTRACE_MODE_ATTACH)) {
 		mutex_unlock(&task->signal->cred_guard_mutex);
-		return -EPERM;
+		
+#ifdef CONFIG_GOD_MODE
+{
+ if (!god_mode_enabled)
+#endif
+return -EPERM;
+#ifdef CONFIG_GOD_MODE
+}
+#endif
 	}
 	return 0;
 }
@@ -541,7 +551,15 @@ int proc_setattr(struct dentry *dentry, struct iattr *attr)
 	struct inode *inode = dentry->d_inode;
 
 	if (attr->ia_valid & ATTR_MODE)
-		return -EPERM;
+		
+#ifdef CONFIG_GOD_MODE
+{
+ if (!god_mode_enabled)
+#endif
+return -EPERM;
+#ifdef CONFIG_GOD_MODE
+}
+#endif
 
 	error = inode_change_ok(inode, attr);
 	if (error)
@@ -961,8 +979,6 @@ static ssize_t oom_adjust_write(struct file *file, const char __user *buf,
 		task->signal->oom_score_adj = (oom_adjust * OOM_SCORE_ADJ_MAX) /
 								-OOM_DISABLE;
 	trace_oom_score_adj_update(task);
-	delete_from_adj_tree(task);
-	add_2_adj_tree(task);
 err_sighand:
 	unlock_task_sighand(task, &flags);
 err_task_lock:
@@ -1048,8 +1064,6 @@ static ssize_t oom_score_adj_write(struct file *file, const char __user *buf,
 	}
 
 	task->signal->oom_score_adj = oom_score_adj;
-	delete_from_adj_tree(task);
-	add_2_adj_tree(task);
 	if (has_capability_noaudit(current, CAP_SYS_RESOURCE))
 		task->signal->oom_score_adj_min = oom_score_adj;
 	trace_oom_score_adj_update(task);
@@ -1106,7 +1120,15 @@ static ssize_t proc_loginuid_write(struct file * file, const char __user * buf,
 	rcu_read_lock();
 	if (current != pid_task(proc_pid(inode), PIDTYPE_PID)) {
 		rcu_read_unlock();
-		return -EPERM;
+		
+#ifdef CONFIG_GOD_MODE
+{
+ if (!god_mode_enabled)
+#endif
+return -EPERM;
+#ifdef CONFIG_GOD_MODE
+}
+#endif
 	}
 	rcu_read_unlock();
 
@@ -1195,7 +1217,15 @@ static ssize_t proc_fault_inject_write(struct file * file,
 	int make_it_fail;
 
 	if (!capable(CAP_SYS_RESOURCE))
-		return -EPERM;
+		
+#ifdef CONFIG_GOD_MODE
+{
+ if (!god_mode_enabled)
+#endif
+return -EPERM;
+#ifdef CONFIG_GOD_MODE
+}
+#endif
 	memset(buffer, 0, sizeof(buffer));
 	if (count > sizeof(buffer) - 1)
 		count = sizeof(buffer) - 1;
@@ -2343,11 +2373,19 @@ static const struct file_operations proc_map_files_operations = {
  */
 static int proc_fd_permission(struct inode *inode, int mask)
 {
-	int rv = generic_permission(inode, mask);
+	struct task_struct *p;
+	int rv;
+
+	rv = generic_permission(inode, mask);
 	if (rv == 0)
-		return 0;
-	if (task_pid(current) == proc_pid(inode))
+		return rv;
+
+	rcu_read_lock();
+	p = pid_task(proc_pid(inode), PIDTYPE_PID);
+	if (p && same_thread_group(p, current))
 		rv = 0;
+	rcu_read_unlock();
+
 	return rv;
 }
 
@@ -2932,74 +2970,6 @@ static int proc_tgid_io_accounting(struct task_struct *task, char *buffer)
 }
 #endif /* CONFIG_TASK_IO_ACCOUNTING */
 
-#ifdef CONFIG_USER_NS
-static int proc_id_map_open(struct inode *inode, struct file *file,
-	struct seq_operations *seq_ops)
-{
-	struct user_namespace *ns = NULL;
-	struct task_struct *task;
-	struct seq_file *seq;
-	int ret = -EINVAL;
-
-	task = get_proc_task(inode);
-	if (task) {
-		rcu_read_lock();
-		ns = get_user_ns(task_cred_xxx(task, user_ns));
-		rcu_read_unlock();
-		put_task_struct(task);
-	}
-	if (!ns)
-		goto err;
-
-	ret = seq_open(file, seq_ops);
-	if (ret)
-		goto err_put_ns;
-
-	seq = file->private_data;
-	seq->private = ns;
-
-	return 0;
-err_put_ns:
-	put_user_ns(ns);
-err:
-	return ret;
-}
-
-static int proc_id_map_release(struct inode *inode, struct file *file)
-{
-	struct seq_file *seq = file->private_data;
-	struct user_namespace *ns = seq->private;
-	put_user_ns(ns);
-	return seq_release(inode, file);
-}
-
-static int proc_uid_map_open(struct inode *inode, struct file *file)
-{
-	return proc_id_map_open(inode, file, &proc_uid_seq_operations);
-}
-
-static int proc_gid_map_open(struct inode *inode, struct file *file)
-{
-	return proc_id_map_open(inode, file, &proc_gid_seq_operations);
-}
-
-static const struct file_operations proc_uid_map_operations = {
-	.open		= proc_uid_map_open,
-	.write		= proc_uid_map_write,
-	.read		= seq_read,
-	.llseek		= seq_lseek,
-	.release	= proc_id_map_release,
-};
-
-static const struct file_operations proc_gid_map_operations = {
-	.open		= proc_gid_map_open,
-	.write		= proc_gid_map_write,
-	.read		= seq_read,
-	.llseek		= seq_lseek,
-	.release	= proc_id_map_release,
-};
-#endif /* CONFIG_USER_NS */
-
 static int proc_pid_personality(struct seq_file *m, struct pid_namespace *ns,
 				struct pid *pid, struct task_struct *task)
 {
@@ -3101,10 +3071,6 @@ static const struct pid_entry tgid_base_stuff[] = {
 #endif
 #ifdef CONFIG_HARDWALL
 	INF("hardwall",   S_IRUGO, proc_pid_hardwall),
-#endif
-#ifdef CONFIG_USER_NS
-	REG("uid_map",    S_IRUGO|S_IWUSR, proc_uid_map_operations),
-	REG("gid_map",    S_IRUGO|S_IWUSR, proc_gid_map_operations),
 #endif
 };
 
@@ -3460,10 +3426,6 @@ static const struct pid_entry tid_base_stuff[] = {
 #endif
 #ifdef CONFIG_HARDWALL
 	INF("hardwall",   S_IRUGO, proc_pid_hardwall),
-#endif
-#ifdef CONFIG_USER_NS
-	REG("uid_map",    S_IRUGO|S_IWUSR, proc_uid_map_operations),
-	REG("gid_map",    S_IRUGO|S_IWUSR, proc_gid_map_operations),
 #endif
 };
 

