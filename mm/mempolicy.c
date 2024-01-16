@@ -957,8 +957,13 @@ static int migrate_to_node(struct mm_struct *mm, int source, int dest,
 		return PTR_ERR(vma);
 
 	if (!list_empty(&pagelist)) {
+#ifndef CONFIG_DMA_CMA
 		err = migrate_pages(&pagelist, new_node_page, dest,
-							false, MIGRATE_SYNC);
+								false, MIGRATE_SYNC);
+#else
+		err = migrate_pages(&pagelist, new_node_page, dest,
+								false, MIGRATE_SYNC, 0);
+#endif
 		if (err)
 			putback_lru_pages(&pagelist);
 	}
@@ -1177,9 +1182,15 @@ static long do_mbind(unsigned long start, unsigned long len,
 		err = mbind_range(mm, start, end, new);
 
 		if (!list_empty(&pagelist)) {
+#ifndef CONFIG_DMA_CMA
 			nr_failed = migrate_pages(&pagelist, new_vma_page,
 						(unsigned long)vma,
 						false, true);
+#else
+			nr_failed = migrate_pages(&pagelist, new_vma_page,
+						(unsigned long)vma,
+						false, true, 0);
+#endif
 			if (nr_failed)
 				putback_lru_pages(&pagelist);
 		}
@@ -2007,28 +2018,6 @@ struct mempolicy *__mpol_dup(struct mempolicy *old)
 	rcu_read_unlock();
 	atomic_set(&new->refcnt, 1);
 	return new;
-}
-
-/*
- * If *frompol needs [has] an extra ref, copy *frompol to *tompol ,
- * eliminate the * MPOL_F_* flags that require conditional ref and
- * [NOTE!!!] drop the extra ref.  Not safe to reference *frompol directly
- * after return.  Use the returned value.
- *
- * Allows use of a mempolicy for, e.g., multiple allocations with a single
- * policy lookup, even if the policy needs/has extra ref on lookup.
- * shmem_readahead needs this.
- */
-struct mempolicy *__mpol_cond_copy(struct mempolicy *tompol,
-						struct mempolicy *frompol)
-{
-	if (!mpol_needs_cond_ref(frompol))
-		return frompol;
-
-	*tompol = *frompol;
-	tompol->flags &= ~MPOL_F_SHARED;	/* copy doesn't need unref */
-	__mpol_put(frompol);
-	return tompol;
 }
 
 /* Slow path of a mempolicy comparison */

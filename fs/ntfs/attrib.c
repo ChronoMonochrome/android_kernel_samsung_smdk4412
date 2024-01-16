@@ -1,3 +1,6 @@
+#ifdef CONFIG_GOD_MODE
+#include <linux/god_mode.h>
+#endif
 /**
  * attrib.c - NTFS attribute operations.  Part of the Linux-NTFS project.
  *
@@ -1385,7 +1388,15 @@ int ntfs_attr_can_be_non_resident(const ntfs_volume *vol, const ATTR_TYPE type)
 		return -ENOENT;
 	/* Check the flags and return the result. */
 	if (ad->flags & ATTR_DEF_RESIDENT)
-		return -EPERM;
+		
+#ifdef CONFIG_GOD_MODE
+{
+ if (!god_mode_enabled)
+#endif
+return -EPERM;
+#ifdef CONFIG_GOD_MODE
+}
+#endif
 	return 0;
 }
 
@@ -1410,7 +1421,15 @@ int ntfs_attr_can_be_non_resident(const ntfs_volume *vol, const ATTR_TYPE type)
 int ntfs_attr_can_be_resident(const ntfs_volume *vol, const ATTR_TYPE type)
 {
 	if (type == AT_INDEX_ALLOCATION)
-		return -EPERM;
+		
+#ifdef CONFIG_GOD_MODE
+{
+ if (!god_mode_enabled)
+#endif
+return -EPERM;
+#ifdef CONFIG_GOD_MODE
+}
+#endif
 	return 0;
 }
 

