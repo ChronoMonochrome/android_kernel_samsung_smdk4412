@@ -190,6 +190,47 @@ static void exynos4_gpio_conpdn_reg(void)
 	__raw_writel(val, gpio_base + GPIO_PUD_PDN_OFFSET);
 }
 
+static void exynos4212_gpio_conpdn_reg(void)
+{
+	void __iomem *gpio_base = S5P_VA_GPIO;
+	unsigned int val;
+
+	do {
+		/* Keep the previous state in didle mode */
+		__raw_writel(0xffff, gpio_base + GPIO_CON_PDN_OFFSET);
+
+		/* Pull up-down state in didle is same as normal */
+		val = __raw_readl(gpio_base + GPIO_PUD_OFFSET);
+		__raw_writel(val, gpio_base + GPIO_PUD_PDN_OFFSET);
+
+		gpio_base += GPIO_OFFSET;
+
+		/* Skip gpio_base there aren't gpios in part1 & part4 of exynos4212 */
+		if (gpio_base == (S5P_VA_GPIO + 0xE0))
+			gpio_base = S5P_VA_GPIO + 0x180;
+		else if (gpio_base == (S5P_VA_GPIO + 0x200))
+			gpio_base = S5P_VA_GPIO + 0x240;
+		else if (gpio_base == (S5P_VA_GPIO4 + 0x40))
+			gpio_base = S5P_VA_GPIO4 + 0x60;
+		else if (gpio_base == (S5P_VA_GPIO4 + 0xA0))
+			gpio_base = S5P_VA_GPIO4 + 0xC0;
+
+		if (gpio_base == S5P_VA_GPIO + GPIO1_END_OFFSET)
+			gpio_base = S5P_VA_GPIO2 + 0x40; /* GPK0CON */
+
+		if (gpio_base == S5P_VA_GPIO2 + GPIO2_END_OFFSET)
+			gpio_base = S5P_VA_GPIO4;
+
+	} while (gpio_base <= S5P_VA_GPIO4 + GPIO4_END_OFFSET);
+
+	/* set the GPZ */
+	gpio_base = S5P_VA_GPIO3;
+	__raw_writel(0xffff, gpio_base + GPIO_CON_PDN_OFFSET);
+
+	val = __raw_readl(gpio_base + GPIO_PUD_OFFSET);
+	__raw_writel(val, gpio_base + GPIO_PUD_PDN_OFFSET);
+}
+
 static int check_power_domain(void)
 {
 	unsigned long tmp;
@@ -308,6 +349,11 @@ static int check_usb_op(void)
 #endif
 }
 
+#if defined (CONFIG_MACH_U1_NA_SPR) || (CONFIG_MACH_U1_NA_USCC)
+#include "../../../sound/soc/samsung/srp-types.h"
+#include "../../../sound/soc/samsung/idma.h"
+#endif
+
 #ifdef CONFIG_SND_SAMSUNG_RP
 extern int srp_get_op_level(void);	/* By srp driver */
 #endif
@@ -390,6 +436,16 @@ static int exynos4_check_operation(void)
 #ifdef CONFIG_SND_SAMSUNG_RP
 	if (srp_get_op_level())
 		return 1;
+#endif
+
+#if defined (CONFIG_MACH_U1_NA_SPR) || (CONFIG_MACH_U1_NA_USCC)
+#ifdef CONFIG_SND_SAMSUNG_RP
+	if (!srp_get_status(IS_RUNNING))
+		return 1;
+#elif defined(CONFIG_SND_SAMSUNG_ALP)
+	if (!idma_is_running())
+		return 1;
+#endif
 #endif
 
 	if (check_usb_op())
@@ -779,12 +835,10 @@ early_wakeup:
 }
 
 static int exynos4_enter_idle(struct cpuidle_device *dev,
-			      struct cpuidle_driver *drv,
-			      int index);
+			      struct cpuidle_state *state);
 
 static int exynos4_enter_lowpower(struct cpuidle_device *dev,
-			          struct cpuidle_driver *drv,
-				  int index);
+				  struct cpuidle_state *state);
 
 static struct cpuidle_state exynos4_cpuidle_set[] = {
 	[0] = {
@@ -819,8 +873,7 @@ static unsigned int old_div;
 static DEFINE_SPINLOCK(idle_lock);
 
 static int exynos4_enter_idle(struct cpuidle_device *dev,
-			      struct cpuidle_driver *drv,
-			      int index)
+			      struct cpuidle_state *state)
 {
 	struct timeval before, after;
 	int idle_time;
@@ -876,8 +929,7 @@ static int exynos4_enter_idle(struct cpuidle_device *dev,
 	idle_time = (after.tv_sec - before.tv_sec) * USEC_PER_SEC +
 		    (after.tv_usec - before.tv_usec);
 
-	dev->last_residency = idle_time;
-	return index;
+	return idle_time;
 }
 
 static int exynos4_check_entermode(void)
@@ -903,19 +955,13 @@ extern int etm_enable(int pm_enable);
 extern int etm_disable(int pm_enable);
 #endif
 
-struct cpuidle_state *last_state;
-struct cpuidle_state *safe_state;
-
 static int exynos4_enter_lowpower(struct cpuidle_device *dev,
-			          struct cpuidle_driver *drv,
-				  int index)
+				  struct cpuidle_state *state)
 {
-	struct cpuidle_state *new_state = &exynos4_cpuidle_set[index];
+	struct cpuidle_state *new_state = state;
 	unsigned int enter_mode;
 	unsigned int tmp;
 	int ret;
-
-	int new_index = index;
 
 	/* This mode only can be entered when only Core0 is online */
 	if (use_clock_down == SW_CLK_DWN) {
@@ -924,22 +970,22 @@ static int exynos4_enter_lowpower(struct cpuidle_device *dev,
 		enter_mode = num_online_cpus() == 1;
 	}
 	if (!enter_mode) {
-		new_state = safe_state;
-		new_index = 0;
+		BUG_ON(!dev->safe_state);
+		new_state = dev->safe_state;
 	}
-	last_state = new_state;
+	dev->last_state = new_state;
 
 	if (!soc_is_exynos4210()) {
 		tmp = S5P_USE_STANDBY_WFI0 | S5P_USE_STANDBY_WFE0;
 		__raw_writel(tmp, S5P_CENTRAL_SEQ_OPTION);
 	}
 
-	if (new_index == 0)
-		return exynos4_enter_idle(dev, drv, new_index);
+	if (new_state == &dev->states[0])
+		return exynos4_enter_idle(dev, new_state);
 
 	enter_mode = exynos4_check_entermode();
 	if (!enter_mode)
-		return exynos4_enter_idle(dev, drv, new_index);
+		return exynos4_enter_idle(dev, new_state);
 	else {
 #ifdef CONFIG_CORESIGHT_ETM
 		etm_disable(0);
@@ -953,8 +999,7 @@ static int exynos4_enter_lowpower(struct cpuidle_device *dev,
 #endif
 	}
 
-	dev->last_residency = ret;
-	return new_index;
+	return ret;
 }
 
 static int exynos4_cpuidle_notifier_event(struct notifier_block *this,
@@ -1142,19 +1187,6 @@ static int __init exynos4_init_cpuidle(void)
 	struct platform_device *pdev;
 	struct resource *res;
 
-	struct cpuidle_driver *drv = &exynos4_idle_driver;
-
-	/* Setup cpuidle driver */
-	drv->state_count = (sizeof(exynos4_cpuidle_set) /
-				sizeof(struct cpuidle_state));
-	max_cpuidle_state = drv->state_count;
-	for (i = 0; i < max_cpuidle_state; i++) {
-		memcpy(&drv->states[i], &exynos4_cpuidle_set[i],
-		sizeof(struct cpuidle_state));
-	}
-
-	safe_state = &drv->states[0];
-
 	if (soc_is_exynos4210())
 		use_clock_down = SW_CLK_DWN;
 	else
@@ -1175,7 +1207,19 @@ static int __init exynos4_init_cpuidle(void)
 		device = &per_cpu(exynos4_cpuidle_device, cpu_id);
 		device->cpu = cpu_id;
 
-		device->state_count = drv->state_count;
+		if (cpu_id == 0)
+			device->state_count = ARRAY_SIZE(exynos4_cpuidle_set);
+		else
+			device->state_count = 1;	/* Support IDLE only */
+
+		max_cpuidle_state = device->state_count;
+
+		for (i = 0; i < max_cpuidle_state; i++) {
+			memcpy(&device->states[i], &exynos4_cpuidle_set[i],
+					sizeof(struct cpuidle_state));
+		}
+
+		device->safe_state = &device->states[0];
 
 		if (cpuidle_register_device(device)) {
 			cpuidle_unregister_driver(&exynos4_idle_driver);
