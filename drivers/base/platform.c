@@ -720,6 +720,25 @@ int platform_pm_suspend(struct device *dev)
 	return ret;
 }
 
+int platform_pm_suspend_noirq(struct device *dev)
+{
+	struct device_driver *drv = dev->driver;
+	int ret = 0;
+
+	if (!drv)
+		return 0;
+
+	if (drv->pm) {
+		if (drv->pm->suspend_noirq) {
+			printk(KERN_DEBUG "%s: %s+\n", __func__, dev_name(dev));
+			ret = drv->pm->suspend_noirq(dev);
+			printk(KERN_DEBUG "%s: %s-\n", __func__, dev_name(dev));
+		}
+	}
+
+	return ret;
+}
+
 int platform_pm_resume(struct device *dev)
 {
 	struct device_driver *drv = dev->driver;
