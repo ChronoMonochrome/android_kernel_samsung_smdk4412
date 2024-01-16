@@ -195,13 +195,7 @@ struct battery_info {
 extern bool is_jig_attached;
 
 /* charger detect source */
-#if defined(CONFIG_MACH_C1_KOR_SKT) || \
-	defined(CONFIG_MACH_C1_KOR_KT) || defined(CONFIG_MACH_C1_KOR_LGT) || \
-	defined(CONFIG_MACH_BAFFIN)
 #undef USE_CHGIN_INTR
-#else
-#define USE_CHGIN_INTR
-#endif
 
 /* extended online type */
 #if defined(CONFIG_MACH_T0)
