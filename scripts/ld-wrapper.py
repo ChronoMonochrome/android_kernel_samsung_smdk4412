@@ -54,20 +54,7 @@ additional_build_rules = {
         "injected_objects":
         [
             "device/i9300/arch/arm/kernel/idiv_emulate.o",
-            "device/i9300/arch/arm/kernel/sleep.o",
             "device/i9300/arch/arm/kernel/smp.o",
-        ],
-        "removed_objects":
-        [
-           "arch/arm/kernel/sleep.o",
-           "arch/arm/kernel/suspend.o",
-        ]
-    }],
-    "arch/arm/mm/built-in.o" :
-    [{
-        "injected_objects":
-        [
-            "device/i9300/arch/arm/mm/proc-v7_legacy.o",
         ],
     }],
     "kernel/built-in.o" :
