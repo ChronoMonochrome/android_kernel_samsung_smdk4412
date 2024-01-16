@@ -2380,6 +2380,9 @@ config ARCH_SUSPEND_POSSIBLE
 		CPU_V6 || CPU_V6K || CPU_V7 || CPU_XSC3 || CPU_XSCALE
 	def_bool y
 
+config ARM_CPU_SUSPEND
+	def_bool PM_SLEEP
+
 endmenu
 
 source "net/Kconfig"
