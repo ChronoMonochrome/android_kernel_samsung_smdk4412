@@ -1331,7 +1331,7 @@ static void dbs_check_cpu(struct cpu_dbs_info_s *this_dbs_info)
 	/* Get Absolute Load - in terms of freq */
 	max_load_freq = 0;
 
-	for_each_cpu(j, policy->cpus) {
+	for_each_online_cpu(j) {
 		struct cpu_dbs_info_s *j_dbs_info;
 		u64 cur_wall_time, cur_idle_time, cur_iowait_time;
 		u64 prev_wall_time, prev_idle_time, prev_iowait_time;
