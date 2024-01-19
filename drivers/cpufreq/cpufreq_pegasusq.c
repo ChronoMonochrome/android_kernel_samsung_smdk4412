@@ -1311,10 +1311,10 @@ static int check_down(void)
 
 static void dbs_check_cpu(struct cpu_dbs_info_s *this_dbs_info)
 {
-	unsigned int max_load_freq;
+	unsigned int max_load_freq, avg_load_freq;
 
 	struct cpufreq_policy *policy;
-	unsigned int j;
+	unsigned int j, online_cpu_count;
 	int num_hist = hotplug_history->num_hist;
 	int max_hotplug_rate = max(dbs_tuners_ins.cpu_up_rate,
 				   dbs_tuners_ins.cpu_down_rate);
@@ -1330,6 +1330,8 @@ static void dbs_check_cpu(struct cpu_dbs_info_s *this_dbs_info)
 
 	/* Get Absolute Load - in terms of freq */
 	max_load_freq = 0;
+	avg_load_freq = 0;
+	online_cpu_count = 0;
 
 	for_each_online_cpu(j) {
 		struct cpu_dbs_info_s *j_dbs_info;
@@ -1389,7 +1391,12 @@ static void dbs_check_cpu(struct cpu_dbs_info_s *this_dbs_info)
 		load_freq = load * freq_avg;
 		if (load_freq > max_load_freq)
 			max_load_freq = load_freq;
+
+		avg_load_freq += load_freq;
+		online_cpu_count++;
 	}
+
+	avg_load_freq /= online_cpu_count;
 
 	/* Check for CPU hotplug */
 	if (check_up()) {
@@ -1421,7 +1428,7 @@ static void dbs_check_cpu(struct cpu_dbs_info_s *this_dbs_info)
 	}
 #endif
 
-	if (max_load_freq > up_threshold * policy->cur) {
+	if (avg_load_freq > up_threshold * policy->cur) {
 		int inc = (policy->max * dbs_tuners_ins.freq_step) / 100;
 		int target = min(policy->max, policy->cur + inc);
 		/* If switching to max speed, apply sampling_down_factor */
@@ -1451,7 +1458,7 @@ static void dbs_check_cpu(struct cpu_dbs_info_s *this_dbs_info)
 	 * policy. To be safe, we focus DOWN_DIFFERENTIAL points under
 	 * the threshold.
 	 */
-	if (max_load_freq <
+	if (avg_load_freq <
 	    (dbs_tuners_ins.up_threshold - dbs_tuners_ins.down_differential) *
 	    policy->cur) {
 		unsigned int freq_next;
