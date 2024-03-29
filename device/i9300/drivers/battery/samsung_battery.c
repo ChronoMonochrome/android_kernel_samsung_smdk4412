@@ -1182,9 +1182,9 @@ charge_state_con:
 	} else if ((chg_curr == 0) && (info->charge_start_time != 0)) {
 		battery_control_info(info, POWER_SUPPLY_PROP_STATUS, DISABLE);
 
-		/*pr_info("%s: charge disabled, current as %d/%dmA @%d\n",
+		pr_info("%s: charge disabled, current as %d/%dmA @%d\n",
 			__func__, info->charge_current, info->input_current,
-			(int)current_time.tv_sec);*/
+			(int)current_time.tv_sec);
 
 		info->charge_start_time = 0;
 
@@ -1611,8 +1611,7 @@ charge_ok:
 
 		if (!info->pdata->suspend_chging)
 			__pm_stay_awake(&info->charge_wake_lock);
-		battery_charge_control(info, info->pdata->chg_curr_ta,
-						info->pdata->in_curr_limit);
+		battery_charge_control(info, ac_level, ac_level);
 		break;
 	case POWER_SUPPLY_TYPE_USB:
 		charge_info_level = usb_level;
@@ -1621,8 +1620,7 @@ charge_ok:
 
 		if (!info->pdata->suspend_chging)
 			__pm_stay_awake(&info->charge_wake_lock);
-		battery_charge_control(info, info->pdata->chg_curr_usb,
-						info->pdata->chg_curr_usb);
+		battery_charge_control(info, usb_level, usb_level);
 		break;
 	case POWER_SUPPLY_TYPE_USB_CDP:
 		charge_info_level = ac_level;
@@ -1631,10 +1629,10 @@ charge_ok:
 
 		if (!info->pdata->suspend_chging)
 			__pm_stay_awake(&info->charge_wake_lock);
-		battery_charge_control(info, info->pdata->chg_curr_cdp,
-						info->pdata->chg_curr_cdp);
+		battery_charge_control(info, ac_level, ac_level);
 		break;
 	case POWER_SUPPLY_TYPE_DOCK:
+		printk("Boeffla-Kernel: POWER_SUPPLY_TYPE_DOCK\n");
 		if (!info->pdata->suspend_chging)
 			__pm_stay_awake(&info->charge_wake_lock);
 		/* default dock prop is AC */
@@ -1750,9 +1748,9 @@ monitor_finish:
 		pr_cont(", f(%d)", info->full_charged_state);
 	if (info->recharge_phase == 1)
 		pr_cont(", r(%d)", info->recharge_phase);
-	/*if (info->charge_start_time != 0)
+	if (info->charge_start_time != 0)
 		pr_cont(", t(%d)", ((int)info->current_time.tv_sec -
-						info->charge_start_time));*/
+						info->charge_start_time));
 	if (info->event_state != EVENT_STATE_CLEAR)
 		pr_cont(", e(%d, 0x%04x)", info->event_state, info->event_type);
 	if (info->siop_state)
